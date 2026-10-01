@@ -25,7 +25,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region source
 
-        [McpServerTool(Name = "GetBlockSource", Title = "Read a block's source", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "GetBlockSource", Title = "Get block source", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Return the source text of one program block directly, instead of exporting a file and reading it back. 'document' gives readable SCL/LAD/STL (SIMATIC Source Document, V20+); objects TIA Portal cannot represent that way - STL and mixed-language blocks - fall back to XML automatically, and the response says which format was produced")]
         public static ResponseSourceText GetBlockSource(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -78,7 +78,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetTypeSource", Title = "Read a PLC data type's source", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "GetTypeSource", Title = "Get type source", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Return the source text of one PLC data type directly, instead of exporting a file and reading it back. 'document' gives the readable TYPE ... END_TYPE declaration (SIMATIC Source Document, requires TIA Portal V21); 'xml' gives the SimaticML export")]
         public static ResponseSourceText GetTypeSource(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -92,7 +92,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "PLC data type");
         }
 
-        [McpServerTool(Name = "ExportPlcAsSourceTree", Title = "Snapshot a PLC to a source tree", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ExportPlcAsSourceTree", Title = "Export PLC as source tree", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Write a whole PLC software to one folder tree that mirrors the project, ready to commit: program blocks and PLC data types as readable SIMATIC Source Documents where TIA Portal supports them, tag tables and watch tables as XML, each below its localised system folder. Replaces running the four bulk exports separately. Objects that cannot be exported are reported instead of failing the snapshot")]
         public static ResponseSourceTree ExportPlcAsSourceTree(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -148,7 +148,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region generate source
 
-        [McpServerTool(Name = "ExportSourceBlock", Title = "Generate a block's source file", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ExportSourceBlock", Title = "Export block as source", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Write one program block as a TIA Portal external source file, in the format the compiler reads back. The extension follows the block: '.db' for data blocks, '.scl' for SCL blocks, '.awl' for STL blocks. Only those three can be generated - LAD, FBD and GRAPH blocks have no source form and are rejected with a reason, for which 'ExportXmlBlock' (SimaticML) or 'ExportAsDocuments' is the alternative")]
         public static ResponseGeneratedSource ExportSourceBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -163,7 +163,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "block");
         }
 
-        [McpServerTool(Name = "ExportSourceType", Title = "Generate a PLC data type's source file", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ExportSourceType", Title = "Export type as source", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Write one PLC data type as a '*.udt' external source file, in the format the compiler reads back. Unlike 'GetTypeSource' this needs no TIA Portal V21 and produces a file that can be imported again")]
         public static ResponseGeneratedSource ExportSourceType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -178,7 +178,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "PLC data type");
         }
 
-        [McpServerTool(Name = "GenerateSources", Title = "Generate sources for a whole PLC", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "GenerateSources", Title = "Generate sources", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Write every block and PLC data type of one PLC software as external source files into a folder tree that mirrors the project groups: '<exportPath>/Program blocks/...' and '<exportPath>/PLC data types/...', one file per object. The compilable counterpart to 'ExportPlcAsSourceTree'. Objects with no source form (LAD, FBD, GRAPH), inconsistent objects and know-how protected ones are reported in 'Skipped' instead of failing the run")]
         public static ResponseGeneratedSources GenerateSources(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -277,7 +277,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region import sources (write)
 
         [WriteTool]
-        [McpServerTool(Name = "ImportSources", Title = "Import a tree of source files", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ImportSources", Title = "Import sources", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Compile every block and PLC data type source file (*.db, *.awl, *.scl, *.udt) under a folder tree back into the project - the counterpart to 'GenerateSources'. Each file is placed into the block or PLC data type group its folder path implies, matching the layout 'GenerateSources' writes; a folder whose group does not yet exist in the project fails that file rather than being created automatically. Existing blocks/types of the same name are overwritten")]
         public static ResponseImportedSources ImportSources(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -328,7 +328,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region external sources
 
-        [McpServerTool(Name = "GetExternalSources", Title = "Get PLC external sources", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "GetExternalSources", Title = "Get external sources", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("List the external source files of a plc software, optionally filtered by a regular expression on the source name")]
         public static ResponseExternalSources GetExternalSources(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -351,7 +351,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetExternalSourceInfo", Title = "Get PLC external source info", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "GetExternalSourceInfo", Title = "Get external source info", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Get a single external source file. Beyond its name, all metadata is returned in the generic Attributes list")]
         public static ResponseExternalSourceInfo GetExternalSourceInfo(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -391,7 +391,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region external sources (write)
 
         [WriteTool]
-        [McpServerTool(Name = "CreateExternalSourceFromFile", Title = "Add an external source file", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "CreateExternalSourceFromFile", Title = "Create external source from file", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Add a source file (for example an SCL file) from the file system into the external source files of the plc software")]
         public static ResponseCreated CreateExternalSourceFromFile(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -407,7 +407,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "DeleteExternalSource", Title = "Delete an external source file", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "DeleteExternalSource", Title = "Delete external source", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Remove an external source file from the plc software")]
         public static ResponseDeleted DeleteExternalSource(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -421,7 +421,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "CreateExternalSourceGroup", Title = "Create an external source group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "CreateExternalSourceGroup", Title = "Create external source group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Create a group below the External source files root of the plc software")]
         public static ResponseCreated CreateExternalSourceGroup(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -436,7 +436,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "DeleteExternalSourceGroup", Title = "Delete an external source group", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "DeleteExternalSourceGroup", Title = "Delete external source group", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Delete an external source group and everything inside it. The External source files system group itself cannot be deleted")]
         public static ResponseDeleted DeleteExternalSourceGroup(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -450,7 +450,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "ImportSourceBlocks", Title = "Generate blocks from an external source", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ImportSourceBlocks", Title = "Import source blocks", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Compile an external source file into program blocks and PLC data types. A target must be a block user group: blocks cannot be generated into the Program blocks root")]
         public static ResponseGenerateBlocks ImportSourceBlocks(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,

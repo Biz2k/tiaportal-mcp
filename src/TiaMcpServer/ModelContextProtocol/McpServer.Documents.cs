@@ -33,7 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region type documents
 
-        [McpServerTool(Name = "ExportTypeAsDocuments", Title = "Export PLC data type as documents", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ExportTypeAsDocuments", Title = "Export type as documents", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Export one PLC data type as a SIMATIC Source Document set (.s7dcl plus an optional .s7res) instead of XML. The response lists the files TIA Portal actually wrote. Requires TIA Portal V21 or newer")]
         public static ResponseExportTypeAsDocuments ExportTypeAsDocuments(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -64,7 +64,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportTypesAsDocuments", Title = "Export PLC data types as documents", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ExportTypesAsDocuments", Title = "Export types as documents", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Export PLC data types as SIMATIC Source Document sets (.s7dcl plus optional .s7res) instead of XML. Inconsistent types are skipped and reported, and a type TIA Portal cannot export does not abort the run. Requires TIA Portal V21 or newer")]
         public static async Task<ResponseExportTypesAsDocuments> ExportTypesAsDocuments(
             IProgress<ProgressNotificationValue> progress,
@@ -187,7 +187,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region type documents (write)
 
         [WriteTool]
-        [McpServerTool(Name = "ImportTypeFromDocuments", Title = "Import PLC data type from documents", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ImportTypeFromDocuments", Title = "Import type from documents", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Import one PLC data type from a SIMATIC Source Document set (.s7dcl plus an optional .s7res) on the file system of the machine running this server. A PLC data type name is unique across the whole PLC, so importing an existing name into a different group fails even with importOption 'Override' - target the group the type already lives in. Requires TIA Portal V21 or newer")]
         public static ResponseImportTypeFromDocuments ImportTypeFromDocuments(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -213,7 +213,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "ImportTypesFromDocuments", Title = "Import PLC data types from documents", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ImportTypesFromDocuments", Title = "Import types from documents", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Import every SIMATIC Source Document set in a directory as a PLC data type. A set that fails does not abort the run. A PLC data type name is unique across the whole PLC, so a name that already exists in another group fails even with importOption 'Override'. Requires TIA Portal V21 or newer")]
         public static async Task<ResponseImportTypesFromDocuments> ImportTypesFromDocuments(
             IProgress<ProgressNotificationValue> progress,
@@ -291,7 +291,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region documents
 
-        [McpServerTool(Name = "ExportAsDocuments", Title = "Export block as documents", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export as documents (.s7dcl/.s7res) from a block in the plc software to path")]
+        [McpServerTool(Name = "ExportAsDocuments", Title = "Export as documents", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export as documents (.s7dcl/.s7res) from a block in the plc software to path")]
         public static ResponseExportAsDocuments ExportAsDocuments(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: defines the path in the project structure to the block")] string blockPath,
@@ -446,7 +446,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportFromDocuments", Title = "Import block from documents", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import program block from SIMATIC SD documents (.s7dcl/.s7res) into PLC software (V20+)")]
+        [McpServerTool(Name = "ImportFromDocuments", Title = "Import from documents", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import program block from SIMATIC SD documents (.s7dcl/.s7res) into PLC software (V20+)")]
         public static ResponseImportFromDocuments ImportFromDocuments(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: optional path within the PLC program where the block should be placed (empty for root)")] string groupPath,

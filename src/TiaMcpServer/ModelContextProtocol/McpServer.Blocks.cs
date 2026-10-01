@@ -154,7 +154,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportXmlBlock", Title = "Export block to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export a block from plc software to file")]
+        [McpServerTool(Name = "ExportXmlBlock", Title = "Export XML block", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export a block from plc software to file")]
         public static ResponseExportXmlBlock ExportXmlBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: full path to the block in the project structure, e.g. 'Group/Subgroup/Name' (single names are ambiguous)")] string blockPath,
@@ -293,7 +293,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportXmlBlock", Title = "Import block from XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import a block file to plc software")]
+        [McpServerTool(Name = "ImportXmlBlock", Title = "Import XML block", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import a block file to plc software")]
         public static ResponseImportXmlBlock ImportXmlBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the block")] string groupPath,
@@ -324,7 +324,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportXmlBlocks", Title = "Export blocks to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export all blocks from the plc software to path")]
+        [McpServerTool(Name = "ExportXmlBlocks", Title = "Export XML blocks", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export all blocks from the plc software to path")]
         public static async Task<ResponseExportXmlBlocks> ExportXmlBlocks(
             IProgress<ProgressNotificationValue> progress,
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -473,7 +473,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region source
 
-        [McpServerTool(Name = "GetBlockInterface", Title = "Read a data block's members", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "GetBlockInterface", Title = "Get block interface", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("List the members of a data block with their data type and every attribute TIA Portal reports. Needs no export and works on inconsistent blocks. Data blocks only: Openness offers no interface accessor for FB, FC or OB, whose declarations come from 'GetBlockSource' instead")]
         public static ResponseBlockInterface GetBlockInterface(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -533,7 +533,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region groups (write)
 
         [WriteTool]
-        [McpServerTool(Name = "CreateBlockGroup", Title = "Create a block group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "CreateBlockGroup", Title = "Create block group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Create a group below the Program blocks root of the plc software")]
         public static ResponseCreated CreateBlockGroup(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -548,7 +548,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "DeleteBlockGroup", Title = "Delete a block group", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "DeleteBlockGroup", Title = "Delete block group", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Delete a block group and everything inside it. The Program blocks system group itself cannot be deleted")]
         public static ResponseDeleted DeleteBlockGroup(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -566,7 +566,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region blocks and types (write)
 
         [WriteTool]
-        [McpServerTool(Name = "DeleteBlock", Title = "Delete a block", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "DeleteBlock", Title = "Delete block", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Delete a program block. Know-how protected blocks are rejected: remove the protection in TIA Portal first")]
         public static ResponseDeleted DeleteBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -580,7 +580,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "RenameBlock", Title = "Rename a block", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "RenameBlock", Title = "Rename block", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Rename a program block. Know-how protected blocks are rejected")]
         public static ResponseRenamed RenameBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -595,7 +595,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "CreateFB", Title = "Create a function block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "CreateFB", Title = "Create function block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Create an empty function block. Openness has no generic create-block operation: FB and instance DB are the only kinds creatable without importing XML")]
         public static ResponseCreated CreateFB(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -613,7 +613,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "CreateInstanceDB", Title = "Create an instance data block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "CreateInstanceDB", Title = "Create instance data block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Create an instance data block for an existing function block")]
         public static ResponseCreated CreateInstanceDB(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -635,7 +635,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region move copy (write)
 
         [WriteTool]
-        [McpServerTool(Name = "CopyBlock", Title = "Copy a block to another group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "CopyBlock", Title = "Copy block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Copy a program block into another block group of the same plc software. Implemented as export plus import because Openness has no copy operation, so the block must be consistent and keeps its block number")]
         public static ResponseCreated CopyBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -660,7 +660,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "MoveBlock", Title = "Move a block to another group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "MoveBlock", Title = "Move block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Move a program block into another block group of the same plc software. Implemented as export, import and deleting the original; the original is only removed after the import succeeds")]
         public static ResponseRenamed MoveBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,

@@ -112,7 +112,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportXmlType", Title = "Export type to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export a type from the plc software")]
+        [McpServerTool(Name = "ExportXmlType", Title = "Export XML type", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export a type from the plc software")]
         public static ResponseExportXmlType ExportXmlType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: defines the path where export the type")] string exportPath,
@@ -166,7 +166,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportXmlType", Title = "Import type from XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import a type from file into the plc software")]
+        [McpServerTool(Name = "ImportXmlType", Title = "Import XML type", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import a type from file into the plc software")]
         public static ResponseImportXmlType ImportXmlType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the type")] string groupPath,
@@ -197,7 +197,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportXmlTypes", Title = "Export types to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export types from the plc software to path")]
+        [McpServerTool(Name = "ExportXmlTypes", Title = "Export XML types", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export types from the plc software to path")]
         public static async Task<ResponseExportXmlTypes> ExportXmlTypes(
             IProgress<ProgressNotificationValue> progress,
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -343,7 +343,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region groups (write)
 
         [WriteTool]
-        [McpServerTool(Name = "CreateTypeGroup", Title = "Create a PLC data type group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "CreateTypeGroup", Title = "Create type group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Create a group below the PLC data types root of the plc software")]
         public static ResponseCreated CreateTypeGroup(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -358,7 +358,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "DeleteTypeGroup", Title = "Delete a PLC data type group", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "DeleteTypeGroup", Title = "Delete type group", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Delete a PLC data type group and everything inside it. The PLC data types system group itself cannot be deleted")]
         public static ResponseDeleted DeleteTypeGroup(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -376,7 +376,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region blocks and types (write)
 
         [WriteTool]
-        [McpServerTool(Name = "DeleteType", Title = "Delete a PLC data type", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "DeleteType", Title = "Delete type", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Delete a PLC data type (UDT). Know-how protected types are rejected")]
         public static ResponseDeleted DeleteType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -390,7 +390,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "RenameType", Title = "Rename a PLC data type", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "RenameType", Title = "Rename type", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Rename a PLC data type (UDT). Know-how protected types are rejected")]
         public static ResponseRenamed RenameType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -409,7 +409,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region move copy (write)
 
         [WriteTool]
-        [McpServerTool(Name = "CopyType", Title = "Copy a PLC data type to another group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "CopyType", Title = "Copy type", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Copy a PLC data type (UDT) into another type group of the same plc software. Implemented as export plus import because Openness has no copy operation, so the type must be consistent")]
         public static ResponseCreated CopyType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -434,7 +434,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "MoveType", Title = "Move a PLC data type to another group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "MoveType", Title = "Move type", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Move a PLC data type (UDT) into another type group of the same plc software. Implemented as export, import and deleting the original; the original is only removed after the import succeeds")]
         public static ResponseRenamed MoveType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,

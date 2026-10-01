@@ -238,7 +238,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "OpenProject", Title = "Open project or session", Destructive = false, Idempotent = true, OpenWorld = false), Description("Open a TIA-Portal local project/session")]
+        [McpServerTool(Name = "OpenProject", Title = "Open project/session", Destructive = false, Idempotent = true, OpenWorld = false), Description("Open a TIA-Portal local project/session")]
         public static ResponseOpenProject OpenProject(
             [Description("path: defines the path where to the project/session")] string path)
         {
@@ -471,7 +471,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region lookup
 
-        [McpServerTool(Name = "OpenTiaProject", Title = "Connect and open a project", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "OpenTiaProject", Title = "Connect/open a project", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Connect to TIA Portal if not already connected, open the given project or session, and return the device and PLC software paths the other tools need. Replaces the Connect then OpenProject then GetProjectTree sequence")]
         public static ResponseOpenTiaProject OpenTiaProject(
             [Description("path: full path of the .apXX project or .alsXX session file on the machine running this server")] string path)
@@ -534,7 +534,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region preview
 
-        [McpServerTool(Name = "PreviewImport", Title = "Preview what an import would do", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "PreviewImport", Title = "Preview import", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Report what importing a directory would create, overwrite or collide with, without touching the project. Checks each file against the objects already in the PLC, including the rule that a PLC data type name must be unique across the whole PLC - importing an existing type name into a different group fails even with importOption 'Override'")]
         public static ResponseImportPreview PreviewImport(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
