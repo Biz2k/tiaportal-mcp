@@ -26,7 +26,7 @@ namespace TiaMcpServer.Siemens
         // project as compiled blocks and PLC data types - the counterpart to
         // GenerateBlockSource / GenerateTypeSource / GenerateSources in Portal.Documents.GenerateSource.cs.
         //
-        // Callers: the ImportSources tool in McpServerWrite.ImportSources.cs. Affected API: none
+        // Callers: the ImportSources tool in McpServer.Documents.ImportSources.cs. Affected API: none
         // existing - every member here is new. CreateExternalSourceFromFile, DeleteExternalSource
         // and GetExternalSourcePath (Portal.Documents.ExternalSources.cs) are reused rather
         // than duplicated, and so is StripSystemRootSegment (Portal.Documents.Types.cs), which already
@@ -49,8 +49,8 @@ namespace TiaMcpServer.Siemens
         // created automatically - the group structure is expected to already exist, because these
         // files were themselves generated from blocks/types that lived in it.
         //
-        // Project-mutating: registered under '--allow-write' like every other tool in
-        // McpServerWrite.
+        // Project-mutating: registered under '--allow-write' like every other
+        // [WriteTool] tool.
 
         #region whole tree
 

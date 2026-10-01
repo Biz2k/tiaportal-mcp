@@ -1,112 +1,90 @@
+using ModelContextProtocol;
 using ModelContextProtocol.Server;
+using Siemens.Engineering.SW.ExternalSources;
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    /// <summary>
-    /// Write tools for watch tables and external source files.
-    ///
-    /// Callers: registered by Program.BuildToolTypes() under '--allow-write'; also invoked
-    /// directly by the write test class. Affected API: additive - a partial of McpServerWrite.
-    /// File I/O: ImportWatchTable and CreateExternalSourceFromFile read a caller-supplied file;
-    /// nothing here writes files.
-    ///
-    /// There are no force-table tools: PlcForceTableComposition has no Create and PlcForceTable
-    /// no Delete, because the force table is system-owned (one per PLC).
-    /// </summary>
-    public static partial class McpServerWrite
+    public static partial class McpServer
     {
-        #region watch tables
+        // From the former McpServer.ExternalSources.cs:
+        // Read-only MCP tools for PLC external source files.
+        //
+        // Callers: registered through Program.BuildTools() and invoked directly by the external
+        // source test class. Affected API: additive only - a new partial of the existing McpServer
+        // type. Data: returns ResponseExternalSource* as MCP structuredContent. No file I/O.
+        //
+        // PlcExternalSource types only Name, so GetExternalSourceInfo leans on the generic
+        // attribute bag for everything else rather than guessing at attribute names.
 
-        [McpServerTool(Name = "CreateWatchTable", Title = "Create a watch table", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Create a PLC watch table. Force tables cannot be created: the system owns the single force table per PLC")]
-        public static ResponseCreated CreateWatchTable(
+        #region external sources
+
+        [McpServerTool(Name = "GetExternalSources", Title = "Get PLC external sources", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the external source files of a plc software, optionally filtered by a regular expression on the source name")]
+        public static ResponseExternalSources GetExternalSources(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("groupPath: root-relative watch table group; empty creates directly below the Watch and force tables root")] string groupPath,
-            [Description("name: name of the new watch table, without a slash")] string name)
+            [Description("regexName: optional regular expression to filter the external source names")] string regexName = "")
         {
-            return Guarded(nameof(CreateWatchTable), () =>
+            try
             {
-                Portal.CreateWatchTable(softwarePath, groupPath, name);
-                return Created("Watch table", name, Join(groupPath, name));
-            });
+                var sources = Portal.GetExternalSources(softwarePath, regexName);
+
+                return new ResponseExternalSources
+                {
+                    Message = $"{sources.Count} external source(s) retrieved from '{softwarePath}'",
+                    Items = sources.Select(ToExternalSourceInfo).ToList(),
+                    Meta = Ok(new JsonObject { ["totalExternalSources"] = sources.Count })
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error retrieving external sources from '{softwarePath}': {ex.Message}", ex);
+            }
         }
 
-        [McpServerTool(Name = "RenameWatchTable", Title = "Rename a watch table", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Rename a PLC watch table")]
-        public static ResponseRenamed RenameWatchTable(
+        [McpServerTool(Name = "GetExternalSourceInfo", Title = "Get PLC external source info", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Get a single external source file. Beyond its name, all metadata is returned in the generic Attributes list")]
+        public static ResponseExternalSourceInfo GetExternalSourceInfo(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("watchTablePath: root-relative path of the watch table")] string watchTablePath,
-            [Description("newName: the new watch table name, without a slash")] string newName)
+            [Description("sourcePath: root-relative path of the external source, e.g. 'SourceGroup1/Source_1'")] string sourcePath)
         {
-            return Guarded(nameof(RenameWatchTable), () =>
+            try
             {
-                Portal.RenameWatchTable(softwarePath, watchTablePath, newName);
-                return Renamed("Watch table", watchTablePath, newName, ReplaceLeaf(watchTablePath, newName));
-            });
+                var source = Portal.GetExternalSource(softwarePath, sourcePath)
+                    ?? throw new McpException($"External source not found at '{sourcePath}' in '{softwarePath}'. Use 'GetExternalSources' to list the available sources.");
+
+                var info = ToExternalSourceInfo(source);
+                info.Message = $"External source info retrieved from '{sourcePath}' in '{softwarePath}'";
+                info.Attributes = Helper.GetAttributeList(source);
+                info.Meta = Ok();
+
+                return info;
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error retrieving external source info from '{sourcePath}' in '{softwarePath}': {ex.Message}", ex);
+            }
         }
 
-        [McpServerTool(Name = "DeleteWatchTable", Title = "Delete a watch table", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Delete a PLC watch table with all of its entries. Force tables cannot be deleted")]
-        public static ResponseDeleted DeleteWatchTable(
-            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("watchTablePath: root-relative path of the watch table")] string watchTablePath)
+        private static ResponseExternalSourceInfo ToExternalSourceInfo(PlcExternalSource source)
         {
-            return Guarded(nameof(DeleteWatchTable), () =>
+            return new ResponseExternalSourceInfo
             {
-                Portal.DeleteWatchTable(softwarePath, watchTablePath);
-                return Deleted("Watch table", watchTablePath);
-            });
-        }
-
-        [McpServerTool(Name = "CreateWatchTableGroup", Title = "Create a watch table group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Create a group below the Watch and force tables root of the plc software")]
-        public static ResponseCreated CreateWatchTableGroup(
-            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("parentGroupPath: root-relative path of the parent group; empty creates directly below the root")] string parentGroupPath,
-            [Description("name: name of the new group, without a slash")] string name)
-        {
-            return Guarded(nameof(CreateWatchTableGroup), () =>
-            {
-                Portal.CreateWatchTableGroup(softwarePath, parentGroupPath, name);
-                return Created("Watch table group", name, Join(parentGroupPath, name));
-            });
-        }
-
-        [McpServerTool(Name = "DeleteWatchTableGroup", Title = "Delete a watch table group", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Delete a watch table group and everything inside it. The Watch and force tables system group itself cannot be deleted")]
-        public static ResponseDeleted DeleteWatchTableGroup(
-            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("groupPath: root-relative path of the group to delete")] string groupPath)
-        {
-            return Guarded(nameof(DeleteWatchTableGroup), () =>
-            {
-                Portal.DeleteWatchTableGroup(softwarePath, groupPath);
-                return Deleted("Watch table group", groupPath);
-            });
-        }
-
-        [McpServerTool(Name = "ImportWatchTable", Title = "Import a watch table", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Import a PLC watch table from an XML file on the file system of the machine running this server")]
-        public static ResponseImported ImportWatchTable(
-            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("groupPath: root-relative watch table group that receives the table; empty uses the root")] string groupPath,
-            [Description("importPath: full path of the XML file to import")] string importPath,
-            [Description("overwrite: replace an existing watch table of the same name (default true)")] bool overwrite = true)
-        {
-            return Guarded(nameof(ImportWatchTable), () =>
-            {
-                Portal.ImportWatchTable(softwarePath, groupPath, importPath, overwrite);
-                return Imported("Watch table", groupPath, importPath);
-            });
+                Name = source.Name,
+                Path = Portal.GetExternalSourcePath(source)
+            };
         }
 
         #endregion
 
-        #region external sources
+        // From the former McpServerWrite.Documents.ExternalSources.cs:
 
+        #region external sources (write)
+
+        [WriteTool]
         [McpServerTool(Name = "CreateExternalSourceFromFile", Title = "Add an external source file", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Add a source file (for example an SCL file) from the file system into the external source files of the plc software")]
         public static ResponseCreated CreateExternalSourceFromFile(
@@ -118,10 +96,11 @@ namespace TiaMcpServer.ModelContextProtocol
             return Guarded(nameof(CreateExternalSourceFromFile), () =>
             {
                 Portal.CreateExternalSourceFromFile(softwarePath, groupPath, name, filePath);
-                return Created("External source", name, Join(groupPath, name));
+                return Created("External source", name, JoinPath(groupPath, name));
             });
         }
 
+        [WriteTool]
         [McpServerTool(Name = "DeleteExternalSource", Title = "Delete an external source file", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Remove an external source file from the plc software")]
         public static ResponseDeleted DeleteExternalSource(
@@ -135,6 +114,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
+        [WriteTool]
         [McpServerTool(Name = "CreateExternalSourceGroup", Title = "Create an external source group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Create a group below the External source files root of the plc software")]
         public static ResponseCreated CreateExternalSourceGroup(
@@ -145,10 +125,11 @@ namespace TiaMcpServer.ModelContextProtocol
             return Guarded(nameof(CreateExternalSourceGroup), () =>
             {
                 Portal.CreateExternalSourceGroup(softwarePath, parentGroupPath, name);
-                return Created("External source group", name, Join(parentGroupPath, name));
+                return Created("External source group", name, JoinPath(parentGroupPath, name));
             });
         }
 
+        [WriteTool]
         [McpServerTool(Name = "DeleteExternalSourceGroup", Title = "Delete an external source group", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Delete an external source group and everything inside it. The External source files system group itself cannot be deleted")]
         public static ResponseDeleted DeleteExternalSourceGroup(
@@ -162,6 +143,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
+        [WriteTool]
         [McpServerTool(Name = "GenerateBlocksFromSource", Title = "Generate blocks from an external source", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Compile an external source file into program blocks and PLC data types. A target must be a block user group: blocks cannot be generated into the Program blocks root")]
         public static ResponseGenerateBlocks GenerateBlocksFromSource(

@@ -25,8 +25,8 @@ namespace TiaMcpServer.Siemens
         // SIMATIC Source Documents for PLC data types.
         //
         // Callers: the ExportTypeAsDocuments / ExportTypesAsDocuments tools in
-        // McpServer.Documents.cs and the ImportTypeFromDocuments / ImportTypesFromDocuments tools in
-        // McpServerWrite.Documents.cs. Affected API: none existing - every member here is new; the
+        // McpServer.Documents.Types.cs and the ImportTypeFromDocuments / ImportTypesFromDocuments tools in
+        // McpServer.Documents.Types.cs. Affected API: none existing - every member here is new; the
         // block document methods (Portal.Documents.Blocks.cs) are deliberately left untouched.
         //
         // A source document is the human-readable, git-diffable form of an object: '<Name>.s7dcl'

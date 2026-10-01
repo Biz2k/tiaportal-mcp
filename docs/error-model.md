@@ -100,7 +100,7 @@ Methods predating 0.2.0 still carry the hand-written block; migrating them is tr
 Project-mutating tools are refused above the portal layer, so this is an MCP-layer concern rather
 than a `PortalErrorCode`:
 
-- `Program.BuildToolTypes()` registers the `McpServerWrite` tool type only when `--allow-write`
+- `Program.BuildTools()` registers the `[WriteTool]` tools only when `--allow-write`
   was passed. Without it the write tools are absent from `tools/list` entirely - the primary
   guard, because a tool that is not advertised cannot be mis-invoked.
 - `WritePolicy.EnsureEnabled(toolName)` runs as the first statement of every write tool and

@@ -26,7 +26,7 @@ namespace TiaMcpServer.Siemens
         // Reading what an object actually contains, rather than only its metadata.
         //
         // Callers: the GetBlockSource / GetTypeSource / GetBlockInterface tools in
-        // McpServer.Source.cs. Affected API: none existing - every member here is new.
+        // McpServer.Blocks.cs and McpServer.Types.cs (ExportPlcAsSourceTree: McpServer.Documents.SourceText.cs). Affected API: none existing - every member here is new.
         // GetBlockSource, GetTypeSource and GetBlockInterface themselves now live in Portal.Blocks.cs and
         // Portal.Types.cs; the shared reader, the scratch directory and the whole-PLC export are here.
         //

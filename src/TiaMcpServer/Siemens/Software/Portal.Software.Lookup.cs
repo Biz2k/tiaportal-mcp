@@ -23,7 +23,7 @@ namespace TiaMcpServer.Siemens
         // From the former Portal.Lookup.cs:
         // Name-to-path resolution across every PLC software area.
         //
-        // Callers: the ResolveObjectPath tool in McpServer.Lookup.cs and the NotFound branch of
+        // Callers: the ResolveObjectPath tool in McpServer.Software.Lookup.cs and the NotFound branch of
         // ExportBlock. Affected API: none existing - every member here is new. Reads and writes no
         // data files.
         //

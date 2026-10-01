@@ -6,22 +6,25 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text.Json.Nodes;
+using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    /// <summary>
-    /// Read-only MCP tool for PLC cross references.
-    ///
-    /// Callers: registered through Program.BuildToolTypes() and invoked directly by the cross
-    /// reference test class. Affected API: additive only - a new partial of the existing
-    /// McpServer type. Data: returns ResponseCrossReferences as MCP structuredContent. No file I/O.
-    ///
-    /// Output size is the real constraint here: Sources -> References -> Locations nests three
-    /// deep and SourceObject.Children recurses, so an unfiltered AllObjects query on a real PLC
-    /// produces megabytes. maxDepth defaults to 1 and the response reports Truncated.
-    /// </summary>
     public static partial class McpServer
     {
+        // From the former McpServer.CrossReferences.cs:
+        // Read-only MCP tool for PLC cross references.
+        //
+        // Callers: registered through Program.BuildTools() and invoked directly by the cross
+        // reference test class. Affected API: additive only - a new partial of the existing
+        // McpServer type. Data: returns ResponseCrossReferences as MCP structuredContent. No file I/O.
+        //
+        // Output size is the real constraint here: Sources -> References -> Locations nests three
+        // deep and SourceObject.Children recurses, so an unfiltered AllObjects query on a real PLC
+        // produces megabytes. maxDepth defaults to 1 and the response reports Truncated.
+
+        #region cross references
+
         /// <summary>
         /// Mutable counters for the recursive projection. A class rather than 'ref' parameters
         /// because ref locals cannot be captured by the lambdas used below.
@@ -151,5 +154,80 @@ namespace TiaMcpServer.ModelContextProtocol
                 ReferencedAsName = location.ReferencedAsName
             };
         }
+
+        #endregion
+
+        #region insight
+
+        [McpServerTool(Name = "WhereUsed", Title = "Find what uses an object", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Answer 'what uses this?' for a tag, block, PLC data type or tag table by name. Resolves the name, picks the right object kind and flattens the cross-reference tree to a plain list of users. Use 'GetCrossReferences' instead when the full nested result or a specific filter is needed")]
+        public static ResponseWhereUsed WhereUsed(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("name: the object to look up, by bare name or by full root-relative path")] string name,
+            [Description("kind: restrict resolution to 'block', 'type', 'tag' or 'tagTable'. Default 'any' picks the single match, and reports the candidates when the name is ambiguous")] string kind = "any")
+        {
+            try
+            {
+                var matches = Portal.ResolveObjectPath(softwarePath, name, kind)
+                    .Where(m => CrossReferenceKinds.Contains(m.Kind))
+                    .ToList();
+
+                if (matches.Count == 0)
+                {
+                    throw new McpException(
+                        $"No block, PLC data type, tag or tag table named '{name}' in '{softwarePath}'. " +
+                        "Watch tables and external source files have no cross references.");
+                }
+
+                if (matches.Count > 1)
+                {
+                    throw new McpException(
+                        $"'{name}' is ambiguous in '{softwarePath}': " +
+                        string.Join(", ", matches.Select(m => $"{m.Path} ({m.Kind})")) +
+                        ". Pass the full path, or narrow it with 'kind'.");
+                }
+
+                var target = matches[0];
+                var result = Portal.GetCrossReferences(softwarePath, target.Path, target.Kind, CrossReferenceFilter.AllObjects);
+
+                var users = result.Sources
+                    .SelectMany(source => source.References.Select(reference => new ResponseUsage
+                    {
+                        UsedBy = reference.Name,
+                        Path = reference.Path,
+                        Address = reference.Address,
+                        TypeName = reference.TypeName
+                    }))
+                    .GroupBy(u => $"{u.Path}|{u.UsedBy}|{u.Address}")
+                    .Select(g => g.First())
+                    .OrderBy(u => u.Path, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+
+                return new ResponseWhereUsed
+                {
+                    Message = users.Count == 0
+                        ? $"'{target.Path}' ({target.Kind}) is not used anywhere in '{softwarePath}'"
+                        : $"'{target.Path}' ({target.Kind}) is used by {users.Count} object(s)",
+                    Path = target.Path,
+                    Kind = target.Kind,
+                    Items = users,
+                    Meta = Ok(new JsonObject { ["userCount"] = users.Count, ["kind"] = target.Kind })
+                };
+            }
+            catch (PortalException pex)
+            {
+                throw new McpException(pex.Message, pex);
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error resolving usages of '{name}': {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>Object kinds Openness can produce cross references for.</summary>
+        private static readonly HashSet<string> CrossReferenceKinds =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "block", "type", "tag", "tagTable" };
+
+        #endregion
     }
 }

@@ -26,7 +26,7 @@ namespace TiaMcpServer.Siemens
         // From the former Portal.Search.cs:
         // Searching the program text, not just object names.
         //
-        // Callers: the FindInCode tool in McpServer.Insight.cs. Affected API: none existing - every
+        // Callers: the FindInCode tool in McpServer.Software.Search.cs. Affected API: none existing - every
         // member here is new.
         //
         // File I/O: like the source readers, this has to export before it can search, because

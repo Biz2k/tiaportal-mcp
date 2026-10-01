@@ -8,23 +8,23 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    /// <summary>
-    /// Writing TIA Portal external source files (*.scl, *.db, *.awl, *.udt).
-    ///
-    /// Callers: the MCP host, through tool registration. Affected API: none existing - all three
-    /// tools are new.
-    ///
-    /// File I/O: these write to a caller-supplied directory and overwrite a file of the same
-    /// name, so they are marked destructive, exactly like the Export* tools. They do not modify
-    /// the project, so they are not gated behind '--allow-write'.
-    ///
-    /// Why this sits next to the existing exporters rather than replacing them: 'ExportBlock'
-    /// writes SimaticML, 'ExportAsDocuments' writes SIMATIC Source Documents, and neither can be
-    /// compiled back. These files can - 'CreateExternalSourceFromFile' plus
-    /// 'GenerateBlocksFromSource' is the return path.
-    /// </summary>
     public static partial class McpServer
     {
+        // From the former McpServer.GenerateSource.cs:
+        // Writing TIA Portal external source files (*.scl, *.db, *.awl, *.udt).
+        //
+        // Callers: the MCP host, through tool registration. Affected API: none existing - all three
+        // tools are new.
+        //
+        // File I/O: these write to a caller-supplied directory and overwrite a file of the same
+        // name, so they are marked destructive, exactly like the Export* tools. They do not modify
+        // the project, so they are not gated behind '--allow-write'.
+        //
+        // Why this sits next to the existing exporters rather than replacing them: 'ExportBlock'
+        // writes SimaticML, 'ExportAsDocuments' writes SIMATIC Source Documents, and neither can be
+        // compiled back. These files can - 'CreateExternalSourceFromFile' plus
+        // 'GenerateBlocksFromSource' is the return path.
+
         #region generate source
 
         [McpServerTool(Name = "GenerateBlockSource", Title = "Generate a block's source file", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),

@@ -24,7 +24,7 @@ namespace TiaMcpServer.Siemens
         // From the former Portal.CrossReferences.cs:
         // Cross references for PLC software objects.
         //
-        // Callers: the GetCrossReferences tool in McpServer.CrossReferences.cs. Affected API: none
+        // Callers: the GetCrossReferences tool in McpServer.Software.CrossReferences.cs. Affected API: none
         // existing - all members are new. Reads/writes no data files.
         //
         // CrossReferenceService lives in Siemens.Engineering.Base, not Step7, and is offered by

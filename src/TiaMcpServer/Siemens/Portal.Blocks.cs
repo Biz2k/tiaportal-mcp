@@ -435,7 +435,7 @@ namespace TiaMcpServer.Siemens
         // Create, rename and delete for program blocks, PLC data types and their groups.
         // The type half of this set (type groups, DeleteType, RenameType) lives in Portal.Types.cs.
         //
-        // Callers: the corresponding tools in McpServerWrite.cs, which are only registered when the
+        // Callers: the corresponding tools in McpServer.Blocks.cs and McpServer.Types.cs, which are only registered when the
         // server runs with '--allow-write'. Affected API: none existing - all members are new.
         // Reads/writes no data files; these mutate the open project in memory until SaveProject.
         //
@@ -638,7 +638,7 @@ namespace TiaMcpServer.Siemens
         // helpers below are shared by both.
         //
         // Callers: the CopyBlock / MoveBlock / CopyType / MoveType tools in
-        // McpServerWrite.MoveCopy.cs, registered only under '--allow-write'. Affected API: none
+        // McpServer.Blocks.cs and McpServer.Types.cs, registered only under '--allow-write'. Affected API: none
         // existing - all members are new. File I/O: each call writes one temporary .xml under the
         // OS temp directory and removes it in a finally block; no caller-visible file is produced.
         //

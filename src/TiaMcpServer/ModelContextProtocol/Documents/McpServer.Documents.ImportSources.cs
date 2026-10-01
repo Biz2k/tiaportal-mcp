@@ -7,22 +7,24 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    /// <summary>
-    /// Importing a whole tree of TIA Portal external source files back into the project.
-    ///
-    /// Callers: the MCP host, through tool registration under '--allow-write'. Affected API:
-    /// none existing - the tool is new. File I/O: reads the caller-supplied tree only; the
-    /// project change stays in memory until SaveProject/SaveSession, per the SaveHint convention
-    /// shared by every tool in McpServerWrite.
-    ///
-    /// The bulk-import counterpart to 'GenerateSources' (McpServer.GenerateSource.cs): that tool
-    /// writes a folder tree of *.db/*.awl/*.scl/*.udt files, this one walks it back into blocks
-    /// and PLC data types via 'Portal.ImportSources'.
-    /// </summary>
-    public static partial class McpServerWrite
+    public static partial class McpServer
     {
-        #region import sources
 
+        // From the former McpServerWrite.ImportSources.cs:
+        // Importing a whole tree of TIA Portal external source files back into the project.
+        //
+        // Callers: the MCP host, through tool registration under '--allow-write'. Affected API:
+        // none existing - the tool is new. File I/O: reads the caller-supplied tree only; the
+        // project change stays in memory until SaveProject/SaveSession, per the SaveHint convention
+        // shared by every [WriteTool] tool.
+        //
+        // The bulk-import counterpart to 'GenerateSources' (McpServer.GenerateSource.cs): that tool
+        // writes a folder tree of *.db/*.awl/*.scl/*.udt files, this one walks it back into blocks
+        // and PLC data types via 'Portal.ImportSources'.
+
+        #region import sources (write)
+
+        [WriteTool]
         [McpServerTool(Name = "ImportSources", Title = "Import a tree of source files", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Compile every block and PLC data type source file (*.db, *.awl, *.scl, *.udt) under a folder tree back into the project - the counterpart to 'GenerateSources'. Each file is placed into the block or PLC data type group its folder path implies, matching the layout 'GenerateSources' writes; a folder whose group does not yet exist in the project fails that file rather than being created automatically. Existing blocks/types of the same name are overwritten")]
         public static ResponseImportedSources ImportSources(

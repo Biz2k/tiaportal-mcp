@@ -26,7 +26,7 @@ namespace TiaMcpServer.Siemens
         // PLC data types.
         //
         // Callers: the GenerateBlockSource / GenerateTypeSource / GenerateSources tools in
-        // McpServer.GenerateSource.cs. Affected API: none existing - every member here is new.
+        // McpServer.Documents.GenerateSource.cs. Affected API: none existing - every member here is new.
         //
         // This is the compiler's own source format, not the SimaticML XML of ExportBlock nor the
         // SIMATIC Source Documents of ExportAsDocuments: the files written here are exactly what

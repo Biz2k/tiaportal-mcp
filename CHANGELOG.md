@@ -11,6 +11,20 @@
   behaviour changes. The class-level notes of the retired files are kept as comments above their
   former sections.
 
+- __`McpServer` partial classes follow the same layout__: the ten `McpServer.*.cs` partials are now
+  `McpServer.cs`, `McpServer.Devices.cs`, `McpServer.Blocks.cs`, `McpServer.Types.cs` and
+  `McpServer.Tags.cs`, plus `ModelContextProtocol/Documents/` (`McpServer.Documents.*.cs`) and
+  `ModelContextProtocol/Software/` (`McpServer.Software.*.cs`). Tool names, attributes and behaviour are
+  unchanged.
+- __`McpServerWrite` merged into `McpServer`__: the project-mutating tools now live in the matching
+  `McpServer` partials (`McpServer.Blocks.cs`, `.Types.cs`, `.Tags.cs`, `Documents/McpServer.Documents.*.cs`),
+  and the shared write plumbing (`Guarded`, `SaveHint`, response builders) in `McpServer.cs`. Tool
+  names, attributes and behaviour are unchanged. The `--allow-write` gate is preserved: the 40 write tools
+  carry the new `[WriteTool]` attribute and `Program.BuildTools` registers them only under
+  `--allow-write`, so they stay out of `tools/list` as before. `WritePolicy.EnsureEnabled` still runs
+  first in every write tool. The write-side `Join` helper is now `JoinPath` (it does not trim a
+  trailing slash, unlike the preview `Join`). New tests: `Test7ToolRegistration`.
+
 ## [0.3.0] - 2026-09-11
 
 Generate TIA Portal external source files - the format the compiler reads back - from blocks and

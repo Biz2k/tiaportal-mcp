@@ -280,7 +280,7 @@ namespace TiaMcpServer.Siemens
         // PLC watch and force tables (read side).
         //
         // Callers: the GetWatchTables / GetWatchTableInfo / GetForceTables / ExportWatchTable tools
-        // in McpServer.WatchTables.cs. Affected API: none existing - all members are new.
+        // in McpServer.Tags.cs. Affected API: none existing - all members are new.
         // ExportWatchTable writes one .xml to the caller-supplied path; nothing else does file I/O.
         //
         // Openness asymmetry to be aware of: watch tables can be created and deleted, force tables
@@ -443,7 +443,7 @@ namespace TiaMcpServer.Siemens
         // sources. Block and type CRUD lives in Portal.Blocks.cs and Portal.Types.cs.
         // The external source create/delete members live in Portal.Documents.ExternalSources.cs.
         //
-        // Callers: the corresponding tools in McpServerWrite.cs, registered only under
+        // Callers: the corresponding tools in McpServer.Tags.cs, registered only under
         // '--allow-write'. Affected API: none existing - all members are new. File reads: the
         // import methods and CreateExternalSourceFromFile read a caller-supplied file; nothing here
         // writes files. Project changes stay in memory until SaveProject / SaveSession.

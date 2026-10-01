@@ -9,18 +9,18 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    /// <summary>
-    /// Getting started and getting un-stuck: one call to reach a usable project, and one call to
-    /// turn a bare object name into the root-relative path every other tool expects.
-    ///
-    /// Callers: the MCP host, through tool registration. Affected API: none existing - both
-    /// tools are new. Reads and writes no data files.
-    ///
-    /// Neither tool modifies the project, so neither is gated behind '--allow-write'. OpenTiaProject
-    /// changes which project is open, which is why it keeps 'Destructive = true' like OpenProject.
-    /// </summary>
     public static partial class McpServer
     {
+        // From the former McpServer.Lookup.cs:
+        // Getting started and getting un-stuck: one call to reach a usable project, and one call to
+        // turn a bare object name into the root-relative path every other tool expects.
+        //
+        // Callers: the MCP host, through tool registration. Affected API: none existing - both
+        // tools are new. Reads and writes no data files.
+        //
+        // Neither tool modifies the project, so neither is gated behind '--allow-write'. OpenTiaProject
+        // changes which project is open, which is why it keeps 'Destructive = true' like OpenProject.
+
         #region lookup
 
         [McpServerTool(Name = "ResolveObjectPath", Title = "Resolve a name to its path", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
@@ -58,48 +58,6 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) when (ex is not McpException)
             {
                 throw new McpException($"Unexpected error resolving '{name}' in '{softwarePath}': {ex.Message}", ex);
-            }
-        }
-
-        [McpServerTool(Name = "OpenTiaProject", Title = "Connect and open a project", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Connect to TIA Portal if not already connected, open the given project or session, and return the device and PLC software paths the other tools need. Replaces the Connect then OpenProject then GetProjectTree sequence")]
-        public static ResponseOpenTiaProject OpenTiaProject(
-            [Description("path: full path of the .apXX project or .alsXX session file on the machine running this server")] string path)
-        {
-            try
-            {
-                var connected = Portal.IsConnected();
-
-                if (!connected && !Portal.ConnectPortal())
-                {
-                    throw new McpException(
-                        "Failed to connect to TIA Portal. Run the 'Doctor' tool to check the installation and user group membership.");
-                }
-
-                // Reuse the existing tool rather than duplicating its extension validation and
-                // project/session branching; it also closes whatever was open first.
-                var opened = OpenProject(path);
-
-                var softwarePaths = CollectSoftwarePaths();
-
-                return new ResponseOpenTiaProject
-                {
-                    Message = $"{opened.Message}. PLC software: " +
-                              (softwarePaths.Count > 0 ? string.Join(", ", softwarePaths) : "none found"),
-                    ProjectPath = path,
-                    WasAlreadyConnected = connected,
-                    SoftwarePaths = softwarePaths,
-                    Tree = Portal.GetProjectTree(),
-                    Meta = Ok(new JsonObject { ["softwareCount"] = softwarePaths.Count })
-                };
-            }
-            catch (PortalException pex)
-            {
-                throw new McpException(pex.Message, pex);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error opening '{path}': {ex.Message}", ex);
             }
         }
 

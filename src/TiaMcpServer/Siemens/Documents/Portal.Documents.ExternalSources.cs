@@ -23,7 +23,7 @@ namespace TiaMcpServer.Siemens
         // PLC external source files (read side).
         //
         // Callers: the GetExternalSources / GetExternalSourceInfo tools in
-        // McpServer.ExternalSources.cs. Affected API: none existing - all members are new.
+        // McpServer.Documents.ExternalSources.cs. Affected API: none existing - all members are new.
         // Reads/writes no data files: the source files themselves live inside the project.
         //
         // PlcExternalSource exposes only Name and Parent as typed properties, so anything else a

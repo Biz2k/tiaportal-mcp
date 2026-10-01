@@ -802,7 +802,7 @@ namespace TiaMcpServer.Siemens
         // From the former Portal.Transactions.cs:
         // Atomic, undoable write scopes.
         //
-        // Callers: the Guarded helper in McpServerWrite.cs, which wraps every project-mutating
+        // Callers: the Guarded helper in McpServer.cs, which wraps every project-mutating
         // tool. Affected API: no signature changes - the wrapper is invisible to callers, it only
         // changes what TIA Portal does with the edits underneath. Reads and writes no data files.
         //

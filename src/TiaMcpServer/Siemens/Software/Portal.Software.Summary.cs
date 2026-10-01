@@ -26,7 +26,7 @@ namespace TiaMcpServer.Siemens
         // From the former Portal.Summary.cs:
         // A single orientation call for a PLC software.
         //
-        // Callers: the GetPlcSummary tool in McpServer.Insight.cs. Affected API: none existing -
+        // Callers: the GetPlcSummary tool in McpServer.Software.Summary.cs. Affected API: none existing -
         // every member here is new. Reads and writes no data files.
         //
         // Why: answering "what am I looking at?" previously meant GetProjectTree, GetSoftwareTree,
