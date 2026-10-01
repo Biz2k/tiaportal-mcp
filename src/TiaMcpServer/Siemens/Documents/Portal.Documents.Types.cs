@@ -1,38 +1,48 @@
 using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
+using Siemens.Engineering.HW.Features;
+using Siemens.Engineering.Hmi;
+using Siemens.Engineering.HmiUnified;
+using Siemens.Engineering.Multiuser;
 using Siemens.Engineering.SW;
+using Siemens.Engineering.SW.Blocks.Interface;
+using Siemens.Engineering.SW.ExternalSources;
+// Imported rather than written inline: TiaMcpServer.Siemens.Engineering shadows the
+// Siemens.Engineering namespace, so a fully qualified Siemens.Engineering.SW.Types.PlcType
+// does not resolve from inside this namespace.
 using Siemens.Engineering.SW.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.Siemens
 {
-    /// <summary>
-    /// SIMATIC Source Documents for PLC data types.
-    ///
-    /// Callers: the ExportTypeAsDocuments / ExportTypesAsDocuments tools in
-    /// McpServer.Documents.cs and the ImportTypeFromDocuments / ImportTypesFromDocuments tools in
-    /// McpServerWrite.Documents.cs. Affected API: none existing - every member here is new; the
-    /// block document methods in Portal.cs are deliberately left untouched.
-    ///
-    /// A source document is the human-readable, git-diffable form of an object: '&lt;Name&gt;.s7dcl'
-    /// carries the declaration and body text, the optional '&lt;Name&gt;.s7res' the comments and
-    /// language resources. Openness - not this code - decides the file names, so exports report
-    /// what was actually written and imports discover a document set by base name across
-    /// <see cref="DocumentExtensions"/> instead of assuming one literal extension.
-    ///
-    /// Path shape: type paths are root-relative ("Common/BtnTyp_X"), the same strings GetTypes
-    /// returns. With preservePath the export mirrors the project tree below the 'PLC data types'
-    /// system folder, exactly like the XML ExportType, and the importers accept that folder name
-    /// back as an optional leading segment of groupPath.
-    ///
-    /// Requires TIA Portal V21: PlcType.ExportAsDocuments and PlcTypeComposition.ImportFromDocuments
-    /// do not exist in older Openness versions (blocks have had their equivalents since V20).
-    /// </summary>
     public partial class Portal
     {
+        // From the former Portal.Documents.cs:
+        // SIMATIC Source Documents for PLC data types.
+        //
+        // Callers: the ExportTypeAsDocuments / ExportTypesAsDocuments tools in
+        // McpServer.Documents.cs and the ImportTypeFromDocuments / ImportTypesFromDocuments tools in
+        // McpServerWrite.Documents.cs. Affected API: none existing - every member here is new; the
+        // block document methods (Portal.Documents.Blocks.cs) are deliberately left untouched.
+        //
+        // A source document is the human-readable, git-diffable form of an object: '<Name>.s7dcl'
+        // carries the declaration and body text, the optional '<Name>.s7res' the comments and
+        // language resources. Openness - not this code - decides the file names, so exports report
+        // what was actually written and imports discover a document set by base name across
+        // DocumentExtensions instead of assuming one literal extension.
+        //
+        // Path shape: type paths are root-relative ("Common/BtnTyp_X"), the same strings GetTypes
+        // returns. With preservePath the export mirrors the project tree below the 'PLC data types'
+        // system folder, exactly like the XML ExportType, and the importers accept that folder name
+        // back as an optional leading segment of groupPath.
+        //
+        // Requires TIA Portal V21: PlcType.ExportAsDocuments and PlcTypeComposition.ImportFromDocuments
+        // do not exist in older Openness versions (blocks have had their equivalents since V20).
+
         #region source document files
 
         /// <summary>The lowest TIA Portal major version that offers documents for PLC data types.</summary>

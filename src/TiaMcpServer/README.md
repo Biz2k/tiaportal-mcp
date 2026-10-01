@@ -25,13 +25,24 @@ carries the whole surface.
     *   `Types.cs`: This file defines the data types that are used by the MCP server.
     *   `Helper.cs`: `GetAttributeList(IEngineeringObject)` reflects over any Openness object's attributes, so each new `Get*Info` tool is a few typed fields plus that call.
 *   **`Siemens/`**: This directory contains the implementation of the TIA Portal interfacing API.
-    *   `Portal.cs`: connection, project and session lifecycle, devices, blocks and types.
-    *   `Portal.Resolve.cs`: the generic path helpers (`WalkGroups`, `BuildGroupPath`, `WalkRecursive`). `PlcSoftware` exposes five look-alike group hierarchies - blocks, types, tag tables, watch and force tables, external sources - that share no common base type, so the shape is captured with generics plus selector delegates instead of inheritance.
-    *   `Portal.Tree.cs`: the software tree sections.
-    *   `Portal.{Tags,WatchTables,ExternalSources,CrossReferences}.cs`: the read side per area.
-    *   `Portal.GenerateSource.cs`: `PlcExternalSourceSystemGroup.GenerateSource`, which writes the `.scl`/`.db`/`.awl`/`.udt` files TIA Portal can compile back into blocks. Separate from `Portal.Source.cs`, which reads text and writes source documents and SimaticML.
-    *   `Portal.ImportSources.cs`: the write side counterpart - registers each file as a scratch `PlcExternalSource` via `CreateExternalSourceFromFile`, compiles it with `PlcExternalSource.GenerateBlocksFromSource`, then deletes the scratch source again.
-    *   `Portal.{BlockCrud,Write,MoveCopy}.cs`: the write side.
+    *   `Portal.cs`: connection, project and session lifecycle, the project tree, and the `InTransaction` helpers.
+    *   `Portal.Devices.cs`: devices and device items, resolved by path.
+    *   `Software/` (`Portal.Software.*.cs`): everything about one PLC software, split by concern.
+        *   `Portal.Software.Core.cs`: software lookup (`GetPlcSoftware` and the container resolvers) and `CompileSoftware`.
+        *   `Portal.Software.Tree.cs`: the software tree, including the section renderers.
+        *   `Portal.Software.Resolve.cs`: the generic path helpers (`WalkGroups`, `BuildGroupPath`, `WalkRecursive`). `PlcSoftware` exposes five look-alike group hierarchies - blocks, types, tag tables, watch and force tables, external sources - that share no common base type, so the shape is captured with generics plus selector delegates instead of inheritance.
+        *   `Portal.Software.Lookup.cs`: `ResolveObjectPath` and `GetSoftwarePaths`.
+        *   `Portal.Software.Search.cs`: `FindInCode`.
+        *   `Portal.Software.Summary.cs`: `GetPlcSummary`.
+        *   `Portal.Software.CrossReferences.cs`: `GetCrossReferences`.
+    *   `Portal.Blocks.cs` / `Portal.Types.cs`: program blocks and PLC data types respectively - read, XML export/import, create/delete/rename, copy/move, and source text (`GetBlockSource`, `GetTypeSource`). Helpers shared by both (the guards and the scratch-directory handling) live in `Portal.Blocks.cs`.
+    *   `Portal.Tags.cs`: tag tables, tags and constants, watch and force tables - both the read side and the write side.
+    *   `Documents/` (`Portal.Documents.*.cs`): everything that exchanges files with TIA Portal outside the XML block/type export.
+        *   `Portal.Documents.Types.cs` / `Portal.Documents.Blocks.cs`: SIMATIC source documents for PLC data types and for blocks (export and import).
+        *   `Portal.Documents.SourceText.cs`: the shared source reader with its scratch directory, and the whole-PLC source tree export.
+        *   `Portal.Documents.GenerateSource.cs`: `GenerateSource`, which writes the `.scl`/`.db`/`.awl`/`.udt` files TIA Portal can compile back into blocks.
+        *   `Portal.Documents.ImportSources.cs`: its counterpart `ImportSources` - registers each file as a scratch `PlcExternalSource` via `CreateExternalSourceFromFile`, compiles it with `PlcExternalSource.GenerateBlocksFromSource`, then deletes the scratch source again.
+        *   `Portal.Documents.ExternalSources.cs`: reading, creating and deleting external sources and their groups, plus `GenerateBlocksFromSource`.
     *   `Operation.cs`: the single exception-decoration point (see `docs/error-model.md`), which also serializes all Openness traffic behind a reentrant lock.
     *   `State.cs`: This file defines the `State` class, which represents the state of the TIA Portal.
     *   `Openness.cs`: This file provides a wrapper around the Siemens TIA Portal Openness API.

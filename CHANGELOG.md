@@ -1,5 +1,16 @@
 # Change Log
 
+## [Unreleased]
+
+### Changed
+
+- __`Portal` partial classes consolidated__: the 18 `Portal.*.cs` files are now `Portal.cs`,
+  `Portal.Blocks.cs`, `Portal.Types.cs`, `Portal.Tags.cs` and `Portal.Devices.cs`, plus two folders:
+  `Siemens/Documents/` (`Portal.Documents.*.cs`, six files) and `Siemens/Software/`
+  (`Portal.Software.*.cs`, seven files). Members were moved verbatim; no signature, visibility or
+  behaviour changes. The class-level notes of the retired files are kept as comments above their
+  former sections.
+
 ## [0.3.0] - 2026-09-11
 
 Generate TIA Portal external source files - the format the compiler reads back - from blocks and

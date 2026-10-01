@@ -18,7 +18,7 @@ namespace TiaMcpServer.ModelContextProtocol
     /// nothing, and never touches the project.
     ///
     /// This is the read-only half of write safety; the other half is the transaction wrapper in
-    /// Portal.Transactions.cs, which every write tool now runs inside. It is one tool rather
+    /// Portal.cs (InTransaction), which every write tool now runs inside. It is one tool rather
     /// than a 'dryRun' flag on all 39 write tools: the flag would have changed the execution
     /// path of every write for a report that only imports really need, and imports are where
     /// the collisions actually happen.

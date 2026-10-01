@@ -50,7 +50,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 // the operator sees a single named entry in the TIA Portal undo stack instead of
                 // an unlabelled pile of steps. Falls back to an unwrapped write when TIA Portal
                 // refuses exclusive access, so this can never turn a working write into a
-                // failure - see Portal.Transactions.cs.
+                // failure - see Portal.InTransaction in Portal.cs.
                 return Portal.InTransaction($"MCP: {toolName}", body);
             }
             catch (PortalException pex)
