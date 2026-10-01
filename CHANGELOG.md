@@ -16,6 +16,11 @@
   `McpServer.Tags.cs`, plus `ModelContextProtocol/Documents/` (`McpServer.Documents.*.cs`) and
   `ModelContextProtocol/Software/` (`McpServer.Software.*.cs`). Tool names, attributes and behaviour are
   unchanged.
+- __Document and source methods regrouped__: `Portal` and `McpServer` now have `Portal.Documents.cs` /
+  `McpServer.Documents.cs` (the `...AsDocuments` exports and the `...FromDocuments` imports) and
+  `Portal.Sources.cs` / `McpServer.Sources.cs` (every source file method, including `GetBlockSource` and
+  `GetTypeSource`, which moved out of the Blocks/Types partials). The `Documents/` subfolders are gone.
+  Members were moved verbatim.
 - __`McpServerWrite` merged into `McpServer`__: the project-mutating tools now live in the matching
   `McpServer` partials (`McpServer.Blocks.cs`, `.Types.cs`, `.Tags.cs`, `Documents/McpServer.Documents.*.cs`),
   and the shared write plumbing (`Guarded`, `SaveHint`, response builders) in `McpServer.cs`. Tool
@@ -24,6 +29,16 @@
   `--allow-write`, so they stay out of `tools/list` as before. `WritePolicy.EnsureEnabled` still runs
   first in every write tool. The write-side `Join` helper is now `JoinPath` (it does not trim a
   trailing slash, unlike the preview `Join`). New tests: `Test7ToolRegistration`.
+- __Breaking: XML tools renamed__. The tools and the `Portal` methods that read and write TIA Portal
+  XML files now say so in their name: `ExportBlock` to `ExportXmlBlock`, `ExportBlocks` to
+  `ExportXmlBlocks`, `ImportBlock` to `ImportXmlBlock`, `ExportType` to `ExportXmlType`, `ExportTypes` to
+  `ExportXmlTypes` and `ImportType` to `ImportXmlType`. Parameters and results are unchanged. MCP clients,
+  prompts and permission allow-lists that name the old tools must be updated. The prompts
+  `ExportBlocks` and `ExportTypes` are renamed to `ExportXmlBlocks` and `ExportXmlTypes` as well.
+  Likewise the source file exports follow the Export naming: `GenerateBlockSource` to
+  `ExportSourceBlock` and `GenerateTypeSource` to `ExportSourceType` (tools and `Portal` methods;
+  `GenerateSources` and `ImportSources` keep their names). `GenerateBlocksFromSource` is now
+  `ImportSourceBlocks` (tool and `Portal` method; the Siemens API method of the same name is unaffected).
 
 ## [0.3.0] - 2026-09-11
 

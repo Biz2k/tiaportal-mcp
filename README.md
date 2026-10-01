@@ -33,7 +33,7 @@ The server is read-only unless it is started with `--allow-write`.
 - Write operations change the project **in memory only**. Every write response says so and names
   the tool that persists it: `SaveProject`, or `SaveSession` when a multiuser local session is open.
 
-Export tools are intentionally *not* gated. `ExportBlock`, `ExportTagTable`, `ExportWatchTable`
+Export tools are intentionally *not* gated. `ExportXmlBlock`, `ExportTagTable`, `ExportWatchTable`
 and friends only write files on the machine running the server; they never modify the project.
 They are annotated `destructiveHint: true` because they can overwrite files on disk.
 
@@ -50,11 +50,11 @@ Read-only tools (59) are always available.
 | Project and session | `GetProject`, `OpenProject`, `SaveProject`, `SaveAsProject`, `CloseProject` |
 | Devices | `GetProjectTree`, `GetDevices`, `GetDeviceInfo`, `GetDeviceItemInfo` |
 | PLC software | `GetSoftwareInfo`, `GetSoftwareTree`, `CompileSoftware` |
-| Blocks | `GetBlocks`, `GetBlockInfo`, `GetBlocksWithHierarchy`, `ExportBlock`, `ExportBlocks`, `ImportBlock` |
-| Types | `GetTypes`, `GetTypeInfo`, `ExportType`, `ExportTypes`, `ImportType` |
+| Blocks | `GetBlocks`, `GetBlockInfo`, `GetBlocksWithHierarchy`, `ExportXmlBlock`, `ExportXmlBlocks`, `ImportXmlBlock` |
+| Types | `GetTypes`, `GetTypeInfo`, `ExportXmlType`, `ExportXmlTypes`, `ImportXmlType` |
 | Tags and constants | `GetTagTables`, `GetTagTableInfo`, `GetTags`, `GetTagInfo`, `GetConstants`, `ExportTagTable` |
 | Watch and force tables | `GetWatchTables`, `GetWatchTableInfo`, `GetForceTables`, `ExportWatchTable` |
-| External sources | `GetExternalSources`, `GetExternalSourceInfo`, `GenerateBlockSource`, `GenerateTypeSource` |
+| External sources | `GetExternalSources`, `GetExternalSourceInfo`, `ExportSourceBlock`, `ExportSourceType` |
 | Cross references | `GetCrossReferences` |
 | Block documents (V20+) | `ExportAsDocuments`, `ExportBlocksAsDocuments`, `ImportFromDocuments`, `ImportBlocksFromDocuments` |
 | Type documents (V21+) | `ExportTypeAsDocuments`, `ExportTypesAsDocuments` |
@@ -70,7 +70,7 @@ Write tools (40) require `--allow-write`.
 | Tag tables | `CreateTagTable`, `DeleteTagTable`, `RenameTagTable`, `CreateTagTableGroup`, `DeleteTagTableGroup`, `ImportTagTable` |
 | Tags and constants | `CreateTag`, `UpdateTag`, `DeleteTag`, `CreateUserConstant`, `UpdateUserConstant`, `DeleteUserConstant` |
 | Watch tables | `CreateWatchTable`, `RenameWatchTable`, `DeleteWatchTable`, `CreateWatchTableGroup`, `DeleteWatchTableGroup`, `ImportWatchTable` |
-| External sources | `CreateExternalSourceFromFile`, `DeleteExternalSource`, `CreateExternalSourceGroup`, `DeleteExternalSourceGroup`, `GenerateBlocksFromSource`, `ImportSources` |
+| External sources | `CreateExternalSourceFromFile`, `DeleteExternalSource`, `CreateExternalSourceGroup`, `DeleteExternalSourceGroup`, `ImportSourceBlocks`, `ImportSources` |
 | Type documents (V21+) | `ImportTypeFromDocuments`, `ImportTypesFromDocuments` |
 
 `GetSoftwareTree` accepts a `sections` argument - any comma separated subset of
@@ -153,7 +153,7 @@ group the type already lives in to replace it.
 ## Known Limitations
 
 - As of 2025-09-02: Importing Ladder (LAD) blocks from SIMATIC SD documents requires the companion `.s7res` file to contain en-US tags for all items; otherwise import may fail. This is a known limitation/bug in TIA Portal Openness.
- - `ExportBlock` requires a fully qualified `blockPath` like `Group/Subgroup/Name`. If only a name is provided, the tool fails with an error result that may include suggestions for likely full paths.
+ - `ExportXmlBlock` requires a fully qualified `blockPath` like `Group/Subgroup/Name`. If only a name is provided, the tool fails with an error result that may include suggestions for likely full paths.
 
 ### Limits imposed by the Openness API itself
 
@@ -166,7 +166,7 @@ These are not gaps in this server - the underlying API offers no operation for t
   into the same PLC can hit a number collision. Renaming during a copy is not offered - it
   would mean rewriting the exported XML.
 - __No generic "create block".__ Only `CreateFB` and `CreateInstanceDB` exist; every other kind
-  of block has to arrive through `ImportBlock`.
+  of block has to arrive through `ImportXmlBlock`.
 - __Read-only objects.__ System constants cannot be created or changed, the force table cannot
   be created or deleted (the system owns one per PLC), the default tag table cannot be deleted,
   and the system groups (`Program blocks`, `PLC data types`, `PLC tags`, ...) cannot be renamed

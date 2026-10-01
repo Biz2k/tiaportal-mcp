@@ -441,7 +441,7 @@ namespace TiaMcpServer.Siemens
         // From the former Portal.Write.cs:
         // Create, update and delete for tag tables, tags, user constants, watch tables and external
         // sources. Block and type CRUD lives in Portal.Blocks.cs and Portal.Types.cs.
-        // The external source create/delete members live in Portal.Documents.ExternalSources.cs.
+        // The external source create/delete members live in Portal.Sources.cs.
         //
         // Callers: the corresponding tools in McpServer.Tags.cs, registered only under
         // '--allow-write'. Affected API: none existing - all members are new. File reads: the

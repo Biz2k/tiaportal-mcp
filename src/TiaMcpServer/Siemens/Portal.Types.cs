@@ -1,19 +1,16 @@
 using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
-using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.Hmi;
 using Siemens.Engineering.HmiUnified;
 using Siemens.Engineering.Multiuser;
 using Siemens.Engineering.SW;
-using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Blocks.Interface;
 using Siemens.Engineering.SW.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security;
 using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.Siemens
@@ -123,7 +120,7 @@ namespace TiaMcpServer.Siemens
             return list;
         }
 
-        public PlcType? ExportType(string softwarePath, string typePath, string exportPath, bool preservePath = false)
+        public PlcType? ExportXmlType(string softwarePath, string typePath, string exportPath, bool preservePath = false)
         {
             _logger?.LogInformation($"Exporting type by path: {typePath}");
 
@@ -179,12 +176,12 @@ namespace TiaMcpServer.Siemens
                 if (!pex.Data.Contains("typePath")) pex.Data["typePath"] = typePath;
                 if (!pex.Data.Contains("exportPath")) pex.Data["exportPath"] = exportPath;
 
-                _logger?.LogError(pex, "ExportType failed for {SoftwarePath} {TypePath} -> {ExportPath}", softwarePath, typePath, exportPath);
+                _logger?.LogError(pex, "ExportXmlType failed for {SoftwarePath} {TypePath} -> {ExportPath}", softwarePath, typePath, exportPath);
                 throw pex;
             }
         }
 
-        public bool ImportType(string softwarePath, string groupPath, string importPath)
+        public bool ImportXmlType(string softwarePath, string groupPath, string importPath)
         {
             _logger?.LogInformation($"Importing type from path: {importPath}");
 
@@ -231,7 +228,7 @@ namespace TiaMcpServer.Siemens
             return success;
         }
 
-        public IEnumerable<PlcType>? ExportTypes(string softwarePath, string exportPath, string regexName = "", bool preservePath = false)
+        public IEnumerable<PlcType>? ExportXmlTypes(string softwarePath, string exportPath, string regexName = "", bool preservePath = false)
         {
             _logger?.LogInformation("Exporting types...");
 
@@ -326,11 +323,11 @@ namespace TiaMcpServer.Siemens
 
             if (failures.Count > 0)
             {
-                _logger?.LogWarning($"ExportTypes completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
+                _logger?.LogWarning($"ExportXmlTypes completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
             }
             else
             {
-                _logger?.LogInformation($"ExportTypes completed successfully. Exported {exportList.Count} types.");
+                _logger?.LogInformation($"ExportXmlTypes completed successfully. Exported {exportList.Count} types.");
             }
 
             return exportList;
@@ -509,37 +506,6 @@ namespace TiaMcpServer.Siemens
             return targetGroup.Types.Find(name)
                 ?? throw new PortalException(PortalErrorCode.ImportFailed,
                     $"Type '{name}' was imported into '{targetGroupPath}' but could not be found afterwards.");
-        }
-
-        #endregion
-
-        #region source text
-
-        /// <summary>Source text of one PLC data type. Documents require TIA Portal V21.</summary>
-        public SourceTextResult GetTypeSource(string softwarePath, string typePath, string format = "document", int maxChars = 40000)
-        {
-            return Operation.Run(_logger, nameof(GetTypeSource), PortalErrorCode.ExportFailed,
-                () =>
-                {
-                    var type = GetType(softwarePath, typePath)
-                        ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"PLC data type not found at '{typePath}'. Use 'ResolveObjectPath' or 'GetTypes' to find its path.");
-
-                    if (!type.IsConsistent)
-                    {
-                        throw new PortalException(PortalErrorCode.InvalidState,
-                            $"PLC data type '{type.Name}' is inconsistent; compile the software before reading its source.");
-                    }
-
-                    return ReadSource(
-                        format,
-                        typePath,
-                        type.Name,
-                        maxChars,
-                        dir => ExportTypeAsDocuments(softwarePath, typePath, dir).Files.Count > 0,
-                        dir => ExportType(softwarePath, dir, typePath) != null);
-                },
-                ("softwarePath", softwarePath), ("typePath", typePath), ("format", format));
         }
 
         #endregion

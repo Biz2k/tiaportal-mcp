@@ -24,13 +24,13 @@ namespace TiaMcpServer.Siemens
         // Name-to-path resolution across every PLC software area.
         //
         // Callers: the ResolveObjectPath tool in McpServer.Software.Lookup.cs and the NotFound branch of
-        // ExportBlock. Affected API: none existing - every member here is new. Reads and writes no
+        // ExportXmlBlock. Affected API: none existing - every member here is new. Reads and writes no
         // data files.
         //
         // Why this exists: every other tool takes a root-relative path ("Common/BtnTyp_X"), but a
         // caller - human or model - normally knows only the bare name. Before this, the only way
         // to turn one into the other was to list a whole area and post-process it, and the
-        // "did you mean" helper that did so was implemented twice inside ExportBlock, once as dead
+        // "did you mean" helper that did so was implemented twice inside ExportXmlBlock, once as dead
         // code. Resolution lives here once and covers all six areas.
 
         #region lookup

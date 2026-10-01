@@ -129,8 +129,8 @@ the gap is explicit rather than implied.
   var dto = DtoMapper.ToBlockInfo(block);
   ```
 
-- [ ] Roll out PortalException + context enrichment pattern beyond ExportBlock
-  Affected: `ImportBlock`, `ExportBlocks`, `ExportType`, `ImportType`, `ExportBlocksAsDocuments`, `ImportFromDocuments`, etc.
+- [ ] Roll out PortalException + context enrichment pattern beyond ExportXmlBlock
+  Affected: `ImportXmlBlock`, `ExportXmlBlocks`, `ExportXmlType`, `ImportXmlType`, `ExportBlocksAsDocuments`, `ImportFromDocuments`, etc.
   Rules:
   - Short messages + `PortalErrorCode` only (no param echoing in message)
   - Attach context in `Exception.Data` in a single catch per portal method, just before rethrow (see docs/error-model.md)
@@ -183,7 +183,7 @@ the gap is explicit rather than implied.
   ```
 
 - [ ] Consolidate progress reporting for export/import operations
-  Reasoning: ExportBlocks/ExportTypes/ExportBlocksAsDocuments share progress calculations and error notifications. A wrapper reduces scattered try/catch and progress-token checks.
+  Reasoning: ExportXmlBlocks/ExportXmlTypes/ExportBlocksAsDocuments share progress calculations and error notifications. A wrapper reduces scattered try/catch and progress-token checks.
   Excerpt (today):
   ```csharp
   // compute totals, send start; for each item send progress; on error send error progress

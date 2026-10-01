@@ -154,8 +154,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportBlock", Title = "Export block to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export a block from plc software to file")]
-        public static ResponseExportBlock ExportBlock(
+        [McpServerTool(Name = "ExportXmlBlock", Title = "Export block to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export a block from plc software to file")]
+        public static ResponseExportXmlBlock ExportXmlBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: full path to the block in the project structure, e.g. 'Group/Subgroup/Name' (single names are ambiguous)")] string blockPath,
             [Description("exportPath: defines the path where to export the block")] string exportPath,
@@ -163,10 +163,10 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var block = Portal.ExportBlock(softwarePath, blockPath, exportPath, preservePath);
+                var block = Portal.ExportXmlBlock(softwarePath, blockPath, exportPath, preservePath);
                 if (block != null)
                 {
-                    return new ResponseExportBlock
+                    return new ResponseExportXmlBlock
                     {
                         Message = $"Block exported from '{blockPath}' to '{exportPath}'",
                         Meta = new JsonObject
@@ -176,7 +176,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         }
                     };
                 }
-                // Should not be reachable because Portal.ExportBlock throws on failure
+                // Should not be reachable because Portal.ExportXmlBlock throws on failure
                 throw new McpException($"Failed exporting block from '{blockPath}' to '{exportPath}'");
             }
             catch (TiaMcpServer.Siemens.PortalException pex)
@@ -228,7 +228,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             var msg = "Failed to export block.";
                             if (!string.IsNullOrEmpty(reason)) msg += $" Reason: {reason}";
 
-                            Logger?.LogError(pex, "MCP ExportBlock failed for {SoftwarePath} {BlockPath} -> {ExportPath}",
+                            Logger?.LogError(pex, "MCP ExportXmlBlock failed for {SoftwarePath} {BlockPath} -> {ExportPath}",
                                 pex.Data?["softwarePath"], pex.Data?["blockPath"], pex.Data?["exportPath"]);
 
                             throw new McpException(msg);
@@ -293,17 +293,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportBlock", Title = "Import block from XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import a block file to plc software")]
-        public static ResponseImportBlock ImportBlock(
+        [McpServerTool(Name = "ImportXmlBlock", Title = "Import block from XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import a block file to plc software")]
+        public static ResponseImportXmlBlock ImportXmlBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the block")] string groupPath,
             [Description("importPath: defines the path of the xml file from where to import the block")] string importPath)
         {
             try
             {
-                if (Portal.ImportBlock(softwarePath, groupPath, importPath))
+                if (Portal.ImportXmlBlock(softwarePath, groupPath, importPath))
                 {
-                    return new ResponseImportBlock
+                    return new ResponseImportXmlBlock
                     {
                         Message = $"Block imported from '{importPath}' to '{groupPath}'",
                         Meta = new JsonObject
@@ -324,8 +324,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportBlocks", Title = "Export blocks to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export all blocks from the plc software to path")]
-        public static async Task<ResponseExportBlocks> ExportBlocks(
+        [McpServerTool(Name = "ExportXmlBlocks", Title = "Export blocks to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export all blocks from the plc software to path")]
+        public static async Task<ResponseExportXmlBlocks> ExportXmlBlocks(
             IProgress<ProgressNotificationValue> progress,
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: defines the path where to export the blocks")] string exportPath,
@@ -346,7 +346,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     progress.Report(new ProgressNotificationValue { Progress = 0, Total = 0, Message = "No blocks found to export" });
                     
-                    return new ResponseExportBlocks
+                    return new ResponseExportXmlBlocks
                     {
                         Message = $"No blocks found with regex '{regexName}' in '{softwarePath}'",
                         Items = new List<ResponseBlockInfo>(),
@@ -365,7 +365,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 progress.Report(new ProgressNotificationValue { Progress = 0, Total = totalBlocks, Message = $"Starting export of {totalBlocks} blocks..." });
 
                 // Export blocks asynchronously
-                var exportedBlocks = await Task.Run(() => Portal.ExportBlocks(softwarePath, exportPath, regexName, preservePath));
+                var exportedBlocks = await Task.Run(() => Portal.ExportXmlBlocks(softwarePath, exportPath, regexName, preservePath));
 
                 // Build list of inconsistent (skipped) blocks for reporting
                 var inconsistentInfos = new List<ResponseBlockInfo>();
@@ -438,7 +438,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var duration = (DateTime.Now - startTime).TotalSeconds;
                     Logger?.LogInformation($"Export completed: {processedCount} blocks exported in {duration:F2} seconds");
 
-                    return new ResponseExportBlocks
+                    return new ResponseExportXmlBlocks
                     {
                         Message = $"Export completed: {processedCount} blocks with regex '{regexName}' exported from '{softwarePath}' to '{exportPath}'",
                         Items = responseList,
@@ -471,32 +471,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #endregion
 
-        // From the former McpServer.Source.cs:
-        // Reading what an object contains, without going through the file system.
-        //
-        // Callers: the MCP host, through tool registration. Affected API: none existing - all three
-        // tools are new. File I/O: none that the caller sees; the portal layer exports into a
-        // scratch directory under the temp path and removes it again.
-        //
-        // Read-only: none of these modify the project, so none are gated behind '--allow-write'.
-        // Unlike the Export* tools they are not marked destructive either - they leave nothing on
-        // disk to overwrite.
-
         #region source
-
-        [McpServerTool(Name = "GetBlockSource", Title = "Read a block's source", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Return the source text of one program block directly, instead of exporting a file and reading it back. 'document' gives readable SCL/LAD/STL (SIMATIC Source Document, V20+); objects TIA Portal cannot represent that way - STL and mixed-language blocks - fall back to XML automatically, and the response says which format was produced")]
-        public static ResponseSourceText GetBlockSource(
-            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("blockPath: root-relative path of the block, e.g. '0_OBs/Main'. Use 'ResolveObjectPath' if you only know the name")] string blockPath,
-            [Description("format: 'document' (default) for readable source text, or 'xml' for the SimaticML export")] string format = "document",
-            [Description("maxChars: truncate the text at this many characters, on a line boundary (default 40000)")] int maxChars = 40000)
-        {
-            return Sourced(
-                () => Portal.GetBlockSource(softwarePath, blockPath, format, maxChars),
-                blockPath,
-                "block");
-        }
 
         [McpServerTool(Name = "GetBlockInterface", Title = "Read a data block's members", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("List the members of a data block with their data type and every attribute TIA Portal reports. Needs no export and works on inconsistent blocks. Data blocks only: Openness offers no interface accessor for FB, FC or OB, whose declarations come from 'GetBlockSource' instead")]
@@ -531,45 +506,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        /// <summary>Shared response shaping for the two source readers.</summary>
-        private static ResponseSourceText Sourced(Func<SourceTextResult> read, string objectPath, string kind)
-        {
-            try
-            {
-                var result = read();
-
-                var note = result.Truncated
-                    ? $" (truncated to {result.Text.Length} of {result.TotalChars} characters)"
-                    : string.Empty;
-
-                return new ResponseSourceText
-                {
-                    Message = $"Source of {kind} '{objectPath}' as {result.Format}{note}",
-                    Name = result.Name,
-                    Path = result.Path,
-                    Format = result.Format,
-                    Text = result.Text,
-                    TotalChars = result.TotalChars,
-                    Truncated = result.Truncated,
-                    FileNames = result.FileNames,
-                    Meta = Ok(new JsonObject
-                    {
-                        ["format"] = result.Format,
-                        ["totalChars"] = result.TotalChars,
-                        ["truncated"] = result.Truncated
-                    })
-                };
-            }
-            catch (PortalException pex)
-            {
-                throw new McpException(pex.Message, pex);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error reading the source of '{objectPath}': {ex.Message}", ex);
-            }
-        }
-
         #endregion
 
         // From the former McpServerWrite.Blocks.cs:
@@ -580,7 +516,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // No file I/O; changes are in memory until SaveProject / SaveSession.
         //
         // Openness offers no generic "create block" and no move/copy, so the creation surface here
-        // is CreateFB and CreateInstanceDB only - anything else arrives through ImportBlock.
+        // is CreateFB and CreateInstanceDB only - anything else arrives through ImportXmlBlock.
 
         // From the former McpServerWrite.MoveCopy.cs:
         // Write tools that copy or move program blocks and PLC data types between groups.

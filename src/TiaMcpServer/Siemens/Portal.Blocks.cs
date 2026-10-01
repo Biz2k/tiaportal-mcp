@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
-using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.Hmi;
 using Siemens.Engineering.HmiUnified;
@@ -13,7 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security;
 using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.Siemens
@@ -75,7 +73,7 @@ namespace TiaMcpServer.Siemens
         /// <summary>
         /// Root-relative path of a block, e.g. "Common/CarrierRegister/GLOBAL_POSITIONING".
         /// The system group ("Program blocks") is deliberately excluded so the result can be fed
-        /// straight back into GetBlock/ExportBlock as a blockPath.
+        /// straight back into GetBlock/ExportXmlBlock as a blockPath.
         /// </summary>
         public string GetBlockPath(PlcBlock block)
         {
@@ -150,7 +148,7 @@ namespace TiaMcpServer.Siemens
             return null;
         }
 
-        public PlcBlock? ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath = false)
+        public PlcBlock? ExportXmlBlock(string softwarePath, string blockPath, string exportPath, bool preservePath = false)
         {
             _logger?.LogInformation($"Exporting block by path: {blockPath}");
 
@@ -207,12 +205,12 @@ namespace TiaMcpServer.Siemens
                 pex.Data["blockPath"] = blockPath;
                 pex.Data["exportPath"] = exportPath;
 
-                _logger?.LogError(pex, "ExportBlock failed for {SoftwarePath} {BlockPath} -> {ExportPath}", softwarePath, blockPath, exportPath);
+                _logger?.LogError(pex, "ExportXmlBlock failed for {SoftwarePath} {BlockPath} -> {ExportPath}", softwarePath, blockPath, exportPath);
                 throw pex;
             }
         }
 
-        public bool ImportBlock(string softwarePath, string groupPath, string importPath)
+        public bool ImportXmlBlock(string softwarePath, string groupPath, string importPath)
         {
             _logger?.LogInformation($"Importing block from path: {importPath}");
 
@@ -259,7 +257,7 @@ namespace TiaMcpServer.Siemens
             return false;
         }
 
-        public IEnumerable<PlcBlock>? ExportBlocks(string softwarePath, string exportPath, string regexName = "", bool preservePath = false)
+        public IEnumerable<PlcBlock>? ExportXmlBlocks(string softwarePath, string exportPath, string regexName = "", bool preservePath = false)
         {
             _logger?.LogInformation("Exporting blocks...");
 
@@ -370,12 +368,12 @@ namespace TiaMcpServer.Siemens
 
             if (failures.Count > 0)
             {
-                _logger?.LogWarning($"ExportBlocks completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
+                _logger?.LogWarning($"ExportXmlBlocks completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
                 // Optionally: _logger?.LogDebug("All failures: {Failures}", string.Join("; ", failures));
             }
             else
             {
-                _logger?.LogInformation($"ExportBlocks completed successfully. Exported {exportList.Count} blocks.");
+                _logger?.LogInformation($"ExportXmlBlocks completed successfully. Exported {exportList.Count} blocks.");
             }
 
             return exportList;
@@ -777,42 +775,6 @@ namespace TiaMcpServer.Siemens
             return targetGroup.Blocks.Find(name)
                 ?? throw new PortalException(PortalErrorCode.ImportFailed,
                     $"Block '{name}' was imported into '{targetGroupPath}' but could not be found afterwards.");
-        }
-
-        #endregion
-
-        #region source text
-
-        /// <summary>
-        /// Source text of one program block. 'document' returns the SIMATIC Source Document
-        /// (readable SCL/LAD/STL text, TIA Portal V20+); 'xml' returns the SimaticML export,
-        /// which is the only option for objects that have no source document.
-        /// </summary>
-        public SourceTextResult GetBlockSource(string softwarePath, string blockPath, string format = "document", int maxChars = 40000)
-        {
-            return Operation.Run(_logger, nameof(GetBlockSource), PortalErrorCode.ExportFailed,
-                () =>
-                {
-                    var block = GetBlock(softwarePath, blockPath)
-                        ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Block not found at '{blockPath}'. Use 'ResolveObjectPath' or 'GetBlocks' to find its path.");
-
-                    if (!block.IsConsistent)
-                    {
-                        throw new PortalException(PortalErrorCode.InvalidState,
-                            $"Block '{block.Name}' is inconsistent; TIA Portal cannot export it. Compile the software first, " +
-                            "or use 'GetBlockInterface', which works without an export.");
-                    }
-
-                    return ReadSource(
-                        format,
-                        blockPath,
-                        block.Name,
-                        maxChars,
-                        dir => ExportAsDocuments(softwarePath, blockPath, dir),
-                        dir => ExportBlock(softwarePath, blockPath, dir) != null);
-                },
-                ("softwarePath", softwarePath), ("blockPath", blockPath), ("format", format));
         }
 
         #endregion

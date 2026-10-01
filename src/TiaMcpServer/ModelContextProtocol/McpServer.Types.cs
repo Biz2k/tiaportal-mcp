@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
-using Siemens.Engineering.SW.Blocks;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -113,8 +112,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportType", Title = "Export type to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export a type from the plc software")]
-        public static ResponseExportType ExportType(
+        [McpServerTool(Name = "ExportXmlType", Title = "Export type to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export a type from the plc software")]
+        public static ResponseExportXmlType ExportXmlType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: defines the path where export the type")] string exportPath,
             [Description("typePath: defines the path in the project structure to the type")] string typePath,
@@ -122,10 +121,10 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var type = Portal.ExportType(softwarePath, typePath, exportPath, preservePath);
+                var type = Portal.ExportXmlType(softwarePath, typePath, exportPath, preservePath);
                 if (type != null)
                 {
-                    return new ResponseExportType
+                    return new ResponseExportXmlType
                     {
                         Message = $"Type exported from '{typePath}' to '{exportPath}'",
                         Meta = new JsonObject
@@ -154,7 +153,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             var reason = pex.InnerException?.Message?.Trim();
                             var msg = "Failed to export type.";
                             if (!string.IsNullOrEmpty(reason)) msg += $" Reason: {reason}";
-                            Logger?.LogError(pex, "MCP ExportType failed for {SoftwarePath} {TypePath} -> {ExportPath}",
+                            Logger?.LogError(pex, "MCP ExportXmlType failed for {SoftwarePath} {TypePath} -> {ExportPath}",
                                 pex.Data?["softwarePath"], pex.Data?["typePath"], pex.Data?["exportPath"]);
                             throw new McpException(msg);
                         }
@@ -167,17 +166,17 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportType", Title = "Import type from XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import a type from file into the plc software")]
-        public static ResponseImportType ImportType(
+        [McpServerTool(Name = "ImportXmlType", Title = "Import type from XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import a type from file into the plc software")]
+        public static ResponseImportXmlType ImportXmlType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the type")] string groupPath,
             [Description("importPath: defines the path of the xml file from where to import the type")] string importPath)
         {
             try
             {
-                if (Portal.ImportType(softwarePath, groupPath, importPath))
+                if (Portal.ImportXmlType(softwarePath, groupPath, importPath))
                 {
-                    return new ResponseImportType
+                    return new ResponseImportXmlType
                     {
                         Message = $"Type imported from '{importPath}' to '{groupPath}'",
                         Meta = new JsonObject
@@ -198,8 +197,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportTypes", Title = "Export types to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export types from the plc software to path")]
-        public static async Task<ResponseExportTypes> ExportTypes(
+        [McpServerTool(Name = "ExportXmlTypes", Title = "Export types to XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export types from the plc software to path")]
+        public static async Task<ResponseExportXmlTypes> ExportXmlTypes(
             IProgress<ProgressNotificationValue> progress,
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: defines the path where to export the types")] string exportPath,
@@ -220,7 +219,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     progress.Report(new ProgressNotificationValue { Progress = 0, Total = 0, Message = "No types found to export" });
                     
-                    return new ResponseExportTypes
+                    return new ResponseExportXmlTypes
                     {
                         Message = $"No types found with regex '{regexName}' in '{softwarePath}'",
                         Items = new List<ResponseTypeInfo>(),
@@ -239,7 +238,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 progress.Report(new ProgressNotificationValue { Progress = 0, Total = totalTypes, Message = $"Starting export of {totalTypes} types..." });
 
                 // Export types asynchronously
-                var exportedTypes = await Task.Run(() => Portal.ExportTypes(softwarePath, exportPath, regexName, preservePath));
+                var exportedTypes = await Task.Run(() => Portal.ExportXmlTypes(softwarePath, exportPath, regexName, preservePath));
 
                 // Build list of inconsistent (skipped) types for reporting
                 var inconsistentTypeInfos = new List<ResponseTypeInfo>();
@@ -306,7 +305,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var duration = (DateTime.Now - startTime).TotalSeconds;
                     Logger?.LogInformation($"Type export completed: {processedCount} types exported in {duration:F2} seconds");
 
-                    return new ResponseExportTypes
+                    return new ResponseExportXmlTypes
                     {
                         Message = $"Export completed: {processedCount} types with regex '{regexName}' exported from '{softwarePath}' to '{exportPath}'",
                         Items = responseList,
@@ -335,24 +334,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 Logger?.LogError(ex, $"Failed exporting types '{regexName}' from '{softwarePath}' to {exportPath}");
                 throw new McpException($"Unexpected error exporting types '{regexName}' from '{softwarePath}' to {exportPath}: {ex.Message}", ex);
             }
-        }
-
-        #endregion
-
-        #region source
-
-        [McpServerTool(Name = "GetTypeSource", Title = "Read a PLC data type's source", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Return the source text of one PLC data type directly, instead of exporting a file and reading it back. 'document' gives the readable TYPE ... END_TYPE declaration (SIMATIC Source Document, requires TIA Portal V21); 'xml' gives the SimaticML export")]
-        public static ResponseSourceText GetTypeSource(
-            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("typePath: root-relative path of the PLC data type, e.g. 'Common/BtnTyp_X'. Use 'ResolveObjectPath' if you only know the name")] string typePath,
-            [Description("format: 'document' (default) for readable source text, or 'xml' for the SimaticML export")] string format = "document",
-            [Description("maxChars: truncate the text at this many characters, on a line boundary (default 40000)")] int maxChars = 40000)
-        {
-            return Sourced(
-                () => Portal.GetTypeSource(softwarePath, typePath, format, maxChars),
-                typePath,
-                "PLC data type");
         }
 
         #endregion

@@ -226,7 +226,7 @@ namespace TiaMcpServer.Test
 
             bool success = Common.OpenProject(_portal, projectPath);
 
-            var result = _portal.ExportBlock(softwarePath, blockPath, exportPath, preservePath);
+            var result = _portal.ExportXmlBlock(softwarePath, blockPath, exportPath, preservePath);
 
             if (result != null)
             {
@@ -258,7 +258,7 @@ namespace TiaMcpServer.Test
 
             bool success = Common.OpenProject(_portal, projectPath);
 
-            var result = _portal.ImportBlock(softwarePath, groupPath, importPath);
+            var result = _portal.ImportXmlBlock(softwarePath, groupPath, importPath);
 
             success &= Common.CloseProject(_portal, projectPath);
 
@@ -279,7 +279,7 @@ namespace TiaMcpServer.Test
 
             bool success = Common.OpenProject(_portal, projectPath);
 
-            var result = _portal.ExportType(softwarePath, typePath, exportPath, preservePath);
+            var result = _portal.ExportXmlType(softwarePath, typePath, exportPath, preservePath);
 
             if (result != null)
             {
@@ -309,7 +309,7 @@ namespace TiaMcpServer.Test
 
             bool success = Common.OpenProject(_portal, projectPath);
 
-            var result = _portal.ImportType(softwarePath, groupPath, importPath);
+            var result = _portal.ImportXmlType(softwarePath, groupPath, importPath);
 
             success &= Common.CloseProject(_portal, projectPath);
 
@@ -334,7 +334,7 @@ namespace TiaMcpServer.Test
 
             bool success = Common.OpenProject(_portal, projectPath);
 
-            var result = _portal.ExportBlocks(softwarePath, exportPath, regexName, preservePath);
+            var result = _portal.ExportXmlBlocks(softwarePath, exportPath, regexName, preservePath);
 
             if (result != null)
             {
@@ -372,7 +372,7 @@ namespace TiaMcpServer.Test
 
             bool success = Common.OpenProject(_portal, projectPath);
 
-            var result = _portal.ExportTypes(softwarePath, exportPath, regexName, preservePath);
+            var result = _portal.ExportXmlTypes(softwarePath, exportPath, regexName, preservePath);
             if (result != null)
             {
                 Console.WriteLine($"Exported Types:");

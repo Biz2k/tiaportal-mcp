@@ -326,15 +326,15 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<ResponseBlockInfo>? Items { get; set; }
     }
 
-    public class ResponseExportBlock : ResponseMessage
+    public class ResponseExportXmlBlock : ResponseMessage
     {
     }
 
-    public class ResponseImportBlock : ResponseMessage
+    public class ResponseImportXmlBlock : ResponseMessage
     {
     }
 
-    public class ResponseExportBlocks : ResponseMessage
+    public class ResponseExportXmlBlocks : ResponseMessage
     {
         public IEnumerable<ResponseBlockInfo>? Items { get; set; }
         public IEnumerable<ResponseBlockInfo>? Inconsistent { get; set; }
@@ -345,15 +345,15 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<ResponseTypeInfo>? Items { get; set; }
     }
 
-    public class ResponseExportType : ResponseMessage
+    public class ResponseExportXmlType : ResponseMessage
     {
     }
 
-    public class ResponseImportType : ResponseMessage
+    public class ResponseImportXmlType : ResponseMessage
     {
     }
 
-    public class ResponseExportTypes : ResponseMessage
+    public class ResponseExportXmlTypes : ResponseMessage
     {
         public IEnumerable<ResponseTypeInfo>? Items { get; set; }
         public IEnumerable<ResponseTypeInfo>? Inconsistent { get; set; }

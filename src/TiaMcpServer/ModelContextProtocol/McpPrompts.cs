@@ -107,8 +107,8 @@ Use the GetSoftwareTree tool with these parameters:
 
         #region Export Templates
 
-        [McpServerPrompt(Name = "ExportBlocks"), Description("Export blocks from PLC software")]
-        public static string ExportBlocks(string softwarePath, string exportPath, string regexName = "", string preservePath = "false")
+        [McpServerPrompt(Name = "ExportXmlBlocks"), Description("Export blocks from PLC software")]
+        public static string ExportXmlBlocks(string softwarePath, string exportPath, string regexName = "", string preservePath = "false")
         {
             return $@"Export blocks from PLC software.
 
@@ -118,15 +118,15 @@ Common parameter values:
 - regexName: Use empty string """" for all blocks, or patterns like ""FB_.*"" for function blocks
 - preservePath: Use false for flat export, true to maintain folder structure
 
-Use the ExportBlocks tool with these parameters:
+Use the ExportXmlBlocks tool with these parameters:
 - softwarePath: {softwarePath}
 - exportPath: {exportPath}
 - regexName: {regexName}
 - preservePath: {NormalizeBool(preservePath)}";
         }
 
-        [McpServerPrompt(Name = "ExportTypes"), Description("Export types from PLC software")]
-        public static string ExportTypes(string softwarePath, string exportPath, string regexName = "", string preservePath = "false")
+        [McpServerPrompt(Name = "ExportXmlTypes"), Description("Export types from PLC software")]
+        public static string ExportXmlTypes(string softwarePath, string exportPath, string regexName = "", string preservePath = "false")
         {
             return $@"Export user-defined types from PLC software.
 
@@ -136,7 +136,7 @@ Common parameter values:
 - regexName: Use empty string """" for all types, or patterns like ""Typ_.*""
 - preservePath: Use false for flat export, true to maintain folder structure
 
-Use the ExportTypes tool with these parameters:
+Use the ExportXmlTypes tool with these parameters:
 - softwarePath: {softwarePath}
 - exportPath: {exportPath}
 - regexName: {regexName}
@@ -169,25 +169,25 @@ Use the ExportBlocksAsDocuments tool with these parameters:
         [McpServerPrompt(Name = "ExportAllBlocksFlattened"), Description("Export all blocks from PLC software (flattened)")]
         public static string ExportAllBlocksFlattened(string softwarePath, string exportPath)
         {
-            return ExportBlocks(softwarePath, exportPath, "", "false");
+            return ExportXmlBlocks(softwarePath, exportPath, "", "false");
         }
 
         [McpServerPrompt(Name = "ExportAllBlocksStructured"), Description("Export all blocks from PLC software (structured)")]
         public static string ExportAllBlocksStructured(string softwarePath, string exportPath)
         {
-            return ExportBlocks(softwarePath, exportPath, "", "true");
+            return ExportXmlBlocks(softwarePath, exportPath, "", "true");
         }
 
         [McpServerPrompt(Name = "ExportAllTypesFlattened"), Description("Export all types from PLC software (flattened)")]
         public static string ExportAllTypesFlattened(string softwarePath, string exportPath)
         {
-            return ExportTypes(softwarePath, exportPath, "", "false");
+            return ExportXmlTypes(softwarePath, exportPath, "", "false");
         }
 
         [McpServerPrompt(Name = "ExportAllTypesStructured"), Description("Export all types from PLC software (structured)")]
         public static string ExportAllTypesStructured(string softwarePath, string exportPath)
         {
-            return ExportTypes(softwarePath, exportPath, "", "true");
+            return ExportXmlTypes(softwarePath, exportPath, "", "true");
         }
 
         [McpServerPrompt(Name = "ExportAllBlocksAsDocumentsFlattened"), Description("Export all blocks as documents from PLC software (flattened)")]
