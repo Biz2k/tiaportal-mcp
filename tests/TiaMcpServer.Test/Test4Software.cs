@@ -396,6 +396,110 @@ namespace TiaMcpServer.Test
             Assert.IsTrue(success, "Failed to export types");
         }
 
+        /// <summary>
+        /// ExportXmlTagTable writes one tag table as XML: '&lt;exportPath&gt;/&lt;table&gt;.xml', or with
+        /// preservePath below the system group and the table's groups. Exports the first tag table the
+        /// PLC has and checks the file, so no table name has to be hard-coded.
+        /// </summary>
+        [TestMethod]
+        [DataRow(Settings.Project1ProjectPath, Settings.Project1PlcSoftwarePath0, false)]
+        [DataRow(Settings.Project1ProjectPath, Settings.Project1PlcSoftwarePath0, true)]
+        public void Test_419_ExportXmlTagTable(string projectPath, string softwarePath, bool preservePath)
+        {
+            if (_portal == null)
+            {
+                Assert.Fail("TiaPortal instance is not initialized");
+            }
+
+            var exportPath = NewTempDirectory("ExportXmlTagTable");
+
+            Assert.IsTrue(Common.OpenProject(_portal, projectPath), "Failed to open the project");
+
+            try
+            {
+                var candidate = _portal.GetTagTables(softwarePath).FirstOrDefault();
+
+                if (candidate == null)
+                {
+                    Assert.Inconclusive($"'{softwarePath}' holds no tag table to export");
+                }
+
+                var tagTablePath = _portal.GetTagTablePath(candidate!);
+                var result = _portal.ExportXmlTagTable(softwarePath, tagTablePath, exportPath, preservePath);
+
+                Assert.IsNotNull(result, "No tag table was returned");
+                Assert.AreEqual(candidate!.Name, result!.Name, "Name mismatch");
+
+                var files = Directory.GetFiles(exportPath, "*.xml", SearchOption.AllDirectories);
+
+                Console.WriteLine($"Exported tag table '{tagTablePath}': {string.Join(", ", files)}");
+
+                Assert.AreEqual(1, files.Length, "Exactly one XML file must be written");
+                Assert.AreEqual(candidate.Name + ".xml", Path.GetFileName(files[0]), "The file is named after the table");
+                Assert.IsTrue(new FileInfo(files[0]).Length > 0, "The XML file is empty");
+
+                var relative = files[0].Substring(exportPath.Length).TrimStart('\\', '/');
+
+                if (preservePath)
+                {
+                    // The system group folder always leads, then the table's groups, then the file.
+                    Assert.IsTrue(relative.Contains("\\") || relative.Contains("/"), "preservePath must write below a group folder");
+                    StringAssert.EndsWith(relative.Replace('\\', '/'), tagTablePath + ".xml", "The folder tree must mirror the table's path");
+                }
+                else
+                {
+                    Assert.AreEqual(candidate.Name + ".xml", relative, "Without preservePath the file must sit directly in the export folder");
+                }
+            }
+            finally
+            {
+                Common.CloseProject(_portal, projectPath);
+                DeleteTempDirectory(exportPath);
+            }
+        }
+
+        /// <summary>
+        /// An unknown tag table is reported as NotFound before anything is written.
+        /// </summary>
+        [TestMethod]
+        [DataRow(Settings.Project1ProjectPath, Settings.Project1PlcSoftwarePath0, "NoSuchGroup/NoSuchTable")]
+        public void Test_420_ExportXmlTagTable_UnknownTableIsNotFound(string projectPath, string softwarePath, string tagTablePath)
+        {
+            if (_portal == null)
+            {
+                Assert.Fail("TiaPortal instance is not initialized");
+            }
+
+            var exportPath = NewTempDirectory("ExportXmlTagTableUnknown");
+
+            Assert.IsTrue(Common.OpenProject(_portal, projectPath), "Failed to open the project");
+
+            try
+            {
+                PortalException? thrown = null;
+
+                try
+                {
+                    _portal.ExportXmlTagTable(softwarePath, tagTablePath, exportPath);
+                }
+                catch (PortalException ex)
+                {
+                    thrown = ex;
+                }
+
+                Assert.IsNotNull(thrown, "Exporting an unknown tag table must throw a PortalException");
+                Assert.AreEqual(PortalErrorCode.NotFound, thrown!.Code, "Error code mismatch");
+                Assert.IsFalse(
+                    Directory.Exists(exportPath) && Directory.GetFiles(exportPath, "*.*", SearchOption.AllDirectories).Length > 0,
+                    "Nothing may be written for an unknown table");
+            }
+            finally
+            {
+                Common.CloseProject(_portal, projectPath);
+                DeleteTempDirectory(exportPath);
+            }
+        }
+
         [TestMethod]
         [DataRow(Settings.Project1ProjectPath, Settings.Project1PlcSoftwarePath0, Settings.Project1ExportPath0, "0_OBs/Main_1", true)]
         [DataRow(Settings.Project1ProjectPath, Settings.Project1PlcSoftwarePath0, Settings.Project1ExportPath0, "0_OBs/Main_1", false)]

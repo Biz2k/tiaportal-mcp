@@ -15,8 +15,8 @@ namespace TiaMcpServer.Siemens
         // PLC tag tables, tags and constants (read side).
         //
         // Callers: the GetTagTables / GetTagTableInfo / GetTags / GetTagInfo / GetConstants /
-        // ExportTagTable tools in McpServer.cs. Affected API: none existing - all members are new.
-        // ExportTagTable writes one .xml file to the path the caller supplies; nothing else here
+        // ExportXmlTagTable tools in McpServer.cs. Affected API: none existing - all members are new.
+        // ExportXmlTagTable writes one .xml file to the path the caller supplies; nothing else here
         // touches the file system.
         //
         // Path shape: tag table paths are root-relative, e.g. "TagGroup1/Table1"; tag paths append
@@ -145,9 +145,9 @@ namespace TiaMcpServer.Siemens
         /// type exports mirror "Program blocks" and "PLC data types".
         /// Filesystem only - it does not modify the project, so it is not gated behind '--allow-write'.
         /// </summary>
-        public PlcTagTable? ExportTagTable(string softwarePath, string tagTablePath, string exportPath, bool preservePath = false)
+        public PlcTagTable? ExportXmlTagTable(string softwarePath, string tagTablePath, string exportPath, bool preservePath = false)
         {
-            return Operation.Run(_logger, nameof(ExportTagTable), PortalErrorCode.ExportFailed,
+            return Operation.Run(_logger, nameof(ExportXmlTagTable), PortalErrorCode.ExportFailed,
                 () =>
                 {
                     var table = GetTagTable(softwarePath, tagTablePath)
@@ -279,9 +279,9 @@ namespace TiaMcpServer.Siemens
         // From the former Portal.WatchTables.cs:
         // PLC watch and force tables (read side).
         //
-        // Callers: the GetWatchTables / GetWatchTableInfo / GetForceTables / ExportWatchTable tools
+        // Callers: the GetWatchTables / GetWatchTableInfo / GetForceTables / ExportXmlWatchTable tools
         // in McpServer.Tags.cs. Affected API: none existing - all members are new.
-        // ExportWatchTable writes one .xml to the caller-supplied path; nothing else does file I/O.
+        // ExportXmlWatchTable writes one .xml to the caller-supplied path; nothing else does file I/O.
         //
         // Openness asymmetry to be aware of: watch tables can be created and deleted, force tables
         // cannot - PlcForceTableComposition has no Create and PlcForceTable has no Delete, because
@@ -405,9 +405,9 @@ namespace TiaMcpServer.Siemens
         /// Exports one watch table to '&lt;exportPath&gt;/&lt;table&gt;.xml'. Filesystem only, so
         /// it is not gated behind '--allow-write'.
         /// </summary>
-        public PlcWatchTable? ExportWatchTable(string softwarePath, string watchTablePath, string exportPath, bool preservePath = false)
+        public PlcWatchTable? ExportXmlWatchTable(string softwarePath, string watchTablePath, string exportPath, bool preservePath = false)
         {
-            return Operation.Run(_logger, nameof(ExportWatchTable), PortalErrorCode.ExportFailed,
+            return Operation.Run(_logger, nameof(ExportXmlWatchTable), PortalErrorCode.ExportFailed,
                 () =>
                 {
                     var table = GetWatchTable(softwarePath, watchTablePath)

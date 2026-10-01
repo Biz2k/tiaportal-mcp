@@ -33,7 +33,7 @@ The server is read-only unless it is started with `--allow-write`.
 - Write operations change the project **in memory only**. Every write response says so and names
   the tool that persists it: `SaveProject`, or `SaveSession` when a multiuser local session is open.
 
-Export tools are intentionally *not* gated. `ExportXmlBlock`, `ExportTagTable`, `ExportWatchTable`
+Export tools are intentionally *not* gated. `ExportXmlBlock`, `ExportXmlTagTable`, `ExportXmlWatchTable`
 and friends only write files on the machine running the server; they never modify the project.
 They are annotated `destructiveHint: true` because they can overwrite files on disk.
 
@@ -52,8 +52,8 @@ Read-only tools (59) are always available.
 | PLC software | `GetSoftwareInfo`, `GetSoftwareTree`, `CompileSoftware` |
 | Blocks | `GetBlocks`, `GetBlockInfo`, `GetBlocksWithHierarchy`, `ExportXmlBlock`, `ExportXmlBlocks`, `ImportXmlBlock` |
 | Types | `GetTypes`, `GetTypeInfo`, `ExportXmlType`, `ExportXmlTypes`, `ImportXmlType` |
-| Tags and constants | `GetTagTables`, `GetTagTableInfo`, `GetTags`, `GetTagInfo`, `GetConstants`, `ExportTagTable` |
-| Watch and force tables | `GetWatchTables`, `GetWatchTableInfo`, `GetForceTables`, `ExportWatchTable` |
+| Tags and constants | `GetTagTables`, `GetTagTableInfo`, `GetTags`, `GetTagInfo`, `GetConstants`, `ExportXmlTagTable` |
+| Watch and force tables | `GetWatchTables`, `GetWatchTableInfo`, `GetForceTables`, `ExportXmlWatchTable` |
 | External sources | `GetExternalSources`, `GetExternalSourceInfo`, `ExportSourceBlock`, `ExportSourceType` |
 | Cross references | `GetCrossReferences` |
 | Block documents (V20+) | `ExportAsDocuments`, `ExportBlocksAsDocuments`, `ImportFromDocuments`, `ImportBlocksFromDocuments` |

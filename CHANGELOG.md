@@ -39,11 +39,14 @@
   `ExportSourceBlock` and `GenerateTypeSource` to `ExportSourceType` (tools and `Portal` methods;
   `GenerateSources` and `ImportSources` keep their names). `GenerateBlocksFromSource` is now
   `ImportSourceBlocks` (tool and `Portal` method; the Siemens API method of the same name is unaffected).
+  The tag and watch table exports follow suit: `ExportTagTable` is now `ExportXmlTagTable` and
+  `ExportWatchTable` is now `ExportXmlWatchTable` (tool, response type, `Portal` method and
+  prompt).
 
 ### Added
 
-- __`ExportTagTable` prompt__: a prompt template for exporting a PLC tag table to XML through the
-  `ExportTagTable` tool, next to the existing block and type export prompts. Likewise prompts for the source
+- __`ExportXmlTagTable` prompt__: a prompt template for exporting a PLC tag table to XML through the
+  `ExportXmlTagTable` tool, next to the existing block and type export prompts. Likewise prompts for the source
   file tools: `ExportSourceBlock`, `ExportSourceType`, `ImportSources` and `ImportSourceBlocks`, plus the
   convenience prompts `ImportAllSources` and `ImportAllSourcesKeepOnError`. Every other tool now has a prompt
   of the same name as well (80 prompts, generated from the tool descriptions and parameter descriptions), so

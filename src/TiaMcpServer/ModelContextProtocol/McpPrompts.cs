@@ -38,7 +38,7 @@ This will establish a connection to either a running TIA Portal instance or star
 Use the Connect tool to initiate the connection.";
         }
 
-        [McpServerPrompt(Name = "OpenProject"), Description("Open a TIA Portal project")]
+        [McpServerPrompt(Name = "OpenProject"), Description("Open project")]
         public static string OpenProject(string projectPath)
         {
             return $@"Open the TIA Portal project.
@@ -50,7 +50,7 @@ Use the OpenProject tool with this parameter:
 - projectPath: {projectPath}";
         }
 
-        [McpServerPrompt(Name = "CloseProject"), Description("Close the currently open TIA Portal project")]
+        [McpServerPrompt(Name = "CloseProject"), Description("Close project")]
         public static string CloseProject()
         {
             return @"Close the currently open TIA Portal project.
@@ -60,7 +60,7 @@ This will close the active project and return TIA Portal to the main screen.
 Use the CloseProject tool to close the current project.";
         }
 
-        [McpServerPrompt(Name = "Disconnect"), Description("Disconnect from TIA Portal")]
+        [McpServerPrompt(Name = "Disconnect"), Description("Disconnect")]
         public static string Disconnect()
         {
             return @"Disconnect from TIA Portal.
@@ -72,7 +72,7 @@ Use the Disconnect tool to remove the connection.";
 
         #region Project Information Templates
 
-        [McpServerPrompt(Name = "GetProjectTree"), Description("Get the project structure/tree on the current TIA Portal project")]
+        [McpServerPrompt(Name = "GetProjectTree"), Description("Get project tree")]
         public static string GetProjectTree()
         {
             return @"Retrieve the complete structure of the current TIA Portal project.
@@ -86,7 +86,7 @@ The hierarchical tree will display:
 Use the GetProjectTree tool to display the project organization and locate software paths for other operations.";
         }
 
-        [McpServerPrompt(Name = "GetSoftwareTree"), Description("Get the structure/tree of a specific PLC software showing blocks and types")]
+        [McpServerPrompt(Name = "GetSoftwareTree"), Description("Get software tree")]
         public static string GetSoftwareTree(string softwarePath)
         {
             return $@"Retrieve the complete structure of PLC software.
@@ -107,7 +107,7 @@ Use the GetSoftwareTree tool with these parameters:
 
         #region Export Templates
 
-        [McpServerPrompt(Name = "ExportXmlBlocks"), Description("Export Xml blocks from PLC software")]
+        [McpServerPrompt(Name = "ExportXmlBlocks"), Description("Export XML blocks")]
         public static string ExportXmlBlocks(string softwarePath, string exportPath, string regexName = "", string preservePath = "false")
         {
             return $@"Export blocks from PLC software.
@@ -125,7 +125,7 @@ Use the ExportXmlBlocks tool with these parameters:
 - preservePath: {NormalizeBool(preservePath)}";
         }
 
-        [McpServerPrompt(Name = "ExportXmlTypes"), Description("Export Xml types from PLC software")]
+        [McpServerPrompt(Name = "ExportXmlTypes"), Description("Export XML types")]
         public static string ExportXmlTypes(string softwarePath, string exportPath, string regexName = "", string preservePath = "false")
         {
             return $@"Export user-defined types from PLC software.
@@ -162,8 +162,8 @@ Use the ExportBlocksAsDocuments tool with these parameters:
 - preservePath: {NormalizeBool(preservePath)}";
         }
 
-        [McpServerPrompt(Name = "ExportTagTable"), Description("Export a PLC tag table to XML")]
-        public static string ExportTagTable(string softwarePath, string tagTablePath, string exportPath, string preservePath = "false")
+        [McpServerPrompt(Name = "ExportXmlTagTable"), Description("Export XML tag table")]
+        public static string ExportXmlTagTable(string softwarePath, string tagTablePath, string exportPath, string preservePath = "false")
         {
             return $@"Export a PLC tag table from PLC software to an XML file.
 
@@ -173,14 +173,14 @@ Common parameter values:
 - exportPath: '${{workspacefolder}}/export/PLC tags' is a good default
 - preservePath: Use false for a flat export, true to maintain the tag table group structure
 
-Use the ExportTagTable tool with these parameters:
+Use the ExportXmlTagTable tool with these parameters:
 - softwarePath: {softwarePath}
 - tagTablePath: {tagTablePath}
 - exportPath: {exportPath}
 - preservePath: {NormalizeBool(preservePath)}";
         }
 
-        [McpServerPrompt(Name = "ExportSourceBlock"), Description("Export one block as source file (.db, .scl or .awl)")]
+        [McpServerPrompt(Name = "ExportSourceBlock"), Description("Export block as source (.db, .scl or .awl)")]
         public static string ExportSourceBlock(string softwarePath, string blockPath, string exportPath, string withDependencies = "false", string preservePath = "false")
         {
             return $@"Export one program block from PLC software as a TIA Portal external source file, in the format the compiler reads back.
@@ -202,7 +202,7 @@ Use the ExportSourceBlock tool with these parameters:
 - preservePath: {NormalizeBool(preservePath)}";
         }
 
-        [McpServerPrompt(Name = "ExportSourceType"), Description("Export one PLC data type as source file (.udt)")]
+        [McpServerPrompt(Name = "ExportSourceType"), Description("Export type as source (.udt)")]
         public static string ExportSourceType(string softwarePath, string typePath, string exportPath, string withDependencies = "false", string preservePath = "false")
         {
             return $@"Export one PLC data type from PLC software as a '.udt' TIA Portal external source file, in the format the compiler reads back.
@@ -293,10 +293,10 @@ Use the ExportTypesAsDocuments tool with these parameters:
 
         #region Import From Documents Templates
 
-        [McpServerPrompt(Name = "ImportFromDocuments"), Description("Import a single block from SIMATIC SD documents (.s7dcl/.s7res) (V20+)")]
+        [McpServerPrompt(Name = "ImportFromDocuments"), Description("Import block from documents (.s7dcl/.s7res) (V20+)")]
         public static string ImportFromDocuments(string softwarePath, string importPath, string fileNameWithoutExtension, string groupPath = "", string importOption = "Override")
         {
-            return $@"Import a single program block from SIMATIC SD documents into PLC software (requires TIA Portal V20 or newer).
+            return $@"Import a program block from documents into PLC software (requires TIA Portal V20 or newer).
 
 Common parameter values:
 - softwarePath: e.g. 'PLC_1' for hardware PLC
@@ -315,10 +315,10 @@ Use the ImportFromDocuments tool with these parameters:
 - importOption: {importOption}";
         }
 
-        [McpServerPrompt(Name = "ImportTypesFromDocuments"), Description("Import PLC data types from SIMATIC Source Documents (V21+)")]
+        [McpServerPrompt(Name = "ImportTypesFromDocuments"), Description("Import types from documents (V21+)")]
         public static string ImportTypesFromDocuments(string softwarePath, string importPath, string groupPath = "", string regexName = "", string importOption = "Override")
         {
-            return $@"Import PLC data types (UDTs) from SIMATIC Source Documents into PLC software (requires TIA Portal V21 or newer and the server started with '--allow-write').
+            return $@"Import types (UDTs) from documents into PLC software (requires TIA Portal V21 or newer and the server started with '--allow-write').
 
 Common parameter values:
 - softwarePath: e.g. 'PLC_1' for hardware PLC
@@ -337,7 +337,7 @@ Use the ImportTypesFromDocuments tool with these parameters:
 - importOption: {importOption}";
         }
 
-        [McpServerPrompt(Name = "ImportBlocksFromDocuments"), Description("Import blocks from SIMATIC SD documents (.s7dcl/.s7res) (V20+)")]
+        [McpServerPrompt(Name = "ImportBlocksFromDocuments"), Description("Import blocks from documents (.s7dcl/.s7res) (V20+)")]
         public static string ImportBlocksFromDocuments(string softwarePath, string importPath, string groupPath = "", string regexName = "", string importOption = "Override")
         {
             return $@"Import multiple program blocks from SIMATIC SD documents into PLC software (requires TIA Portal V20 or newer).
@@ -381,10 +381,10 @@ Use the ImportSources tool with these parameters:
 - keepOnError: {NormalizeBool(keepOnError)}";
         }
 
-        [McpServerPrompt(Name = "ImportSourceBlocks"), Description("Compile a registered external source into blocks and PLC data types")]
+        [McpServerPrompt(Name = "ImportSourceBlocks"), Description("Import source blocks")]
         public static string ImportSourceBlocks(string softwarePath, string sourcePath, string targetGroupPath = "", string keepOnError = "false")
         {
-            return $@"Compile an external source that is already registered in PLC software into program blocks and PLC data types (requires the server started with '--allow-write').
+            return $@"Compile/import an external source that is already registered in PLC software into program blocks and PLC data types (requires the server started with '--allow-write').
 
 Common parameter values:
 - softwarePath: e.g. 'PLC_1' for hardware PLC
@@ -405,13 +405,13 @@ Use the ImportSourceBlocks tool with these parameters:
 
         #region Convenience Import Templates
 
-        [McpServerPrompt(Name = "ImportAllSources"), Description("Import all source files of a folder tree into PLC software (rolls back a whole file on any error)")]
+        [McpServerPrompt(Name = "ImportAllSources"), Description("Import all sources")]
         public static string ImportAllSources(string softwarePath, string importPath)
         {
             return ImportSources(softwarePath, importPath, "", "false");
         }
 
-        [McpServerPrompt(Name = "ImportAllSourcesKeepOnError"), Description("Import all source files of a folder tree into PLC software (keeps the objects generated successfully)")]
+        [McpServerPrompt(Name = "ImportAllSourcesKeepOnError"), Description("Import all source files, keeps the objects generated successfully")]
         public static string ImportAllSourcesKeepOnError(string softwarePath, string importPath)
         {
             return ImportSources(softwarePath, importPath, "", "true");
@@ -421,7 +421,7 @@ Use the ImportSourceBlocks tool with these parameters:
 
         #region Project and Session Templates
 
-        [McpServerPrompt(Name = "GetState"), Description("Get server state")]
+        [McpServerPrompt(Name = "GetState"), Description("Get state")]
         public static string GetState()
         {
             return $@"Get the state of the TIA-Portal MCP server.
@@ -429,7 +429,7 @@ Use the ImportSourceBlocks tool with these parameters:
 Use the GetState tool (it takes no parameters).";
         }
 
-        [McpServerPrompt(Name = "GetProject"), Description("Get open project")]
+        [McpServerPrompt(Name = "GetProject"), Description("Get project")]
         public static string GetProject()
         {
             return $@"Get open local project/session.
@@ -469,7 +469,7 @@ Use the OpenTiaProject tool with these parameters:
 - path: {path}";
         }
 
-        [McpServerPrompt(Name = "PreviewImport"), Description("Preview what an import would do")]
+        [McpServerPrompt(Name = "PreviewImport"), Description("Preview import")]
         public static string PreviewImport(string softwarePath, string importPath, string kind, string groupPath = "")
         {
             return $@"Report what importing a directory would create, overwrite or collide with, without touching the project. Checks each file against the objects already in the PLC, including the rule that a PLC data type name must be unique across the whole PLC - importing an existing type name into a different group fails even with importOption 'Override'.
@@ -527,7 +527,7 @@ Use the GetDevices tool (it takes no parameters).";
 
         #region Software Templates
 
-        [McpServerPrompt(Name = "GetSoftwareInfo"), Description("Get PLC software info")]
+        [McpServerPrompt(Name = "GetSoftwareInfo"), Description("Get software info")]
         public static string GetSoftwareInfo(string softwarePath)
         {
             return $@"Get plc software info.
@@ -539,27 +539,27 @@ Use the GetSoftwareInfo tool with these parameters:
 - softwarePath: {softwarePath}";
         }
 
-        [McpServerPrompt(Name = "CompileSoftware"), Description("Compile PLC software")]
+        [McpServerPrompt(Name = "CompileSoftware"), Description("Compile software")]
         public static string CompileSoftware(string softwarePath, string password = "")
         {
-            return $@"Compile the plc software and report every compiler message with the object it belongs to, so errors can be fixed without re-reading the whole PLC. Warnings are reported as a successful compile with detail; only errors fail the call.
+            return $@"Compile the software and report every compiler message with the object it belongs to, so errors can be fixed without re-reading the whole PLC. Warnings are reported as a successful compile with detail; only errors fail the call.
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
-- password: the password to access adminsitration, default: no password
+|- softwarePath: defines the path in the project structure to the software
+- password: the password to access administration, default: no password
 
 Use the CompileSoftware tool with these parameters:
 - softwarePath: {softwarePath}
 - password: {password}";
         }
 
-        [McpServerPrompt(Name = "ResolveObjectPath"), Description("Resolve a name to its path")]
+        [McpServerPrompt(Name = "ResolveObjectPath"), Description("Resolve object path")]
         public static string ResolveObjectPath(string softwarePath, string name, string kind = "any")
         {
-            return $@"Turn a bare or partial object name into the root-relative path the other tools need, searching program blocks, PLC data types, tags, tag tables, watch tables and external sources. Exact matches win; substring matches are only reported when nothing matches exactly.
+            return $@"Turn a bare or partial object name into the root-relative path the other tools need, searching program blocks, data types, tags, tag tables, watch tables and external sources. Exact matches win; substring matches are only reported when nothing matches exactly.
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 - name: the object name to look for, e.g. 'FC_Block_1'. A full path may be passed; only its last segment is matched
 - kind: restrict the search to 'block', 'type', 'tag', 'tagTable', 'watchTable' or 'source'. Default 'any' searches all of them
 
@@ -575,7 +575,7 @@ Use the ResolveObjectPath tool with these parameters:
             return $@"Search the actual source text of program blocks and PLC data types with a regular expression - every other filter in this server matches object names only. Returns the object path, line number and the matching line. Each call exports the candidate objects behind the scenes, so narrow a large PLC with 'nameFilter'.
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 - pattern: regular expression matched against each line, case-insensitive. Plain text works too
 - nameFilter: optional regular expression on object names, to limit which objects are searched. Empty (default) searches all of them
 - maxResults: stop after this many matching lines (default 200)
@@ -587,25 +587,25 @@ Use the FindInCode tool with these parameters:
 - maxResults: {maxResults}";
         }
 
-        [McpServerPrompt(Name = "GetPlcSummary"), Description("Summarise a PLC software")]
+        [McpServerPrompt(Name = "GetPlcSummary"), Description("Get PLC summary")]
         public static string GetPlcSummary(string softwarePath)
         {
             return $@"Counts, programming languages and health of one PLC software in a single call - replaces listing blocks, types, tags, tag tables and watch tables separately just to see what is there. Also names the inconsistent objects (which refuse to export until compiled) and the know-how protected ones (whose content cannot be read).
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 
 Use the GetPlcSummary tool with these parameters:
 - softwarePath: {softwarePath}";
         }
 
-        [McpServerPrompt(Name = "GetCrossReferences"), Description("Get PLC cross references")]
+        [McpServerPrompt(Name = "GetCrossReferences"), Description("Get cross references")]
         public static string GetCrossReferences(string softwarePath, string objectPath = "", string objectKind = "auto", string filter = "AllObjects", string maxDepth = "1")
         {
             return $@"Get cross references for a PLC software or for one block, type, tag table, tag or block group inside it. Watch tables, force tables and external sources have no cross references.
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 - objectPath: optional root-relative path of a block, type, tag table, tag or block group; empty targets the whole plc software
 - objectKind: 'auto' (default), 'block', 'type', 'tagTable', 'tag' or 'blockGroup'
 - filter: 'AllObjects' (default), 'ObjectsWithReferences', 'ObjectsWithoutReferences' or 'UnusedObjects'
@@ -619,13 +619,13 @@ Use the GetCrossReferences tool with these parameters:
 - maxDepth: {maxDepth}";
         }
 
-        [McpServerPrompt(Name = "WhereUsed"), Description("Find what uses an object")]
+        [McpServerPrompt(Name = "WhereUsed"), Description("Where used")]
         public static string WhereUsed(string softwarePath, string name, string kind = "any")
         {
             return $@"Answer 'what uses this?' for a tag, block, PLC data type or tag table by name. Resolves the name, picks the right object kind and flattens the cross-reference tree to a plain list of users. Use 'GetCrossReferences' instead when the full nested result or a specific filter is needed.
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 - name: the object to look up, by bare name or by full root-relative path
 - kind: restrict resolution to 'block', 'type', 'tag' or 'tagTable'. Default 'any' picks the single match, and reports the candidates when the name is ambiguous
 
@@ -642,10 +642,10 @@ Use the WhereUsed tool with these parameters:
         [McpServerPrompt(Name = "GetBlockInfo"), Description("Get block info")]
         public static string GetBlockInfo(string softwarePath, string blockPath)
         {
-            return $@"Get a block info, which is located in the plc software.
+            return $@"Get a block info, which is located in the software.
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 - blockPath: defines the path in the project structure to the block
 
 Use the GetBlockInfo tool with these parameters:
@@ -656,10 +656,10 @@ Use the GetBlockInfo tool with these parameters:
         [McpServerPrompt(Name = "GetBlocks"), Description("Get blocks")]
         public static string GetBlocks(string softwarePath, string regexName = "")
         {
-            return $@"Get a list of blocks, which are located in plc software.
+            return $@"Get a list of blocks, which are located in the software.
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 - regexName: defines the name or regular expression to find the block. Use empty string (default) to find all
 
 Use the GetBlocks tool with these parameters:
@@ -670,10 +670,10 @@ Use the GetBlocks tool with these parameters:
         [McpServerPrompt(Name = "GetBlocksWithHierarchy"), Description("Get blocks with hierarchy")]
         public static string GetBlocksWithHierarchy(string softwarePath)
         {
-            return $@"Get a list of all blocks with their group hierarchy from the plc software.
+            return $@"Get a list of all blocks with their group hierarchy from the software.
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 
 Use the GetBlocksWithHierarchy tool with these parameters:
 - softwarePath: {softwarePath}";
@@ -682,10 +682,10 @@ Use the GetBlocksWithHierarchy tool with these parameters:
         [McpServerPrompt(Name = "ExportXmlBlock"), Description("Export block to XML")]
         public static string ExportXmlBlock(string softwarePath, string blockPath, string exportPath, string preservePath = "false")
         {
-            return $@"Export a block from plc software to file.
+            return $@"Export a block from the software to file.
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 - blockPath: full path to the block in the project structure, e.g. 'Group/Subgroup/Name' (single names are ambiguous)
 - exportPath: defines the path where to export the block
 - preservePath: preserves the path/structure of the plc software
@@ -700,10 +700,10 @@ Use the ExportXmlBlock tool with these parameters:
         [McpServerPrompt(Name = "ImportXmlBlock"), Description("Import block from XML")]
         public static string ImportXmlBlock(string softwarePath, string groupPath, string importPath)
         {
-            return $@"Import a block file to plc software.
+            return $@"Import a block file to the software.
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 - groupPath: defines the path in the project structure to the group, where to import the block
 - importPath: defines the path of the xml file from where to import the block
 
@@ -719,7 +719,7 @@ Use the ImportXmlBlock tool with these parameters:
             return $@"List the members of a data block with their data type and every attribute TIA Portal reports. Needs no export and works on inconsistent blocks. Data blocks only: Openness offers no interface accessor for FB, FC or OB, whose declarations come from 'GetBlockSource' instead.
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 - blockPath: root-relative path of the data block, e.g. '1_Tests/DB_Block_1'
 
 Use the GetBlockInterface tool with these parameters:
@@ -727,13 +727,13 @@ Use the GetBlockInterface tool with these parameters:
 - blockPath: {blockPath}";
         }
 
-        [McpServerPrompt(Name = "CreateBlockGroup"), Description("Create a block group")]
+        [McpServerPrompt(Name = "CreateBlockGroup"), Description("Create block group")]
         public static string CreateBlockGroup(string softwarePath, string parentGroupPath, string name)
         {
             return $@"Create a group below the Program blocks root of the plc software (requires the server started with '--allow-write').
 
 Common parameter values:
-- softwarePath: defines the path in the project structure to the plc software
+- softwarePath: defines the path in the project structure to the software
 - parentGroupPath: root-relative path of the parent group; empty creates directly below Program blocks
 - name: name of the new group, without a slash
 
@@ -743,10 +743,11 @@ Use the CreateBlockGroup tool with these parameters:
 - name: {name}";
         }
 
-        [McpServerPrompt(Name = "DeleteBlockGroup"), Description("Delete a block group")]
+        [McpServerPrompt(Name = "DeleteBlockGroup"), Description("Delete block group")]
         public static string DeleteBlockGroup(string softwarePath, string groupPath)
         {
             return $@"Delete a block group and everything inside it. The Program blocks system group itself cannot be deleted (requires the server started with '--allow-write').
+- softwarePath: defines the path in the project structure to the software
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the plc software
@@ -757,7 +758,7 @@ Use the DeleteBlockGroup tool with these parameters:
 - groupPath: {groupPath}";
         }
 
-        [McpServerPrompt(Name = "DeleteBlock"), Description("Delete a block")]
+        [McpServerPrompt(Name = "DeleteBlock"), Description("Delete block")]
         public static string DeleteBlock(string softwarePath, string blockPath)
         {
             return $@"Delete a program block. Know-how protected blocks are rejected: remove the protection in TIA Portal first (requires the server started with '--allow-write').
@@ -771,7 +772,7 @@ Use the DeleteBlock tool with these parameters:
 - blockPath: {blockPath}";
         }
 
-        [McpServerPrompt(Name = "RenameBlock"), Description("Rename a block")]
+        [McpServerPrompt(Name = "RenameBlock"), Description("Rename block")]
         public static string RenameBlock(string softwarePath, string blockPath, string newName)
         {
             return $@"Rename a program block. Know-how protected blocks are rejected (requires the server started with '--allow-write').
@@ -787,7 +788,7 @@ Use the RenameBlock tool with these parameters:
 - newName: {newName}";
         }
 
-        [McpServerPrompt(Name = "CreateFB"), Description("Create a function block")]
+        [McpServerPrompt(Name = "CreateFB"), Description("Create function block")]
         public static string CreateFB(string softwarePath, string groupPath, string name, string language = "LAD", string autoNumber = "true", string number = "0")
         {
             return $@"Create an empty function block. Openness has no generic create-block operation: FB and instance DB are the only kinds creatable without importing XML (requires the server started with '--allow-write').
@@ -809,7 +810,7 @@ Use the CreateFB tool with these parameters:
 - number: {number}";
         }
 
-        [McpServerPrompt(Name = "CreateInstanceDB"), Description("Create an instance data block")]
+        [McpServerPrompt(Name = "CreateInstanceDB"), Description("Create instance data block")]
         public static string CreateInstanceDB(string softwarePath, string groupPath, string name, string instanceOfName, string autoNumber = "true", string number = "0")
         {
             return $@"Create an instance data block for an existing function block (requires the server started with '--allow-write').
@@ -831,7 +832,7 @@ Use the CreateInstanceDB tool with these parameters:
 - number: {number}";
         }
 
-        [McpServerPrompt(Name = "CopyBlock"), Description("Copy a block to another group")]
+        [McpServerPrompt(Name = "CopyBlock"), Description("Copy block")]
         public static string CopyBlock(string softwarePath, string blockPath, string targetGroupPath, string overwrite = "false")
         {
             return $@"Copy a program block into another block group of the same plc software. Implemented as export plus import because Openness has no copy operation, so the block must be consistent and keeps its block number (requires the server started with '--allow-write').
@@ -849,7 +850,7 @@ Use the CopyBlock tool with these parameters:
 - overwrite: {NormalizeBool(overwrite)}";
         }
 
-        [McpServerPrompt(Name = "MoveBlock"), Description("Move a block to another group")]
+        [McpServerPrompt(Name = "MoveBlock"), Description("Move block")]
         public static string MoveBlock(string softwarePath, string blockPath, string targetGroupPath, string overwrite = "false")
         {
             return $@"Move a program block into another block group of the same plc software. Implemented as export, import and deleting the original; the original is only removed after the import succeeds (requires the server started with '--allow-write').
@@ -899,7 +900,7 @@ Use the GetTypes tool with these parameters:
 - regexName: {regexName}";
         }
 
-        [McpServerPrompt(Name = "ExportXmlType"), Description("Export type to XML")]
+        [McpServerPrompt(Name = "ExportXmlType"), Description("Export XML type")]
         public static string ExportXmlType(string softwarePath, string exportPath, string typePath, string preservePath = "false")
         {
             return $@"Export a type from the plc software.
@@ -917,7 +918,7 @@ Use the ExportXmlType tool with these parameters:
 - preservePath: {NormalizeBool(preservePath)}";
         }
 
-        [McpServerPrompt(Name = "ImportXmlType"), Description("Import type from XML")]
+        [McpServerPrompt(Name = "ImportXmlType"), Description("Import XML type")]
         public static string ImportXmlType(string softwarePath, string groupPath, string importPath)
         {
             return $@"Import a type from file into the plc software.
@@ -933,7 +934,7 @@ Use the ImportXmlType tool with these parameters:
 - importPath: {importPath}";
         }
 
-        [McpServerPrompt(Name = "CreateTypeGroup"), Description("Create a PLC data type group")]
+        [McpServerPrompt(Name = "CreateTypeGroup"), Description("Create type group")]
         public static string CreateTypeGroup(string softwarePath, string parentGroupPath, string name)
         {
             return $@"Create a group below the PLC data types root of the plc software (requires the server started with '--allow-write').
@@ -949,7 +950,7 @@ Use the CreateTypeGroup tool with these parameters:
 - name: {name}";
         }
 
-        [McpServerPrompt(Name = "DeleteTypeGroup"), Description("Delete a PLC data type group")]
+        [McpServerPrompt(Name = "DeleteTypeGroup"), Description("Delete type group")]
         public static string DeleteTypeGroup(string softwarePath, string groupPath)
         {
             return $@"Delete a PLC data type group and everything inside it. The PLC data types system group itself cannot be deleted (requires the server started with '--allow-write').
@@ -963,7 +964,7 @@ Use the DeleteTypeGroup tool with these parameters:
 - groupPath: {groupPath}";
         }
 
-        [McpServerPrompt(Name = "DeleteType"), Description("Delete a PLC data type")]
+        [McpServerPrompt(Name = "DeleteType"), Description("Delete type")]
         public static string DeleteType(string softwarePath, string typePath)
         {
             return $@"Delete a PLC data type (UDT). Know-how protected types are rejected (requires the server started with '--allow-write').
@@ -977,7 +978,7 @@ Use the DeleteType tool with these parameters:
 - typePath: {typePath}";
         }
 
-        [McpServerPrompt(Name = "RenameType"), Description("Rename a PLC data type")]
+        [McpServerPrompt(Name = "RenameType"), Description("Rename type")]
         public static string RenameType(string softwarePath, string typePath, string newName)
         {
             return $@"Rename a PLC data type (UDT). Know-how protected types are rejected (requires the server started with '--allow-write').
@@ -993,7 +994,7 @@ Use the RenameType tool with these parameters:
 - newName: {newName}";
         }
 
-        [McpServerPrompt(Name = "CopyType"), Description("Copy a PLC data type to another group")]
+        [McpServerPrompt(Name = "CopyType"), Description("Copy type")]
         public static string CopyType(string softwarePath, string typePath, string targetGroupPath, string overwrite = "false")
         {
             return $@"Copy a PLC data type (UDT) into another type group of the same plc software. Implemented as export plus import because Openness has no copy operation, so the type must be consistent (requires the server started with '--allow-write').
@@ -1011,7 +1012,7 @@ Use the CopyType tool with these parameters:
 - overwrite: {NormalizeBool(overwrite)}";
         }
 
-        [McpServerPrompt(Name = "MoveType"), Description("Move a PLC data type to another group")]
+        [McpServerPrompt(Name = "MoveType"), Description("Move type")]
         public static string MoveType(string softwarePath, string typePath, string targetGroupPath, string overwrite = "false")
         {
             return $@"Move a PLC data type (UDT) into another type group of the same plc software. Implemented as export, import and deleting the original; the original is only removed after the import succeeds (requires the server started with '--allow-write').
@@ -1033,7 +1034,7 @@ Use the MoveType tool with these parameters:
 
         #region Tag and Table Templates
 
-        [McpServerPrompt(Name = "GetTagTables"), Description("Get PLC tag tables")]
+        [McpServerPrompt(Name = "GetTagTables"), Description("Get tag tables")]
         public static string GetTagTables(string softwarePath, string regexName = "")
         {
             return $@"List the PLC tag tables of a plc software, optionally filtered by a regular expression on the table name.
@@ -1047,10 +1048,10 @@ Use the GetTagTables tool with these parameters:
 - regexName: {regexName}";
         }
 
-        [McpServerPrompt(Name = "GetTagTableInfo"), Description("Get PLC tag table info")]
+        [McpServerPrompt(Name = "GetTagTableInfo"), Description("Get tag table info")]
         public static string GetTagTableInfo(string softwarePath, string tagTablePath)
         {
-            return $@"Get the details of a single PLC tag table, including its tag and constant counts.
+            return $@"Get the details of a single tag table, including its tag and constant counts.
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the plc software
@@ -1061,7 +1062,7 @@ Use the GetTagTableInfo tool with these parameters:
 - tagTablePath: {tagTablePath}";
         }
 
-        [McpServerPrompt(Name = "GetTags"), Description("Get PLC tags")]
+        [McpServerPrompt(Name = "GetTags"), Description("Get tags")]
         public static string GetTags(string softwarePath, string tagTablePath = "", string regexName = "")
         {
             return $@"List PLC tags, either of one tag table or of every tag table of the plc software, optionally filtered by a regular expression on the tag name.
@@ -1077,7 +1078,7 @@ Use the GetTags tool with these parameters:
 - regexName: {regexName}";
         }
 
-        [McpServerPrompt(Name = "GetTagInfo"), Description("Get PLC tag info")]
+        [McpServerPrompt(Name = "GetTagInfo"), Description("Get tag info")]
         public static string GetTagInfo(string softwarePath, string tagPath)
         {
             return $@"Get the details of a single PLC tag, including data type, logical address and external access flags.
@@ -1091,7 +1092,7 @@ Use the GetTagInfo tool with these parameters:
 - tagPath: {tagPath}";
         }
 
-        [McpServerPrompt(Name = "GetConstants"), Description("Get PLC constants")]
+        [McpServerPrompt(Name = "GetConstants"), Description("Get constants")]
         public static string GetConstants(string softwarePath, string tagTablePath = "", string kind = "all", string regexName = "")
         {
             return $@"List PLC user and/or system constants, either of one tag table or of every tag table of the plc software.
@@ -1109,7 +1110,7 @@ Use the GetConstants tool with these parameters:
 - regexName: {regexName}";
         }
 
-        [McpServerPrompt(Name = "GetWatchTables"), Description("Get PLC watch tables")]
+        [McpServerPrompt(Name = "GetWatchTables"), Description("Get watch tables")]
         public static string GetWatchTables(string softwarePath, string regexName = "")
         {
             return $@"List the PLC watch tables of a plc software, optionally filtered by a regular expression on the table name. Entries are omitted; use GetWatchTableInfo for one table's rows.
@@ -1123,7 +1124,7 @@ Use the GetWatchTables tool with these parameters:
 - regexName: {regexName}";
         }
 
-        [McpServerPrompt(Name = "GetWatchTableInfo"), Description("Get PLC watch table info")]
+        [McpServerPrompt(Name = "GetWatchTableInfo"), Description("Get watch table info")]
         public static string GetWatchTableInfo(string softwarePath, string watchTablePath)
         {
             return $@"Get a single PLC watch table including all of its entries (address, display format, monitor and modify settings).
@@ -1137,7 +1138,7 @@ Use the GetWatchTableInfo tool with these parameters:
 - watchTablePath: {watchTablePath}";
         }
 
-        [McpServerPrompt(Name = "GetForceTables"), Description("Get PLC force tables")]
+        [McpServerPrompt(Name = "GetForceTables"), Description("Get force tables")]
         public static string GetForceTables(string softwarePath)
         {
             return $@"List the PLC force tables of a plc software including their entries. A force table is created and owned by the system: it cannot be created or deleted through Openness.
@@ -1149,8 +1150,8 @@ Use the GetForceTables tool with these parameters:
 - softwarePath: {softwarePath}";
         }
 
-        [McpServerPrompt(Name = "ExportWatchTable"), Description("Export a PLC watch table")]
-        public static string ExportWatchTable(string softwarePath, string watchTablePath, string exportPath, string preservePath = "false")
+        [McpServerPrompt(Name = "ExportXmlWatchTable"), Description("Export XML watch table")]
+        public static string ExportXmlWatchTable(string softwarePath, string watchTablePath, string exportPath, string preservePath = "false")
         {
             return $@"Export a PLC watch table to an XML file on the file system of the machine running this server. Does not modify the project.
 
@@ -1160,7 +1161,7 @@ Common parameter values:
 - exportPath: directory on this machine that receives the XML file
 - preservePath: recreate the watch table group structure below exportPath
 
-Use the ExportWatchTable tool with these parameters:
+Use the ExportXmlWatchTable tool with these parameters:
 - softwarePath: {softwarePath}
 - watchTablePath: {watchTablePath}
 - exportPath: {exportPath}
@@ -1183,7 +1184,7 @@ Use the CreateTagTable tool with these parameters:
 - name: {name}";
         }
 
-        [McpServerPrompt(Name = "DeleteTagTable"), Description("Delete a PLC tag table")]
+        [McpServerPrompt(Name = "DeleteTagTable"), Description("Delete tag table")]
         public static string DeleteTagTable(string softwarePath, string tagTablePath)
         {
             return $@"Delete a PLC tag table with all of its tags and user constants. The default tag table cannot be deleted (requires the server started with '--allow-write').
@@ -1197,7 +1198,7 @@ Use the DeleteTagTable tool with these parameters:
 - tagTablePath: {tagTablePath}";
         }
 
-        [McpServerPrompt(Name = "RenameTagTable"), Description("Rename a PLC tag table")]
+        [McpServerPrompt(Name = "RenameTagTable"), Description("Rename tag table")]
         public static string RenameTagTable(string softwarePath, string tagTablePath, string newName)
         {
             return $@"Rename a PLC tag table (requires the server started with '--allow-write').
@@ -1213,7 +1214,7 @@ Use the RenameTagTable tool with these parameters:
 - newName: {newName}";
         }
 
-        [McpServerPrompt(Name = "CreateTagTableGroup"), Description("Create a tag table group")]
+        [McpServerPrompt(Name = "CreateTagTableGroup"), Description("Create tag table group")]
         public static string CreateTagTableGroup(string softwarePath, string parentGroupPath, string name)
         {
             return $@"Create a group below the PLC tags root of the plc software (requires the server started with '--allow-write').
@@ -1229,7 +1230,7 @@ Use the CreateTagTableGroup tool with these parameters:
 - name: {name}";
         }
 
-        [McpServerPrompt(Name = "DeleteTagTableGroup"), Description("Delete a tag table group")]
+        [McpServerPrompt(Name = "DeleteTagTableGroup"), Description("Delete tag table group")]
         public static string DeleteTagTableGroup(string softwarePath, string groupPath)
         {
             return $@"Delete a tag table group and everything inside it. The PLC tags system group itself cannot be deleted (requires the server started with '--allow-write').
@@ -1243,7 +1244,7 @@ Use the DeleteTagTableGroup tool with these parameters:
 - groupPath: {groupPath}";
         }
 
-        [McpServerPrompt(Name = "ImportTagTable"), Description("Import a PLC tag table")]
+        [McpServerPrompt(Name = "ImportTagTable"), Description("Import tag table")]
         public static string ImportTagTable(string softwarePath, string groupPath, string importPath, string overwrite = "true")
         {
             return $@"Import a PLC tag table from an XML file on the file system of the machine running this server (requires the server started with '--allow-write').
@@ -1261,7 +1262,7 @@ Use the ImportTagTable tool with these parameters:
 - overwrite: {NormalizeBool(overwrite)}";
         }
 
-        [McpServerPrompt(Name = "CreateTag"), Description("Create a PLC tag")]
+        [McpServerPrompt(Name = "CreateTag"), Description("Create tag")]
         public static string CreateTag(string softwarePath, string tagTablePath, string name, string dataTypeName = "", string logicalAddress = "")
         {
             return $@"Create a PLC tag in a tag table (requires the server started with '--allow-write').
@@ -1281,7 +1282,7 @@ Use the CreateTag tool with these parameters:
 - logicalAddress: {logicalAddress}";
         }
 
-        [McpServerPrompt(Name = "UpdateTag"), Description("Update a PLC tag")]
+        [McpServerPrompt(Name = "UpdateTag"), Description("Update tag")]
         public static string UpdateTag(string softwarePath, string tagPath, string newName = "", string dataTypeName = "", string logicalAddress = "", string externalAccessible = "", string externalVisible = "", string externalWritable = "")
         {
             return $@"Change one or more properties of an existing PLC tag. Every argument left empty or null keeps the current value (requires the server started with '--allow-write').
@@ -1307,7 +1308,7 @@ Use the UpdateTag tool with these parameters:
 - externalWritable: {externalWritable}";
         }
 
-        [McpServerPrompt(Name = "DeleteTag"), Description("Delete a PLC tag")]
+        [McpServerPrompt(Name = "DeleteTag"), Description("Delete tag")]
         public static string DeleteTag(string softwarePath, string tagPath)
         {
             return $@"Delete a PLC tag from its tag table (requires the server started with '--allow-write').
@@ -1321,7 +1322,7 @@ Use the DeleteTag tool with these parameters:
 - tagPath: {tagPath}";
         }
 
-        [McpServerPrompt(Name = "CreateUserConstant"), Description("Create a PLC user constant")]
+        [McpServerPrompt(Name = "CreateUserConstant"), Description("Create user constant")]
         public static string CreateUserConstant(string softwarePath, string tagTablePath, string name, string dataTypeName = "", string value = "")
         {
             return $@"Create a user constant in a tag table. System constants are read-only and cannot be created (requires the server started with '--allow-write').
@@ -1341,7 +1342,7 @@ Use the CreateUserConstant tool with these parameters:
 - value: {value}";
         }
 
-        [McpServerPrompt(Name = "UpdateUserConstant"), Description("Update a PLC user constant")]
+        [McpServerPrompt(Name = "UpdateUserConstant"), Description("Update user constant")]
         public static string UpdateUserConstant(string softwarePath, string tagTablePath, string name, string newName = "", string dataTypeName = "", string value = "")
         {
             return $@"Change the name, data type or value of an existing user constant. Every argument left null keeps the current value (requires the server started with '--allow-write').
@@ -1363,7 +1364,7 @@ Use the UpdateUserConstant tool with these parameters:
 - value: {value}";
         }
 
-        [McpServerPrompt(Name = "DeleteUserConstant"), Description("Delete a PLC user constant")]
+        [McpServerPrompt(Name = "DeleteUserConstant"), Description("Delete user constant")]
         public static string DeleteUserConstant(string softwarePath, string tagTablePath, string name)
         {
             return $@"Delete a user constant from a tag table. System constants cannot be deleted (requires the server started with '--allow-write').
@@ -1379,10 +1380,10 @@ Use the DeleteUserConstant tool with these parameters:
 - name: {name}";
         }
 
-        [McpServerPrompt(Name = "CreateWatchTable"), Description("Create a watch table")]
+        [McpServerPrompt(Name = "CreateWatchTable"), Description("Create watch table")]
         public static string CreateWatchTable(string softwarePath, string groupPath, string name)
         {
-            return $@"Create a PLC watch table. Force tables cannot be created: the system owns the single force table per PLC (requires the server started with '--allow-write').
+            return $@"Create watch table. Force tables cannot be created: the system owns the single force table per PLC (requires the server started with '--allow-write').
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the plc software
@@ -1398,7 +1399,7 @@ Use the CreateWatchTable tool with these parameters:
         [McpServerPrompt(Name = "RenameWatchTable"), Description("Rename a watch table")]
         public static string RenameWatchTable(string softwarePath, string watchTablePath, string newName)
         {
-            return $@"Rename a PLC watch table (requires the server started with '--allow-write').
+            return $@"Rename watch table (requires the server started with '--allow-write').
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the plc software
@@ -1411,10 +1412,10 @@ Use the RenameWatchTable tool with these parameters:
 - newName: {newName}";
         }
 
-        [McpServerPrompt(Name = "DeleteWatchTable"), Description("Delete a watch table")]
+        [McpServerPrompt(Name = "DeleteWatchTable"), Description("Delete watch table")]
         public static string DeleteWatchTable(string softwarePath, string watchTablePath)
         {
-            return $@"Delete a PLC watch table with all of its entries. Force tables cannot be deleted (requires the server started with '--allow-write').
+            return $@"Delete watch table with all of its entries. Force tables cannot be deleted (requires the server started with '--allow-write').
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the plc software
@@ -1425,10 +1426,10 @@ Use the DeleteWatchTable tool with these parameters:
 - watchTablePath: {watchTablePath}";
         }
 
-        [McpServerPrompt(Name = "CreateWatchTableGroup"), Description("Create a watch table group")]
+        [McpServerPrompt(Name = "CreateWatchTableGroup"), Description("Create watch table group")]
         public static string CreateWatchTableGroup(string softwarePath, string parentGroupPath, string name)
         {
-            return $@"Create a group below the Watch and force tables root of the plc software (requires the server started with '--allow-write').
+            return $@"Create watch table group below the Watch and force tables root of the plc software (requires the server started with '--allow-write').
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the plc software
@@ -1441,10 +1442,10 @@ Use the CreateWatchTableGroup tool with these parameters:
 - name: {name}";
         }
 
-        [McpServerPrompt(Name = "DeleteWatchTableGroup"), Description("Delete a watch table group")]
+        [McpServerPrompt(Name = "DeleteWatchTableGroup"), Description("Delete watch table group")]
         public static string DeleteWatchTableGroup(string softwarePath, string groupPath)
         {
-            return $@"Delete a watch table group and everything inside it. The Watch and force tables system group itself cannot be deleted (requires the server started with '--allow-write').
+            return $@"Delete watch table group and everything inside it. The Watch and force tables system group itself cannot be deleted (requires the server started with '--allow-write').
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the plc software
@@ -1477,10 +1478,10 @@ Use the ImportWatchTable tool with these parameters:
 
         #region Document Templates
 
-        [McpServerPrompt(Name = "ExportTypeAsDocuments"), Description("Export PLC data type as documents")]
+        [McpServerPrompt(Name = "ExportTypeAsDocuments"), Description("Export type as documents")]
         public static string ExportTypeAsDocuments(string softwarePath, string typePath, string exportPath, string preservePath = "false")
         {
-            return $@"Export one PLC data type as a SIMATIC Source Document set (.s7dcl plus an optional .s7res) instead of XML. The response lists the files TIA Portal actually wrote. Requires TIA Portal V21 or newer.
+            return $@"Export type as a SIMATIC Source Document set (.s7dcl plus an optional .s7res) instead of XML. The response lists the files TIA Portal actually wrote. Requires TIA Portal V21 or newer.
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the plc software
@@ -1495,14 +1496,14 @@ Use the ExportTypeAsDocuments tool with these parameters:
 - preservePath: {NormalizeBool(preservePath)}";
         }
 
-        [McpServerPrompt(Name = "ImportTypeFromDocuments"), Description("Import PLC data type from documents")]
+        [McpServerPrompt(Name = "ImportTypeFromDocuments"), Description("Import type from documents")]
         public static string ImportTypeFromDocuments(string softwarePath, string groupPath, string importPath, string fileNameWithoutExtension, string importOption = "Override")
         {
-            return $@"Import one PLC data type from a SIMATIC Source Document set (.s7dcl plus an optional .s7res) on the file system of the machine running this server. A PLC data type name is unique across the whole PLC, so importing an existing name into a different group fails even with importOption 'Override' - target the group the type already lives in. Requires TIA Portal V21 or newer (requires the server started with '--allow-write').
+            return $@"Import one type from a SIMATIC Source Document set (.s7dcl plus an optional .s7res) on the file system of the machine running this server. A type name is unique across the whole PLC, so importing an existing name into a different group fails even with importOption 'Override' - target the group the type already lives in. Requires TIA Portal V21 or newer (requires the server started with '--allow-write').
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the plc software
-- groupPath: root-relative PLC data type group that receives the type; empty uses the PLC data types root. A leading 'PLC data types' segment, as written by preservePath exports, is accepted and ignored
+- groupPath: root-relative type group that receives the type; empty uses the PLC data types root. A leading 'PLC data types' segment, as written by preservePath exports, is accepted and ignored
 - importPath: directory containing the document files
 - fileNameWithoutExtension: base name of the document set, e.g. 'BtnTyp_X'
 - importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)
@@ -1515,7 +1516,7 @@ Use the ImportTypeFromDocuments tool with these parameters:
 - importOption: {importOption}";
         }
 
-        [McpServerPrompt(Name = "ExportAsDocuments"), Description("Export block as documents")]
+        [McpServerPrompt(Name = "ExportAsDocuments"), Description("Export as documents")]
         public static string ExportAsDocuments(string softwarePath, string blockPath, string exportPath, string preservePath = "false")
         {
             return $@"Export as documents (.s7dcl/.s7res) from a block in the plc software to path.
@@ -1537,7 +1538,7 @@ Use the ExportAsDocuments tool with these parameters:
 
         #region Source File Templates
 
-        [McpServerPrompt(Name = "GetBlockSource"), Description("Read a block's source")]
+        [McpServerPrompt(Name = "GetBlockSource"), Description("Get block source")]
         public static string GetBlockSource(string softwarePath, string blockPath, string format = "document", string maxChars = "40000")
         {
             return $@"Return the source text of one program block directly, instead of exporting a file and reading it back. 'document' gives readable SCL/LAD/STL (SIMATIC Source Document, V20+); objects TIA Portal cannot represent that way - STL and mixed-language blocks - fall back to XML automatically, and the response says which format was produced.
@@ -1555,7 +1556,7 @@ Use the GetBlockSource tool with these parameters:
 - maxChars: {maxChars}";
         }
 
-        [McpServerPrompt(Name = "GetTypeSource"), Description("Read a PLC data type's source")]
+        [McpServerPrompt(Name = "GetTypeSource"), Description("Get type source")]
         public static string GetTypeSource(string softwarePath, string typePath, string format = "document", string maxChars = "40000")
         {
             return $@"Return the source text of one PLC data type directly, instead of exporting a file and reading it back. 'document' gives the readable TYPE ... END_TYPE declaration (SIMATIC Source Document, requires TIA Portal V21); 'xml' gives the SimaticML export.
@@ -1573,7 +1574,7 @@ Use the GetTypeSource tool with these parameters:
 - maxChars: {maxChars}";
         }
 
-        [McpServerPrompt(Name = "ExportPlcAsSourceTree"), Description("Snapshot a PLC to a source tree")]
+        [McpServerPrompt(Name = "ExportPlcAsSourceTree"), Description("Export PLC as source tree")]
         public static string ExportPlcAsSourceTree(string softwarePath, string exportPath)
         {
             return $@"Write a whole PLC software to one folder tree that mirrors the project, ready to commit: program blocks and PLC data types as readable SIMATIC Source Documents where TIA Portal supports them, tag tables and watch tables as XML, each below its localised system folder. Replaces running the four bulk exports separately. Objects that cannot be exported are reported instead of failing the snapshot.
@@ -1587,7 +1588,7 @@ Use the ExportPlcAsSourceTree tool with these parameters:
 - exportPath: {exportPath}";
         }
 
-        [McpServerPrompt(Name = "GenerateSources"), Description("Generate sources for a whole PLC")]
+        [McpServerPrompt(Name = "GenerateSources"), Description("Generate sources")]
         public static string GenerateSources(string softwarePath, string exportPath, string regexName = "", string withDependencies = "false")
         {
             return $@"Write every block and PLC data type of one PLC software as external source files into a folder tree that mirrors the project groups: '<exportPath>/Program blocks/...' and '<exportPath>/PLC data types/...', one file per object. The compilable counterpart to 'ExportPlcAsSourceTree'. Objects with no source form (LAD, FBD, GRAPH), inconsistent objects and know-how protected ones are reported in 'Skipped' instead of failing the run.
@@ -1605,7 +1606,7 @@ Use the GenerateSources tool with these parameters:
 - withDependencies: {NormalizeBool(withDependencies)}";
         }
 
-        [McpServerPrompt(Name = "GetExternalSources"), Description("Get PLC external sources")]
+        [McpServerPrompt(Name = "GetExternalSources"), Description("Get external sources")]
         public static string GetExternalSources(string softwarePath, string regexName = "")
         {
             return $@"List the external source files of a plc software, optionally filtered by a regular expression on the source name.
@@ -1619,7 +1620,7 @@ Use the GetExternalSources tool with these parameters:
 - regexName: {regexName}";
         }
 
-        [McpServerPrompt(Name = "GetExternalSourceInfo"), Description("Get PLC external source info")]
+        [McpServerPrompt(Name = "GetExternalSourceInfo"), Description("Get external source info")]
         public static string GetExternalSourceInfo(string softwarePath, string sourcePath)
         {
             return $@"Get a single external source file. Beyond its name, all metadata is returned in the generic Attributes list.
@@ -1633,7 +1634,7 @@ Use the GetExternalSourceInfo tool with these parameters:
 - sourcePath: {sourcePath}";
         }
 
-        [McpServerPrompt(Name = "CreateExternalSourceFromFile"), Description("Add an external source file")]
+        [McpServerPrompt(Name = "CreateExternalSourceFromFile"), Description("Create external source from file")]
         public static string CreateExternalSourceFromFile(string softwarePath, string groupPath, string name, string filePath)
         {
             return $@"Add a source file (for example an SCL file) from the file system into the external source files of the plc software (requires the server started with '--allow-write').
@@ -1651,7 +1652,7 @@ Use the CreateExternalSourceFromFile tool with these parameters:
 - filePath: {filePath}";
         }
 
-        [McpServerPrompt(Name = "DeleteExternalSource"), Description("Delete an external source file")]
+        [McpServerPrompt(Name = "DeleteExternalSource"), Description("Delete external source")]
         public static string DeleteExternalSource(string softwarePath, string sourcePath)
         {
             return $@"Remove an external source file from the plc software (requires the server started with '--allow-write').
@@ -1665,7 +1666,7 @@ Use the DeleteExternalSource tool with these parameters:
 - sourcePath: {sourcePath}";
         }
 
-        [McpServerPrompt(Name = "CreateExternalSourceGroup"), Description("Create an external source group")]
+        [McpServerPrompt(Name = "CreateExternalSourceGroup"), Description("Create external source group")]
         public static string CreateExternalSourceGroup(string softwarePath, string parentGroupPath, string name)
         {
             return $@"Create a group below the External source files root of the plc software (requires the server started with '--allow-write').
@@ -1681,7 +1682,7 @@ Use the CreateExternalSourceGroup tool with these parameters:
 - name: {name}";
         }
 
-        [McpServerPrompt(Name = "DeleteExternalSourceGroup"), Description("Delete an external source group")]
+        [McpServerPrompt(Name = "DeleteExternalSourceGroup"), Description("Delete external source group")]
         public static string DeleteExternalSourceGroup(string softwarePath, string groupPath)
         {
             return $@"Delete an external source group and everything inside it. The External source files system group itself cannot be deleted (requires the server started with '--allow-write').

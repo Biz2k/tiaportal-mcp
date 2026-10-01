@@ -313,12 +313,12 @@ namespace TiaMcpServer.Siemens
 
                     // Tag and watch tables have no document format in V21; XML is all there is.
                     Record(result, "tagTables", "xml", ExportEach(
-                        GetTagTables(softwarePath).Select(t => (GetTagTablePath(t), (Action)(() => ExportTagTable(softwarePath, GetTagTablePath(t), exportPath, preservePath: true)))),
+                        GetTagTables(softwarePath).Select(t => (GetTagTablePath(t), (Action)(() => ExportXmlTagTable(softwarePath, GetTagTablePath(t), exportPath, preservePath: true)))),
                         "tag table",
                         result));
 
                     Record(result, "watchTables", "xml", ExportEach(
-                        GetWatchTables(softwarePath).Select(t => (GetWatchTablePath(t), (Action)(() => ExportWatchTable(softwarePath, GetWatchTablePath(t), exportPath, preservePath: true)))),
+                        GetWatchTables(softwarePath).Select(t => (GetWatchTablePath(t), (Action)(() => ExportXmlWatchTable(softwarePath, GetWatchTablePath(t), exportPath, preservePath: true)))),
                         "watch table",
                         result));
 

@@ -18,7 +18,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // Callers: registered through Program.BuildTools() and invoked directly by the tag test
         // class. Affected API: additive only - this is a new partial of the existing McpServer type.
         // Data: returns the ResponseTagTable*/ResponseTag*/ResponseConstant* DTOs as MCP
-        // structuredContent. Only ExportTagTable touches the file system, writing one .xml.
+        // structuredContent. Only ExportXmlTagTable touches the file system, writing one .xml.
         //
         // Every tool follows the house pattern: call Portal, translate a null/empty result into a
         // specific McpException, and wrap anything unexpected with 'when (ex is not McpException)'.
@@ -177,9 +177,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportTagTable", Title = "Export a PLC tag table", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ExportXmlTagTable", Title = "Export a PLC tag table", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Export a PLC tag table to an XML file on the file system of the machine running this server. Does not modify the project")]
-        public static ResponseExportTagTable ExportTagTable(
+        public static ResponseExportXmlTagTable ExportXmlTagTable(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("tagTablePath: root-relative path of the tag table, e.g. 'TagGroup1/Table1'")] string tagTablePath,
             [Description("exportPath: directory on this machine that receives the XML file")] string exportPath,
@@ -187,10 +187,10 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var table = Portal.ExportTagTable(softwarePath, tagTablePath, exportPath, preservePath)
+                var table = Portal.ExportXmlTagTable(softwarePath, tagTablePath, exportPath, preservePath)
                     ?? throw new McpException($"Failed exporting tag table '{tagTablePath}' from '{softwarePath}'");
 
-                return new ResponseExportTagTable
+                return new ResponseExportXmlTagTable
                 {
                     Message = $"Tag table '{tagTablePath}' exported to '{exportPath}'",
                     Name = table.Name,
@@ -267,7 +267,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // Callers: registered through Program.BuildTools() and invoked directly by the watch
         // table test class. Affected API: additive only - a new partial of the existing McpServer
         // type. Data: returns ResponseWatchTable*/TableEntryInfo as MCP structuredContent; only
-        // ExportWatchTable touches the file system, writing one .xml.
+        // ExportXmlWatchTable touches the file system, writing one .xml.
 
         #region watch and force tables
 
@@ -340,9 +340,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportWatchTable", Title = "Export a PLC watch table", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ExportXmlWatchTable", Title = "Export a PLC watch table", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Export a PLC watch table to an XML file on the file system of the machine running this server. Does not modify the project")]
-        public static ResponseExportWatchTable ExportWatchTable(
+        public static ResponseExportXmlWatchTable ExportXmlWatchTable(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("watchTablePath: root-relative path of the watch table, e.g. 'WatchGroup1/WatchTable_1'")] string watchTablePath,
             [Description("exportPath: directory on this machine that receives the XML file")] string exportPath,
@@ -350,10 +350,10 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var table = Portal.ExportWatchTable(softwarePath, watchTablePath, exportPath, preservePath)
+                var table = Portal.ExportXmlWatchTable(softwarePath, watchTablePath, exportPath, preservePath)
                     ?? throw new McpException($"Failed exporting watch table '{watchTablePath}' from '{softwarePath}'");
 
-                return new ResponseExportWatchTable
+                return new ResponseExportXmlWatchTable
                 {
                     Message = $"Watch table '{watchTablePath}' exported to '{exportPath}'",
                     Name = table.Name,

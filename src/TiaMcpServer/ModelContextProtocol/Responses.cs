@@ -133,7 +133,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<ResponseConstantInfo>? Items { get; set; }
     }
 
-    public class ResponseExportTagTable : ResponseMessage
+    public class ResponseExportXmlTagTable : ResponseMessage
     {
         public string? Name { get; set; }
         public string? Path { get; set; }
@@ -163,7 +163,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<ResponseWatchTableInfo>? Items { get; set; }
     }
 
-    public class ResponseExportWatchTable : ResponseMessage
+    public class ResponseExportXmlWatchTable : ResponseMessage
     {
         public string? Name { get; set; }
         public string? Path { get; set; }
