@@ -262,7 +262,7 @@ Use the ExportSourceType tool with these parameters:
             return ExportBlocksAsDocuments(softwarePath, exportPath, "", "true");
         }
 
-        [McpServerPrompt(Name = "ExportTypesAsDocuments"), Description("Export PLC data types as SIMATIC Source Documents (V21+)")]
+        [McpServerPrompt(Name = "ExportTypesAsDocuments"), Description("Export types as documents (V21+)")]
         public static string ExportTypesAsDocuments(string softwarePath, string exportPath, string regexName = "", string preservePath = "false")
         {
             return $@"Export PLC data types (UDTs) as SIMATIC Source Documents instead of XML.
