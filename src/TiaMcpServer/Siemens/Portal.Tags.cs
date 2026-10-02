@@ -85,7 +85,9 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         private static string StripTagTableSystemRoot(PlcTagTableSystemGroup root, string groupPath)
         {
-            if (string.IsNullOrEmpty(groupPath))
+            groupPath = NormalizeGroupPath(groupPath);
+
+            if (groupPath.Length == 0)
             {
                 return groupPath;
             }
@@ -236,7 +238,7 @@ namespace TiaMcpServer.Siemens
             Func<T, string> name,
             string regexName)
         {
-            var tables = string.IsNullOrEmpty(tagTablePath)
+            var tables = NormalizeGroupPath(tagTablePath).Length == 0
                 ? GetTagTables(softwarePath)
                 : new List<PlcTagTable>
                   {
@@ -535,9 +537,9 @@ namespace TiaMcpServer.Siemens
                 ("softwarePath", softwarePath), ("groupPath", groupPath));
         }
 
-        public bool ImportTagTable(string softwarePath, string groupPath, string importPath, bool overwrite = true)
+        public bool ImportXmlTagTable(string softwarePath, string groupPath, string importPath, bool overwrite = true)
         {
-            return Operation.Run(_logger, nameof(ImportTagTable), PortalErrorCode.ImportFailed,
+            return Operation.Run(_logger, nameof(ImportXmlTagTable), PortalErrorCode.ImportFailed,
                 () =>
                 {
                     var group = GetTagTableGroupByPath(softwarePath, groupPath)

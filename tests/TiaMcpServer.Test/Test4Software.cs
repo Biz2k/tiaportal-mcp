@@ -910,7 +910,7 @@ namespace TiaMcpServer.Test
 
         [TestMethod]
         [DataRow(Settings.Project1ProjectPath, Settings.Project1PlcSoftwarePath0)]
-        public void Test_452_ExportPlcAsSourceTree(string projectPath, string softwarePath)
+        public void Test_452_ExportPlcAsDocuments(string projectPath, string softwarePath)
         {
             if (_portal == null)
             {
@@ -923,7 +923,7 @@ namespace TiaMcpServer.Test
 
             try
             {
-                var result = _portal.ExportPlcAsSourceTree(softwarePath, exportPath);
+                var result = _portal.ExportPlcAsDocuments(softwarePath, exportPath);
 
                 Console.WriteLine($"Snapshot in {result.Directory}: {result.TotalWritten} written, " +
                                   $"{result.Skipped.Count} skipped, {result.Failures.Count} failed");

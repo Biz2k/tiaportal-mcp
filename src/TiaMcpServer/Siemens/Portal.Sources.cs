@@ -87,7 +87,7 @@ namespace TiaMcpServer.Siemens
         // From the former Portal.Source.cs:
         // Reading what an object actually contains, rather than only its metadata.
         //
-        // Callers: the GetBlockSource / GetTypeSource tools and ExportPlcAsSourceTree in McpServer.Sources.cs,
+        // Callers: the GetBlockSource / GetTypeSource tools and ExportPlcAsDocuments in McpServer.Sources.cs,
         // and the GetBlockInterface tool in McpServer.Blocks.cs.
         // Affected API: none existing - every member here is new. GetBlockInterface itself lives in
         // Portal.Blocks.cs; the source readers, the shared reader, the scratch directory and the whole-PLC export are here.
@@ -271,9 +271,9 @@ namespace TiaMcpServer.Siemens
         /// inherits their skip-and-continue behaviour: one object that cannot be exported does
         /// not lose the rest of the snapshot.
         /// </summary>
-        public SourceTreeResult ExportPlcAsSourceTree(string softwarePath, string exportPath)
+        public SourceTreeResult ExportPlcAsDocuments(string softwarePath, string exportPath)
         {
-            return Operation.Run(_logger, nameof(ExportPlcAsSourceTree), PortalErrorCode.ExportFailed,
+            return Operation.Run(_logger, nameof(ExportPlcAsDocuments), PortalErrorCode.ExportFailed,
                 () =>
                 {
                     // Fail before writing anything when the path is wrong.
@@ -511,7 +511,7 @@ namespace TiaMcpServer.Siemens
         /// a folder tree that mirrors the project groups: '&lt;exportPath&gt;/Program blocks/...'
         /// and '&lt;exportPath&gt;/PLC data types/...', one file per object.
         ///
-        /// The counterpart to <see cref="ExportPlcAsSourceTree"/>, which snapshots the same tree
+        /// The counterpart to <see cref="ExportPlcAsDocuments"/>, which snapshots the same tree
         /// as source documents and XML. This one produces the format TIA Portal can compile back
         /// into blocks, at the cost of leaving out everything that has no source form - LAD, FBD
         /// and GRAPH blocks among them.
@@ -529,60 +529,8 @@ namespace TiaMcpServer.Siemens
 
                     var result = new GeneratedSourcesResult { Directory = exportPath };
 
-                    foreach (var block in GetBlocks(softwarePath, regexName))
-                    {
-                        var blockPath = GetBlockPath(block);
-                        var (extension, reason) = BlockSourceExtension(block);
-
-                        if (extension == null)
-                        {
-                            result.Skipped.Add($"block {blockPath}: {reason}");
-                            continue;
-                        }
-
-                        if (Skip(result, "block", blockPath, block.IsConsistent, block.IsKnowHowProtected))
-                        {
-                            continue;
-                        }
-
-                        TryGenerate(
-                            result,
-                            "block",
-                            blockPath,
-                            () => Generate(
-                                group,
-                                block,
-                                block.Name,
-                                blockPath,
-                                extension,
-                                block.ProgrammingLanguage.ToString(),
-                                BlockSourceDirectory(block, exportPath, preservePath: true),
-                                withDependencies));
-                    }
-
-                    foreach (var type in GetTypes(softwarePath, regexName))
-                    {
-                        var typePath = GetTypePath(type);
-
-                        if (Skip(result, "type", typePath, type.IsConsistent, type.IsKnowHowProtected))
-                        {
-                            continue;
-                        }
-
-                        TryGenerate(
-                            result,
-                            "type",
-                            typePath,
-                            () => Generate(
-                                group,
-                                type,
-                                type.Name,
-                                typePath,
-                                TypeSourceExtension,
-                                "UDT",
-                                TypeSourceDirectory(type, exportPath, preservePath: true),
-                                withDependencies));
-                    }
+                    GenerateBlocks(result, group, GetBlocks(softwarePath, regexName), exportPath, withDependencies, preservePath: true);
+                    GenerateTypes(result, group, GetTypes(softwarePath, regexName), exportPath, withDependencies, preservePath: true);
 
                     _logger?.LogInformation(
                         "Sources for '{Software}' written to '{Directory}': {Written} file(s), {Skipped} skipped, {Failed} failed",
@@ -591,6 +539,160 @@ namespace TiaMcpServer.Siemens
                     return result;
                 },
                 ("softwarePath", softwarePath), ("exportPath", exportPath), ("regexName", regexName));
+        }
+
+        /// <summary>
+        /// Writes every block below a group, including all subgroups, as external source files.
+        /// An empty <paramref name="groupPath"/> means the 'Program blocks' root, which makes it
+        /// the same as <see cref="GenerateSources"/> restricted to blocks.
+        ///
+        /// With <paramref name="preservePath"/> the project groups are mirrored below
+        /// '&lt;exportPath&gt;/Program blocks'; without it every file lands directly in
+        /// '&lt;exportPath&gt;', so two blocks of the same name in different groups overwrite
+        /// each other. Skip-and-continue, like <see cref="GenerateSources"/>.
+        /// </summary>
+        public GeneratedSourcesResult ExportSourceBlocks(string softwarePath, string groupPath, string exportPath, bool withDependencies = false, bool preservePath = false)
+        {
+            return Operation.Run(_logger, nameof(ExportSourceBlocks), PortalErrorCode.ExportFailed,
+                () =>
+                {
+                    var sourceGroup = GetSourceSystemGroup(softwarePath);
+
+                    var group = NormalizeGroupPath(groupPath).Length == 0
+                        ? GetPlcSoftwareOrThrow(softwarePath).BlockGroup
+                        : GetPlcBlockGroupByPath(softwarePath, groupPath);
+
+                    if (group == null)
+                    {
+                        throw new PortalException(PortalErrorCode.NotFound,
+                            $"Block group not found at '{groupPath}'. Use 'GetBlocks' or 'ResolveObjectPath' to find the path.");
+                    }
+
+                    var blocks = new List<PlcBlock>();
+                    GetBlocksRecursive(group, blocks);
+
+                    var result = new GeneratedSourcesResult { Directory = exportPath };
+
+                    GenerateBlocks(result, sourceGroup, blocks, exportPath, withDependencies, preservePath);
+
+                    _logger?.LogInformation(
+                        "Block sources below '{Group}' written to '{Directory}': {Written} file(s), {Skipped} skipped, {Failed} failed",
+                        groupPath, exportPath, result.Files.Count, result.Skipped.Count, result.Failures.Count);
+
+                    return result;
+                },
+                ("softwarePath", softwarePath), ("groupPath", groupPath), ("exportPath", exportPath));
+        }
+
+        /// <summary>
+        /// Writes every PLC data type below a group, including all subgroups, as '*.udt' files.
+        /// An empty <paramref name="groupPath"/> means the 'PLC data types' root. See
+        /// <see cref="ExportSourceBlocks"/> for the effect of <paramref name="preservePath"/>.
+        /// </summary>
+        public GeneratedSourcesResult ExportSourceTypes(string softwarePath, string groupPath, string exportPath, bool withDependencies = false, bool preservePath = false)
+        {
+            return Operation.Run(_logger, nameof(ExportSourceTypes), PortalErrorCode.ExportFailed,
+                () =>
+                {
+                    var sourceGroup = GetSourceSystemGroup(softwarePath);
+
+                    var group = NormalizeGroupPath(groupPath).Length == 0
+                        ? GetPlcSoftwareOrThrow(softwarePath).TypeGroup
+                        : GetPlcTypeGroupByPath(softwarePath, groupPath);
+
+                    if (group == null)
+                    {
+                        throw new PortalException(PortalErrorCode.NotFound,
+                            $"PLC data type group not found at '{groupPath}'. Use 'GetTypes' or 'ResolveObjectPath' to find the path.");
+                    }
+
+                    var types = new List<PlcType>();
+                    GetTypesRecursive(group, types);
+
+                    var result = new GeneratedSourcesResult { Directory = exportPath };
+
+                    GenerateTypes(result, sourceGroup, types, exportPath, withDependencies, preservePath);
+
+                    _logger?.LogInformation(
+                        "Type sources below '{Group}' written to '{Directory}': {Written} file(s), {Skipped} skipped, {Failed} failed",
+                        groupPath, exportPath, result.Files.Count, result.Skipped.Count, result.Failures.Count);
+
+                    return result;
+                },
+                ("softwarePath", softwarePath), ("groupPath", groupPath), ("exportPath", exportPath));
+        }
+
+        private void GenerateBlocks(
+            GeneratedSourcesResult result,
+            PlcExternalSourceSystemGroup group,
+            IEnumerable<PlcBlock> blocks,
+            string exportPath,
+            bool withDependencies,
+            bool preservePath)
+        {
+            foreach (var block in blocks)
+            {
+                var blockPath = GetBlockPath(block);
+                var (extension, reason) = BlockSourceExtension(block);
+
+                if (extension == null)
+                {
+                    result.Skipped.Add($"block {blockPath}: {reason}");
+                    continue;
+                }
+
+                if (Skip(result, "block", blockPath, block.IsConsistent, block.IsKnowHowProtected))
+                {
+                    continue;
+                }
+
+                TryGenerate(
+                    result,
+                    "block",
+                    blockPath,
+                    () => Generate(
+                        group,
+                        block,
+                        block.Name,
+                        blockPath,
+                        extension,
+                        block.ProgrammingLanguage.ToString(),
+                        BlockSourceDirectory(block, exportPath, preservePath),
+                        withDependencies));
+            }
+        }
+
+        private void GenerateTypes(
+            GeneratedSourcesResult result,
+            PlcExternalSourceSystemGroup group,
+            IEnumerable<PlcType> types,
+            string exportPath,
+            bool withDependencies,
+            bool preservePath)
+        {
+            foreach (var type in types)
+            {
+                var typePath = GetTypePath(type);
+
+                if (Skip(result, "type", typePath, type.IsConsistent, type.IsKnowHowProtected))
+                {
+                    continue;
+                }
+
+                TryGenerate(
+                    result,
+                    "type",
+                    typePath,
+                    () => Generate(
+                        group,
+                        type,
+                        type.Name,
+                        typePath,
+                        TypeSourceExtension,
+                        "UDT",
+                        TypeSourceDirectory(type, exportPath, preservePath),
+                        withDependencies));
+            }
         }
 
         /// <summary>
@@ -906,7 +1008,7 @@ namespace TiaMcpServer.Siemens
         /// <summary>Empty groupPath means the source's own default location.</summary>
         private PlcBlockUserGroup? ResolveBlockUserGroupForGenerate(string softwarePath, string groupPath)
         {
-            if (string.IsNullOrEmpty(groupPath))
+            if (NormalizeGroupPath(groupPath).Length == 0)
             {
                 return null;
             }
@@ -924,7 +1026,7 @@ namespace TiaMcpServer.Siemens
         /// <summary>Empty groupPath means the source's own default location.</summary>
         private PlcTypeUserGroup? ResolveTypeUserGroupForGenerate(string softwarePath, string groupPath)
         {
-            if (string.IsNullOrEmpty(groupPath))
+            if (NormalizeGroupPath(groupPath).Length == 0)
             {
                 return null;
             }
@@ -1142,7 +1244,7 @@ namespace TiaMcpServer.Siemens
                     // IList<IEngineeringObject>, which holds PlcBlock and PlcType instances.
                     IList<IEngineeringObject> generated;
 
-                    if (string.IsNullOrWhiteSpace(targetGroupPath))
+                    if (NormalizeGroupPath(targetGroupPath).Length == 0)
                     {
                         generated = source.GenerateBlocksFromSource(option);
                     }

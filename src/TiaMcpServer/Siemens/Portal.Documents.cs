@@ -551,7 +551,9 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         private static string StripSystemRootSegment(string rootName, string path)
         {
-            if (string.IsNullOrEmpty(path))
+            path = NormalizeGroupPath(path);
+
+            if (path.Length == 0)
             {
                 return path;
             }

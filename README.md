@@ -13,12 +13,12 @@ A MCP server which connects to Siemens TIA Portal.
 
 ## Command Line Arguments
 
-| Argument | Description |
-| --- | --- |
-| `--tia-major-version <n>` | TIA Portal major version to bind against. Default `21`. |
-| `--logging <1\|2\|3>` | `1` stderr, `2` debug output, `3` Windows event log. Omit for no logging. |
-| `--doctor` | Print the environment report and exit without starting the MCP server. |
-| `--allow-write` | Register the project-mutating tools. Omitted by default; see below. |
+| Argument                  | Description                                                               |
+| ------------------------- | ------------------------------------------------------------------------- |
+| `--tia-major-version <n>` | TIA Portal major version to bind against. Default `21`.                   |
+| `--logging <1\|2\|3>`     | `1` stderr, `2` debug output, `3` Windows event log. Omit for no logging. |
+| `--doctor`                | Print the environment report and exit without starting the MCP server.    |
+| `--allow-write`           | Register the project-mutating tools. Omitted by default; see below.       |
 
 ## Write mode
 
@@ -44,34 +44,34 @@ To enable write mode, add the argument to your client configuration, for example
 
 Read-only tools (59) are always available.
 
-| Area | Tools |
-| --- | --- |
-| Portal and state | `Connect`, `Disconnect`, `GetState`, `Doctor` |
-| Project and session | `GetProject`, `OpenProject`, `SaveProject`, `SaveAsProject`, `CloseProject` |
-| Devices | `GetProjectTree`, `GetDevices`, `GetDeviceInfo`, `GetDeviceItemInfo` |
-| PLC software | `GetSoftwareInfo`, `GetSoftwareTree`, `CompileSoftware` |
-| Blocks | `GetBlocks`, `GetBlockInfo`, `GetBlocksWithHierarchy`, `ExportXmlBlock`, `ExportXmlBlocks`, `ImportXmlBlock` |
-| Types | `GetTypes`, `GetTypeInfo`, `ExportXmlType`, `ExportXmlTypes`, `ImportXmlType` |
-| Tags and constants | `GetTagTables`, `GetTagTableInfo`, `GetTags`, `GetTagInfo`, `GetConstants`, `ExportXmlTagTable` |
-| Watch and force tables | `GetWatchTables`, `GetWatchTableInfo`, `GetForceTables`, `ExportXmlWatchTable` |
-| External sources | `GetExternalSources`, `GetExternalSourceInfo`, `ExportSourceBlock`, `ExportSourceType` |
-| Cross references | `GetCrossReferences` |
-| Block documents (V20+) | `ExportAsDocuments`, `ExportBlocksAsDocuments`, `ImportFromDocuments`, `ImportBlocksFromDocuments` |
-| Type documents (V21+) | `ExportTypeAsDocuments`, `ExportTypesAsDocuments` |
-| Understand and read (comfort) | `GetPlcSummary`, `ResolveObjectPath`, `WhereUsed`, `FindInCode`, `GetBlockSource`, `GetTypeSource`, `GetBlockInterface`, `PreviewImport`, `OpenTiaProject`, `ExportPlcAsSourceTree`, `GenerateSources` |
+| Area                          | Tools                                                                                                                                                                                                  |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Portal and state              | `Connect`, `Disconnect`, `GetState`, `Doctor`                                                                                                                                                          |
+| Project and session           | `GetProject`, `OpenProject`, `SaveProject`, `SaveAsProject`, `CloseProject`                                                                                                                            |
+| Devices                       | `GetProjectTree`, `GetDevices`, `GetDeviceInfo`, `GetDeviceItemInfo`                                                                                                                                   |
+| PLC software                  | `GetSoftwareInfo`, `GetSoftwareTree`, `CompileSoftware`                                                                                                                                                |
+| Blocks                        | `GetBlocks`, `GetBlockInfo`, `GetBlocksWithHierarchy`, `ExportXmlBlock`, `ExportXmlBlocks`, `ImportXmlBlock`                                                                                           |
+| Types                         | `GetTypes`, `GetTypeInfo`, `ExportXmlType`, `ExportXmlTypes`, `ImportXmlType`                                                                                                                          |
+| Tags and constants            | `GetTagTables`, `GetTagTableInfo`, `GetTags`, `GetTagInfo`, `GetConstants`, `ExportXmlTagTable`                                                                                                        |
+| Watch and force tables        | `GetWatchTables`, `GetWatchTableInfo`, `GetForceTables`, `ExportXmlWatchTable`                                                                                                                         |
+| External sources              | `GetExternalSources`, `GetExternalSourceInfo`, `ExportSourceBlock`, `ExportSourceType`                                                                                                                 |
+| Cross references              | `GetCrossReferences`                                                                                                                                                                                   |
+| Block documents (V20+)        | `ExportAsDocuments`, `ExportBlocksAsDocuments`, `ImportFromDocuments`, `ImportBlocksFromDocuments`                                                                                                     |
+| Type documents (V21+)         | `ExportTypeAsDocuments`, `ExportTypesAsDocuments`                                                                                                                                                      |
+| Understand and read (comfort) | `GetPlcSummary`, `ResolveObjectPath`, `WhereUsed`, `FindInCode`, `GetBlockSource`, `GetTypeSource`, `GetBlockInterface`, `PreviewImport`, `OpenTiaProject`, `ExportPlcAsDocuments`, `GenerateSources` |
 
 Write tools (40) require `--allow-write`.
 
-| Area | Tools |
-| --- | --- |
-| Block and type groups | `CreateBlockGroup`, `DeleteBlockGroup`, `CreateTypeGroup`, `DeleteTypeGroup` |
-| Blocks and types | `DeleteBlock`, `RenameBlock`, `DeleteType`, `RenameType`, `CreateFB`, `CreateInstanceDB` |
-| Copy and move | `CopyBlock`, `MoveBlock`, `CopyType`, `MoveType` |
-| Tag tables | `CreateTagTable`, `DeleteTagTable`, `RenameTagTable`, `CreateTagTableGroup`, `DeleteTagTableGroup`, `ImportTagTable` |
-| Tags and constants | `CreateTag`, `UpdateTag`, `DeleteTag`, `CreateUserConstant`, `UpdateUserConstant`, `DeleteUserConstant` |
-| Watch tables | `CreateWatchTable`, `RenameWatchTable`, `DeleteWatchTable`, `CreateWatchTableGroup`, `DeleteWatchTableGroup`, `ImportWatchTable` |
-| External sources | `CreateExternalSourceFromFile`, `DeleteExternalSource`, `CreateExternalSourceGroup`, `DeleteExternalSourceGroup`, `ImportSourceBlocks`, `ImportSources` |
-| Type documents (V21+) | `ImportTypeFromDocuments`, `ImportTypesFromDocuments` |
+| Area                  | Tools                                                                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Block and type groups | `CreateBlockGroup`, `DeleteBlockGroup`, `CreateTypeGroup`, `DeleteTypeGroup`                                                                            |
+| Blocks and types      | `DeleteBlock`, `RenameBlock`, `DeleteType`, `RenameType`, `CreateFB`, `CreateInstanceDB`                                                                |
+| Copy and move         | `CopyBlock`, `MoveBlock`, `CopyType`, `MoveType`                                                                                                        |
+| Tag tables            | `CreateTagTable`, `DeleteTagTable`, `RenameTagTable`, `CreateTagTableGroup`, `DeleteTagTableGroup`, `ImportXmlTagTable`                                    |
+| Tags and constants    | `CreateTag`, `UpdateTag`, `DeleteTag`, `CreateUserConstant`, `UpdateUserConstant`, `DeleteUserConstant`                                                 |
+| Watch tables          | `CreateWatchTable`, `RenameWatchTable`, `DeleteWatchTable`, `CreateWatchTableGroup`, `DeleteWatchTableGroup`, `ImportWatchTable`                        |
+| External sources      | `CreateExternalSourceFromFile`, `DeleteExternalSource`, `CreateExternalSourceGroup`, `DeleteExternalSourceGroup`, `ImportSourceBlocks`, `ImportSources` |
+| Type documents (V21+) | `ImportTypeFromDocuments`, `ImportTypesFromDocuments`                                                                                                   |
 
 `GetSoftwareTree` accepts a `sections` argument - any comma separated subset of
 `blocks,types,tags,watch,sources`, default `all` - to keep the output small on a large PLC.

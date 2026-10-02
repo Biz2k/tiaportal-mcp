@@ -59,6 +59,28 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>
+        /// Canonical form of a group or object path: '/'-separated, without empty or '.' segments.
+        /// "", ".", "/" and "./" (and null) all mean the top folder of the software structure and
+        /// come back as the empty string; "./A//B/" comes back as "A/B". Backslashes are accepted
+        /// as separators.
+        /// </summary>
+        private static string NormalizeGroupPath(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return string.Empty;
+            }
+
+            var segments = path!
+                .Replace('\\', '/')
+                .Split(['/'], StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0 && s != ".");
+
+            return string.Join("/", segments);
+        }
+
+        /// <summary>
         /// Walks a '/'-separated group path down from <paramref name="root"/>.
         /// An empty path returns the root itself. Returns null when a segment does not match.
         /// </summary>
@@ -71,7 +93,7 @@ namespace TiaMcpServer.Siemens
         {
             T? current = root;
 
-            foreach (var segment in groupPath.Split(['/'], StringSplitOptions.RemoveEmptyEntries))
+            foreach (var segment in NormalizeGroupPath(groupPath).Split(['/'], StringSplitOptions.RemoveEmptyEntries))
             {
                 if (current == null)
                 {
@@ -198,7 +220,7 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         private static (string GroupPath, string LeafName) SplitPath(string path)
         {
-            var trimmed = (path ?? string.Empty).Trim('/');
+            var trimmed = NormalizeGroupPath(path);
             var index = trimmed.LastIndexOf('/');
 
             return index < 0

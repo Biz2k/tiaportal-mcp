@@ -92,15 +92,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 "PLC data type");
         }
 
-        [McpServerTool(Name = "ExportPlcAsSourceTree", Title = "Export PLC as source tree", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "ExportPlcAsDocuments", Title = "Export PLC as documents", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Write a whole PLC software to one folder tree that mirrors the project, ready to commit: program blocks and PLC data types as readable SIMATIC Source Documents where TIA Portal supports them, tag tables and watch tables as XML, each below its localised system folder. Replaces running the four bulk exports separately. Objects that cannot be exported are reported instead of failing the snapshot")]
-        public static ResponseSourceTree ExportPlcAsSourceTree(
+        public static ResponseSourceTree ExportPlcAsDocuments(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: directory on this machine that receives the tree; existing files of the same name are overwritten")] string exportPath)
         {
             try
             {
-                var result = Portal.ExportPlcAsSourceTree(softwarePath, exportPath);
+                var result = Portal.ExportPlcAsDocuments(softwarePath, exportPath);
 
                 return new ResponseSourceTree
                 {
@@ -178,8 +178,38 @@ namespace TiaMcpServer.ModelContextProtocol
                 "PLC data type");
         }
 
-        [McpServerTool(Name = "GenerateSources", Title = "Generate sources", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Write every block and PLC data type of one PLC software as external source files into a folder tree that mirrors the project groups: '<exportPath>/Program blocks/...' and '<exportPath>/PLC data types/...', one file per object. The compilable counterpart to 'ExportPlcAsSourceTree'. Objects with no source form (LAD, FBD, GRAPH), inconsistent objects and know-how protected ones are reported in 'Skipped' instead of failing the run")]
+        [McpServerTool(Name = "ExportSourceBlocks", Title = "Export blocks as source", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Write every program block below a block group, including all subgroups, as TIA Portal external source files. Blocks with no source form (LAD, FBD, GRAPH), inconsistent blocks and know-how protected ones are reported in 'Skipped' instead of failing the run. The recursive counterpart to 'ExportSourceBlock'")]
+        public static ResponseGeneratedSources ExportSourceBlocks(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("groupPath: root-relative path of the block group to export recursively, e.g. '0_OBs'. Empty means all blocks below 'Program blocks'")] string groupPath,
+            [Description("exportPath: directory on this machine that receives the files; existing files of the same name are overwritten")] string exportPath,
+            [Description("withDependencies: also write every object each block uses into its file. Default false, which keeps one object per file")] bool withDependencies = false,
+            [Description("preservePath: mirror the project groups below '<exportPath>/Program blocks'. Default false, which writes straight into exportPath, so blocks of the same name in different groups overwrite each other")] bool preservePath = false)
+        {
+            return GeneratedMany(
+                () => Portal.ExportSourceBlocks(softwarePath, groupPath, exportPath, withDependencies, preservePath),
+                $"Block sources below '{groupPath}'",
+                exportPath);
+        }
+
+        [McpServerTool(Name = "ExportSourceTypes", Title = "Export types as source", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Write every PLC data type below a type group, including all subgroups, as '*.udt' external source files. Inconsistent and know-how protected types are reported in 'Skipped' instead of failing the run. The recursive counterpart to 'ExportSourceType'")]
+        public static ResponseGeneratedSources ExportSourceTypes(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("groupPath: root-relative path of the type group to export recursively, e.g. 'Common'. Empty means all types below 'PLC data types'")] string groupPath,
+            [Description("exportPath: directory on this machine that receives the files; existing files of the same name are overwritten")] string exportPath,
+            [Description("withDependencies: also write every data type each one uses into its file. Default false")] bool withDependencies = false,
+            [Description("preservePath: mirror the project groups below '<exportPath>/PLC data types'. Default false, which writes straight into exportPath, so types of the same name in different groups overwrite each other")] bool preservePath = false)
+        {
+            return GeneratedMany(
+                () => Portal.ExportSourceTypes(softwarePath, groupPath, exportPath, withDependencies, preservePath),
+                $"Type sources below '{groupPath}'",
+                exportPath);
+        }
+
+        [McpServerTool(Name = "GenerateSources", Title = "Generate sources",Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Write every block and PLC data type of one PLC software as external source files into a folder tree that mirrors the project groups: '<exportPath>/Program blocks/...' and '<exportPath>/PLC data types/...', one file per object. The compilable counterpart to 'ExportPlcAsDocuments'. Objects with no source form (LAD, FBD, GRAPH), inconsistent objects and know-how protected ones are reported in 'Skipped' instead of failing the run")]
         public static ResponseGeneratedSources GenerateSources(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: directory on this machine that receives the tree; existing files of the same name are overwritten")] string exportPath,
@@ -214,6 +244,40 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) when (ex is not McpException)
             {
                 throw new McpException($"Unexpected error generating sources for '{softwarePath}': {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>Shared response shaping for the two recursive group generators.</summary>
+        private static ResponseGeneratedSources GeneratedMany(Func<GeneratedSourcesResult> generate, string what, string exportPath)
+        {
+            try
+            {
+                var result = generate();
+
+                return new ResponseGeneratedSources
+                {
+                    Message = $"{what} written to '{exportPath}': {result.Files.Count} file(s), " +
+                              $"{result.Skipped.Count} skipped, {result.Failures.Count} failed",
+                    Directory = result.Directory,
+                    Written = result.Written,
+                    Items = result.Files.Select(ToGeneratedSourceItem).ToList(),
+                    Skipped = result.Skipped,
+                    Failures = result.Failures,
+                    Meta = Ok(new JsonObject
+                    {
+                        ["totalWritten"] = result.Files.Count,
+                        ["skipped"] = result.Skipped.Count,
+                        ["failed"] = result.Failures.Count
+                    })
+                };
+            }
+            catch (PortalException pex)
+            {
+                throw new McpException(pex.Message, pex);
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error exporting {what}: {ex.Message}", ex);
             }
         }
 

@@ -671,8 +671,8 @@ namespace TiaMcpServer.Siemens
 
         private static void EnsureDifferentGroup(string sourceGroupPath, string targetGroupPath, string itemName)
         {
-            var source = (sourceGroupPath ?? string.Empty).Trim('/');
-            var target = (targetGroupPath ?? string.Empty).Trim('/');
+            var source = NormalizeGroupPath(sourceGroupPath);
+            var target = NormalizeGroupPath(targetGroupPath);
 
             if (source.Equals(target, StringComparison.OrdinalIgnoreCase))
             {

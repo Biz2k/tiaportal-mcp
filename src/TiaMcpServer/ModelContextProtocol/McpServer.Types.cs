@@ -112,7 +112,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportXmlType", Title = "Export XML type", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export a type from the plc software")]
+        [McpServerTool(Name = "ExportXmlType", Title = "Export type as XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export type as XML")]
         public static ResponseExportXmlType ExportXmlType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: defines the path where export the type")] string exportPath,
@@ -166,7 +166,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportXmlType", Title = "Import XML type", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import a type from file into the plc software")]
+        [McpServerTool(Name = "ImportXmlType", Title = "Import type as XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import type from XML")]
         public static ResponseImportXmlType ImportXmlType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the type")] string groupPath,
@@ -197,7 +197,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ExportXmlTypes", Title = "Export XML types", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export types from the plc software to path")]
+        [McpServerTool(Name = "ExportXmlTypes", Title = "Export types as XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export types as XML")]
         public static async Task<ResponseExportXmlTypes> ExportXmlTypes(
             IProgress<ProgressNotificationValue> progress,
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,

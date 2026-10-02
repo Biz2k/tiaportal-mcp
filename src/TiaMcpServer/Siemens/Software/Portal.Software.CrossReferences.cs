@@ -68,7 +68,7 @@ namespace TiaMcpServer.Siemens
         {
             var plcSoftware = GetPlcSoftwareOrThrow(softwarePath);
 
-            if (string.IsNullOrWhiteSpace(objectPath))
+            if (NormalizeGroupPath(objectPath).Length == 0)
             {
                 return plcSoftware;
             }

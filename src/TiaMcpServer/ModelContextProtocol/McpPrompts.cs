@@ -107,7 +107,7 @@ Use the GetSoftwareTree tool with these parameters:
 
         #region Export Templates
 
-        [McpServerPrompt(Name = "ExportXmlBlocks"), Description("Export XML blocks")]
+        [McpServerPrompt(Name = "ExportXmlBlocks"), Description("Export blocks as XML")]
         public static string ExportXmlBlocks(string softwarePath, string exportPath, string regexName = "", string preservePath = "false")
         {
             return $@"Export blocks from PLC software.
@@ -125,7 +125,7 @@ Use the ExportXmlBlocks tool with these parameters:
 - preservePath: {NormalizeBool(preservePath)}";
         }
 
-        [McpServerPrompt(Name = "ExportXmlTypes"), Description("Export XML types")]
+        [McpServerPrompt(Name = "ExportXmlTypes"), Description("Export types as XML")]
         public static string ExportXmlTypes(string softwarePath, string exportPath, string regexName = "", string preservePath = "false")
         {
             return $@"Export user-defined types from PLC software.
@@ -162,7 +162,7 @@ Use the ExportBlocksAsDocuments tool with these parameters:
 - preservePath: {NormalizeBool(preservePath)}";
         }
 
-        [McpServerPrompt(Name = "ExportXmlTagTable"), Description("Export XML tag table")]
+        [McpServerPrompt(Name = "ExportXmlTagTable"), Description("Export tag table as XML")]
         public static string ExportXmlTagTable(string softwarePath, string tagTablePath, string exportPath, string preservePath = "false")
         {
             return $@"Export a PLC tag table from PLC software to an XML file.
@@ -226,25 +226,25 @@ Use the ExportSourceType tool with these parameters:
 
         #region Convenience Export Templates
 
-        [McpServerPrompt(Name = "ExportAllBlocksFlattened"), Description("Export all blocks from PLC software (flattened)")]
+        [McpServerPrompt(Name = "ExportAllBlocksFlattened"), Description("Export blocks as XML from PLC software (flattened)")]
         public static string ExportAllBlocksFlattened(string softwarePath, string exportPath)
         {
             return ExportXmlBlocks(softwarePath, exportPath, "", "false");
         }
 
-        [McpServerPrompt(Name = "ExportAllBlocksStructured"), Description("Export all blocks from PLC software (structured)")]
+        [McpServerPrompt(Name = "ExportAllBlocksStructured"), Description("Export blocks as XML from PLC software (structured)")]
         public static string ExportAllBlocksStructured(string softwarePath, string exportPath)
         {
             return ExportXmlBlocks(softwarePath, exportPath, "", "true");
         }
 
-        [McpServerPrompt(Name = "ExportAllTypesFlattened"), Description("Export all types from PLC software (flattened)")]
+        [McpServerPrompt(Name = "ExportAllTypesFlattened"), Description("Export all types as XML from PLC software (flattened)")]
         public static string ExportAllTypesFlattened(string softwarePath, string exportPath)
         {
             return ExportXmlTypes(softwarePath, exportPath, "", "false");
         }
 
-        [McpServerPrompt(Name = "ExportAllTypesStructured"), Description("Export all types from PLC software (structured)")]
+        [McpServerPrompt(Name = "ExportAllTypesStructured"), Description("Export all types as XML from PLC software (structured)")]
         public static string ExportAllTypesStructured(string softwarePath, string exportPath)
         {
             return ExportXmlTypes(softwarePath, exportPath, "", "true");
@@ -363,7 +363,7 @@ Use the ImportBlocksFromDocuments tool with these parameters:
 
         #region Import From Sources Templates
 
-        [McpServerPrompt(Name = "ImportSources"), Description("Import a folder tree of source files (.db, .scl, .awl, .udt) into PLC software")]
+        [McpServerPrompt(Name = "ImportSources"), Description("Import folder tree of sources (.db, .scl, .awl, .udt)")]
         public static string ImportSources(string softwarePath, string importPath, string regexName = "", string keepOnError = "false")
         {
             return $@"Import every block and PLC data type source file (.db, .awl, .scl, .udt) under a folder tree into PLC software (requires the server started with '--allow-write').
@@ -381,7 +381,7 @@ Use the ImportSources tool with these parameters:
 - keepOnError: {NormalizeBool(keepOnError)}";
         }
 
-        [McpServerPrompt(Name = "ImportSourceBlocks"), Description("Import source blocks")]
+        [McpServerPrompt(Name = "ImportSourceBlocks"), Description("Import blocks from sources")]
         public static string ImportSourceBlocks(string softwarePath, string sourcePath, string targetGroupPath = "", string keepOnError = "false")
         {
             return $@"Compile/import an external source that is already registered in PLC software into program blocks and PLC data types (requires the server started with '--allow-write').
@@ -411,7 +411,7 @@ Use the ImportSourceBlocks tool with these parameters:
             return ImportSources(softwarePath, importPath, "", "false");
         }
 
-        [McpServerPrompt(Name = "ImportAllSourcesKeepOnError"), Description("Import all source files, keeps the objects generated successfully")]
+        [McpServerPrompt(Name = "ImportAllSourcesKeepOnError"), Description("Import sources, keeps the objects generated successfully")]
         public static string ImportAllSourcesKeepOnError(string softwarePath, string importPath)
         {
             return ImportSources(softwarePath, importPath, "", "true");
@@ -679,7 +679,7 @@ Use the GetBlocksWithHierarchy tool with these parameters:
 - softwarePath: {softwarePath}";
         }
 
-        [McpServerPrompt(Name = "ExportXmlBlock"), Description("Export block to XML")]
+        [McpServerPrompt(Name = "ExportXmlBlock"), Description("Export block as XML")]
         public static string ExportXmlBlock(string softwarePath, string blockPath, string exportPath, string preservePath = "false")
         {
             return $@"Export a block from the software to file.
@@ -900,7 +900,7 @@ Use the GetTypes tool with these parameters:
 - regexName: {regexName}";
         }
 
-        [McpServerPrompt(Name = "ExportXmlType"), Description("Export XML type")]
+        [McpServerPrompt(Name = "ExportXmlType"), Description("Export type as XML")]
         public static string ExportXmlType(string softwarePath, string exportPath, string typePath, string preservePath = "false")
         {
             return $@"Export a type from the plc software.
@@ -918,7 +918,7 @@ Use the ExportXmlType tool with these parameters:
 - preservePath: {NormalizeBool(preservePath)}";
         }
 
-        [McpServerPrompt(Name = "ImportXmlType"), Description("Import XML type")]
+        [McpServerPrompt(Name = "ImportXmlType"), Description("Import type from XML")]
         public static string ImportXmlType(string softwarePath, string groupPath, string importPath)
         {
             return $@"Import a type from file into the plc software.
@@ -1150,7 +1150,7 @@ Use the GetForceTables tool with these parameters:
 - softwarePath: {softwarePath}";
         }
 
-        [McpServerPrompt(Name = "ExportXmlWatchTable"), Description("Export XML watch table")]
+        [McpServerPrompt(Name = "ExportXmlWatchTable"), Description("Export watch table as XML")]
         public static string ExportXmlWatchTable(string softwarePath, string watchTablePath, string exportPath, string preservePath = "false")
         {
             return $@"Export a PLC watch table to an XML file on the file system of the machine running this server. Does not modify the project.
@@ -1244,8 +1244,8 @@ Use the DeleteTagTableGroup tool with these parameters:
 - groupPath: {groupPath}";
         }
 
-        [McpServerPrompt(Name = "ImportTagTable"), Description("Import tag table")]
-        public static string ImportTagTable(string softwarePath, string groupPath, string importPath, string overwrite = "true")
+        [McpServerPrompt(Name = "ImportXmlTagTable"), Description("Import tag table from XML")]
+        public static string ImportXmlTagTable(string softwarePath, string groupPath, string importPath, string overwrite = "true")
         {
             return $@"Import a PLC tag table from an XML file on the file system of the machine running this server (requires the server started with '--allow-write').
 
@@ -1255,7 +1255,7 @@ Common parameter values:
 - importPath: full path of the XML file to import
 - overwrite: replace an existing tag table of the same name (default true)
 
-Use the ImportTagTable tool with these parameters:
+Use the ImportXmlTagTable tool with these parameters:
 - softwarePath: {softwarePath}
 - groupPath: {groupPath}
 - importPath: {importPath}
@@ -1574,8 +1574,8 @@ Use the GetTypeSource tool with these parameters:
 - maxChars: {maxChars}";
         }
 
-        [McpServerPrompt(Name = "ExportPlcAsSourceTree"), Description("Export PLC as source tree")]
-        public static string ExportPlcAsSourceTree(string softwarePath, string exportPath)
+        [McpServerPrompt(Name = "ExportPlcAsDocuments"), Description("Export PLC as documents")]
+        public static string ExportPlcAsDocuments(string softwarePath, string exportPath)
         {
             return $@"Write a whole PLC software to one folder tree that mirrors the project, ready to commit: program blocks and PLC data types as readable SIMATIC Source Documents where TIA Portal supports them, tag tables and watch tables as XML, each below its localised system folder. Replaces running the four bulk exports separately. Objects that cannot be exported are reported instead of failing the snapshot.
 
@@ -1583,15 +1583,55 @@ Common parameter values:
 - softwarePath: defines the path in the project structure to the plc software
 - exportPath: directory on this machine that receives the tree; existing files of the same name are overwritten
 
-Use the ExportPlcAsSourceTree tool with these parameters:
+Use the ExportPlcAsDocuments tool with these parameters:
 - softwarePath: {softwarePath}
 - exportPath: {exportPath}";
+        }
+
+        [McpServerPrompt(Name = "ExportSourceBlocks"), Description("Export blocks as source")]
+        public static string ExportSourceBlocks(string softwarePath, string groupPath, string exportPath, string withDependencies = "false", string preservePath = "false")
+        {
+            return $@"Write every program block below a block group, including all subgroups, as TIA Portal external source files. Blocks with no source form (LAD, FBD, GRAPH), inconsistent blocks and know-how protected ones are reported in 'Skipped' instead of failing the run.
+
+Common parameter values:
+- softwarePath: defines the path in the project structure to the plc software
+- groupPath: root-relative path of the block group to export recursively, e.g. '0_OBs'. Empty means all blocks below 'Program blocks'
+- exportPath: directory on this machine that receives the files; existing files of the same name are overwritten
+- withDependencies: also write every object each block uses into its file. Default false
+- preservePath: mirror the project groups below '<exportPath>/Program blocks'. Default false, which writes straight into exportPath
+
+Use the ExportSourceBlocks tool with these parameters:
+- softwarePath: {softwarePath}
+- groupPath: {groupPath}
+- exportPath: {exportPath}
+- withDependencies: {withDependencies}
+- preservePath: {preservePath}";
+        }
+
+        [McpServerPrompt(Name = "ExportSourceTypes"), Description("Export types as source")]
+        public static string ExportSourceTypes(string softwarePath, string groupPath, string exportPath, string withDependencies = "false", string preservePath = "false")
+        {
+            return $@"Write every PLC data type below a type group, including all subgroups, as '*.udt' external source files. Inconsistent and know-how protected types are reported in 'Skipped' instead of failing the run.
+
+Common parameter values:
+- softwarePath: defines the path in the project structure to the plc software
+- groupPath: root-relative path of the type group to export recursively, e.g. 'Common'. Empty means all types below 'PLC data types'
+- exportPath: directory on this machine that receives the files; existing files of the same name are overwritten
+- withDependencies: also write every data type each one uses into its file. Default false
+- preservePath: mirror the project groups below '<exportPath>/PLC data types'. Default false, which writes straight into exportPath
+
+Use the ExportSourceTypes tool with these parameters:
+- softwarePath: {softwarePath}
+- groupPath: {groupPath}
+- exportPath: {exportPath}
+- withDependencies: {withDependencies}
+- preservePath: {preservePath}";
         }
 
         [McpServerPrompt(Name = "GenerateSources"), Description("Generate sources")]
         public static string GenerateSources(string softwarePath, string exportPath, string regexName = "", string withDependencies = "false")
         {
-            return $@"Write every block and PLC data type of one PLC software as external source files into a folder tree that mirrors the project groups: '<exportPath>/Program blocks/...' and '<exportPath>/PLC data types/...', one file per object. The compilable counterpart to 'ExportPlcAsSourceTree'. Objects with no source form (LAD, FBD, GRAPH), inconsistent objects and know-how protected ones are reported in 'Skipped' instead of failing the run.
+            return $@"Write every block and PLC data type of one PLC software as external source files into a folder tree that mirrors the project groups: '<exportPath>/Program blocks/...' and '<exportPath>/PLC data types/...', one file per object. The compilable counterpart to 'ExportPlcAsDocuments'. Objects with no source form (LAD, FBD, GRAPH), inconsistent objects and know-how protected ones are reported in 'Skipped' instead of failing the run.
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the plc software
