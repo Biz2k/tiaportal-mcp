@@ -1738,6 +1738,38 @@ Use the DeleteExternalSourceGroup tool with these parameters:
 
         #endregion
 
+        #region hardware creation prompts
+
+        [McpServerPrompt(Name = "CreateHardwareDevice"), Description("Create a new hardware device (PLC/HMI/ET200) in the project")]
+        public static string CreateHardwareDevice(string typeIdentifier, string name)
+        {
+            return $@"You are helping to create hardware in a TIA Portal project.
+
+Use the CreateHardwareDevice tool with these parameters:
+- typeIdentifier: {typeIdentifier}
+- name: {name}
+
+TypeIdentifier format: 'OrderNumber:6ES7 516-3AN01-0AB0/V2.8'
+After creation, verify with GetHardwareTopology.";
+        }
+
+        [McpServerPrompt(Name = "PlugHardwareModule"), Description("Plug a module into an existing hardware device slot")]
+        public static string PlugHardwareModule(string deviceName, string parentItemName, string positionNumber, string typeIdentifier, string moduleName)
+        {
+            return $@"You are helping to add a hardware module to an existing device in TIA Portal.
+
+Use the PlugHardwareModule tool with these parameters:
+- deviceName: {deviceName}
+- parentItemName: {parentItemName}
+- positionNumber: {positionNumber}
+- typeIdentifier: {typeIdentifier}
+- moduleName: {moduleName}
+
+Use GetHardwareTopology first to confirm item names and available slots.";
+        }
+
+        #endregion
+
         // MCP prompt arguments are always strings, so boolean flags arrive as text.
         private static string NormalizeBool(string? value)
         {

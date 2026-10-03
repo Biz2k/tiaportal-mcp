@@ -176,5 +176,58 @@ namespace TiaMcpServer.Siemens
             
             return results.Count > 0 ? results : null;
         }
+
+        public Device CreateHardwareDevice(string typeIdentifier, string name)
+        {
+            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
+
+            _logger?.LogInformation($"Creating device '{name}' with type '{typeIdentifier}'");
+            return _project!.Devices.CreateWithItem(typeIdentifier, name, name);
+        }
+
+        public DeviceItem PlugHardwareModule(string deviceName, string parentItemName, int positionNumber, string typeIdentifier, string moduleName)
+        {
+            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
+
+            var device = _project!.Devices.Find(deviceName);
+            if (device == null)
+            {
+                // check ungrouped devices
+                device = _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
+                if (device == null)
+                    throw new InvalidOperationException($"Device '{deviceName}' not found");
+            }
+
+            var parentItem = FindDeviceItem(device.DeviceItems, parentItemName);
+            if (parentItem == null) throw new InvalidOperationException($"Parent item '{parentItemName}' not found in device '{deviceName}'");
+
+            _logger?.LogInformation($"Plugging module '{moduleName}' ({typeIdentifier}) at position {positionNumber} in '{parentItemName}'");
+            
+            // Check if we can plug
+            if (parentItem.CanPlugNew(typeIdentifier, moduleName, positionNumber))
+            {
+                return parentItem.PlugNew(typeIdentifier, moduleName, positionNumber);
+            }
+            else
+            {
+                throw new InvalidOperationException($"Cannot plug module '{typeIdentifier}' at position {positionNumber} in '{parentItemName}'");
+            }
+        }
+
+        private DeviceItem? FindDeviceItem(DeviceItemComposition items, string targetName)
+        {
+            foreach (DeviceItem item in items)
+            {
+                if (item.Name.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+                    return item;
+
+                if (item.DeviceItems != null && item.DeviceItems.Count > 0)
+                {
+                    var found = FindDeviceItem(item.DeviceItems, targetName);
+                    if (found != null) return found;
+                }
+            }
+            return null;
+        }
     }
 }
