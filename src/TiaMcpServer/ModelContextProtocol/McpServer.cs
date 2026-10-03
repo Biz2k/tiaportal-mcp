@@ -244,7 +244,6 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                Portal.CloseProject();
 
                 // get project extension
                 string extension = Path.GetExtension(path).ToLowerInvariant();

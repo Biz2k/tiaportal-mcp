@@ -262,18 +262,6 @@ namespace TiaMcpServer.Siemens
                 return false;
             }
 
-            if (_project != null)
-            {
-                (_project as Project)?.Close();
-                _project = null;
-            }
-
-            if (_session != null)
-            {
-                _session.Close();
-                _session = null;
-            }
-
             try
             {
                 var projects = GetProjects();
@@ -286,13 +274,23 @@ namespace TiaMcpServer.Siemens
 
                     return _project != null;
                 }
-                else
-                {
-                    // see [5.3.1 Projekt öffnen, S.113]
-                    _project = _portal?.Projects.OpenWithUpgrade(new FileInfo(projectPath));
 
-                    return _project != null;
+                if (_project != null)
+                {
+                    (_project as Project)?.Close();
+                    _project = null;
                 }
+
+                if (_session != null)
+                {
+                    _session.Close();
+                    _session = null;
+                }
+
+                // see [5.3.1 Projekt öffnen, S.113]
+                _project = _portal?.Projects.OpenWithUpgrade(new FileInfo(projectPath));
+
+                return _project != null;
             }
             catch (Exception)
             {
@@ -409,13 +407,6 @@ namespace TiaMcpServer.Siemens
                 return false;
             }
 
-            if (_session != null)
-            {
-                _project = null;
-                _session?.Close();
-                _session = null;
-            }
-
             try
             {
                 var sessions = GetSessions();
@@ -433,15 +424,26 @@ namespace TiaMcpServer.Siemens
                         return _project != null;
                     }
                 }
-                else
+
+                if (_session != null)
                 {
-                    _session = _portal?.LocalSessions.Open(new FileInfo(localSessionPath));
-                    if (_session != null)
-                    {
-                        // Correctly cast MultiuserProject to Project  
-                        _project = _session.Project;
-                        return _project != null;
-                    }
+                    _project = null;
+                    _session?.Close();
+                    _session = null;
+                }
+
+                if (_project != null)
+                {
+                    (_project as Project)?.Close();
+                    _project = null;
+                }
+
+                _session = _portal?.LocalSessions.Open(new FileInfo(localSessionPath));
+                if (_session != null)
+                {
+                    // Correctly cast MultiuserProject to Project  
+                    _project = _session.Project;
+                    return _project != null;
                 }
             }
             catch (Exception)
