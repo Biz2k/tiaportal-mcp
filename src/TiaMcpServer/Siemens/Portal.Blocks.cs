@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Siemens.Engineering.Compiler;
 
 namespace TiaMcpServer.Siemens
 {
@@ -838,6 +839,50 @@ namespace TiaMcpServer.Siemens
             info.DataTypeName = info.Attributes.TryGetValue("DataTypeName", out var dataType) ? dataType : null;
 
             return info;
+        }
+
+        #endregion
+
+        #region compile (write)
+
+        public CompilerResult? CompileBlock(string softwarePath, string blockPath)
+        {
+            return Operation.Run(_logger, nameof(CompileBlock), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    var block = GetBlock(softwarePath, blockPath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Block not found at '{blockPath}'. Use 'GetBlocks' to list the available blocks.");
+
+                    if (block is ICompilable compilable)
+                    {
+                        return compilable.Compile();
+                    }
+                    throw new PortalException(PortalErrorCode.NotSupported, $"Block '{blockPath}' is not compilable.");
+                },
+                ("softwarePath", softwarePath), ("blockPath", blockPath));
+        }
+
+        public CompilerResult? CompileSoftware(string softwarePath)
+        {
+            return Operation.Run(_logger, nameof(CompileSoftware), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    var softwareContainer = GetSoftwareContainer(softwarePath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Software not found at '{softwarePath}'.");
+
+                    if (softwareContainer.Software is ICompilable compilable)
+                    {
+                        return compilable.Compile();
+                    }
+                    else if (softwareContainer is ICompilable containerCompilable)
+                    {
+                        return containerCompilable.Compile();
+                    }
+                    throw new PortalException(PortalErrorCode.NotSupported, $"Software '{softwarePath}' is not compilable.");
+                },
+                ("softwarePath", softwarePath));
         }
 
         #endregion

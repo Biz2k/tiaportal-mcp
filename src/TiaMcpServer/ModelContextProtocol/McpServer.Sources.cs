@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using System.IO;
 using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -540,6 +541,51 @@ namespace TiaMcpServer.ModelContextProtocol
                         ["keepOnError"] = keepOnError
                     }
                 };
+            });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "CreateSclBlock", Title = "Create SCL block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create a block directly from SCL source code text.")]
+        public static ResponseGenerateBlocks CreateSclBlock(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("sclCode: the raw SCL source code for the block")] string sclCode,
+            [Description("targetGroupPath: optional root-relative block user group that receives the blocks; empty uses the source default location")] string targetGroupPath = "",
+            [Description("keepOnError: keep successfully generated blocks even when others fail (default false)")] bool keepOnError = false)
+        {
+            return Guarded(nameof(CreateSclBlock), () =>
+            {
+                var tempFile = Path.Combine(Path.GetTempPath(), "TiaMcpServer", Guid.NewGuid().ToString("N") + ".scl");
+                Directory.CreateDirectory(Path.GetDirectoryName(tempFile));
+                File.WriteAllText(tempFile, sclCode);
+                
+                string sourceName = "AI_Gen_" + Guid.NewGuid().ToString("N").Substring(0, 8);
+                try
+                {
+                    Portal.CreateExternalSourceFromFile(softwarePath, "", sourceName, tempFile);
+                    var names = Portal.ImportSourceBlocks(softwarePath, sourceName, targetGroupPath, keepOnError);
+                    
+                    try { Portal.DeleteExternalSource(softwarePath, sourceName); } catch { /* Ignore cleanup errors */ }
+                    
+                    return new ResponseGenerateBlocks
+                    {
+                        GeneratedNames = names,
+                        Count = names.Count,
+                        Message = $"{names.Count} object(s) generated from SCL code. {SaveHint}",
+                        Meta = new JsonObject
+                        {
+                            ["timestamp"] = DateTime.Now,
+                            ["success"] = true,
+                            ["pendingSave"] = true,
+                            ["generatedCount"] = names.Count,
+                            ["keepOnError"] = keepOnError
+                        }
+                    };
+                }
+                finally
+                {
+                    if (File.Exists(tempFile)) File.Delete(tempFile);
+                }
             });
         }
 

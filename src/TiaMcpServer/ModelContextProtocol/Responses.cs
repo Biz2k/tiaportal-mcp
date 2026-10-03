@@ -1,4 +1,4 @@
-﻿using Siemens.Engineering;
+using Siemens.Engineering;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
@@ -677,6 +677,24 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? Kind { get; set; }
 
         public IEnumerable<ResponseUsage>? Items { get; set; }
+    }
+
+    public class ResponseCompilerMessage
+    {
+        public string? Description { get; set; }
+        public string? Path { get; set; }
+        public string? State { get; set; }
+        public int? ErrorCount { get; set; }
+        public int? WarningCount { get; set; }
+        public IEnumerable<ResponseCompilerMessage>? Messages { get; set; }
+    }
+
+    public class ResponseCompilerResult : ResponseMessage
+    {
+        public int? ErrorCount { get; set; }
+        public int? WarningCount { get; set; }
+        public string? State { get; set; }
+        public IEnumerable<ResponseCompilerMessage>? Messages { get; set; }
     }
 
     #endregion

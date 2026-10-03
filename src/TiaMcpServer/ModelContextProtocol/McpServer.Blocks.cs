@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
+using Siemens.Engineering.Compiler;
 using Siemens.Engineering.SW.Blocks;
 using System;
 using System.Collections.Generic;
@@ -683,6 +684,77 @@ namespace TiaMcpServer.ModelContextProtocol
                     Meta = OkMeta()
                 };
             });
+        }
+
+        #endregion
+
+        #region compile (write)
+
+        [WriteTool]
+        [McpServerTool(Name = "CompileBlock", Title = "Compile block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Compile a program block. Returns the compiler result with any errors or warnings")]
+        public static ResponseCompilerResult CompileBlock(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("blockPath: root-relative path of the block to compile, e.g. 1_Tests/FC_Block_1")] string blockPath)
+        {
+            return Guarded(nameof(CompileBlock), () =>
+            {
+                var result = Portal.CompileBlock(softwarePath, blockPath);
+                return MapCompilerResult(result, $"Block '{blockPath}' compilation completed.");
+            });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "CompileSoftware", Title = "Compile software", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Compile the entire PLC software. Returns the compiler result with any errors or warnings")]
+        public static ResponseCompilerResult CompileSoftware(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
+        {
+            return Guarded(nameof(CompileSoftware), () =>
+            {
+                var result = Portal.CompileSoftware(softwarePath);
+                return MapCompilerResult(result, $"Software '{softwarePath}' compilation completed.");
+            });
+        }
+
+        private static ResponseCompilerResult MapCompilerResult(CompilerResult? result, string message)
+        {
+            if (result == null)
+            {
+                return new ResponseCompilerResult
+                {
+                    Message = message + " No result returned.",
+                    State = "Unknown",
+                    Meta = OkMeta()
+                };
+            }
+
+            return new ResponseCompilerResult
+            {
+                Message = message + $" State: {result.State}, Errors: {result.ErrorCount}, Warnings: {result.WarningCount}",
+                State = result.State.ToString(),
+                ErrorCount = result.ErrorCount,
+                WarningCount = result.WarningCount,
+                Messages = result.Messages.Select(MapCompilerMessage).ToList(),
+                Meta = new JsonObject
+                {
+                    ["timestamp"] = DateTime.Now,
+                    ["success"] = result.State == CompilerResultState.Success || result.State == CompilerResultState.Warning
+                }
+            };
+        }
+
+        private static ResponseCompilerMessage MapCompilerMessage(CompilerResultMessage msg)
+        {
+            return new ResponseCompilerMessage
+            {
+                Description = msg.Description,
+                Path = msg.Path,
+                State = msg.State.ToString(),
+                ErrorCount = msg.ErrorCount,
+                WarningCount = msg.WarningCount,
+                Messages = msg.Messages.Select(MapCompilerMessage).ToList()
+            };
         }
 
         #endregion
