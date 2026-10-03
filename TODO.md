@@ -229,5 +229,25 @@ the gap is explicit rather than implied.
 - [ ] Add tests for `ImportFromDocuments`: single import happy path, version gating (<20), invalid `importPath`, invalid `fileNameWithoutExtension`.
 - [ ] Add tests for `ImportBlocksFromDocuments`: regex filtering on `.s7dcl`, progress notifications, partial failures aggregation, empty directory behavior.
 - [ ] Validate enum mapping for `importOption` (Override/None; extend if environment exposes more values).
-- [ ] Verify placement into `groupPath` (root vs. nested groups) and behavior when group does not exist.
 - [ ] Add docs pages under `docs/tools/` for import-from-documents tools; include file discovery rules (.s7dcl/.s7res), name derivation, and option mapping.
+
+## HMI (Human Machine Interface) - Deferred Tasks
+- [ ] **Настройка событий (Event Handlers):** Инструменты для привязки системных функций к событиям элементов (например, назначение функции `ChangeScreen` на событие `Click` для кнопки). 
+- [ ] **Настройка архивных трендов (Trend Controls):** Специализированные методы для конфигурации `HmiTrendControl`, добавления перьев и привязки их к `DataLog` архивам.
+- [ ] **Работа с Faceplates (Фейсплейты):** Методы для добавления экземпляров Faceplate на экраны и привязки их специфичных интерфейсных тегов и свойств (Properties/Events интерфейса фейсплейта).
+- [ ] **Анимации и скрипты:** Возможность добавлять динамизацию через скрипты (JavaScript в Unified / VBScript или C-Script в Classic) напрямую через MCP-сервер.
+
+## Hardware Configuration & Topology (Аппаратная часть) - Deferred Tasks
+- [ ] **Чтение аппаратной конфигурации:** Инструменты для получения списка устройств, модулей, их заказных номеров (MLFB) и версий прошивок (Firmware).
+- [ ] **Сетевая топология:** Инструменты для получения информации о подсетях (Subnets), IP-адресах устройств и связях PROFINET/PROFIBUS.
+- [ ] **Добавление нового оборудования:** Инструменты для программного добавления новых PLC, станций ET200 и HMI панелей в проект.
+
+## PLC Logic & Data (ПЛК Логика и Данные) - Deferred Tasks
+- [ ] **Создание и редактирование PLC тегов:** Инструменты для добавления тегов в таблицы тегов (Tag Tables) и назначения им адресов.
+- [ ] **Управление типами данных (UDT):** Чтение, создание и редактирование пользовательских типов данных (User Data Types).
+- [ ] **Алармы и сообщения:** Настройка HMI Alarms и PLC ProDiag/Program_Alarm сообщений.
+
+## Управление проектом и компиляция - Deferred Tasks
+- [ ] **Полная компиляция проекта:** Запуск компиляции как Hardware, так и Software с возвращением структурированных логов.
+- [ ] **Загрузка в ПЛК (Download):** Инструменты для загрузки конфигурации и блоков в виртуальный или реальный ПЛК (PLCSIM Advanced).
+
