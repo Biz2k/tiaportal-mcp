@@ -697,6 +697,16 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<ResponseCompilerMessage>? Messages { get; set; }
     }
 
+    public class ResponseHmiScreens : ResponseMessage
+    {
+        public IEnumerable<Siemens.HmiScreenInfo>? Items { get; set; }
+    }
+
+    public class ResponseHmiTags : ResponseMessage
+    {
+        public IEnumerable<Siemens.HmiTagInfo>? Items { get; set; }
+    }
+
     #endregion
 
 }
