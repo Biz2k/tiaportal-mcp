@@ -424,8 +424,8 @@ namespace TiaMcpServer.Siemens
             if (height.HasValue) { try { targetItem.Height = height.Value; results.Add("Height"); } catch { } }
             if (processValue != null) { 
                 try { 
-                    // 1) Try WinCC Unified dynamization (TagDynamization)
-                    try {
+                    if (dynSoftware is HmiSoftware) {
+                        // WinCC Unified
                         object dynamizations = targetItem.Dynamizations;
                         if (dynamizations != null) {
                             var dynBaseType = dynamizations.GetType();
@@ -436,19 +436,18 @@ namespace TiaMcpServer.Siemens
                                     var genericCreate = createMethod.MakeGenericMethod(tagDynType);
                                     dynamic dynObj = genericCreate.Invoke(dynamizations, new object[] { "ProcessValue" });
                                     dynObj.Tag = processValue;
-                                    results.Add("ProcessValue(Dynamization)");
-                                    goto ProcessValueDone;
+                                    results.Add("ProcessValue(Unified TagDynamization)");
                                 }
                             }
                         }
-                    } catch { }
-
-                    // 2) Try static fallback or WinCC Classic
-                    targetItem.ProcessValue = processValue; 
-                    results.Add("ProcessValue(Static)"); 
-                    
-                ProcessValueDone: ;
-                } catch { } 
+                    } else if (dynSoftware is HmiTarget) {
+                        // WinCC Comfort / Advanced / Professional
+                        targetItem.ProcessValue = processValue; 
+                        results.Add("ProcessValue(Classic)"); 
+                    }
+                } catch (System.Exception ex) {
+                    results.Add($"ProcessValue(Error: {ex.Message})");
+                } 
             }
             
             if (text != null) { 
