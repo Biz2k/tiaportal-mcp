@@ -422,7 +422,34 @@ namespace TiaMcpServer.Siemens
             if (top.HasValue) { try { targetItem.Top = top.Value; results.Add("Top"); } catch { } }
             if (width.HasValue) { try { targetItem.Width = width.Value; results.Add("Width"); } catch { } }
             if (height.HasValue) { try { targetItem.Height = height.Value; results.Add("Height"); } catch { } }
-            if (processValue != null) { try { targetItem.ProcessValue = processValue; results.Add("ProcessValue"); } catch { } }
+            if (processValue != null) { 
+                try { 
+                    // 1) Try WinCC Unified dynamization (TagDynamization)
+                    try {
+                        object dynamizations = targetItem.Dynamizations;
+                        if (dynamizations != null) {
+                            var dynBaseType = dynamizations.GetType();
+                            var tagDynType = System.Linq.Enumerable.FirstOrDefault(dynBaseType.Assembly.GetTypes(), t => t.Name == "TagDynamization");
+                            if (tagDynType != null) {
+                                var createMethod = System.Linq.Enumerable.FirstOrDefault(dynBaseType.GetMethods(), m => m.Name == "Create" && m.IsGenericMethod);
+                                if (createMethod != null) {
+                                    var genericCreate = createMethod.MakeGenericMethod(tagDynType);
+                                    dynamic dynObj = genericCreate.Invoke(dynamizations, new object[] { "ProcessValue" });
+                                    dynObj.Tag = processValue;
+                                    results.Add("ProcessValue(Dynamization)");
+                                    goto ProcessValueDone;
+                                }
+                            }
+                        }
+                    } catch { }
+
+                    // 2) Try static fallback or WinCC Classic
+                    targetItem.ProcessValue = processValue; 
+                    results.Add("ProcessValue(Static)"); 
+                    
+                ProcessValueDone: ;
+                } catch { } 
+            }
             
             if (text != null) { 
                 try { 

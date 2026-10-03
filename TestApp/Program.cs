@@ -60,10 +60,24 @@ class Program {
                                 
                                 // Test dynamization
                                 try {
-                                    newIo.ProcessValue = "Tag_1";
-                                    Console.WriteLine("Successfully set ProcessValue directly!");
+                                    object dynamizations = newIo.Dynamizations;
+                                    Console.WriteLine("Dynamizations type: " + dynamizations.GetType().FullName);
+                                    
+                                    var tagDynType = dynamizations.GetType().Assembly.GetTypes().FirstOrDefault(t => t.Name == "TagDynamization");
+                                    if (tagDynType != null) {
+                                        var createMethodDyn = dynamizations.GetType().GetMethods().FirstOrDefault(m => m.Name == "Create" && m.IsGenericMethod);
+                                        if (createMethodDyn != null) {
+                                            var genericCreateDyn = createMethodDyn.MakeGenericMethod(tagDynType);
+                                            dynamic dynObj = genericCreateDyn.Invoke(dynamizations, new object[] { "ProcessValue" });
+                                            Console.WriteLine("Created Dynamization type: " + dynObj.GetType().FullName);
+                                            dynObj.Tag = "Tag_1";
+                                            Console.WriteLine("Successfully set Tag property on TagDynamization!");
+                                        }
+                                    } else {
+                                        Console.WriteLine("TagDynamization type not found!");
+                                    }
                                 } catch (Exception exGeo) {
-                                    Console.WriteLine("Direct ProcessValue failed: " + exGeo.Message);
+                                    Console.WriteLine("Dynamizations failed: " + exGeo.Message);
                                 }
                             }
                         }
