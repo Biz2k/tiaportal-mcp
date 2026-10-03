@@ -4,6 +4,7 @@ using Siemens.Engineering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Siemens.Engineering.HW.Features;
 using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
@@ -123,7 +124,8 @@ namespace TiaMcpServer.Siemens
                 Classification = classif,
                 ArticleNumber = article,
                 FirmwareVersion = firmware,
-                DeviceItems = new List<ResponseHardwareItem>()
+                DeviceItems = new List<ResponseHardwareItem>(),
+                NetworkInterfaces = GetNetworkInterfaces(item)
             };
 
             if (item.DeviceItems != null && item.DeviceItems.Count > 0)
@@ -137,6 +139,42 @@ namespace TiaMcpServer.Siemens
             }
 
             return res;
+        }
+
+        private List<ResponseNetworkInterface>? GetNetworkInterfaces(DeviceItem item)
+        {
+            var results = new List<ResponseNetworkInterface>();
+            try
+            {
+                NetworkInterface netIf = item.GetService<NetworkInterface>();
+                if (netIf != null && netIf.Nodes != null)
+                {
+                    foreach (var node in netIf.Nodes)
+                    {
+                        string ip = "";
+                        try { ip = node.GetAttribute("Address").ToString() ?? ""; } catch { }
+                        
+                        string subnetName = "";
+                        if (node.ConnectedSubnet != null)
+                        {
+                            subnetName = node.ConnectedSubnet.Name;
+                        }
+                        
+                        if (!string.IsNullOrEmpty(ip) || !string.IsNullOrEmpty(subnetName))
+                        {
+                            results.Add(new ResponseNetworkInterface
+                            {
+                                Name = item.Name,
+                                Address = ip,
+                                Subnet = subnetName
+                            });
+                        }
+                    }
+                }
+            }
+            catch { }
+            
+            return results.Count > 0 ? results : null;
         }
     }
 }
