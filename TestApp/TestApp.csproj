@@ -6,4 +6,8 @@
   <ItemGroup>
     <ProjectReference Include="..\src\TiaMcpServer\TiaMcpServer.csproj" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
 </Project>

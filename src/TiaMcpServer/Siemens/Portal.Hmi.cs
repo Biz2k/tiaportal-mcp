@@ -242,5 +242,155 @@ namespace TiaMcpServer.Siemens
             } catch (System.Exception) { }
             return null;
         }
+
+        public List<string> GetHmiFaceplates()
+        {
+            var faceplates = new List<string>();
+            if (_project == null) return faceplates;
+
+            try {
+                dynamic projLib = _project.ProjectLibrary;
+                foreach (var type in projLib.TypeFolder.Types)
+                {
+                    if (type.GetType().Name.Contains("Faceplate"))
+                    {
+                        faceplates.Add(type.Name);
+                    }
+                }
+            } catch { }
+            return faceplates;
+        }
+
+        public string CreateHmiScreen(string softwarePath, string screenName)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            try
+            {
+                if (dynSoftware is HmiTarget) {
+                    dynSoftware.ScreenFolder.Screens.Create(screenName);
+                } else if (dynSoftware is HmiSoftware) {
+                    dynSoftware.Screens.Create(screenName);
+                } else {
+                    dynSoftware.Screens.Create(screenName);
+                }
+                return $"Screen '{screenName}' created successfully.";
+            } catch (System.Exception ex) {
+                throw new System.Exception($"Failed to create screen: {ex.Message}");
+            }
+        }
+
+        public string DeleteHmiScreen(string softwarePath, string screenName)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            try
+            {
+                dynamic screen = null;
+                if (dynSoftware is HmiTarget target) {
+                    screen = FindScreenInFolder(target.ScreenFolder, screenName);
+                } else {
+                    foreach (var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
+                }
+                if (screen != null) { screen.Delete(); return $"Screen '{screenName}' deleted."; }
+                throw new System.Exception($"Screen '{screenName}' not found.");
+            } catch (System.Exception ex) {
+                throw new System.Exception($"Failed to delete screen: {ex.Message}");
+            }
+        }
+
+        public string CreateHmiScreenItem(string softwarePath, string screenName, string typeName, string itemName)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            dynamic screen = null;
+
+            if (dynSoftware is HmiTarget target) {
+                screen = FindScreenInFolder(target.ScreenFolder, screenName);
+            } else if (dynSoftware is HmiSoftware unified) {
+                foreach (var s in unified.Screens) { if (s.Name == screenName) { screen = s; break; } }
+            }
+
+            if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
+
+            try {
+                // WinCC Classic behavior
+                screen.ScreenItems.Create(typeName, itemName);
+                return $"Created '{itemName}' of type '{typeName}'.";
+            } catch {
+                try {
+                    // WinCC Unified behavior (generic reflection)
+                    object screenItems = screen.ScreenItems;
+                    System.Type screenItemsType = screenItems.GetType();
+                    var targetAssembly = screenItemsType.Assembly;
+                    System.Type itemType = System.Linq.Enumerable.FirstOrDefault(targetAssembly.GetTypes(), t => t.Name.Equals(typeName, System.StringComparison.OrdinalIgnoreCase));
+                    if (itemType != null) {
+                        var createMethod = System.Linq.Enumerable.FirstOrDefault(screenItemsType.GetMethods(), m => m.Name == "Create" && m.IsGenericMethod);
+                        if (createMethod != null) {
+                            var genericCreate = createMethod.MakeGenericMethod(itemType);
+                            genericCreate.Invoke(screenItems, new object[] { itemName });
+                            return $"Created '{itemName}' of type '{typeName}' via reflection.";
+                        }
+                    }
+                } catch { }
+
+                try {
+                    // Try Elements just in case
+                    object elements = screen.Elements;
+                    System.Type elementsType = elements.GetType();
+                    var targetAssembly = elementsType.Assembly;
+                    System.Type itemType = System.Linq.Enumerable.FirstOrDefault(targetAssembly.GetTypes(), t => t.Name.Equals(typeName, System.StringComparison.OrdinalIgnoreCase));
+                    if (itemType != null) {
+                        var createMethod = System.Linq.Enumerable.FirstOrDefault(elementsType.GetMethods(), m => m.Name == "Create" && m.IsGenericMethod);
+                        if (createMethod != null) {
+                            var genericCreate = createMethod.MakeGenericMethod(itemType);
+                            genericCreate.Invoke(elements, new object[] { itemName });
+                            return $"Created '{itemName}' of type '{typeName}' via reflection in Elements.";
+                        }
+                    }
+                } catch { }
+
+                throw new System.Exception($"Failed to create item '{itemName}'. This type of item or operation may not be supported by this HMI target.");
+            }
+        }
+
+        public string DeleteHmiScreenItem(string softwarePath, string screenName, string itemName)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            dynamic screen = null;
+
+            if (dynSoftware is HmiTarget target) {
+                screen = FindScreenInFolder(target.ScreenFolder, screenName);
+            } else if (dynSoftware is HmiSoftware unified) {
+                foreach (var s in unified.Screens) { if (s.Name == screenName) { screen = s; break; } }
+            }
+
+            if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
+
+            try {
+                foreach (var item in screen.ScreenItems) {
+                    if (item.Name == itemName) {
+                        item.Delete();
+                        return $"Deleted '{itemName}'.";
+                    }
+                }
+            } catch { }
+
+            try {
+                foreach (var item in screen.Elements) {
+                    if (item.Name == itemName) {
+                        item.Delete();
+                        return $"Deleted '{itemName}'.";
+                    }
+                }
+            } catch { }
+
+            throw new System.Exception($"Item '{itemName}' not found on screen '{screenName}'.");
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
@@ -25,6 +25,7 @@ namespace TiaMcpServer.Siemens
         private TiaPortal? _portal;
 
         private ProjectBase? _project;
+        public ProjectBase? Project => _project;
 
         private LocalSession? _session;
 

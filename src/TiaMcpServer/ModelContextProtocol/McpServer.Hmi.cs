@@ -102,5 +102,79 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new { message = ex.Message };
             }
         }
+        [McpServerTool(Name = "GetLibraryFaceplates", Title = "Get Project Library Faceplates", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Get a list of all Faceplates available in the Project Library.")]
+        public static object GetLibraryFaceplates()
+        {
+            try {
+                var faceplates = Portal.GetHmiFaceplates();
+                return new { Message = $"Retrieved {faceplates.Count} faceplates from Project Library", Items = faceplates, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "CreateHmiScreen", Title = "Create HMI screen", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Create a new HMI screen in the given HMI target.")]
+        public static object CreateHmiScreen(
+            [Description("softwarePath: path to HMI software")] string softwarePath,
+            [Description("screenName: name of the new screen")] string screenName)
+        {
+            try {
+                string msg = Portal.CreateHmiScreen(softwarePath, screenName);
+                return new { Message = msg, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "DeleteHmiScreen", Title = "Delete HMI screen", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Delete an HMI screen from the given HMI target.")]
+        public static object DeleteHmiScreen(
+            [Description("softwarePath: path to HMI software")] string softwarePath,
+            [Description("screenName: name of the screen to delete")] string screenName)
+        {
+            try {
+                string msg = Portal.DeleteHmiScreen(softwarePath, screenName);
+                return new { Message = msg, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "CreateHmiScreenItem", Title = "Create HMI screen item", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Create an item (e.g. HmiButton, HmiIOField, HmiFaceplate) on the given HMI screen.")]
+        public static object CreateHmiScreenItem(
+            [Description("softwarePath: path to HMI software")] string softwarePath,
+            [Description("screenName: name of the screen")] string screenName,
+            [Description("typeName: type of the item (e.g. 'HmiButton' or 'HmiFaceplate')")] string typeName,
+            [Description("itemName: name of the new item")] string itemName)
+        {
+            try {
+                string msg = Portal.CreateHmiScreenItem(softwarePath, screenName, typeName, itemName);
+                return new { Message = msg, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "DeleteHmiScreenItem", Title = "Delete HMI screen item", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Delete an item from the given HMI screen.")]
+        public static object DeleteHmiScreenItem(
+            [Description("softwarePath: path to HMI software")] string softwarePath,
+            [Description("screenName: name of the screen")] string screenName,
+            [Description("itemName: name of the item to delete")] string itemName)
+        {
+            try {
+                string msg = Portal.DeleteHmiScreenItem(softwarePath, screenName, itemName);
+                return new { Message = msg, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
     }
 }

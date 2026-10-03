@@ -96,7 +96,7 @@ namespace TiaMcpServer.Siemens
 
         #region get software container ...
 
-        private SoftwareContainer? GetSoftwareContainer(string softwarePath)
+        public SoftwareContainer? GetSoftwareContainer(string softwarePath)
         {
             if (_project == null)
             {
