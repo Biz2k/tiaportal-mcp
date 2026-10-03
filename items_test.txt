@@ -1,0 +1,296 @@
+﻿[
+    {
+        "name":  "IO field_3",
+        "typeName":  "HmiIOField",
+        "left":  1155,
+        "top":  9,
+        "width":  132,
+        "height":  36,
+        "processValue":  "0",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Rectangle_3",
+        "typeName":  "HmiRectangle",
+        "left":  1150,
+        "top":  11,
+        "width":  132,
+        "height":  36,
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Screen window_1",
+        "typeName":  "HmiScreenWindow",
+        "left":  0,
+        "top":  85,
+        "width":  1366,
+        "height":  680,
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "IO field_1",
+        "typeName":  "HmiIOField",
+        "left":  1150,
+        "top":  7,
+        "width":  132,
+        "height":  36,
+        "processValue":  "0",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "IO field_2",
+        "typeName":  "HmiIOField",
+        "left":  1147,
+        "top":  49,
+        "width":  140,
+        "height":  24,
+        "processValue":  "01.01.2025",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Text box_1",
+        "typeName":  "HmiTextBox",
+        "left":  221,
+        "top":  -2,
+        "width":  896,
+        "height":  44,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_1",
+        "typeName":  "HmiButton",
+        "left":  0,
+        "top":  44,
+        "width":  124,
+        "height":  40,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_2",
+        "typeName":  "HmiButton",
+        "left":  124,
+        "top":  44,
+        "width":  124,
+        "height":  40,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_3",
+        "typeName":  "HmiButton",
+        "left":  248,
+        "top":  44,
+        "width":  124,
+        "height":  40,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_4",
+        "typeName":  "HmiButton",
+        "left":  372,
+        "top":  44,
+        "width":  124,
+        "height":  40,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_5",
+        "typeName":  "HmiButton",
+        "left":  496,
+        "top":  44,
+        "width":  124,
+        "height":  40,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_6",
+        "typeName":  "HmiButton",
+        "left":  620,
+        "top":  44,
+        "width":  124,
+        "height":  40,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_7",
+        "typeName":  "HmiButton",
+        "left":  744,
+        "top":  44,
+        "width":  124,
+        "height":  40,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_8",
+        "typeName":  "HmiButton",
+        "left":  868,
+        "top":  44,
+        "width":  124,
+        "height":  40,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_9",
+        "typeName":  "HmiButton",
+        "left":  992,
+        "top":  44,
+        "width":  124,
+        "height":  40,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Text box_17",
+        "typeName":  "HmiTextBox",
+        "left":  2,
+        "top":  4,
+        "width":  219,
+        "height":  36,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Text box_2",
+        "typeName":  "HmiTextBox",
+        "left":  43,
+        "top":  2,
+        "width":  142,
+        "height":  17,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Graphic view_1",
+        "typeName":  "HmiGraphicView",
+        "left":  5,
+        "top":  0,
+        "width":  38,
+        "height":  44,
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Graphic view_5",
+        "typeName":  "HmiGraphicView",
+        "left":  5,
+        "top":  0,
+        "width":  38,
+        "height":  44,
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Graphic view_6",
+        "typeName":  "HmiGraphicView",
+        "left":  5,
+        "top":  0,
+        "width":  38,
+        "height":  44,
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_10",
+        "typeName":  "HmiButton",
+        "left":  185,
+        "top":  4,
+        "width":  36,
+        "height":  36,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Text box_3",
+        "typeName":  "HmiTextBox",
+        "left":  43,
+        "top":  4,
+        "width":  142,
+        "height":  36,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_11",
+        "typeName":  "HmiButton",
+        "left":  2,
+        "top":  4,
+        "width":  183,
+        "height":  36,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Graphic view_2",
+        "typeName":  "HmiGraphicView",
+        "left":  1268,
+        "top":  -6,
+        "width":  97,
+        "height":  97,
+        "events":  [
+
+                   ]
+    },
+    {
+        "name":  "Button_12",
+        "typeName":  "HmiButton",
+        "left":  1117,
+        "top":  44,
+        "width":  38,
+        "height":  40,
+        "text":  "Siemens.Engineering.MultilingualText",
+        "events":  [
+
+                   ]
+    }
+]

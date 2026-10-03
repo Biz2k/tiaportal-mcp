@@ -1,0 +1,8 @@
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestApp\obj\Debug\net48\TestApp.csproj.AssemblyReference.cache
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestApp\obj\Debug\net48\TestApp.csproj.SuggestedBindingRedirects.cache
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestApp\obj\Debug\net48\TestApp.exe.config
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestApp\obj\Debug\net48\TestApp.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestApp\obj\Debug\net48\TestApp.AssemblyInfoInputs.cache
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestApp\obj\Debug\net48\TestApp.AssemblyInfo.cs
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestApp\obj\Debug\net48\TestApp.csproj.CoreCompileInputs.cache
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestApp\obj\Debug\net48\TestApp.sourcelink.json

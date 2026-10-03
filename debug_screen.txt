@@ -1,0 +1,24 @@
+﻿{
+    "type":  "HmiScreen",
+    "props":  [
+                  "EventHandlers = HmiScreenEventHandlerComposition",
+                  "Parent = IEngineeringObject",
+                  "ScreenItems = HmiScreenItemBaseComposition",
+                  "AlternateBackColor = Color",
+                  "BackColor = Color",
+                  "BackFillPattern = HmiFillPattern",
+                  "BackGraphic = String",
+                  "BackGraphicStretchMode = HmiGraphicStretchMode",
+                  "BackgroundFillMode = HmiBackgroundFillMode",
+                  "Enabled = Boolean",
+                  "Height = UInt32",
+                  "HorizontalAlignment = HmiHorizontalAlignment",
+                  "ScreenNumber = UInt16",
+                  "VerticalAlignment = HmiVerticalAlignment",
+                  "Width = UInt32",
+                  "DisplayName = MultilingualText",
+                  "Name = String",
+                  "Dynamizations = DynamizationBaseComposition",
+                  "PropertyEventHandlers = PropertyEventHandlerComposition"
+              ]
+}

@@ -707,6 +707,11 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<Siemens.HmiTagInfo>? Items { get; set; }
     }
 
+    public class ResponseHmiScreenItems : ResponseMessage
+    {
+        public IEnumerable<Siemens.HmiScreenItemInfo>? Items { get; set; }
+    }
+
     #endregion
 
 }
