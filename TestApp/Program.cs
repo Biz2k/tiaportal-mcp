@@ -47,25 +47,26 @@ class Program {
                     Type screenItemsType = screenItems.GetType();
                     Console.WriteLine("ScreenItems type: " + screenItemsType.FullName);
 
-                    // Find the type of HmiButton
+                    // Find the type of IO Field
                     var targetAssembly = screenItemsType.Assembly;
                     if (targetAssembly != null) {
-                        Type btnType = targetAssembly.GetTypes().FirstOrDefault(t => t.Name == "HmiButton");
-                        if (btnType != null) {
-                            Console.WriteLine("Found HmiButton type: " + btnType.FullName);
+                        Type ioType = targetAssembly.GetTypes().FirstOrDefault(t => t.Name == "HmiIOField");
+                        if (ioType != null) {
                             var createMethod = screenItemsType.GetMethods().FirstOrDefault(m => m.Name == "Create" && m.IsGenericMethod);
                             if (createMethod != null) {
-                                var genericCreate = createMethod.MakeGenericMethod(btnType);
-                                var newBtn = genericCreate.Invoke(screenItems, new object[] { "MyReflectButton" });
-                                Console.WriteLine("Successfully created button via reflection!");
-                            } else {
-                                Console.WriteLine("Create generic method not found on ScreenItems.");
+                                var genericCreate = createMethod.MakeGenericMethod(ioType);
+                                dynamic newIo = genericCreate.Invoke(screenItems, new object[] { "MyReflectIoField2" });
+                                Console.WriteLine("Successfully created IO Field!");
+                                
+                                // Test dynamization
+                                try {
+                                    newIo.ProcessValue = "Tag_1";
+                                    Console.WriteLine("Successfully set ProcessValue directly!");
+                                } catch (Exception exGeo) {
+                                    Console.WriteLine("Direct ProcessValue failed: " + exGeo.Message);
+                                }
                             }
-                        } else {
-                            Console.WriteLine("HmiButton type not found in assembly.");
                         }
-                    } else {
-                        Console.WriteLine("HmiUnified assembly not loaded.");
                     }
                 } catch (Exception ex) {
                     Console.WriteLine("Reflection create failed: " + ex.Message);

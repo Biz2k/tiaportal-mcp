@@ -176,5 +176,27 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new { Message = $"Unexpected error: {ex.Message}" };
             }
         }
+
+        [WriteTool]
+        [McpServerTool(Name = "ConfigureHmiScreenItem", Title = "Configure HMI screen item", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Configure an item (e.g. dimensions, text, processValue binding) on the given HMI screen.")]
+        public static object ConfigureHmiScreenItem(
+            [Description("softwarePath: path to HMI software")] string softwarePath,
+            [Description("screenName: name of the screen")] string screenName,
+            [Description("itemName: name of the item to configure")] string itemName,
+            [Description("left: X coordinate (optional)")] int? left = null,
+            [Description("top: Y coordinate (optional)")] int? top = null,
+            [Description("width: Item width (optional)")] int? width = null,
+            [Description("height: Item height (optional)")] int? height = null,
+            [Description("processValue: tag binding or value for ProcessValue property (optional)")] string processValue = null,
+            [Description("text: string for the Text property (optional)")] string text = null)
+        {
+            try {
+                string msg = Portal.ConfigureHmiScreenItem(softwarePath, screenName, itemName, left, top, width, height, processValue, text);
+                return new { Message = msg, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
     }
 }

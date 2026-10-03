@@ -392,5 +392,55 @@ namespace TiaMcpServer.Siemens
 
             throw new System.Exception($"Item '{itemName}' not found on screen '{screenName}'.");
         }
+
+        public string ConfigureHmiScreenItem(string softwarePath, string screenName, string itemName, 
+            int? left, int? top, int? width, int? height, string processValue, string text)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            dynamic screen = null;
+
+            if (dynSoftware is HmiTarget target) {
+                screen = FindScreenInFolder(target.ScreenFolder, screenName);
+            } else if (dynSoftware is HmiSoftware unified) {
+                foreach (var s in unified.Screens) { if (s.Name == screenName) { screen = s; break; } }
+            }
+
+            if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
+
+            dynamic targetItem = null;
+            try { foreach (var item in screen.ScreenItems) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
+            if (targetItem == null) {
+                try { foreach (var item in screen.Elements) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
+            }
+            if (targetItem == null) throw new System.Exception($"Item '{itemName}' not found.");
+
+            var results = new System.Collections.Generic.List<string>();
+            
+            if (left.HasValue) { try { targetItem.Left = left.Value; results.Add("Left"); } catch { } }
+            if (top.HasValue) { try { targetItem.Top = top.Value; results.Add("Top"); } catch { } }
+            if (width.HasValue) { try { targetItem.Width = width.Value; results.Add("Width"); } catch { } }
+            if (height.HasValue) { try { targetItem.Height = height.Value; results.Add("Height"); } catch { } }
+            if (processValue != null) { try { targetItem.ProcessValue = processValue; results.Add("ProcessValue"); } catch { } }
+            
+            if (text != null) { 
+                try { 
+                    targetItem.Text = text; 
+                    results.Add("Text"); 
+                } catch { 
+                    try { 
+                        var ml = targetItem.Text;
+                        if (ml != null && ml.Items.Count > 0) {
+                            var en = System.Linq.Enumerable.First(ml.Items);
+                            en.Text = text;
+                            results.Add("Text(Multilingual)");
+                        }
+                    } catch { }
+                } 
+            }
+
+            return $"Item '{itemName}' configured successfully. Updated properties: {string.Join(", ", results)}";
+        }
     }
 }
