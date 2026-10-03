@@ -714,4 +714,28 @@ namespace TiaMcpServer.ModelContextProtocol
 
     #endregion
 
+    #region hardware topology
+
+    public class ResponseHardwareItem
+    {
+        public string? Name { get; set; }
+        public string? TypeIdentifier { get; set; }
+        public string? Classification { get; set; }
+        public string? ArticleNumber { get; set; }
+        public string? FirmwareVersion { get; set; }
+        public IEnumerable<ResponseHardwareItem>? DeviceItems { get; set; }
+    }
+
+    public class ResponseHardwareDevice
+    {
+        public string? Name { get; set; }
+        public IEnumerable<ResponseHardwareItem>? DeviceItems { get; set; }
+    }
+
+    public class ResponseHardwareTopology : ResponseMessage
+    {
+        public IEnumerable<ResponseHardwareDevice>? Devices { get; set; }
+    }
+
+    #endregion
 }
