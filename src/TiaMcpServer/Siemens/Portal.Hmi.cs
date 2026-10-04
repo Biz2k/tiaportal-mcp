@@ -256,11 +256,23 @@ namespace TiaMcpServer.Siemens
             } catch { }
 
             // Extract Events
-            var evtList = new List<string>();
+            var evtList = new List<Dictionary<string, object>>();
             props["_Events"] = evtList;
             try {
                 foreach (var evt in targetItem.EventHandlers) {
-                    evtList.Add(evt.Name);
+                    var evtProps = new Dictionary<string, object>();
+                    try { evtProps["EventType"] = ((dynamic)evt).EventType.ToString(); } catch { }
+                    try { evtProps["Name"] = ((dynamic)evt).Name; } catch { }
+                    
+                    try {
+                        var script = ((dynamic)evt).Script;
+                        if (script != null) {
+                            evtProps["Script"] = script.GetType().Name;
+                            try { evtProps["ScriptCode"] = script.ScriptCode; } catch { }
+                        }
+                    } catch { }
+
+                    evtList.Add(evtProps);
                 }
             } catch { }
             
