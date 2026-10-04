@@ -234,8 +234,9 @@ namespace TiaMcpServer.Siemens
             }
 
             // Extract Dynamizations
+            var dynList = new List<Dictionary<string, object>>();
+            props["_Dynamizations"] = dynList;
             try {
-                var dynList = new List<Dictionary<string, object>>();
                 foreach (var dyn in targetItem.Dynamizations) {
                     var dynProps = new Dictionary<string, object>();
                     dynProps["__Type"] = dyn.GetType().Name;
@@ -252,16 +253,24 @@ namespace TiaMcpServer.Siemens
                     } catch { }
                     dynList.Add(dynProps);
                 }
-                props["_Dynamizations"] = dynList;
             } catch { }
 
             // Extract Events
+            var evtList = new List<string>();
+            props["_Events"] = evtList;
             try {
-                var evtList = new List<string>();
                 foreach (var evt in targetItem.EventHandlers) {
                     evtList.Add(evt.Name);
                 }
-                props["_Events"] = evtList;
+            } catch { }
+            
+            // Extract Expressions (if any, per user request)
+            var exprList = new List<string>();
+            props["_Expression"] = exprList;
+            try {
+                foreach (var expr in targetItem.Expressions) {
+                    exprList.Add(expr.Name);
+                }
             } catch { }
 
             return props;
