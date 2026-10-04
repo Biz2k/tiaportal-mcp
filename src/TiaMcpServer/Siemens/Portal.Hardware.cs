@@ -229,5 +229,64 @@ namespace TiaMcpServer.Siemens
             }
             return null;
         }
+
+        public void DeleteHardwareDevice(string deviceName)
+        {
+            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
+
+            var device = _project!.Devices.Find(deviceName);
+            if (device == null)
+            {
+                device = _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
+                if (device == null)
+                    throw new InvalidOperationException($"Device '{deviceName}' not found");
+            }
+
+            _logger?.LogInformation($"Deleting device '{deviceName}'");
+            device.Delete();
+        }
+
+        public void ConnectToSubnet(string deviceName, string interfaceName, string subnetName)
+        {
+            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
+
+            var device = _project!.Devices.Find(deviceName) ?? _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
+            if (device == null) throw new InvalidOperationException($"Device '{deviceName}' not found");
+
+            var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
+            if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
+
+            var netIf = interfaceItem.GetService<NetworkInterface>();
+            if (netIf == null || netIf.Nodes == null || netIf.Nodes.Count == 0)
+                throw new InvalidOperationException($"Interface '{interfaceName}' has no nodes to connect");
+
+            var subnet = _project.Subnets.Find(subnetName);
+            if (subnet == null)
+            {
+                _logger?.LogInformation($"Creating PN/IE subnet '{subnetName}'");
+                subnet = _project.Subnets.Create("System:Subnet.Ethernet", subnetName);
+            }
+
+            _logger?.LogInformation($"Connecting interface '{interfaceName}' to subnet '{subnetName}'");
+            netIf.Nodes[0].ConnectToSubnet(subnet);
+        }
+
+        public void DisconnectSubnet(string deviceName, string interfaceName)
+        {
+            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
+
+            var device = _project!.Devices.Find(deviceName) ?? _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
+            if (device == null) throw new InvalidOperationException($"Device '{deviceName}' not found");
+
+            var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
+            if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
+
+            var netIf = interfaceItem.GetService<NetworkInterface>();
+            if (netIf == null || netIf.Nodes == null || netIf.Nodes.Count == 0)
+                throw new InvalidOperationException($"Interface '{interfaceName}' has no nodes to disconnect");
+
+            _logger?.LogInformation($"Disconnecting interface '{interfaceName}' from subnet");
+            netIf.Nodes[0].DisconnectFromSubnet();
+        }
     }
 }

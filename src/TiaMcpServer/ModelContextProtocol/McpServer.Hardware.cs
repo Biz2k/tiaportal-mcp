@@ -84,6 +84,69 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "DeleteHardwareDevice", Title = "Delete hardware device", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Deletes a hardware device (PLC, HMI, etc) from the project")]
+        public static ResponseMessage DeleteHardwareDevice([Description("deviceName: the name of the device to delete")] string deviceName)
+        {
+            try
+            {
+                Portal.DeleteHardwareDevice(deviceName);
+                return new ResponseMessage
+                {
+                    Message = $"Hardware device '{deviceName}' deleted successfully",
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error deleting device '{deviceName}': {ex.Message}", ex);
+            }
+        }
+
+        #endregion
+
+        #region network and subnets
+
+        [McpServerTool(Name = "ConnectSubnet", Title = "Connect interface to subnet", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Connects a network interface to a subnet (creates the PN/IE subnet if it doesn't exist)")]
+        public static ResponseMessage ConnectSubnet(
+            [Description("deviceName: the name of the device")] string deviceName,
+            [Description("interfaceName: the name of the PROFINET/Ethernet interface (e.g. 'PROFINET interface_1')")] string interfaceName,
+            [Description("subnetName: the name of the subnet to connect to (e.g. 'PN/IE_1')")] string subnetName)
+        {
+            try
+            {
+                Portal.ConnectToSubnet(deviceName, interfaceName, subnetName);
+                return new ResponseMessage
+                {
+                    Message = $"Interface '{interfaceName}' connected to subnet '{subnetName}' successfully",
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error connecting to subnet: {ex.Message}", ex);
+            }
+        }
+
+        [McpServerTool(Name = "DisconnectSubnet", Title = "Disconnect interface from subnet", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Disconnects a network interface from its current subnet")]
+        public static ResponseMessage DisconnectSubnet(
+            [Description("deviceName: the name of the device")] string deviceName,
+            [Description("interfaceName: the name of the PROFINET/Ethernet interface")] string interfaceName)
+        {
+            try
+            {
+                Portal.DisconnectSubnet(deviceName, interfaceName);
+                return new ResponseMessage
+                {
+                    Message = $"Interface '{interfaceName}' disconnected from subnet successfully",
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error disconnecting from subnet: {ex.Message}", ex);
+            }
+        }
+
         #endregion
     }
 }
