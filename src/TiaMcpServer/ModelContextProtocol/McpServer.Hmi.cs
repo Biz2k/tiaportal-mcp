@@ -159,6 +159,19 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "GetHmiConnections", Title = "Get HMI connections", ReadOnly = true, Destructive = false, OpenWorld = false, UseStructuredContent = true),
+         Description("List all HMI connections to PLCs with their attributes.")]
+        public static object GetHmiConnections(
+            [Description("softwarePath: path to HMI software")] string softwarePath)
+        {
+            try {
+                var conn = Portal.GetHmiConnections(softwarePath);
+                return new { Items = conn, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
+
         [WriteTool]
         [McpServerTool(Name = "CreateHmiScreen", Title = "Create HMI screen", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Create a new HMI screen in the given HMI target.")]

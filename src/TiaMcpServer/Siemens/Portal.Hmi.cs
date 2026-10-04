@@ -189,6 +189,41 @@ namespace TiaMcpServer.Siemens
             return info;
         }
 
+        public List<Dictionary<string, object>> GetHmiConnections(string softwarePath)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            
+            var connectionList = new List<Dictionary<string, object>>();
+            dynamic connections = null;
+
+            try { connections = dynSoftware.GetType().GetProperty("Connections")?.GetValue(dynSoftware); } catch { }
+            if (connections == null) {
+                try { connections = dynSoftware.GetType().GetProperty("HmiConnections")?.GetValue(dynSoftware); } catch { }
+            }
+
+            if (connections != null) {
+                foreach(var conn in connections) {
+                    var connDict = new Dictionary<string, object>();
+                    connDict["Name"] = conn.Name;
+                    try {
+                        foreach(var attr in ((dynamic)conn).GetAttributeInfos()) {
+                            try {
+                                var val = ((dynamic)conn).GetAttribute(attr.Name);
+                                if (val != null) {
+                                    if (val.GetType().IsEnum) connDict[attr.Name] = val.ToString();
+                                    else connDict[attr.Name] = val.ToString();
+                                }
+                            } catch { }
+                        }
+                    } catch { }
+                    connectionList.Add(connDict);
+                }
+            }
+            return connectionList;
+        }
+
         public Dictionary<string, object> GetHmiScreenItemProperties(string softwarePath, string screenName, string itemName)
         {
             var softwareContainer = GetSoftwareContainer(softwarePath);

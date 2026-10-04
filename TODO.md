@@ -237,6 +237,46 @@ the gap is explicit rather than implied.
 - [x] **Настройка архивных трендов (Trend Controls):** Специализированные методы для конфигурации `HmiTrendControl`, добавления перьев и привязки их к `DataLog` архивам.
 - [ ] **Работа с Faceplates (Фейсплейты):** Методы для добавления экземпляров Faceplate на экраны и привязки их специфичных интерфейсных тегов и свойств (Properties/Events интерфейса фейсплейта).
 - [ ] **Анимации и скрипты:** Возможность добавлять динамизацию через скрипты (JavaScript в Unified / VBScript или C-Script в Classic) напрямую через MCP-сервер.
+- [ ] `add_screen_items`: Add multiple graphical elements to an HMI screen at once
+- [ ] `configure_hmi_runtime`: Configure HMI runtime settings and parameters
+- [ ] `configure_hmi_screen`: Configure screen properties like size and background
+- [ ] `create_hmi_alarm`: Create a new HMI alarm with trigger and text
+- [ ] `create_hmi_connection`: Create a connection between HMI and a PLC
+- [ ] `create_hmi_cycle`: Create a new HMI acquisition cycle
+- [ ] `create_hmi_script`: Create a new VBScript or JavaScript for the HMI
+- [ ] `create_hmi_tag`: Create a single HMI tag with connection and address
+- [ ] `create_hmi_tag_table`: Create a new HMI tag table for organizing tags
+- [ ] `create_hmi_tags`: Create multiple HMI tags in batch
+- [ ] `delete_hmi_alarm`: Delete an existing HMI alarm
+- [ ] `delete_hmi_connection`: Delete an HMI-to-PLC connection
+- [ ] `delete_hmi_tag`: Delete a single HMI tag
+- [ ] `delete_hmi_tag_table`: Delete an HMI tag table and its contents
+- [ ] `delete_hmi_tags`: Delete multiple HMI tags in batch
+- [ ] `get_hmi_alarm_classes`: Get all configured HMI alarm classes
+- [ ] `get_hmi_analog_alarms`: Get all analog alarms configured in the HMI
+- [x] `get_hmi_connections`: List all HMI connections to PLCs
+- [ ] `get_hmi_cycles`: Get all HMI acquisition cycles
+- [ ] `get_hmi_discrete_alarms`: Get all discrete alarms configured in the HMI
+- [ ] `get_hmi_logs`: Retrieve HMI runtime and diagnostic logs
+- [ ] `get_hmi_plant_views`: Get the plant view hierarchy of the HMI
+- [ ] `get_hmi_runtime_settings`: Get current HMI runtime configuration settings
+- [x] `get_hmi_screen_details`: Get detailed properties of a specific HMI screen
+- [ ] `get_hmi_screen_global_elements`: Get global screen elements shared across screens
+- [ ] `get_hmi_screen_overview`: Get an overview of all screen items and layout
+- [ ] `get_hmi_script_content`: Read the source code of an HMI script
+- [ ] `get_hmi_scripts_tree`: Get the hierarchical tree of all HMI scripts
+- [ ] `list_hmi_library_types`: List all available HMI library types
+- [ ] `list_hmi_project_graphics`: List all project-level graphic resources
+- [ ] `list_hmi_tags`: List all HMI tags in a tag table
+- [ ] `list_hmi_text_graphic_lists`: List all text and graphic lists in the HMI
+- [ ] `create_graphic_list`: Create a new graphic list for the HMI
+- [ ] `modify_hmi_script`: Modify the source code of an existing HMI script
+- [ ] `remove_animation`: Remove an animation from a screen element
+- [ ] `set_appearance_animation`: Set appearance animation on a screen element
+- [ ] `set_flashing`: Configure flashing behavior on a screen element
+- [ ] `set_movement_animation`: Set movement animation on a screen element
+- [ ] `set_script_dynamization`: Set script-based dynamization on a screen property
+- [ ] `set_visibility_animation`: Set visibility animation on a screen element
 
 ## Hardware Configuration & Topology (Аппаратная часть) - Deferred Tasks
 - [x] **Чтение аппаратной конфигурации:** Инструменты для получения списка устройств, модулей, их заказных номеров (MLFB) и версий прошивок (Firmware).
