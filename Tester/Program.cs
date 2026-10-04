@@ -59,6 +59,19 @@ namespace Tester
                     string result2 = portal.ConfigureHmiTrendControl(hmiPath, "A7", "UserTrendControl", "Потужність", "Насосний агрегат СР1 потужність", "Interpolated", 3, "Blue");
                     Console.WriteLine(result2);
 
+                    // Call GetHmiScreenItemProperties for the Screen itself (empty itemName)
+                    var props = portal.GetHmiScreenItemProperties(hmiPath, "0_Main", "");
+                    
+                    // Convert dictionary to formatted JSON string
+                    string json = System.Text.Json.JsonSerializer.Serialize(props, new System.Text.Json.JsonSerializerOptions {
+                        WriteIndented = true
+                    });
+                    
+                    // Write to Untitled-1.md
+                    string outputFilePath = @"C:\Users\Biz\Antigravity\MCP_TIA_Portal\Untitled-1.md";
+                    System.IO.File.WriteAllText(outputFilePath, "```json\n" + json + "\n```");
+                    
+                    Console.WriteLine($"Successfully wrote properties to {outputFilePath}");
                 } catch(Exception e) {
                     Console.WriteLine($"Error: {e.Message}");
                 }

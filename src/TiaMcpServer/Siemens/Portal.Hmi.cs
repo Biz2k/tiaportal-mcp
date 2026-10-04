@@ -189,6 +189,122 @@ namespace TiaMcpServer.Siemens
             return info;
         }
 
+        public Dictionary<string, object> GetHmiScreenItemProperties(string softwarePath, string screenName, string itemName)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            
+            object targetScreen = null;
+            try { targetScreen = FindScreenInFolder(dynSoftware.ScreenFolder, screenName); }
+            catch {
+                foreach (var screen in dynSoftware.Screens) {
+                    if (screen.Name == screenName) { targetScreen = screen; break; }
+                }
+            }
+            if (targetScreen == null) throw new System.Exception($"Screen '{screenName}' not found.");
+
+            dynamic targetItem = null;
+            if (!string.IsNullOrEmpty(itemName)) {
+                foreach (var item in ((dynamic)targetScreen).ScreenItems) {
+                    if (item.Name == itemName) { targetItem = item; break; }
+                }
+                if (targetItem == null) throw new System.Exception($"Item '{itemName}' not found on screen '{screenName}'.");
+            } else {
+                targetItem = targetScreen;
+            }
+
+            var props = new Dictionary<string, object>();
+            try {
+                var attrInfos = targetItem.GetAttributeInfos();
+                foreach (var attr in attrInfos) {
+                    try {
+                        var val = targetItem.GetAttribute(attr.Name);
+                        if (val != null) {
+                            if (val.GetType().IsEnum) props[attr.Name] = val.ToString();
+                            else if (val is System.Drawing.Color c) props[attr.Name] = $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+                            else props[attr.Name] = val.ToString(); // Keep as string or primitive
+                        } else {
+                            props[attr.Name] = null;
+                        }
+                    } catch { }
+                }
+            } catch (System.Exception ex) {
+                throw new System.Exception($"Failed to get attributes: {ex.Message}");
+            }
+
+            // Extract Dynamizations
+            try {
+                var dynList = new List<Dictionary<string, object>>();
+                foreach (var dyn in targetItem.Dynamizations) {
+                    var dynProps = new Dictionary<string, object>();
+                    dynProps["__Type"] = dyn.GetType().Name;
+                    try {
+                        foreach(var attr in ((dynamic)dyn).GetAttributeInfos()) {
+                            try {
+                                var val = ((dynamic)dyn).GetAttribute(attr.Name);
+                                if (val != null) {
+                                    if (val.GetType().IsEnum) dynProps[attr.Name] = val.ToString();
+                                    else dynProps[attr.Name] = val.ToString();
+                                }
+                            } catch { }
+                        }
+                    } catch { }
+                    dynList.Add(dynProps);
+                }
+                props["_Dynamizations"] = dynList;
+            } catch { }
+
+            // Extract Events
+            try {
+                var evtList = new List<string>();
+                foreach (var evt in targetItem.EventHandlers) {
+                    evtList.Add(evt.Name);
+                }
+                props["_Events"] = evtList;
+            } catch { }
+
+            return props;
+        }
+
+        public string SetHmiScreenItemProperty(string softwarePath, string screenName, string itemName, string propertyName, object propertyValue)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            
+            object targetScreen = null;
+            try { targetScreen = FindScreenInFolder(dynSoftware.ScreenFolder, screenName); }
+            catch {
+                foreach (var screen in dynSoftware.Screens) {
+                    if (screen.Name == screenName) { targetScreen = screen; break; }
+                }
+            }
+            if (targetScreen == null) throw new System.Exception($"Screen '{screenName}' not found.");
+
+            dynamic targetItem = null;
+            if (!string.IsNullOrEmpty(itemName)) {
+                foreach (var item in ((dynamic)targetScreen).ScreenItems) {
+                    if (item.Name == itemName) { targetItem = item; break; }
+                }
+                if (targetItem == null) throw new System.Exception($"Item '{itemName}' not found on screen '{screenName}'.");
+            } else {
+                targetItem = targetScreen;
+            }
+
+            try {
+                // If it's a color hex string, try to convert it
+                if (propertyValue is string strVal && strVal.StartsWith("#") && (strVal.Length == 7 || strVal.Length == 9)) {
+                    try { propertyValue = System.Drawing.ColorTranslator.FromHtml(strVal); } catch { }
+                }
+                
+                targetItem.SetAttribute(propertyName, propertyValue);
+                return $"Property '{propertyName}' updated successfully on '{itemName}'.";
+            } catch (System.Exception ex) {
+                throw new System.Exception($"Failed to set property '{propertyName}': {ex.Message}");
+            }
+        }
+
         public object DebugScreenItem(string softwarePath, string screenName, string itemName)
         {
             var softwareContainer = GetSoftwareContainer(softwarePath);

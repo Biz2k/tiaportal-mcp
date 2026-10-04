@@ -114,6 +114,51 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "GetHmiScreenItemProperties", Title = "Get HMI screen item complete properties", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Get a complete dictionary of all properties dynamically available for a specific screen element via Openness. If itemName is empty, returns properties of the screen itself.")]
+        public static object GetHmiScreenItemProperties(
+            [Description("softwarePath: defines the path in the project structure to the HMI software")] string softwarePath,
+            [Description("screenName: the name of the screen")] string screenName,
+            [Description("itemName: the name of the item to inspect (leave empty to inspect the screen)")] string itemName = "")
+        {
+            try {
+                var props = Portal.GetHmiScreenItemProperties(softwarePath, screenName, itemName);
+                return new { Message = $"Retrieved {props.Count} properties from '{(string.IsNullOrEmpty(itemName) ? screenName : itemName)}'", Items = props, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "SetHmiScreenItemProperty", Title = "Set HMI screen item generic property", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Set an arbitrary property of a screen element by its exact property name (e.g. 'BackColor', 'Visible'). Use GetHmiScreenItemProperties to find the correct property names. If itemName is empty, modifies the screen itself.")]
+        public static object SetHmiScreenItemProperty(
+            [Description("softwarePath: path to HMI software")] string softwarePath,
+            [Description("screenName: name of the screen")] string screenName,
+            [Description("itemName: name of the item to modify (leave empty to modify the screen)")] string itemName,
+            [Description("propertyName: exact name of the property to set (e.g. 'Visible', 'BackColor')")] string propertyName,
+            [Description("propertyValue: the value to set (can be string, boolean, number, or hex color '#RRGGBB')")] JsonNode propertyValue)
+        {
+            try {
+                // Convert JsonNode to native .NET type based on its value kind
+                object nativeValue = null;
+                if (propertyValue is JsonValue jval) {
+                    if (jval.TryGetValue(out string s)) nativeValue = s;
+                    else if (jval.TryGetValue(out bool b)) nativeValue = b;
+                    else if (jval.TryGetValue(out int i)) nativeValue = i;
+                    else if (jval.TryGetValue(out double d)) nativeValue = d;
+                    else nativeValue = jval.ToString();
+                } else if (propertyValue != null) {
+                    nativeValue = propertyValue.ToString();
+                }
+
+                string msg = Portal.SetHmiScreenItemProperty(softwarePath, screenName, itemName, propertyName, nativeValue);
+                return new { Message = msg, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
+
         [WriteTool]
         [McpServerTool(Name = "CreateHmiScreen", Title = "Create HMI screen", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Create a new HMI screen in the given HMI target.")]
