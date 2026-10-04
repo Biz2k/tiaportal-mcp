@@ -697,7 +697,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: root-relative path of the block to compile, e.g. 1_Tests/FC_Block_1")] string blockPath)
         {
-            return Guarded(nameof(CompileBlock), () =>
+            return GuardedNoTransaction(nameof(CompileBlock), () =>
             {
                 var result = Portal.CompileBlock(softwarePath, blockPath);
                 return MapCompilerResult(result, $"Block '{blockPath}' compilation completed.");
@@ -710,7 +710,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseCompilerResult CompileSoftware(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
         {
-            return Guarded(nameof(CompileSoftware), () =>
+            return GuardedNoTransaction(nameof(CompileSoftware), () =>
             {
                 var result = Portal.CompileSoftware(softwarePath);
                 return MapCompilerResult(result, $"Software '{softwarePath}' compilation completed.");

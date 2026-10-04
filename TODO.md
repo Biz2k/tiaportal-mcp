@@ -50,8 +50,9 @@ external source files, cross references, and create/rename/delete/copy/move for 
 and their groups. The areas below are still entirely uncovered - no design work done, listed so
 the gap is explicit rather than implied.
 
-- [ ] __Online and device operations__: go online/offline, download, upload, online diagnostics
-  and module state, PLCSIM simulation. Needs real hardware or a simulator to test.
+- [ ] __Online and device operations__: go online/offline, upload, online diagnostics
+  and module state. Needs real hardware or a simulator to test.
+  - [x] download, PLCSIM simulation (completed)
 - [ ] __Hardware and network configuration__: create and delete devices, GSD import, plug and
   unplug modules, subnets, nodes, IO systems, connections.
 - [ ] __Libraries__: project and global libraries, master copies, library types and versioning,
@@ -243,11 +244,11 @@ the gap is explicit rather than implied.
 - [x] **Добавление нового оборудования:** Инструменты для программного добавления новых PLC, станций ET200 и HMI панелей в проект (`CreateHardwareDevice`, `PlugHardwareModule`). Примечание: для Classic HMI-панелей требуется установленный HSP-пакет; Unified HMI поддерживается.
 
 ## PLC Logic & Data (ПЛК Логика и Данные) - Deferred Tasks
-- [ ] **Создание и редактирование PLC тегов:** Инструменты для добавления тегов в таблицы тегов (Tag Tables) и назначения им адресов.
-- [ ] **Управление типами данных (UDT):** Чтение, создание и редактирование пользовательских типов данных (User Data Types).
+- [x] **Создание и редактирование PLC тегов:** Инструменты для добавления тегов в таблицы тегов (Tag Tables) и назначения им адресов.
+- [x] **Управление типами данных (UDT):** Чтение, создание и редактирование пользовательских типов данных (User Data Types).
 - [ ] **Алармы и сообщения:** Настройка HMI Alarms и PLC ProDiag/Program_Alarm сообщений.
 
 ## Управление проектом и компиляция - Deferred Tasks
-- [ ] **Полная компиляция проекта:** Запуск компиляции как Hardware, так и Software с возвращением структурированных логов.
-- [ ] **Загрузка в ПЛК (Download):** Инструменты для загрузки конфигурации и блоков в виртуальный или реальный ПЛК (PLCSIM Advanced).
+- [x] **Полная компиляция проекта:** Запуск компиляции как Hardware, так и Software с возвращением структурированных логов.
+- [x] **Загрузка в ПЛК (Download):** Инструменты для загрузки конфигурации и блоков в виртуальный или реальный ПЛК (PLCSIM Advanced).
 

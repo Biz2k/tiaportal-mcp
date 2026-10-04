@@ -713,6 +713,23 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        private static T GuardedNoTransaction<T>(string toolName, Func<T> body)
+        {
+            WritePolicy.EnsureEnabled(toolName);
+            try
+            {
+                return body();
+            }
+            catch (PortalException pex)
+            {
+                throw new McpException(pex.Message, pex);
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error in '{toolName}': {ex.Message}", ex);
+            }
+        }
+
         private static JsonObject OkMeta() => new JsonObject
         {
             ["timestamp"] = DateTime.Now,

@@ -1,4 +1,4 @@
-﻿# Agents Guide
+# Agents Guide
 
 This repository can be used with agentic coding assistants. Follow these guidelines to collaborate safely and efficiently.
 
@@ -36,3 +36,13 @@ Use clear, actionable language. For example:
 - Preserve existing indentation style (tabs vs. spaces).
 - Do not modify file encodings; keep UTF-8 BOM where present.
 - Ensure Windows CRLF line endings are retained when editing files.
+
+## PLCSIM Execution Policy
+
+- Do not attempt to autonomously launch and power on PLCSIM or PLCSIM Advanced via background terminal commands or headless API during the download process.
+- Background execution lacks UI visibility and may fail due to unconfigured IP settings in headless instances.
+- Always instruct the user to:
+  1. Manually launch PLCSIM (or PLCSIM Advanced).
+  2. Create a virtual controller instance with the correct IP address (matching the TIA Portal project).
+  3. Power on the instance.
+  ...before initiating a download task via Openness.

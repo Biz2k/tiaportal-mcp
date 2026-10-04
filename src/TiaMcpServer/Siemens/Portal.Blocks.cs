@@ -872,9 +872,17 @@ namespace TiaMcpServer.Siemens
                         ?? throw new PortalException(PortalErrorCode.NotFound,
                             $"Software not found at '{softwarePath}'.");
 
-                    if (softwareContainer.Software is ICompilable compilable)
+                    if (softwareContainer.Software is IEngineeringServiceProvider provider && provider.GetService<ICompilable>() is ICompilable compilable)
                     {
                         return compilable.Compile();
+                    }
+                    else if (softwareContainer.Software is ICompilable swCompilable)
+                    {
+                        return swCompilable.Compile();
+                    }
+                    else if (softwareContainer is IEngineeringServiceProvider contProvider && contProvider.GetService<ICompilable>() is ICompilable contService)
+                    {
+                        return contService.Compile();
                     }
                     else if (softwareContainer is ICompilable containerCompilable)
                     {

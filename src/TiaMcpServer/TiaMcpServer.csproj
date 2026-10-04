@@ -21,6 +21,9 @@
       <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Management.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Siemens.Simatic.Simulation.Runtime.Api.x64">
+      <HintPath>C:\Users\Biz\.gemini\antigravity-ide\brain\ba0fe103-e371-4677-807c-03a1fb9b99f5\scratch\repo\PLCsimAdvanced_Manager\Libs\Siemens.Simatic.Simulation.Runtime.Api.x64.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="tests\**" />
