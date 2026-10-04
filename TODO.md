@@ -55,7 +55,7 @@ the gap is explicit rather than implied.
   - [x] download, PLCSIM simulation (completed)
 - [ ] __Hardware and network configuration__: create and delete devices, GSD import, plug and
   unplug modules, subnets, nodes, IO systems, connections.
-- [ ] __Libraries__: project and global libraries, master copies, library types and versioning,
+- [x] __Libraries__: project and global libraries, master copies, library types and versioning,
   `UpdateProject`. Note that `CreateFrom(MasterCopy)` already exists on several compositions, so
   this would also unlock a native copy path for blocks and types.
 - [ ] __HMI__: screens, HMI tags, text lists, cycles, connections. Today `HmiTarget` and
@@ -233,7 +233,7 @@ the gap is explicit rather than implied.
 - [ ] Add docs pages under `docs/tools/` for import-from-documents tools; include file discovery rules (.s7dcl/.s7res), name derivation, and option mapping.
 
 ## HMI (Human Machine Interface) - Deferred Tasks
-- [ ] **Настройка событий (Event Handlers):** Инструменты для привязки системных функций к событиям элементов (например, назначение функции `ChangeScreen` на событие `Click` для кнопки). 
+- [x] **Настройка событий (Event Handlers):** Инструменты для привязки системных функций к событиям элементов (например, назначение функции `ChangeScreen` на событие `Click` для кнопки). 
 - [ ] **Настройка архивных трендов (Trend Controls):** Специализированные методы для конфигурации `HmiTrendControl`, добавления перьев и привязки их к `DataLog` архивам.
 - [ ] **Работа с Faceplates (Фейсплейты):** Методы для добавления экземпляров Faceplate на экраны и привязки их специфичных интерфейсных тегов и свойств (Properties/Events интерфейса фейсплейта).
 - [ ] **Анимации и скрипты:** Возможность добавлять динамизацию через скрипты (JavaScript в Unified / VBScript или C-Script в Classic) напрямую через MCP-сервер.
@@ -242,6 +242,8 @@ the gap is explicit rather than implied.
 - [x] **Чтение аппаратной конфигурации:** Инструменты для получения списка устройств, модулей, их заказных номеров (MLFB) и версий прошивок (Firmware).
 - [x] **Сетевая топология:** Инструменты для получения информации о подсетях (Subnets), IP-адресах устройств и связях PROFINET/PROFIBUS.
 - [x] **Добавление нового оборудования:** Инструменты для программного добавления новых PLC, станций ET200 и HMI панелей в проект (`CreateHardwareDevice`, `PlugHardwareModule`). Примечание: для Classic HMI-панелей требуется установленный HSP-пакет; Unified HMI поддерживается.
+- [x] **Удаление и управление оборудованием:** Инструменты для удаления устройств (`DeleteHardwareDevice`).
+- [x] **Работа с сетями и IO-системами:** Назначение интерфейсов в подсети (`ConnectSubnet`, `DisconnectSubnet`), создание IO-систем PROFINET (`CreateIoSystem`) и подключение к ним распределенной периферии (`ConnectToIoSystem`).
 
 ## PLC Logic & Data (ПЛК Логика и Данные) - Deferred Tasks
 - [x] **Создание и редактирование PLC тегов:** Инструменты для добавления тегов в таблицы тегов (Tag Tables) и назначения им адресов.

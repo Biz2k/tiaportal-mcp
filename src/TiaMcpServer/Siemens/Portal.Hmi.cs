@@ -468,5 +468,49 @@ namespace TiaMcpServer.Siemens
 
             return $"Item '{itemName}' configured successfully. Updated properties: {string.Join(", ", results)}";
         }
+        public string SetHmiUnifiedScreenItemEvent(string softwarePath, string screenName, string itemName, string eventName, string scriptCode)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            if (!(dynSoftware is HmiSoftware)) throw new System.Exception("This method is only supported for WinCC Unified (HmiSoftware).");
+
+            dynamic screen = null;
+            foreach (var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
+            if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
+
+            dynamic targetItem = null;
+            try { foreach (var item in screen.ScreenItems) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
+            if (targetItem == null) throw new System.Exception($"Item '{itemName}' not found.");
+
+            object eventHandlers = targetItem.EventHandlers;
+            if (eventHandlers == null) throw new System.Exception($"Item '{itemName}' does not support EventHandlers.");
+            
+            var compType = eventHandlers.GetType();
+            var createMethod = compType.GetMethod("Create");
+            if (createMethod == null) throw new System.Exception("EventHandlers composition does not have a Create method.");
+            
+            var paramType = createMethod.GetParameters()[0].ParameterType;
+            object enumValue;
+            try {
+                enumValue = System.Enum.Parse(paramType, eventName, true);
+            } catch {
+                throw new System.Exception($"Event '{eventName}' is not valid. Valid events are: {string.Join(", ", System.Enum.GetNames(paramType))}");
+            }
+            
+            dynamic eventHandler = null;
+            var findMethod = compType.GetMethod("Find");
+            if (findMethod != null) {
+                eventHandler = findMethod.Invoke(eventHandlers, new[] { enumValue });
+            }
+            
+            if (eventHandler == null) {
+                eventHandler = createMethod.Invoke(eventHandlers, new[] { enumValue });
+            }
+            
+            eventHandler.Script.ScriptCode = scriptCode;
+
+            return $"Successfully set '{eventName}' event handler for item '{itemName}'.";
+        }
     }
 }

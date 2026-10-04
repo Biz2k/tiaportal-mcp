@@ -198,5 +198,23 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new { Message = $"Unexpected error: {ex.Message}" };
             }
         }
+
+        [WriteTool]
+        [McpServerTool(Name = "SetHmiUnifiedScreenItemEvent", Title = "Set HMI screen item event (WinCC Unified only)", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Set an event handler (like Click) with JS script for a WinCC Unified screen item.")]
+        public static object SetHmiUnifiedScreenItemEvent(
+            [Description("softwarePath: path to HMI software")] string softwarePath,
+            [Description("screenName: name of the screen")] string screenName,
+            [Description("itemName: name of the item")] string itemName,
+            [Description("eventName: name of the event (e.g. 'Click')")] string eventName,
+            [Description("scriptCode: JavaScript code for the event handler")] string scriptCode)
+        {
+            try {
+                string msg = Portal.SetHmiUnifiedScreenItemEvent(softwarePath, screenName, itemName, eventName, scriptCode);
+                return new { Message = msg, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
     }
 }
