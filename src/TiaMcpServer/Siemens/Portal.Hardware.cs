@@ -288,5 +288,59 @@ namespace TiaMcpServer.Siemens
             _logger?.LogInformation($"Disconnecting interface '{interfaceName}' from subnet");
             netIf.Nodes[0].DisconnectFromSubnet();
         }
+
+        public void CreateIoSystem(string deviceName, string interfaceName, string ioSystemName)
+        {
+            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
+
+            var device = _project!.Devices.Find(deviceName) ?? _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
+            if (device == null) throw new InvalidOperationException($"Device '{deviceName}' not found");
+
+            var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
+            if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
+
+            var netIf = interfaceItem.GetService<NetworkInterface>();
+            if (netIf == null)
+                throw new InvalidOperationException($"Interface '{interfaceName}' does not support network operations");
+
+            var ioController = netIf.IoControllers.FirstOrDefault();
+            if (ioController == null)
+                throw new InvalidOperationException($"Interface '{interfaceName}' is not an IO controller and cannot create an IO system");
+
+            _logger?.LogInformation($"Creating IO system '{ioSystemName}' on '{interfaceName}'");
+            ioController.CreateIoSystem(ioSystemName);
+        }
+
+        public void ConnectToIoSystem(string deviceName, string interfaceName, string ioSystemName)
+        {
+            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
+
+            var device = _project!.Devices.Find(deviceName) ?? _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
+            if (device == null) throw new InvalidOperationException($"Device '{deviceName}' not found");
+
+            var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
+            if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
+
+            var netIf = interfaceItem.GetService<NetworkInterface>();
+            if (netIf == null)
+                throw new InvalidOperationException($"Interface '{interfaceName}' does not support network operations");
+
+            var ioConnector = netIf.IoConnectors.FirstOrDefault();
+            if (ioConnector == null)
+                throw new InvalidOperationException($"Interface '{interfaceName}' is not an IO connector (IO device)");
+
+            IoSystem? targetIoSystem = null;
+            foreach (var subnet in _project.Subnets)
+            {
+                targetIoSystem = subnet.IoSystems.FirstOrDefault(s => s.Name == ioSystemName);
+                if (targetIoSystem != null) break;
+            }
+
+            if (targetIoSystem == null)
+                throw new InvalidOperationException($"IO system '{ioSystemName}' not found in any subnet");
+
+            _logger?.LogInformation($"Connecting IO connector '{interfaceName}' to IO system '{ioSystemName}'");
+            ioConnector.ConnectToIoSystem(targetIoSystem);
+        }
     }
 }

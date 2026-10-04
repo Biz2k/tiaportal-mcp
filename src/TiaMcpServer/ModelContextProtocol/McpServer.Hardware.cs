@@ -148,5 +148,51 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         #endregion
+
+        #region IO systems
+
+        [McpServerTool(Name = "CreateIoSystem", Title = "Create IO system on controller", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Assigns (creates) a PROFINET IO system to a PLC network interface")]
+        public static ResponseMessage CreateIoSystem(
+            [Description("deviceName: the name of the PLC device")] string deviceName,
+            [Description("interfaceName: the name of the PROFINET interface (e.g. 'PROFINET interface_1')")] string interfaceName,
+            [Description("ioSystemName: the name of the IO system to create (e.g. 'PROFINET IO-System (100)')")] string ioSystemName)
+        {
+            try
+            {
+                Portal.CreateIoSystem(deviceName, interfaceName, ioSystemName);
+                return new ResponseMessage
+                {
+                    Message = $"IO system '{ioSystemName}' created on interface '{interfaceName}' successfully",
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error creating IO system: {ex.Message}", ex);
+            }
+        }
+
+        [McpServerTool(Name = "ConnectToIoSystem", Title = "Connect IO device to IO system", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Connects an IO device's network interface to an existing IO system")]
+        public static ResponseMessage ConnectToIoSystem(
+            [Description("deviceName: the name of the IO device")] string deviceName,
+            [Description("interfaceName: the name of the PROFINET interface on the IO device")] string interfaceName,
+            [Description("ioSystemName: the name of the target IO system to connect to")] string ioSystemName)
+        {
+            try
+            {
+                Portal.ConnectToIoSystem(deviceName, interfaceName, ioSystemName);
+                return new ResponseMessage
+                {
+                    Message = $"Interface '{interfaceName}' connected to IO system '{ioSystemName}' successfully",
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"Unexpected error connecting to IO system: {ex.Message}", ex);
+            }
+        }
+
+        #endregion
     }
 }
