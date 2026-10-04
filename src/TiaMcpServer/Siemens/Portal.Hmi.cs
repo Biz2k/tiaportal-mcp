@@ -420,8 +420,20 @@ namespace TiaMcpServer.Siemens
             
             if (left.HasValue) { try { targetItem.Left = left.Value; results.Add("Left"); } catch { } }
             if (top.HasValue) { try { targetItem.Top = top.Value; results.Add("Top"); } catch { } }
-            if (width.HasValue) { try { targetItem.Width = width.Value; results.Add("Width"); } catch { } }
-            if (height.HasValue) { try { targetItem.Height = height.Value; results.Add("Height"); } catch { } }
+            if (width.HasValue) { 
+                try { targetItem.Width = (uint)width.Value; results.Add("Width"); } 
+                catch { 
+                    try { targetItem.Width = width.Value; results.Add("Width"); }
+                    catch { }
+                } 
+            }
+            if (height.HasValue) { 
+                try { targetItem.Height = (uint)height.Value; results.Add("Height"); } 
+                catch { 
+                    try { targetItem.Height = height.Value; results.Add("Height"); }
+                    catch { }
+                } 
+            }
             if (processValue != null) { 
                 try { 
                     if (dynSoftware is HmiSoftware) {
@@ -467,6 +479,132 @@ namespace TiaMcpServer.Siemens
             }
 
             return $"Item '{itemName}' configured successfully. Updated properties: {string.Join(", ", results)}";
+        }
+
+        public string ConfigureHmiTrendCompanion(string softwarePath, string screenName, string companionName, string sourceTrendControlName)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            if (!(dynSoftware is HmiSoftware)) throw new System.Exception("This method is only supported for WinCC Unified (HmiSoftware).");
+
+            dynamic screen = null;
+            foreach (var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
+            if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
+
+            dynamic companion = null;
+            try { foreach (var item in screen.ScreenItems) { if (item.Name == companionName) { companion = item; break; } } } catch { }
+            if (companion == null) throw new System.Exception($"TrendCompanion '{companionName}' not found on screen '{screenName}'.");
+
+            companion.SourceTrendControl = sourceTrendControlName;
+
+            return $"TrendCompanion '{companionName}' bound successfully to '{sourceTrendControlName}'.";
+        }
+
+        public string ConfigureHmiTrendControl(string softwarePath, string screenName, string trendControlName, string trendName, string dataSource, string trendMode = null, int? lineWidth = null, string lineColor = null)
+        {
+            var results = new System.Collections.Generic.List<string>();
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            if (!(dynSoftware is HmiSoftware)) throw new System.Exception("This method is only supported for WinCC Unified (HmiSoftware).");
+
+            dynamic screen = null;
+            foreach (var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
+            if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
+
+            dynamic trendControl = null;
+            try { foreach (var item in screen.ScreenItems) { if (item.Name == trendControlName) { trendControl = item; break; } } } catch { }
+            if (trendControl == null) throw new System.Exception($"TrendControl '{trendControlName}' not found on screen '{screenName}'.");
+
+            // Ensure TrendArea exists
+            dynamic trendArea = null;
+            var trendAreas = trendControl.TrendAreas;
+            foreach (var a in trendAreas)
+            {
+                trendArea = a; 
+                break; // Just grab the first one for now
+            }
+            if (trendArea == null)
+            {
+                trendArea = trendAreas.Create("Area_1");
+                results.Add("Created TrendArea");
+            }
+
+            // Create or Reuse Trend
+            dynamic trend = null;
+            try {
+                foreach (var t in trendArea.Trends)
+                {
+                    var sourceY = t.DataSourceY;
+                    if (sourceY != null && string.IsNullOrEmpty((string)sourceY.Source))
+                    {
+                        trend = t;
+                        results.Add("Reused empty Trend");
+                        break;
+                    }
+                }
+            } catch { }
+
+            if (trend == null) {
+                trend = trendArea.Trends.Create();
+                results.Add("Created new Trend");
+            }
+
+            // Set Data Source
+            if (!string.IsNullOrEmpty(dataSource))
+            {
+                trend.DataSourceY.Source = dataSource;
+                results.Add("DataSourceY=" + dataSource);
+            }
+
+            // Set DisplayName (trendName)
+            if (!string.IsNullOrEmpty(trendName))
+            {
+                try {
+                    foreach(var item in trend.DisplayName.Items) {
+                        item.Text = $"<body><p>{System.Security.SecurityElement.Escape(trendName)}</p></body>";
+                    }
+                    results.Add("DisplayName=" + trendName);
+                } catch { }
+            }
+
+            if (!string.IsNullOrEmpty(trendMode))
+            {
+                try
+                {
+                    var enumType = trend.TrendMode.GetType();
+                    var enumVal = System.Enum.Parse(enumType, trendMode, true);
+                    trend.TrendMode = enumVal;
+                    results.Add("TrendMode");
+                }
+                catch { }
+            }
+
+            if (lineWidth.HasValue)
+            {
+                try
+                {
+                    trend.LineWidth = (byte)lineWidth.Value;
+                    results.Add("LineWidth");
+                }
+                catch { }
+            }
+
+            if (!string.IsNullOrEmpty(lineColor))
+            {
+                try
+                {
+                    System.Drawing.Color color;
+                    if (lineColor.StartsWith("#")) color = System.Drawing.ColorTranslator.FromHtml(lineColor);
+                    else color = System.Drawing.Color.FromName(lineColor);
+                    trend.LineColor = color;
+                    results.Add("LineColor=" + lineColor);
+                }
+                catch { }
+            }
+
+            return $"Trend added successfully to '{trendControlName}'. Configurations applied: {string.Join(", ", results)}";
         }
         public string SetHmiUnifiedScreenItemEvent(string softwarePath, string screenName, string itemName, string eventName, string scriptCode)
         {

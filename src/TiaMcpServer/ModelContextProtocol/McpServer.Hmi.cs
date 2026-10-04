@@ -200,6 +200,44 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
+        [McpServerTool(Name = "ConfigureHmiTrendControl", Title = "Configure HMI Trend Control", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Add a trend/pen to an HmiTrendControl and bind it to a Data Source (e.g. Logged Tag). WinCC Unified only.")]
+        public static object ConfigureHmiTrendControl(
+            [Description("softwarePath: path to HMI software")] string softwarePath,
+            [Description("screenName: name of the screen")] string screenName,
+            [Description("trendControlName: name of the Trend Control item")] string trendControlName,
+            [Description("trendName: name of the new Trend/Pen to create")] string trendName,
+            [Description("dataSource: tag name or log data source")] string dataSource,
+            [Description("trendMode: how to draw (Points, Interpolated, Stepped, Bar, Value) (optional)")] string trendMode = null,
+            [Description("lineWidth: line width of the trend (optional)")] int? lineWidth = null,
+            [Description("lineColor: color of the trend line, name (e.g. Red) or Hex (e.g. #FF0000) (optional)")] string lineColor = null)
+        {
+            try {
+                string msg = Portal.ConfigureHmiTrendControl(softwarePath, screenName, trendControlName, trendName, dataSource, trendMode, lineWidth, lineColor);
+                return new { Message = msg, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "ConfigureHmiTrendCompanion", Title = "Configure HMI Trend Companion", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Bind an HmiTrendCompanion to an HmiTrendControl. WinCC Unified only.")]
+        public static object ConfigureHmiTrendCompanion(
+            [Description("softwarePath: path to HMI software")] string softwarePath,
+            [Description("screenName: name of the screen")] string screenName,
+            [Description("companionName: name of the Trend Companion item")] string companionName,
+            [Description("sourceTrendControlName: name of the source Trend Control to bind to")] string sourceTrendControlName)
+        {
+            try {
+                string msg = Portal.ConfigureHmiTrendCompanion(softwarePath, screenName, companionName, sourceTrendControlName);
+                return new { Message = msg, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
+
+        [WriteTool]
         [McpServerTool(Name = "SetHmiUnifiedScreenItemEvent", Title = "Set HMI screen item event (WinCC Unified only)", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Set an event handler (like Click) with JS script for a WinCC Unified screen item.")]
         public static object SetHmiUnifiedScreenItemEvent(

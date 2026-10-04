@@ -1,0 +1,75 @@
+# Установка и Интеграция TiaMcpServer
+
+В этом руководстве описан процесс установки и интеграции предварительно скомпилированного `TiaMcpServer` в ваши любимые AI-ассистенты (Claude Code, Antigravity 2.0 или Claude Desktop).
+
+## 1. Установка
+
+Папка `TiaMcpServer` уже содержит всё необходимое для запуска сервера.
+
+1. Переместите папку `TiaMcpServer` в удобное для вас постоянное место на вашем ПК. Рекомендуемый стандартный путь:
+   `C:\Users\<ВашеИмяПользователя>\AppData\Local\TiaMcpServer\`
+2. Запомните этот путь, так как вам понадобится указать точный путь к файлу `TiaMcpServer.exe` на этапах интеграции ниже.
+
+---
+
+## 2. Интеграция с Claude Code (CLI)
+
+[Claude Code](https://github.com/anthropics/claude-code) изначально поддерживает MCP серверы через свой конфигурационный интерфейс CLI.
+
+Выполните следующую команду в терминале, убедившись, что указан правильный путь к `TiaMcpServer.exe`:
+
+```bash
+claude mcp add tia-mcp-server -- C:\Users\<ВашеИмяПользователя>\AppData\Local\TiaMcpServer\TiaMcpServer.exe
+```
+
+Эта команда автоматически настроит Claude Code для запуска и общения с `TiaMcpServer` через `stdio`. Вы можете проверить работоспособность, запустив `claude` и попросив его: `"Используй tia-mcp-server для вывода списка инстансов plcsim"`.
+
+---
+
+## 3. Интеграция с Antigravity 2.0 (IDE)
+
+Antigravity 2.0 настраивает MCP серверы через файл `mcp.json`. Вы можете настроить его **Глобально** (для всех ваших проектов) или **Для отдельной рабочей области (Workspace)**.
+
+### Вариант А: Глобальная конфигурация
+1. Откройте или создайте файл `C:\Users\<ВашеИмяПользователя>\.gemini\config\mcp.json`.
+2. Добавьте следующий JSON-код (не забудьте изменить путь, если вы сохранили папку в другом месте):
+
+```json
+{
+  "servers": {
+    "tia-mcp-server": {
+      "type": "stdio",
+      "command": "C:\\Users\\<ВашеИмяПользователя>\\AppData\\Local\\TiaMcpServer\\TiaMcpServer.exe",
+      "args": []
+    }
+  }
+}
+```
+
+### Вариант Б: Конфигурация рабочей области (VS Code / Antigravity)
+1. В корне вашего проекта откройте или создайте файл `.vscode/mcp.json`.
+2. Вставьте тот же JSON-код, что указан выше.
+
+Перезапустите агент Antigravity или IDE, и инструменты `tia-mcp-server` станут доступны в вашем контексте!
+
+---
+
+## 4. Интеграция с Claude Desktop
+
+Чтобы использовать `TiaMcpServer` напрямую в приложении Claude Desktop:
+
+1. Откройте файл конфигурации Claude Desktop, расположенный по пути:
+   `%APPDATA%\Claude\claude_desktop_config.json`
+2. Добавьте сервер в объект `mcpServers`, указав правильный путь:
+
+```json
+{
+  "mcpServers": {
+    "tia-mcp-server": {
+      "command": "C:\\Users\\<ВашеИмяПользователя>\\AppData\\Local\\TiaMcpServer\\TiaMcpServer.exe",
+      "args": []
+    }
+  }
+}
+```
+3. Полностью закройте и перезапустите Claude Desktop.
