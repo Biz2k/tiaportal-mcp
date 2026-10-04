@@ -746,4 +746,31 @@ namespace TiaMcpServer.ModelContextProtocol
     }
 
     #endregion
+
+    #region Libraries
+
+    public class ResponseLibraryInfo
+    {
+        public string? Name { get; set; }
+        public string? Path { get; set; }
+        public bool? IsProjectLibrary { get; set; }
+    }
+
+    public class ResponseLibraries : ResponseMessage
+    {
+        public IEnumerable<ResponseLibraryInfo>? Items { get; set; }
+    }
+
+    public class ResponseMasterCopyInfo
+    {
+        public string? Name { get; set; }
+        public string? Path { get; set; }
+    }
+
+    public class ResponseMasterCopies : ResponseMessage
+    {
+        public IEnumerable<ResponseMasterCopyInfo>? Items { get; set; }
+    }
+    
+    #endregion
 }
