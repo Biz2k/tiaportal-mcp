@@ -31,32 +31,15 @@ namespace Tester
                 }
                 
                 try {
-                    Console.WriteLine("\n--- LISTING LIBRARY TYPES ---");
-                    var types = portal.ListHmiLibraryTypes();
-                    foreach (var t in types) {
-                        Console.WriteLine($"\nName: {t["Name"]}, Path: {t["Path"]}, Kind: {t["Kind"]}, TargetSystem: {t["TargetSystem"]}");
-                        if (t.ContainsKey("Versions") && t["Versions"] is System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>> versions) {
-                            foreach (var v in versions) {
-                                Console.WriteLine($"  Version: {v["Version"]} (State: {v["State"]})");
-                                if (v.ContainsKey("ContainedTypeFormat")) {
-                                    Console.WriteLine($"  ContainedTypeFormat: {v["ContainedTypeFormat"]}");
-                                }
-                            }
-                        }
-                    }
-                    
-                    Console.WriteLine("\n--- SPAWNING AI_setting TO GET DETAILS ---");
-                    // Assuming screen "1_Pump_station" exists on "HMI (A7)/HMI_RT_3" from previous tests
+                    Console.WriteLine("\n--- SPAWN HMI_Analog_Valve ---");
                     string hmiPath = "HMI (A7)/HMI_RT_3";
-                    string screenName = "1_Pump_station";
-                    string instanceName = "Temp_AI_Setting_Instance";
+                    string screenName = "A7"; // User said "A7"
+                    string instanceName = "Test_Analog_Valve";
+                    try { portal.DeleteHmiScreenItem(hmiPath, screenName, instanceName); } catch { }
                     
-                    try { portal.DeleteHmiScreenItem(hmiPath, screenName, instanceName); } catch { } // Clean up just in case
-                    
-                    string res = portal.CreateHmiFaceplateInstance(hmiPath, screenName, instanceName, "V0.0.54\\AI_setting");
+                    string res = portal.CreateHmiFaceplateInstance(hmiPath, screenName, instanceName, "V0.0.3\\HMI_Analog_Valve");
                     Console.WriteLine(res);
                     
-                    Console.WriteLine("\n--- DETAILS FOR Temp_AI_Setting_Instance ---");
                     var props = portal.GetHmiScreenItemProperties(hmiPath, screenName, instanceName);
                     if (props.ContainsKey("_Interface")) {
                         var ifaceList = props["_Interface"] as System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>;
@@ -66,12 +49,41 @@ namespace Tester
                                 if (kvp.Key != "__Type") Console.WriteLine($"  {kvp.Key}: {kvp.Value}");
                             }
                         }
-                    } else {
-                        Console.WriteLine("No _Interface found.");
+                    }
+                    
+                    // Now let's find the first tag to bind
+                    string firstTag = "";
+                    var softwareContainer = portal.GetSoftwareContainer(hmiPath);
+                    dynamic dynSoftware = softwareContainer.GetType().GetProperty("Software").GetValue(softwareContainer);
+                    try {
+                        foreach(var tt in dynSoftware.TagFolder.TagTables) {
+                            foreach(var t in tt.Tags) {
+                                firstTag = t.Name;
+                                break;
+                            }
+                            if (firstTag != "") break;
+                        }
+                    } catch {}
+                    Console.WriteLine($"Found Tag to bind: {firstTag}");
+                    
+                    dynamic screen = null;
+                    foreach(var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
+                    
+                    dynamic faceplateItem = null;
+                    foreach(var i in screen.ScreenItems) { if (i.Name == instanceName) { faceplateItem = i; break; } }
+                    
+                    try {
+                        string resSet = portal.SetHmiScreenItemProperty(hmiPath, screenName, instanceName, "Interface_Tag_1", firstTag);
+                        Console.WriteLine(resSet);
+                        
+                        string resSet2 = portal.SetHmiScreenItemProperty(hmiPath, screenName, instanceName, "Valve_Name", "Main Valve");
+                        Console.WriteLine(resSet2);
+                    } catch (Exception ex) {
+                        Console.WriteLine($"Failed to set Faceplate property: {ex.Message}");
                     }
                     
                 } catch(Exception e) {
-                    Console.WriteLine($"Error: {e.Message}\n{e.StackTrace}");
+                    Console.WriteLine($"Error: {e.Message}");
                 }
             }
             catch (Exception ex)

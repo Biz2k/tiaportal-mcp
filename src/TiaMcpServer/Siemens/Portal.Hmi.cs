@@ -372,7 +372,28 @@ namespace TiaMcpServer.Siemens
                     try { propertyValue = System.Drawing.ColorTranslator.FromHtml(strVal); } catch { }
                 }
                 
-                targetItem.SetAttribute(propertyName, propertyValue);
+                bool handledAsInterface = false;
+                try {
+                    var interfaceProp = targetItem.GetType().GetProperty("Interface");
+                    if (interfaceProp != null) {
+                        dynamic ifaceList = interfaceProp.GetValue(targetItem);
+                        if (ifaceList != null) {
+                            foreach (var iProp in ifaceList) {
+                                string iPropName = iProp.GetType().GetProperty("PropertyName")?.GetValue(iProp)?.ToString();
+                                if (string.Equals(iPropName, propertyName, System.StringComparison.OrdinalIgnoreCase)) {
+                                    iProp.GetType().GetProperty("Value")?.SetValue(iProp, propertyValue);
+                                    handledAsInterface = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } catch { }
+
+                if (!handledAsInterface) {
+                    targetItem.SetAttribute(propertyName, propertyValue);
+                }
+                
                 return $"Property '{propertyName}' updated successfully on '{itemName}'.";
             } catch (System.Exception ex) {
                 throw new System.Exception($"Failed to set property '{propertyName}': {ex.Message}");
