@@ -23,7 +23,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error listing libraries: {ex.Message}", ex);
+                throw new McpException($"Unexpected error listing libraries: {Why(ex)}", ex);
             }
         }
 
@@ -42,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error opening global library: {ex.Message}", ex);
+                throw new McpException($"Unexpected error opening global library: {Why(ex)}", ex);
             }
         }
 
@@ -62,7 +62,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error getting Master Copies: {ex.Message}", ex);
+                throw new McpException($"Unexpected error getting Master Copies: {Why(ex)}", ex);
             }
         }
 
@@ -85,7 +85,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error instantiating Master Copy: {ex.Message}", ex);
+                throw new McpException($"Unexpected error instantiating Master Copy: {Why(ex)}", ex);
             }
         }
     }

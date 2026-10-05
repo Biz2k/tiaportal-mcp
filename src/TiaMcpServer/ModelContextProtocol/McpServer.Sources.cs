@@ -71,11 +71,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error reading the source of '{objectPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error reading the source of '{objectPath}': {Why(ex)}", ex);
             }
         }
 
@@ -121,11 +121,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error snapshotting '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error snapshotting '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -235,11 +235,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error generating sources for '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error generating sources for '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -269,11 +269,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting {what}: {ex.Message}", ex);
+                throw new McpException($"Unexpected error exporting {what}: {Why(ex)}", ex);
             }
         }
 
@@ -302,11 +302,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error generating the source of '{objectPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error generating the source of '{objectPath}': {Why(ex)}", ex);
             }
         }
 
@@ -406,7 +406,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving external sources from '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving external sources from '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -430,7 +430,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving external source info from '{sourcePath}' in '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving external source info from '{sourcePath}' in '{softwarePath}': {Why(ex)}", ex);
             }
         }
 

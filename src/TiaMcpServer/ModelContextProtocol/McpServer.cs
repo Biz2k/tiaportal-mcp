@@ -79,7 +79,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error connecting to TIA-Portal: {ex.Message}", ex);
+                throw new McpException($"Unexpected error connecting to TIA-Portal: {Why(ex)}", ex);
             }
         }
 
@@ -107,7 +107,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error disconnecting from TIA-Portal: {ex.Message}", ex);
+                throw new McpException($"Unexpected error disconnecting from TIA-Portal: {Why(ex)}", ex);
             }
         }
 
@@ -147,7 +147,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving TIA-Portal MCP server state: {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving TIA-Portal MCP server state: {Why(ex)}", ex);
             }
         }
 
@@ -189,7 +189,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error diagnosing the TIA-Portal environment: {ex.Message}", ex);
+                throw new McpException($"Unexpected error diagnosing the TIA-Portal environment: {Why(ex)}", ex);
             }
         }
 
@@ -234,7 +234,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving open projects: {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving open projects: {Why(ex)}", ex);
             }
         }
 
@@ -285,7 +285,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error opening project '{path}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error opening project '{path}': {Why(ex)}", ex);
             }
         }
 
@@ -335,7 +335,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error saving local project/session: {ex.Message}", ex);
+                throw new McpException($"Unexpected error saving local project/session: {Why(ex)}", ex);
             }
         }
 
@@ -372,7 +372,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error saving local project/session as '{newProjectPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error saving local project/session as '{newProjectPath}': {Why(ex)}", ex);
             }
         }
 
@@ -427,7 +427,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error closing local project/session: {ex.Message}", ex);
+                throw new McpException($"Unexpected error closing local project/session: {Why(ex)}", ex);
             }
         }
 
@@ -462,7 +462,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving project tree: {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving project tree: {Why(ex)}", ex);
             }
         }
 
@@ -504,11 +504,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error opening '{path}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error opening '{path}': {Why(ex)}", ex);
             }
         }
 
@@ -622,11 +622,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error previewing the import of '{importPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error previewing the import of '{importPath}': {Why(ex)}", ex);
             }
         }
 
@@ -704,12 +704,12 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (PortalException pex)
             {
                 // PortalException messages are already written for the caller (what went wrong
-                // and which tool lists the valid paths), so they pass through unchanged.
-                throw new McpException(pex.Message, pex);
+                // and which tool lists the valid paths); ToolError adds the code and context.
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error in '{toolName}': {ex.Message}", ex);
+                throw ToolError(ex, $"Unexpected error in '{toolName}'");
             }
         }
 
@@ -722,13 +722,37 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error in '{toolName}': {ex.Message}", ex);
+                throw ToolError(ex, $"Unexpected error in '{toolName}'");
             }
         }
+
+        /// <summary>
+        /// The one place a failure is turned into what the client reads. The MCP SDK forwards
+        /// only the message of an McpException - and for any other exception type nothing but
+        /// "An error occurred invoking '...'" - so every tool has to leave through here.
+        /// </summary>
+        /// <param name="prefix">What the tool was doing, for failures that are not a PortalException.</param>
+        internal static McpException ToolError(Exception ex, string? prefix = null)
+        {
+            if (ex is McpException mcp)
+            {
+                return mcp;
+            }
+
+            var text = ErrorText.ForClient(ex);
+
+            return new McpException(string.IsNullOrEmpty(prefix) ? text : $"{prefix}: {text}", ex);
+        }
+
+        /// <summary>
+        /// The reason behind an exception, including nested Openness messages - for the
+        /// "Unexpected error ...: {reason}" texts, where ex.Message alone is often just a wrapper.
+        /// </summary>
+        internal static string Why(Exception ex) => ErrorText.Describe(ex);
 
         private static JsonObject OkMeta() => new JsonObject
         {

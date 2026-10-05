@@ -49,11 +49,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error searching '{softwarePath}' for '{pattern}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error searching '{softwarePath}' for '{pattern}': {Why(ex)}", ex);
             }
         }
 

@@ -13,7 +13,14 @@ namespace TiaMcpServer.ModelContextProtocol
         public static List<string> GetDownloadTargets(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
         {
-            return Portal.GetDownloadTargets(softwarePath);
+            try
+            {
+                return Portal.GetDownloadTargets(softwarePath);
+            }
+            catch (System.Exception ex)
+            {
+                throw ToolError(ex);
+            }
         }
 
         [WriteTool]

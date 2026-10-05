@@ -1,3 +1,4 @@
+using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                throw new Exception($"Unexpected error retrieving HMI screens from '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving HMI screens from '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -47,7 +48,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                throw new Exception($"Unexpected error retrieving HMI tags from '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving HMI tags from '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -69,7 +70,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                throw new Exception($"Unexpected error retrieving screen items from '{screenName}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving screen items from '{screenName}': {Why(ex)}", ex);
             }
         }
 
@@ -85,7 +86,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                return new { message = ex.Message };
+                throw ToolError(ex);
             }
         }
 
@@ -99,7 +100,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                return new { message = ex.Message };
+                throw ToolError(ex);
             }
         }
         [McpServerTool(Name = "hmi_get_library_faceplates", Title = "Get Project Library Faceplates", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
@@ -110,7 +111,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var faceplates = Portal.GetHmiFaceplates();
                 return new { Message = $"Retrieved {faceplates.Count} faceplates from Project Library", Items = faceplates, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -122,7 +123,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var types = Portal.ListHmiLibraryTypes();
                 return new { Message = $"Retrieved {types.Count} types from Project Library", Items = types, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -138,7 +139,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string msg = Portal.CreateHmiFaceplateInstance(softwarePath, screenName, instanceName, containedType);
                 return new { Message = msg, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -153,7 +154,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var props = Portal.GetHmiScreenItemProperties(softwarePath, screenName, itemName);
                 return new { Message = $"Retrieved {props.Count} properties from '{(string.IsNullOrEmpty(itemName) ? screenName : itemName)}'", Items = props, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -183,7 +184,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string msg = Portal.SetHmiScreenItemProperty(softwarePath, screenName, itemName, propertyName, nativeValue);
                 return new { Message = msg, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -196,7 +197,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var conn = Portal.GetHmiConnections(softwarePath);
                 return new { Items = conn, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -211,7 +212,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string msg = Portal.CreateHmiScreen(softwarePath, screenName);
                 return new { Message = msg, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -226,7 +227,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string msg = Portal.DeleteHmiScreen(softwarePath, screenName);
                 return new { Message = msg, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -243,7 +244,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string msg = Portal.CreateHmiScreenItem(softwarePath, screenName, typeName, itemName);
                 return new { Message = msg, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -259,7 +260,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string msg = Portal.DeleteHmiScreenItem(softwarePath, screenName, itemName);
                 return new { Message = msg, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -281,7 +282,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string msg = Portal.ConfigureHmiScreenItem(softwarePath, screenName, itemName, left, top, width, height, processValue, text);
                 return new { Message = msg, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -302,7 +303,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string msg = Portal.ConfigureHmiTrendControl(softwarePath, screenName, trendControlName, trendName, dataSource, trendMode, lineWidth, lineColor);
                 return new { Message = msg, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -319,7 +320,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string msg = Portal.ConfigureHmiTrendCompanion(softwarePath, screenName, companionName, sourceTrendControlName);
                 return new { Message = msg, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -337,7 +338,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 string msg = Portal.SetHmiUnifiedScreenItemEvent(softwarePath, screenName, itemName, eventName, scriptCode);
                 return new { Message = msg, Meta = OkMeta() };
             } catch (Exception ex) {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
         [McpServerTool(Name = "hmi_manage_unified_faceplate", Title = "Manage Unified Faceplate", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
@@ -350,8 +351,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     dict[kvp.Key] = kvp.Value?.ToString();
                 }
             }
-            var res = Portal.ManageHmiUnifiedFaceplate(softwarePath, screenName, action, itemName, faceplateType, dict);
-            return new ResponseHmiManageItems { Results = new List<HmiItemResult> { res }, SuccessCount = res.Status == "success" ? 1 : 0 };
+            try {
+                var res = Portal.ManageHmiUnifiedFaceplate(softwarePath, screenName, action, itemName, faceplateType, dict);
+                return new ResponseHmiManageItems { Results = new List<HmiItemResult> { res }, SuccessCount = res.Status == "success" ? 1 : 0 };
+            } catch (Exception ex) {
+                throw ToolError(ex);
+            }
         }
         [McpServerTool(Name = "hmi_test_faceplate", Title = "Test Faceplate", Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Test faceplate interface")]
@@ -386,7 +391,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ifaceProp.Value = propValue;
                     return "Set as Value OK";
                 }
-            } catch (Exception ex) { return ex.ToString(); }
+            } catch (Exception ex) { throw ToolError(ex); }
         }
     }
 }

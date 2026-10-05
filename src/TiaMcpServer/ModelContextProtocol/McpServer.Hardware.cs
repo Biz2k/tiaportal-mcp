@@ -31,7 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving hardware topology: {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving hardware topology: {Why(ex)}", ex);
             }
         }
 
@@ -56,7 +56,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error creating device '{name}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error creating device '{name}': {Why(ex)}", ex);
             }
         }
 
@@ -80,7 +80,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error plugging module '{moduleName}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error plugging module '{moduleName}': {Why(ex)}", ex);
             }
         }
 
@@ -98,7 +98,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error deleting device '{deviceName}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error deleting device '{deviceName}': {Why(ex)}", ex);
             }
         }
 
@@ -123,7 +123,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error connecting to subnet: {ex.Message}", ex);
+                throw new McpException($"Unexpected error connecting to subnet: {Why(ex)}", ex);
             }
         }
 
@@ -143,7 +143,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error disconnecting from subnet: {ex.Message}", ex);
+                throw new McpException($"Unexpected error disconnecting from subnet: {Why(ex)}", ex);
             }
         }
 
@@ -168,7 +168,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error creating IO system: {ex.Message}", ex);
+                throw new McpException($"Unexpected error creating IO system: {Why(ex)}", ex);
             }
         }
 
@@ -189,7 +189,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error connecting to IO system: {ex.Message}", ex);
+                throw new McpException($"Unexpected error connecting to IO system: {Why(ex)}", ex);
             }
         }
 

@@ -93,7 +93,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     catch (Exception ex)
                     {
-                        results.Add(new { status = "error", path = path, error = ex.Message });
+                        results.Add(new { status = "error", path = path, error = Why(ex) });
                     }
                 }
 
@@ -106,7 +106,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
@@ -163,7 +163,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     catch (Exception ex)
                     {
-                        results.Add(new { status = "error", file = file, error = ex.Message });
+                        results.Add(new { status = "error", file = file, error = Why(ex) });
                     }
                 }
 
@@ -176,7 +176,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
     }

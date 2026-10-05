@@ -95,6 +95,36 @@ context pair into `Exception.Data`, logs once and rethrows. Three properties mat
 
 Methods predating 0.2.0 still carry the hand-written block; migrating them is tracked in `TODO.md`.
 
+### The reason travels in the message
+
+The MCP SDK sends the client the message of an `McpException` and nothing else; `InnerException`
+and `Exception.Data` never leave the process. A wrapper that says only `CreateFB failed` therefore
+tells the model nothing. Two helpers keep the reason attached:
+
+- `ErrorText.Describe(ex)` (`Siemens/ErrorText.cs`) joins the messages of an exception chain,
+  outermost first, skipping reflection wrappers and repeats, and adds the `MessageData` /
+  `DetailMessageData` texts of Siemens.Engineering exceptions. `Operation.Run` uses it, so a
+  wrapped failure reads `CreateFB failed: <what Openness said>`.
+- `McpServer.ToolError(ex)` builds the `McpException` every tool throws. For a `PortalException`
+  it appends the code and the context pairs recorded by `Operation.Run`:
+  `... [code: CreateFailed; softwarePath: 'PLC_1'; groupPath: 'Tests'; cause: EngineeringTargetInvocationException]`.
+
+Rules for tool methods:
+
+- Leave through `ToolError` (or `Guarded`, which calls it). Do not throw a plain `Exception`: the
+  SDK replaces it with `An error occurred invoking '<tool>'.` and drops the text.
+- Do not return a failure as an ordinary result (`return new { Message = "Unexpected error ..." }`):
+  the client cannot tell it from success. Throw, so the result carries `isError: true`.
+- In `"Unexpected error ...: {reason}"` texts use `Why(ex)`, not `ex.Message`.
+
+### Attribute values
+
+`Helper.GetAttributeList` passes every Openness attribute value through `Helper.ToJsonSafe`.
+Attribute values are typed `object` and include `FileInfo`, `DirectoryInfo`, `CultureInfo` and live
+engineering objects; serializing those throws after the tool method has returned, outside its
+`try/catch`, which surfaced as a bare `An error occurred invoking 'get_project'.` An attribute
+Openness refuses to read is reported as `<unreadable: ...>` instead of failing the whole call.
+
 ## Write Policy
 
 Project-mutating tools are refused above the portal layer, so this is an MCP-layer concern rather

@@ -59,7 +59,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving block info from '{blockPath}' in '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving block info from '{blockPath}' in '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -117,7 +117,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving blocks with regex '{regexName}' in '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving blocks with regex '{regexName}' in '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -151,7 +151,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) when (ex is not McpException)
             {
                 // Generic unexpected failure wrapper
-                throw new McpException($"Unexpected error retrieving block hierarchy for '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving block hierarchy for '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -247,7 +247,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting block from '{blockPath}' to '{exportPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error exporting block from '{blockPath}' to '{exportPath}': {Why(ex)}", ex);
             }
         }
 
@@ -321,7 +321,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error importing block from '{importPath}' to '{groupPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error importing block from '{importPath}' to '{groupPath}': {Why(ex)}", ex);
             }
         }
 
@@ -466,7 +466,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 progress.Report(new ProgressNotificationValue { Progress = 0, Total = 0, Message = $"Export failed: {ex.Message}" });
                 
                 Logger?.LogError(ex, $"Failed exporting blocks with '{regexName}' from '{softwarePath}' to {exportPath}");
-                throw new McpException($"Unexpected error exporting blocks with '{regexName}' from '{softwarePath}' to {exportPath}: {ex.Message}", ex);
+                throw new McpException($"Unexpected error exporting blocks with '{regexName}' from '{softwarePath}' to {exportPath}: {Why(ex)}", ex);
             }
         }
 
@@ -499,11 +499,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error reading the interface of '{blockPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error reading the interface of '{blockPath}': {Why(ex)}", ex);
             }
         }
 

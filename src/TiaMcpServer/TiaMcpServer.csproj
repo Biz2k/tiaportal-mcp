@@ -23,6 +23,9 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="TiaMcpServer.Test" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Remove="tests\**" />
     <None Include="tests\**" />
   </ItemGroup>

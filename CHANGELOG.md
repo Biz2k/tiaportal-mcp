@@ -2,7 +2,28 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- __Failures now say why.__ A failed Openness call used to reach the client as `CreateFB failed`,
+  `DownloadToPlc failed` or `CopyBlock failed`, with the reason left in `InnerException`, which the
+  MCP SDK never sends. `Operation.Run` now puts the Openness text into the message, and the new
+  `McpServer.ToolError` appends the error code and the paths the call was about. See
+  `docs/error-model.md`.
+- __`get_project`, `get_devices`, `hw_get_device_info` and `get_device_item_info`__ returned a bare
+  `An error occurred invoking '...'`: attribute values such as `FileInfo` and engineering objects
+  could not be serialized. Attribute values are now reduced to JSON-safe values
+  (`Helper.ToJsonSafe`), and one unreadable attribute no longer fails the whole call.
+- __HMI tools, `export_objects`, `import_objects` and `get_download_targets`__ report a failure as
+  an error result (`isError: true`) with its reason. Before, the HMI tools returned it as an
+  ordinary result with the text `Unexpected error: ...`, or threw a plain `Exception` that the SDK
+  replaced with a generic message. Clients that parsed `Unexpected error` out of a successful
+  result must check `isError` instead.
+
 ### Added
+
+- `docs/tools-list.txt`: the tool names the server registers, as a baseline for spotting tools that
+  disappear or get renamed.
+- `Test8ErrorReporting`: tests for error texts and attribute serialization; they need no TIA Portal.
 
 - __Batch CRUD operations (Stage 3 & 5)__: 
   - `plc_manage_tag_table_entries` for efficient bulk create/update/delete of tags and constants via JSON arrays.

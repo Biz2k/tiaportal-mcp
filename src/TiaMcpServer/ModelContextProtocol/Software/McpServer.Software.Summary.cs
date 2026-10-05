@@ -56,11 +56,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error summarising '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error summarising '{softwarePath}': {Why(ex)}", ex);
             }
         }
 

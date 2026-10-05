@@ -46,7 +46,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving device info from '{devicePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving device info from '{devicePath}': {Why(ex)}", ex);
             }
         }
 
@@ -82,7 +82,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving device item info from '{deviceItemPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving device item info from '{deviceItemPath}': {Why(ex)}", ex);
             }
         }
 
@@ -128,7 +128,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving devices: {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving devices: {Why(ex)}", ex);
             }
         }
 

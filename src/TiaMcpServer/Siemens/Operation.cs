@@ -98,8 +98,10 @@ namespace TiaMcpServer.Siemens
             Exception ex,
             (string Key, object? Value)[] context)
         {
+            // The reason goes into the message itself: the MCP SDK sends the message to the
+            // client and nothing else, so text left in InnerException never reaches the model.
             var pex = ex as PortalException
-                      ?? new PortalException(failCode, $"{operation} failed", null, ex);
+                      ?? new PortalException(failCode, $"{operation} failed: {ErrorText.Describe(ex)}", null, ex);
 
             // Inner frames win: an inner Run already recorded the most specific context.
             foreach (var (key, value) in context)

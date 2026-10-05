@@ -47,7 +47,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving software info from '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving software info from '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -109,7 +109,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error compiling software '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error compiling software '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
