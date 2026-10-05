@@ -45,6 +45,10 @@ namespace TiaMcpServer.ModelContextProtocol
                         var res = Portal.GenerateSources(softwarePath, exportPath, "", true);
                         return new { Message = "Exported all blocks and types as sources", Result = res, Meta = OkMeta() };
                     }
+
+                    // Reaching this point used to fall through into the loop below with no
+                    // paths at all, which ended in a NullReferenceException.
+                    throw new McpException($"Unknown format '{format}'. Use 'xml', 'document' or 'source'.");
                 }
 
                 foreach (var path in object_paths)

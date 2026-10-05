@@ -784,7 +784,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var block = Portal.GetBlock(softwarePath, blockName);
                 if (block == null) throw new Exception($"Block {blockName} not found.");
 
-                string xmlContent = null;
+                string? xmlContent = null;
                 if (pList.Contains("interface") || pList.Contains("source")) {
                     string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), blockName + "_" + Guid.NewGuid().ToString() + ".xml");
                     try {

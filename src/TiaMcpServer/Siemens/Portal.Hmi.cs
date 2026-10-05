@@ -19,8 +19,8 @@ namespace TiaMcpServer.Siemens
         public int? Top { get; set; }
         public int? Width { get; set; }
         public int? Height { get; set; }
-        public string Text { get; set; }
-        public string ProcessValue { get; set; }
+        public string? Text { get; set; }
+        public string? ProcessValue { get; set; }
         public List<string> Events { get; set; } = new List<string>();
         public Dictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
     }
@@ -123,7 +123,7 @@ namespace TiaMcpServer.Siemens
 
 
             dynamic dynSoftware = softwareContainer.Software;
-            object targetScreen = null;
+            object? targetScreen = null;
 
             try
             {
@@ -244,7 +244,7 @@ namespace TiaMcpServer.Siemens
                 var res = new System.Text.Json.Nodes.JsonObject { ["action"] = action.action, ["screenName"] = action.screenName, ["itemName"] = action.itemName };
                 try
                 {
-                    dynamic screen = null;
+                    dynamic? screen = null;
                     if (isUnified) {
                         try {
                             dynamic target = softwareContainer.Software;
@@ -259,17 +259,17 @@ namespace TiaMcpServer.Siemens
 
                     if (screen == null) throw new System.Exception($"Screen '{action.screenName}' not found.");
 
-                    dynamic itemsColl = null;
+                    dynamic? itemsColl = null;
                     try { itemsColl = screen.ScreenItems; } 
                     catch { 
                         try { itemsColl = screen.Elements; } 
                         catch { throw new System.Exception("Cannot access screen items collection."); }
                     }
 
-                    dynamic item = null;
+                    dynamic? item = null;
                     try { item = itemsColl.Find(action.itemName); } catch { }
 
-                    if (action.action.ToLower() == "create")
+                    if ((action.action ?? string.Empty).ToLower() == "create")
                     {
                         if (item != null) throw new System.Exception($"Item '{action.itemName}' already exists.");
                         if (string.IsNullOrEmpty(action.itemType)) throw new System.Exception("itemType is required for create.");
@@ -279,13 +279,13 @@ namespace TiaMcpServer.Siemens
                             throw new System.Exception($"Creation of '{action.itemType}' failed (API might not support this on the current HMI target). Inner: {ex.Message}");
                         }
                     }
-                    else if (action.action.ToLower() == "delete")
+                    else if ((action.action ?? string.Empty).ToLower() == "delete")
                     {
                         if (item == null) throw new System.Exception($"Item '{action.itemName}' not found.");
                         item.Delete();
                     }
 
-                    if (action.action.ToLower() == "update" || action.action.ToLower() == "create")
+                    if ((action.action ?? string.Empty).ToLower() == "update" || (action.action ?? string.Empty).ToLower() == "create")
                     {
                         if (item == null) throw new System.Exception($"Item '{action.itemName}' not found.");
                         
@@ -329,7 +329,7 @@ namespace TiaMcpServer.Siemens
             dynamic dynSoftware = softwareContainer.Software;
             
             var connectionList = new List<Dictionary<string, object>>();
-            dynamic connections = null;
+            dynamic? connections = null;
 
             try { connections = dynSoftware.GetType().GetProperty("Connections")?.GetValue(dynSoftware); } catch { }
             if (connections == null) {
@@ -362,7 +362,7 @@ namespace TiaMcpServer.Siemens
             var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             
-            object targetScreen = null;
+            object? targetScreen = null;
             try { targetScreen = FindScreenInFolder(dynSoftware.ScreenFolder, screenName); }
             catch {
                 foreach (var screen in dynSoftware.Screens) {
@@ -371,7 +371,7 @@ namespace TiaMcpServer.Siemens
             }
             if (targetScreen == null) throw new System.Exception($"Screen '{screenName}' not found.");
 
-            dynamic targetItem = null;
+            dynamic? targetItem = null;
             if (!string.IsNullOrEmpty(itemName)) {
                 foreach (var item in ((dynamic)targetScreen).ScreenItems) {
                     if (item.Name == itemName) { targetItem = item; break; }
@@ -473,12 +473,12 @@ namespace TiaMcpServer.Siemens
             return props;
         }
 
-        public string SetHmiScreenItemProperty(string softwarePath, string screenName, string itemName, string propertyName, object propertyValue)
+        public string SetHmiScreenItemProperty(string softwarePath, string screenName, string itemName, string propertyName, object? propertyValue)
         {
             var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             
-            object targetScreen = null;
+            object? targetScreen = null;
             try { targetScreen = FindScreenInFolder(dynSoftware.ScreenFolder, screenName); }
             catch {
                 foreach (var screen in dynSoftware.Screens) {
@@ -487,7 +487,7 @@ namespace TiaMcpServer.Siemens
             }
             if (targetScreen == null) throw new System.Exception($"Screen '{screenName}' not found.");
 
-            dynamic targetItem = null;
+            dynamic? targetItem = null;
             if (!string.IsNullOrEmpty(itemName)) {
                 foreach (var item in ((dynamic)targetScreen).ScreenItems) {
                     if (item.Name == itemName) { targetItem = item; break; }
@@ -510,7 +510,7 @@ namespace TiaMcpServer.Siemens
                         dynamic ifaceList = interfaceProp.GetValue(targetItem);
                         if (ifaceList != null) {
                             foreach (var iProp in ifaceList) {
-                                string iPropName = iProp.GetType().GetProperty("PropertyName")?.GetValue(iProp)?.ToString();
+                                string? iPropName = iProp.GetType().GetProperty("PropertyName")?.GetValue(iProp)?.ToString();
                                 if (string.Equals(iPropName, propertyName, System.StringComparison.OrdinalIgnoreCase)) {
                                     iProp.GetType().GetProperty("Value")?.SetValue(iProp, propertyValue);
                                     handledAsInterface = true;
@@ -536,7 +536,7 @@ namespace TiaMcpServer.Siemens
             var softwareContainer = RequireHmiContainer(softwarePath);
             
             dynamic dynSoftware = softwareContainer.Software;
-            object targetScreen = null;
+            object? targetScreen = null;
             try {
                 targetScreen = FindScreenInFolder(dynSoftware.ScreenFolder, screenName);
             } catch (System.Exception) {
@@ -545,7 +545,7 @@ namespace TiaMcpServer.Siemens
             if (targetScreen == null) throw new System.Exception("Screen not found");
 
             dynamic dynScreen = targetScreen;
-            object targetItem = null;
+            object? targetItem = null;
             if (string.IsNullOrEmpty(itemName)) {
                 targetItem = targetScreen;
             } else {
@@ -693,7 +693,7 @@ namespace TiaMcpServer.Siemens
             dynamic dynSoftware = softwareContainer.Software;
             try
             {
-                dynamic screen = null;
+                dynamic? screen = null;
                 if (dynSoftware is HmiTarget target) {
                     screen = FindScreenInFolder(target.ScreenFolder, screenName);
                 } else {
@@ -710,7 +710,7 @@ namespace TiaMcpServer.Siemens
         {
             var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
-            dynamic screen = null;
+            dynamic? screen = null;
 
             if (dynSoftware is HmiTarget target) {
                 screen = FindScreenInFolder(target.ScreenFolder, screenName);
@@ -765,7 +765,7 @@ namespace TiaMcpServer.Siemens
         {
             var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
-            dynamic screen = null;
+            dynamic? screen = null;
 
             if (dynSoftware is HmiTarget target) {
                 screen = FindScreenInFolder(target.ScreenFolder, screenName);
@@ -775,7 +775,7 @@ namespace TiaMcpServer.Siemens
 
             if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
 
-            dynamic faceplateItem = null;
+            dynamic? faceplateItem = null;
             try {
                 // Determine what type to create based on Classic vs Unified
                 if (dynSoftware is HmiTarget) {
@@ -803,7 +803,7 @@ namespace TiaMcpServer.Siemens
         {
             var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
-            dynamic screen = null;
+            dynamic? screen = null;
 
             if (dynSoftware is HmiTarget target) {
                 screen = FindScreenInFolder(target.ScreenFolder, screenName);
@@ -833,7 +833,7 @@ namespace TiaMcpServer.Siemens
 
             throw new System.Exception($"Item '{itemName}' not found on screen '{screenName}'.");
         }
-        public TiaMcpServer.ModelContextProtocol.HmiItemResult ManageHmiUnifiedFaceplate(string softwarePath, string screenName, string action, string itemName, string faceplateType, System.Collections.Generic.Dictionary<string, string> interfaceTags)
+        public TiaMcpServer.ModelContextProtocol.HmiItemResult ManageHmiUnifiedFaceplate(string softwarePath, string screenName, string action, string itemName, string faceplateType, System.Collections.Generic.Dictionary<string, string?> interfaceTags)
         {
             var result = new TiaMcpServer.ModelContextProtocol.HmiItemResult { Action = action, ScreenName = screenName, ItemName = itemName };
             try
@@ -842,11 +842,11 @@ namespace TiaMcpServer.Siemens
                 dynamic dynSoftware = softwareContainer.Software;
                 if (!(dynSoftware is global::Siemens.Engineering.HmiUnified.HmiSoftware)) throw new System.Exception("This tool is strictly for WinCC Unified faceplates. HMI target is not WinCC Unified.");
 
-                dynamic screen = null;
+                dynamic? screen = null;
                 foreach (var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
                 if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
 
-                dynamic targetItem = null;
+                dynamic? targetItem = null;
                 try { foreach (var item in screen.ScreenItems) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
                 if (targetItem == null) {
                     try { foreach (var item in screen.Elements) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
@@ -897,7 +897,7 @@ namespace TiaMcpServer.Siemens
                     var interfaceCol = targetItem.Interface;
                     foreach (var kvp in interfaceTags)
                     {
-                        dynamic ifaceProp = null;
+                        dynamic? ifaceProp = null;
                         try {
                             foreach (var ip in interfaceCol) {
                                 if (ip.PropertyName == kvp.Key) {
@@ -932,11 +932,11 @@ namespace TiaMcpServer.Siemens
         }
 
         public string ConfigureHmiScreenItem(string softwarePath, string screenName, string itemName, 
-            int? left, int? top, int? width, int? height, string processValue, string text)
+            int? left, int? top, int? width, int? height, string? processValue, string? text)
         {
             var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
-            dynamic screen = null;
+            dynamic? screen = null;
 
             if (dynSoftware is HmiTarget target) {
                 screen = FindScreenInFolder(target.ScreenFolder, screenName);
@@ -946,7 +946,7 @@ namespace TiaMcpServer.Siemens
 
             if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
 
-            dynamic targetItem = null;
+            dynamic? targetItem = null;
             try { foreach (var item in screen.ScreenItems) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
             if (targetItem == null) {
                 try { foreach (var item in screen.Elements) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
@@ -1006,8 +1006,8 @@ namespace TiaMcpServer.Siemens
                 } catch { 
                     try { 
                         var ml = targetItem.Text;
-                        if (ml != null && ml.Items.Count > 0) {
-                            var en = System.Linq.Enumerable.First(ml.Items);
+                        if (ml is not null && ml.Items.Count > 0) {
+                            var en = System.Linq.Enumerable.First(ml!.Items); // non-null: checked on the line above; a dynamic call resets the compiler's null state
                             en.Text = text;
                             results.Add("Text(Multilingual)");
                         }
@@ -1024,11 +1024,11 @@ namespace TiaMcpServer.Siemens
             dynamic dynSoftware = softwareContainer.Software;
             if (!(dynSoftware is HmiSoftware)) throw new System.Exception("This method is only supported for WinCC Unified (HmiSoftware).");
 
-            dynamic screen = null;
+            dynamic? screen = null;
             foreach (var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
             if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
 
-            dynamic companion = null;
+            dynamic? companion = null;
             try { foreach (var item in screen.ScreenItems) { if (item.Name == companionName) { companion = item; break; } } } catch { }
             if (companion == null) throw new System.Exception($"TrendCompanion '{companionName}' not found on screen '{screenName}'.");
 
@@ -1037,23 +1037,23 @@ namespace TiaMcpServer.Siemens
             return $"TrendCompanion '{companionName}' bound successfully to '{sourceTrendControlName}'.";
         }
 
-        public string ConfigureHmiTrendControl(string softwarePath, string screenName, string trendControlName, string trendName, string dataSource, string trendMode = null, int? lineWidth = null, string lineColor = null)
+        public string ConfigureHmiTrendControl(string softwarePath, string screenName, string trendControlName, string trendName, string dataSource, string? trendMode = null, int? lineWidth = null, string? lineColor = null)
         {
             var results = new System.Collections.Generic.List<string>();
             var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             if (!(dynSoftware is HmiSoftware)) throw new System.Exception("This method is only supported for WinCC Unified (HmiSoftware).");
 
-            dynamic screen = null;
+            dynamic? screen = null;
             foreach (var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
             if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
 
-            dynamic trendControl = null;
+            dynamic? trendControl = null;
             try { foreach (var item in screen.ScreenItems) { if (item.Name == trendControlName) { trendControl = item; break; } } } catch { }
             if (trendControl == null) throw new System.Exception($"TrendControl '{trendControlName}' not found on screen '{screenName}'.");
 
             // Ensure TrendArea exists
-            dynamic trendArea = null;
+            dynamic? trendArea = null;
             var trendAreas = trendControl.TrendAreas;
             foreach (var a in trendAreas)
             {
@@ -1067,12 +1067,12 @@ namespace TiaMcpServer.Siemens
             }
 
             // Create or Reuse Trend
-            dynamic trend = null;
+            dynamic? trend = null;
             try {
                 foreach (var t in trendArea.Trends)
                 {
                     var sourceY = t.DataSourceY;
-                    if (sourceY != null && string.IsNullOrEmpty((string)sourceY.Source))
+                    if (sourceY is not null && string.IsNullOrEmpty((string)sourceY.Source))
                     {
                         trend = t;
                         results.Add("Reused empty Trend");
@@ -1126,7 +1126,7 @@ namespace TiaMcpServer.Siemens
                 catch { }
             }
 
-            if (!string.IsNullOrEmpty(lineColor))
+            if (lineColor is { Length: > 0 })
             {
                 try
                 {
@@ -1147,11 +1147,11 @@ namespace TiaMcpServer.Siemens
             dynamic dynSoftware = softwareContainer.Software;
             if (!(dynSoftware is HmiSoftware)) throw new System.Exception("This method is only supported for WinCC Unified (HmiSoftware).");
 
-            dynamic screen = null;
+            dynamic? screen = null;
             foreach (var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
             if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
 
-            dynamic targetItem = null;
+            dynamic? targetItem = null;
             try { foreach (var item in screen.ScreenItems) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
             if (targetItem == null) throw new System.Exception($"Item '{itemName}' not found.");
 
@@ -1170,7 +1170,7 @@ namespace TiaMcpServer.Siemens
                 throw new System.Exception($"Event '{eventName}' is not valid. Valid events are: {string.Join(", ", System.Enum.GetNames(paramType))}");
             }
             
-            dynamic eventHandler = null;
+            dynamic? eventHandler = null;
             var findMethod = compType.GetMethod("Find");
             if (findMethod != null) {
                 eventHandler = findMethod.Invoke(eventHandlers, new[] { enumValue });

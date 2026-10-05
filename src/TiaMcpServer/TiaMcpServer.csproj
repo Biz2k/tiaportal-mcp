@@ -2,6 +2,8 @@
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
     <Nullable>enable</Nullable>
+    <!-- Nullable warnings fail the build: 103 of them had piled up unnoticed. -->
+    <WarningsAsErrors>nullable</WarningsAsErrors>
     <LangVersion>Latest</LangVersion>
     <OutputType>Exe</OutputType>
     <PlatformTarget>x64</PlatformTarget>

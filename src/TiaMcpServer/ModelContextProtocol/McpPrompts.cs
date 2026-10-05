@@ -1252,7 +1252,9 @@ Use GetHardwareTopology first to confirm item names and available slots.";
         private static string NormalizeBool(string? value)
         {
             var text = value?.Trim();
-            if (string.IsNullOrEmpty(text))
+            // 'text == null' spelled out: string.IsNullOrEmpty carries no nullability
+            // annotation on .NET Framework, so the compiler cannot see the guard.
+            if (text == null || text.Length == 0)
             {
                 return "false";
             }

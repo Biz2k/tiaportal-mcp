@@ -6,7 +6,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public class ResponseHmiManage
     {
-        public string Message { get; set; }
-        public JsonObject Meta { get; set; }
+        public string? Message { get; set; }
+        public JsonObject? Meta { get; set; }
     }
 }

@@ -19,6 +19,13 @@
   replaced with a generic message. Clients that parsed `Unexpected error` out of a successful
   result must check `isError` instead.
 
+- __`export_objects` with no paths and an unknown format__ ended in a `NullReferenceException`; it now
+  says which formats exist.
+- __`plc_manage_tag_table_entries`__ treats a JSON `null` in `action`, `name`, `dataType`,
+  `logicalAddress` or `comment` like a missing value instead of failing on it.
+- The solution builds without warnings (103 nullable-reference warnings before). Four optional HMI
+  string parameters (`processValue`, `text`, `trendMode`, `lineColor`) are now declared nullable in
+  their schema, matching their `null` default.
 - __`import_objects` respects the write gate.__ It changes the project but was registered in read-only
   mode.
 - __`download_to_plc` reports what happened.__ It answered TIA Portal's configuration steps through

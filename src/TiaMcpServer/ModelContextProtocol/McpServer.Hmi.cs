@@ -173,9 +173,9 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try {
                 // Convert JsonNode to native .NET type based on its value kind
-                object nativeValue = null;
+                object? nativeValue = null;
                 if (propertyValue is JsonValue jval) {
-                    if (jval.TryGetValue(out string s)) nativeValue = s;
+                    if (jval.TryGetValue(out string? s)) nativeValue = s;
                     else if (jval.TryGetValue(out bool b)) nativeValue = b;
                     else if (jval.TryGetValue(out int i)) nativeValue = i;
                     else if (jval.TryGetValue(out double d)) nativeValue = d;
@@ -278,8 +278,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("top: Y coordinate (optional)")] int? top = null,
             [Description("width: Item width (optional)")] int? width = null,
             [Description("height: Item height (optional)")] int? height = null,
-            [Description("processValue: tag binding or value for ProcessValue property (optional)")] string processValue = null,
-            [Description("text: string for the Text property (optional)")] string text = null)
+            [Description("processValue: tag binding or value for ProcessValue property (optional)")] string? processValue = null,
+            [Description("text: string for the Text property (optional)")] string? text = null)
         {
             try {
                 string msg = Portal.ConfigureHmiScreenItem(softwarePath, screenName, itemName, left, top, width, height, processValue, text);
@@ -298,9 +298,9 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("trendControlName: name of the Trend Control item")] string trendControlName,
             [Description("trendName: name of the new Trend/Pen to create")] string trendName,
             [Description("dataSource: tag name or log data source")] string dataSource,
-            [Description("trendMode: how to draw (Points, Interpolated, Stepped, Bar, Value) (optional)")] string trendMode = null,
+            [Description("trendMode: how to draw (Points, Interpolated, Stepped, Bar, Value) (optional)")] string? trendMode = null,
             [Description("lineWidth: line width of the trend (optional)")] int? lineWidth = null,
-            [Description("lineColor: color of the trend line, name (e.g. Red) or Hex (e.g. #FF0000) (optional)")] string lineColor = null)
+            [Description("lineColor: color of the trend line, name (e.g. Red) or Hex (e.g. #FF0000) (optional)")] string? lineColor = null)
         {
             try {
                 string msg = Portal.ConfigureHmiTrendControl(softwarePath, screenName, trendControlName, trendName, dataSource, trendMode, lineWidth, lineColor);
@@ -349,7 +349,7 @@ namespace TiaMcpServer.ModelContextProtocol
          Description("Create and parameterize faceplates in WinCC Unified")]
         public static ResponseHmiManageItems ManageHmiUnifiedFaceplate(string softwarePath, string screenName, string action, string itemName, string faceplateType, JsonObject interfaceTags)
         {
-            var dict = new Dictionary<string, string>();
+            var dict = new Dictionary<string, string?>();
             if (interfaceTags != null) {
                 foreach (var kvp in interfaceTags) {
                     dict[kvp.Key] = kvp.Value?.ToString();
@@ -377,15 +377,18 @@ namespace TiaMcpServer.ModelContextProtocol
         public static string TestFaceplate(string softwarePath, string screenName, string itemName, string propName, string propValue, bool asTag)
         {
             try {
-                var softwareContainer = Portal.GetSoftwareContainer(softwarePath);
+                var softwareContainer = Portal.GetSoftwareContainer(softwarePath)
+                    ?? throw new McpException($"No HMI software found at '{softwarePath}'.");
                 dynamic dynSoftware = softwareContainer.Software;
-                dynamic screen = null;
+                dynamic? screen = null;
                 foreach (var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
-                dynamic targetItem = null;
+                dynamic? targetItem = null;
+                if (screen is null) throw new McpException($"Screen '{screenName}' not found.");
                 foreach (var item in screen.ScreenItems) { if (item.Name == itemName) { targetItem = item; break; } }
-                
+                if (targetItem is null) throw new McpException($"Item '{itemName}' not found on screen '{screenName}'.");
+
                 var interfaceCol = targetItem.Interface;
-                dynamic ifaceProp = null;
+                dynamic? ifaceProp = null;
                 foreach(var ip in interfaceCol) {
                     if (ip.PropertyName == propName) { ifaceProp = ip; break; }
                 }

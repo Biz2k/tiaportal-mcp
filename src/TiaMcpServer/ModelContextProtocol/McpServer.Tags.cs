@@ -802,11 +802,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     if (node == null) continue;
                     var actionObj = node.AsObject();
-                    string action = actionObj.ContainsKey("action") ? actionObj["action"].GetValue<string>() : "";
-                    string name = actionObj.ContainsKey("name") ? actionObj["name"].GetValue<string>() : "";
-                    string dataType = actionObj.ContainsKey("dataType") ? actionObj["dataType"].GetValue<string>() : "";
-                    string logicalAddress = actionObj.ContainsKey("logicalAddress") ? actionObj["logicalAddress"].GetValue<string>() : "";
-                    string comment = actionObj.ContainsKey("comment") ? actionObj["comment"].GetValue<string>() : "";
+                    string action = actionObj["action"]?.GetValue<string>() ?? "";
+                    string name = actionObj["name"]?.GetValue<string>() ?? "";
+                    string dataType = actionObj["dataType"]?.GetValue<string>() ?? "";
+                    string logicalAddress = actionObj["logicalAddress"]?.GetValue<string>() ?? "";
+                    string comment = actionObj["comment"]?.GetValue<string>() ?? "";
                     
                     try {
                         if (action == "create") {
