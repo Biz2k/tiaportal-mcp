@@ -2,7 +2,19 @@
 
 ## [Unreleased]
 
+### Added
+
+- __Batch CRUD operations (Stage 3 & 5)__: 
+  - `plc_manage_tag_table_entries` for efficient bulk create/update/delete of tags and constants via JSON arrays.
+  - `hmi_manage_items` for upserting HMI screen items and configurations in bulk.
+  - `hmi_create_faceplate_instance` (formerly `create_hmi_faceplate_instance`) updated to robustly handle complex faceplate parameterization.
+- __Consolidated Read operations (Stage 4)__: `plc_get_block_data` combines block information, interface, and source into a single call with flags.
+
 ### Changed
+
+- __Architecture segmentation (Stage 2)__: All tool names have been segmented using strict prefixes (`plc_`, `hmi_`, `hw_`, `net_`) and normalized to `snake_case` for better LLM context predictability and modularity.
+- __Universal Import/Export (Stage 1)__: Replaced 24+ individual XML import/export tools with two unified tools: `export_objects` and `import_objects`.
+- __WinCC Unified Integration__: Improved HMI parameterization for faceplate properties mapping directly to `_Interface` instead of generic dynamizations.
 
 - __`Portal` partial classes consolidated__: the 18 `Portal.*.cs` files are now `Portal.cs`,
   `Portal.Blocks.cs`, `Portal.Types.cs`, `Portal.Tags.cs` and `Portal.Devices.cs`, plus two folders:
