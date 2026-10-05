@@ -559,11 +559,110 @@ namespace TiaMcpServer.Siemens
                 ("softwarePath", softwarePath), ("blockPath", blockPath), ("newName", newName));
         }
 
+        #endregion
+
+        #region block numbers
+
+        // Block numbers are unique per kind within a PLC: every data block shares one range,
+        // function blocks another, and so on. Openness does not pick a number for us - an
+        // instance DB created with autoNumber and number 0 really is created as DB0, which the
+        // compiler then rejects - so the server looks up a free one itself.
+
+        private const int MaxBlockNumber = 65535;
+
+        /// <summary>User OBs start at 123; the numbers below belong to the system OB classes.</summary>
+        private const int FirstUserObNumber = 123;
+
+        private static string NumberSpace(PlcBlock block)
+        {
+            return block switch
+            {
+                OB => "OB",
+                FB => "FB",
+                FC => "FC",
+                _ => "DB"
+            };
+        }
+
+        private HashSet<int> UsedBlockNumbers(string softwarePath, string numberSpace)
+        {
+            return new HashSet<int>(
+                GetBlocks(softwarePath)
+                    .Where(b => NumberSpace(b) == numberSpace)
+                    .Select(b => b.Number));
+        }
+
+        internal static int NextFreeNumber(HashSet<int> used, string numberSpace)
+        {
+            for (var number = numberSpace == "OB" ? FirstUserObNumber : 1; number <= MaxBlockNumber; number++)
+            {
+                if (!used.Contains(number))
+                {
+                    return number;
+                }
+            }
+
+            throw new PortalException(PortalErrorCode.InvalidState, $"No free {numberSpace} number is left in this PLC.");
+        }
+
         /// <summary>
-        /// Creates an empty function block. Openness offers no generic "create block", so FB and
-        /// instance DB are the only two kinds creatable without importing XML.
+        /// The number a new block gets: the caller's when autoNumber is off (validated), else
+        /// the first free one of that kind.
         /// </summary>
-        public FB CreateFB(string softwarePath, string groupPath, string name, bool autoNumber = true, int number = 0, string language = "LAD")
+        private int ResolveBlockNumber(string softwarePath, string numberSpace, bool autoNumber, int number)
+        {
+            var used = UsedBlockNumbers(softwarePath, numberSpace);
+
+            if (autoNumber)
+            {
+                return NextFreeNumber(used, numberSpace);
+            }
+
+            if (number < 1 || number > MaxBlockNumber)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams,
+                    $"Block number {number} is not valid. Pass a number from 1 to {MaxBlockNumber}, or set autoNumber to true. " +
+                    $"The next free {numberSpace} number is {NextFreeNumber(used, numberSpace)}.");
+            }
+
+            if (used.Contains(number))
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams,
+                    $"{numberSpace}{number} already exists in this PLC. The next free {numberSpace} number is {NextFreeNumber(used, numberSpace)}.");
+            }
+
+            return number;
+        }
+
+        private void EnsureBlockNameIsFree(string softwarePath, string name)
+        {
+            var existing = GetBlocks(softwarePath).FirstOrDefault(b => b.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+
+            if (existing != null)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams,
+                    $"A block named '{name}' already exists at '{GetBlockPath(existing)}'. Block names are unique within a PLC.");
+            }
+        }
+
+        #endregion
+
+        #region create blocks
+
+        /// <summary>Languages a function block can be created in through the SimaticML template.</summary>
+        private static readonly ProgrammingLanguage[] TemplateLanguages =
+            [ProgrammingLanguage.LAD, ProgrammingLanguage.FBD, ProgrammingLanguage.STL];
+
+        /// <summary>
+        /// Creates an empty function block.
+        ///
+        /// PlcBlockComposition.CreateFB only creates ProDiag blocks - for every other language
+        /// Openness answers "The action 'Create block' only supports the programming language
+        /// 'ProDiag'". So the route depends on the language: ProDiag through CreateFB, SCL by
+        /// generating from a one-block source text, LAD/FBD/STL by importing a minimal SimaticML
+        /// document.
+        /// </summary>
+        public PlcBlock CreateFB(string softwarePath, string groupPath, string name, bool autoNumber = true, int number = 0, string language = "LAD")
         {
             return Operation.Run(_logger, nameof(CreateFB), PortalErrorCode.CreateFailed,
                 () =>
@@ -573,16 +672,137 @@ namespace TiaMcpServer.Siemens
                     if (!Enum.TryParse<ProgrammingLanguage>(language, true, out var parsedLanguage))
                     {
                         throw new PortalException(PortalErrorCode.InvalidParams,
-                            $"Unknown programming language '{language}'. Allowed values are: {string.Join(", ", Enum.GetNames(typeof(ProgrammingLanguage)))}.");
+                            $"Unknown programming language '{language}'. Supported for a new function block: LAD, FBD, STL, SCL, ProDiag.");
                     }
 
                     var group = GetPlcBlockGroupByPath(softwarePath, groupPath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Block group not found at '{groupPath}'.");
+                            $"Block group not found at '{groupPath}'. Use 'plc_get_software_tree' to discover valid group paths.");
 
-                    return group.Blocks.CreateFB(name, autoNumber, number, parsedLanguage);
+                    EnsureBlockNameIsFree(softwarePath, name);
+
+                    var resolvedNumber = ResolveBlockNumber(softwarePath, "FB", autoNumber, number);
+
+                    if (parsedLanguage == ProgrammingLanguage.ProDiag)
+                    {
+                        return group.Blocks.CreateFB(name, autoNumber, resolvedNumber, parsedLanguage);
+                    }
+
+                    if (parsedLanguage == ProgrammingLanguage.SCL)
+                    {
+                        return CreateFbFromSclText(softwarePath, group, name, autoNumber, resolvedNumber);
+                    }
+
+                    if (TemplateLanguages.Contains(parsedLanguage))
+                    {
+                        return ImportBlockTemplate(group, name, autoNumber, resolvedNumber, parsedLanguage);
+                    }
+
+                    throw new PortalException(PortalErrorCode.NotSupported,
+                        $"An empty function block cannot be created in '{parsedLanguage}' through Openness. " +
+                        "Create it in TIA Portal, or import an exported block with 'import_objects'.");
                 },
                 ("softwarePath", softwarePath), ("groupPath", groupPath), ("name", name), ("language", language));
+        }
+
+        private PlcBlock CreateFbFromSclText(string softwarePath, PlcBlockGroup group, string name, bool autoNumber, int number)
+        {
+            var sclCode =
+                $"FUNCTION_BLOCK \"{name}\"\r\n" +
+                "{ S7_Optimized_Access := 'TRUE' }\r\n" +
+                "VERSION : 0.1\r\n" +
+                "BEGIN\r\n" +
+                "END_FUNCTION_BLOCK\r\n";
+
+            // A source can only be generated into a user group; the system root is the source's
+            // default location, which an empty target selects.
+            var target = group is PlcBlockUserGroup ? GetPlcBlockGroupPath(group, false) : string.Empty;
+
+            GenerateFromSclText(softwarePath, sclCode, target, keepOnError: false);
+
+            var block = group.Blocks.Find(name)
+                ?? throw new PortalException(PortalErrorCode.CreateFailed,
+                    $"Function block '{name}' was generated but could not be found afterwards.");
+
+            // A source text carries no block number, so an explicit one is applied afterwards.
+            if (!autoNumber)
+            {
+                block.AutoNumber = false;
+                block.Number = number;
+            }
+
+            return block;
+        }
+
+        private PlcBlock ImportBlockTemplate(PlcBlockGroup group, string name, bool autoNumber, int number, ProgrammingLanguage language)
+        {
+            var directory = CreateTempExportDirectory();
+
+            try
+            {
+                var file = new FileInfo(Path.Combine(directory, "block.xml"));
+
+                File.WriteAllText(file.FullName, BuildFbTemplate(name, number, language.ToString(), Engineering.TiaMajorVersion));
+                group.Blocks.Import(file, ImportOptions.None);
+            }
+            finally
+            {
+                DeleteTempExportDirectory(directory);
+            }
+
+            var block = group.Blocks.Find(name)
+                ?? throw new PortalException(PortalErrorCode.CreateFailed,
+                    $"Function block '{name}' was imported but could not be found afterwards.");
+
+            // The document pins the number; say whether TIA Portal may renumber it later.
+            block.AutoNumber = autoNumber;
+
+            return block;
+        }
+
+        /// <summary>
+        /// The smallest SimaticML document TIA Portal imports as an empty function block. The
+        /// shape was taken from a real V21 export and reduced until the import complained: the
+        /// 'Namespace' element is mandatory even when empty ("Missing 'Namespace' identifier
+        /// attribute"), the interface sections and one empty network are kept so the block opens
+        /// like one created in the editor.
+        /// </summary>
+        internal static string BuildFbTemplate(string name, int number, string language, int tiaMajorVersion)
+        {
+            var escapedName = System.Security.SecurityElement.Escape(name);
+
+            return
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n" +
+                "<Document>\r\n" +
+                $"  <Engineering version=\"V{tiaMajorVersion}\" />\r\n" +
+                "  <SW.Blocks.FB ID=\"0\">\r\n" +
+                "    <AttributeList>\r\n" +
+                "      <Interface>\r\n" +
+                "        <Sections xmlns=\"http://www.siemens.com/automation/Openness/SW/Interface/v5\">\r\n" +
+                "          <Section Name=\"Input\" />\r\n" +
+                "          <Section Name=\"Output\" />\r\n" +
+                "          <Section Name=\"InOut\" />\r\n" +
+                "          <Section Name=\"Static\" />\r\n" +
+                "          <Section Name=\"Temp\" />\r\n" +
+                "          <Section Name=\"Constant\" />\r\n" +
+                "        </Sections>\r\n" +
+                "      </Interface>\r\n" +
+                "      <MemoryLayout>Optimized</MemoryLayout>\r\n" +
+                $"      <Name>{escapedName}</Name>\r\n" +
+                "      <Namespace />\r\n" +
+                $"      <Number>{number}</Number>\r\n" +
+                $"      <ProgrammingLanguage>{language}</ProgrammingLanguage>\r\n" +
+                "    </AttributeList>\r\n" +
+                "    <ObjectList>\r\n" +
+                "      <SW.Blocks.CompileUnit ID=\"1\" CompositionName=\"CompileUnits\">\r\n" +
+                "        <AttributeList>\r\n" +
+                "          <NetworkSource />\r\n" +
+                $"          <ProgrammingLanguage>{language}</ProgrammingLanguage>\r\n" +
+                "        </AttributeList>\r\n" +
+                "      </SW.Blocks.CompileUnit>\r\n" +
+                "    </ObjectList>\r\n" +
+                "  </SW.Blocks.FB>\r\n" +
+                "</Document>\r\n";
         }
 
         /// <param name="instanceOfName">Name of the FB this instance DB is created for.</param>
@@ -601,9 +821,35 @@ namespace TiaMcpServer.Siemens
 
                     var group = GetPlcBlockGroupByPath(softwarePath, groupPath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Block group not found at '{groupPath}'.");
+                            $"Block group not found at '{groupPath}'. Use 'plc_get_software_tree' to discover valid group paths.");
 
-                    return group.Blocks.CreateInstanceDB(name, autoNumber, number, instanceOfName);
+                    var instanceOf = SplitPath(instanceOfName).LeafName;
+
+                    if (!GetBlocks(softwarePath).Any(b => b is FB && b.Name.Equals(instanceOf, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        throw new PortalException(PortalErrorCode.NotFound,
+                            $"Function block '{instanceOf}' does not exist in this PLC. Use 'plc_get_blocks' to list the blocks.");
+                    }
+
+                    EnsureBlockNameIsFree(softwarePath, name);
+
+                    // Openness takes the number literally even with autoNumber set, so a valid
+                    // one is always passed.
+                    var resolvedNumber = ResolveBlockNumber(softwarePath, "DB", autoNumber, number);
+                    var block = group.Blocks.CreateInstanceDB(name, autoNumber, resolvedNumber, instanceOf);
+
+                    if (block.Number < 1)
+                    {
+                        // Never leave a DB0 behind: it only shows up later, as a compile error.
+                        var created = block.Number;
+
+                        block.Delete();
+
+                        throw new PortalException(PortalErrorCode.CreateFailed,
+                            $"TIA Portal created '{name}' with the invalid number {created}; it was removed again. Pass an explicit number with autoNumber false.");
+                    }
+
+                    return block;
                 },
                 ("softwarePath", softwarePath), ("groupPath", groupPath), ("name", name), ("instanceOfName", instanceOfName));
         }
@@ -697,64 +943,229 @@ namespace TiaMcpServer.Siemens
 
         #region blocks
 
-        /// <param name="overwrite">Replace an object of the same name already in the target group.</param>
-        public PlcBlock CopyBlock(string softwarePath, string blockPath, string targetGroupPath, bool overwrite = false)
+        /// <summary>
+        /// Copies a block. Block names and numbers are unique within a PLC, so a copy inside the
+        /// same PLC needs <paramref name="newName"/> and gets a free number; a copy into another
+        /// PLC may keep both.
+        /// </summary>
+        /// <param name="newName">Name of the copy. Required when source and target PLC are the same.</param>
+        /// <param name="targetSoftwarePath">PLC that receives the copy; empty means the source PLC.</param>
+        /// <param name="overwrite">Replace a block of the final name that already exists in the target PLC.</param>
+        public PlcBlock CopyBlock(string softwarePath, string blockPath, string targetGroupPath, string newName = "", string targetSoftwarePath = "", bool overwrite = false)
         {
             return Operation.Run(_logger, nameof(CopyBlock), PortalErrorCode.ImportFailed,
-                () => TransferBlock(softwarePath, blockPath, targetGroupPath, overwrite, false),
-                ("softwarePath", softwarePath), ("blockPath", blockPath), ("targetGroupPath", targetGroupPath));
+                () =>
+                {
+                    var source = GetBlock(softwarePath, blockPath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Block not found at '{blockPath}'. Use 'plc_get_blocks' to list the available blocks.");
+
+                    EnsureNotKnowHowProtected(source);
+                    EnsureConsistent(source);
+
+                    var targetSoftware = string.IsNullOrWhiteSpace(targetSoftwarePath) ? softwarePath : targetSoftwarePath;
+                    var samePlc = IsSameSoftware(softwarePath, targetSoftware);
+                    var finalName = string.IsNullOrWhiteSpace(newName) ? source.Name : newName.Trim();
+
+                    EnsureValidName(finalName);
+
+                    if (samePlc && finalName.Equals(source.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"A copy of '{source.Name}' inside the same PLC needs a different name: block names are unique within a PLC. " +
+                            "Pass 'newName', or pass 'targetSoftwarePath' to copy into another PLC. To change the group only, use 'plc_move_block'.");
+                    }
+
+                    var targetGroup = GetPlcBlockGroupByPath(targetSoftware, targetGroupPath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Block group not found at '{targetGroupPath}' in '{targetSoftware}'. Use 'plc_get_software_tree' to discover valid group paths.");
+
+                    var existing = GetBlocks(targetSoftware).FirstOrDefault(b => b.Name.Equals(finalName, StringComparison.OrdinalIgnoreCase));
+
+                    if (existing != null && !overwrite)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"A block named '{finalName}' already exists at '{GetBlockPath(existing)}' in '{targetSoftware}'. " +
+                            "Choose another 'newName', or set 'overwrite' to replace it.");
+                    }
+
+                    // The exported number travels with the block; give the copy a free one unless
+                    // it replaces the block that already owns it.
+                    var numberSpace = NumberSpace(source);
+                    var used = UsedBlockNumbers(targetSoftware, numberSpace);
+
+                    if (existing != null)
+                    {
+                        used.Remove(existing.Number);
+                    }
+
+                    int? newNumber = used.Contains(source.Number) ? NextFreeNumber(used, numberSpace) : null;
+                    var directory = CreateTempExportDirectory();
+
+                    try
+                    {
+                        var file = new FileInfo(Path.Combine(directory, "block.xml"));
+
+                        source.Export(file, ExportOptions.None);
+
+                        if (newNumber.HasValue || !finalName.Equals(source.Name, StringComparison.Ordinal))
+                        {
+                            File.WriteAllText(file.FullName, RewriteExportedObject(File.ReadAllText(file.FullName), finalName, newNumber));
+                        }
+
+                        targetGroup.Blocks.Import(file, overwrite ? ImportOptions.Override : ImportOptions.None);
+                    }
+                    finally
+                    {
+                        DeleteTempExportDirectory(directory);
+                    }
+
+                    // With 'overwrite' the replaced block keeps the group it already lived in.
+                    return targetGroup.Blocks.Find(finalName)
+                        ?? GetBlocks(targetSoftware).FirstOrDefault(b => b.Name.Equals(finalName, StringComparison.OrdinalIgnoreCase))
+                        ?? throw new PortalException(PortalErrorCode.ImportFailed,
+                            $"Block '{finalName}' was imported into '{targetGroupPath}' but could not be found afterwards.");
+                },
+                ("softwarePath", softwarePath), ("blockPath", blockPath), ("targetGroupPath", targetGroupPath),
+                ("newName", newName), ("targetSoftwarePath", targetSoftwarePath));
         }
 
-        public PlcBlock MoveBlock(string softwarePath, string blockPath, string targetGroupPath, bool overwrite = false)
+        /// <summary>
+        /// Moves a block into another group of the same PLC. The original has to go before the
+        /// import: with it still in place the import fails on the duplicate name. If the import
+        /// then fails, the block is put back where it was.
+        /// </summary>
+        public PlcBlock MoveBlock(string softwarePath, string blockPath, string targetGroupPath)
         {
             return Operation.Run(_logger, nameof(MoveBlock), PortalErrorCode.ImportFailed,
-                () => TransferBlock(softwarePath, blockPath, targetGroupPath, overwrite, true),
+                () =>
+                {
+                    var source = GetBlock(softwarePath, blockPath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Block not found at '{blockPath}'. Use 'plc_get_blocks' to list the available blocks.");
+
+                    EnsureNotKnowHowProtected(source);
+                    EnsureConsistent(source);
+
+                    var sourceGroup = source.Parent as PlcBlockGroup
+                        ?? throw new PortalException(PortalErrorCode.InvalidState,
+                            $"Block '{source.Name}' is not inside a block group and cannot be moved.");
+
+                    var targetGroup = GetPlcBlockGroupByPath(softwarePath, targetGroupPath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Block group not found at '{targetGroupPath}'. Use 'plc_get_software_tree' to discover valid group paths.");
+
+                    EnsureDifferentGroup(GetPlcBlockGroupPath(sourceGroup, false), GetPlcBlockGroupPath(targetGroup, false), source.Name);
+
+                    var name = source.Name;
+                    var directory = CreateTempExportDirectory();
+
+                    try
+                    {
+                        var file = new FileInfo(Path.Combine(directory, "block.xml"));
+
+                        source.Export(file, ExportOptions.None);
+                        source.Delete();
+
+                        try
+                        {
+                            targetGroup.Blocks.Import(file, ImportOptions.None);
+                        }
+                        catch (Exception importError)
+                        {
+                            RestoreAfterFailedMove(() => sourceGroup.Blocks.Import(file, ImportOptions.None), "Block", name, importError);
+
+                            throw;
+                        }
+                    }
+                    finally
+                    {
+                        DeleteTempExportDirectory(directory);
+                    }
+
+                    return targetGroup.Blocks.Find(name)
+                        ?? throw new PortalException(PortalErrorCode.ImportFailed,
+                            $"Block '{name}' was imported into '{targetGroupPath}' but could not be found afterwards.");
+                },
                 ("softwarePath", softwarePath), ("blockPath", blockPath), ("targetGroupPath", targetGroupPath));
         }
 
-        private PlcBlock TransferBlock(string softwarePath, string blockPath, string targetGroupPath, bool overwrite, bool deleteSource)
+        #endregion
+
+        #region copy and move plumbing
+
+        /// <summary>
+        /// Puts a moved object back into its original group after the import into the target
+        /// failed. Inside a transaction the rollback would undo the delete anyway; this covers
+        /// the case where TIA Portal granted none. If even the restore fails, the caller must
+        /// learn that the object is gone - that outranks the original error.
+        /// </summary>
+        private void RestoreAfterFailedMove(Action restore, string kind, string name, Exception importError)
         {
-            var source = GetBlock(softwarePath, blockPath)
-                ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"Block not found at '{blockPath}'. Use 'GetBlocks' to list the available blocks.");
-
-            EnsureNotKnowHowProtected(source);
-            EnsureConsistent(source);
-
-            var sourceGroupPath = source.Parent is PlcBlockGroup sourceGroup
-                ? GetPlcBlockGroupPath(sourceGroup, false)
-                : string.Empty;
-
-            EnsureDifferentGroup(sourceGroupPath, targetGroupPath, source.Name);
-
-            var targetGroup = GetPlcBlockGroupByPath(softwarePath, targetGroupPath)
-                ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"Block group not found at '{targetGroupPath}'. Use 'GetSoftwareTree' to discover valid group paths.");
-
-            var name = source.Name;
-            var directory = CreateTempExportDirectory();
-
             try
             {
-                var file = new FileInfo(Path.Combine(directory, name + ".xml"));
+                restore();
+            }
+            catch (Exception restoreError)
+            {
+                _logger?.LogError(restoreError, "{Kind} {Name} could not be restored after a failed move", kind, name);
 
-                source.Export(file, ExportOptions.None);
-                targetGroup.Blocks.Import(file, overwrite ? ImportOptions.Override : ImportOptions.None);
+                throw new PortalException(PortalErrorCode.ImportFailed,
+                    $"{kind} '{name}' was removed from its group, the import into the target failed ({ErrorText.Describe(importError)}), " +
+                    $"and restoring it failed as well ({ErrorText.Describe(restoreError)}). Undo the change in TIA Portal or close the project without saving.",
+                    null, restoreError);
+            }
+        }
 
-                // Only after a successful import, so a failed move never loses the original.
-                if (deleteSource)
+        private bool IsSameSoftware(string softwarePath, string otherSoftwarePath)
+        {
+            if (softwarePath.Equals(otherSoftwarePath, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            // Two spellings can address one PLC ("PLC_1" and "Station/PLC_1").
+            var first = GetPlcSoftwareOrThrow(softwarePath);
+            var second = GetPlcSoftwareOrThrow(otherSoftwarePath);
+
+            return first.Equals(second);
+        }
+
+        /// <summary>
+        /// Renames and/or renumbers the object of an exported SimaticML document, so it can be
+        /// imported next to its original.
+        /// </summary>
+        internal static string RewriteExportedObject(string xml, string? newName, int? newNumber)
+        {
+            var document = System.Xml.Linq.XDocument.Parse(xml, System.Xml.Linq.LoadOptions.PreserveWhitespace);
+
+            var exported = document.Root?.Elements().FirstOrDefault(e => e.Name.LocalName.StartsWith("SW.", StringComparison.Ordinal))
+                ?? throw new PortalException(PortalErrorCode.ImportFailed, "The exported document contains no block or type to copy.");
+
+            var attributes = exported.Element("AttributeList")
+                ?? throw new PortalException(PortalErrorCode.ImportFailed, "The exported document has no attribute list to rename the copy in.");
+
+            if (!string.IsNullOrEmpty(newName))
+            {
+                var name = attributes.Element("Name")
+                    ?? throw new PortalException(PortalErrorCode.ImportFailed, "The exported document carries no name to replace.");
+
+                name.Value = newName;
+            }
+
+            if (newNumber.HasValue)
+            {
+                var number = attributes.Element("Number");
+
+                if (number != null)
                 {
-                    source.Delete();
+                    number.Value = newNumber.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
                 }
             }
-            finally
-            {
-                DeleteTempExportDirectory(directory);
-            }
 
-            return targetGroup.Blocks.Find(name)
-                ?? throw new PortalException(PortalErrorCode.ImportFailed,
-                    $"Block '{name}' was imported into '{targetGroupPath}' but could not be found afterwards.");
+            var declaration = document.Declaration == null ? string.Empty : document.Declaration + Environment.NewLine;
+
+            return declaration + document.ToString(System.Xml.Linq.SaveOptions.DisableFormatting);
         }
 
         #endregion
@@ -833,11 +1244,17 @@ namespace TiaMcpServer.Siemens
                         ?? throw new PortalException(PortalErrorCode.NotFound,
                             $"Block not found at '{blockPath}'. Use 'GetBlocks' to list the available blocks.");
 
-                    if (block is ICompilable compilable)
+                    // A block does not implement ICompilable itself; the compiler is a
+                    // service it provides, exactly as PlcSoftware does in CompileSoftware.
+                    var compilable = block.GetService<ICompilable>() ?? block as ICompilable;
+
+                    if (compilable != null)
                     {
                         return compilable.Compile();
                     }
-                    throw new PortalException(PortalErrorCode.NotSupported, $"Block '{blockPath}' is not compilable.");
+
+                    throw new PortalException(PortalErrorCode.NotSupported,
+                        $"Block '{blockPath}' offers no compile service. Use 'plc_compile_software' to compile the whole PLC.");
                 },
                 ("softwarePath", softwarePath), ("blockPath", blockPath));
         }

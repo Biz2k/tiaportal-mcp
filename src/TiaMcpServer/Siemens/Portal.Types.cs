@@ -429,62 +429,139 @@ namespace TiaMcpServer.Siemens
 
         #region types
 
-        public PlcType CopyType(string softwarePath, string typePath, string targetGroupPath, bool overwrite = false)
+        /// <summary>
+        /// Copies a PLC data type. A type name is unique across the whole PLC, so a copy inside
+        /// the same PLC needs <paramref name="newName"/>; a copy into another PLC may keep it.
+        /// </summary>
+        /// <param name="newName">Name of the copy. Required when source and target PLC are the same.</param>
+        /// <param name="targetSoftwarePath">PLC that receives the copy; empty means the source PLC.</param>
+        /// <param name="overwrite">Replace a type of the final name that already exists in the target PLC.</param>
+        public PlcType CopyType(string softwarePath, string typePath, string targetGroupPath, string newName = "", string targetSoftwarePath = "", bool overwrite = false)
         {
             return Operation.Run(_logger, nameof(CopyType), PortalErrorCode.ImportFailed,
-                () => TransferType(softwarePath, typePath, targetGroupPath, overwrite, false),
-                ("softwarePath", softwarePath), ("typePath", typePath), ("targetGroupPath", targetGroupPath));
+                () =>
+                {
+                    var source = GetType(softwarePath, typePath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Type not found at '{typePath}'. Use 'plc_get_types' to list the available types.");
+
+                    EnsureNotKnowHowProtected(source);
+                    EnsureConsistent(source);
+
+                    var targetSoftware = string.IsNullOrWhiteSpace(targetSoftwarePath) ? softwarePath : targetSoftwarePath;
+                    var samePlc = IsSameSoftware(softwarePath, targetSoftware);
+                    var finalName = string.IsNullOrWhiteSpace(newName) ? source.Name : newName.Trim();
+
+                    EnsureValidName(finalName);
+
+                    if (samePlc && finalName.Equals(source.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"A copy of '{source.Name}' inside the same PLC needs a different name: a PLC data type name is unique across the whole PLC. " +
+                            "Pass 'newName', or pass 'targetSoftwarePath' to copy into another PLC. To change the group only, use 'plc_move_type'.");
+                    }
+
+                    var targetGroup = GetPlcTypeGroupByPath(targetSoftware, targetGroupPath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Type group not found at '{targetGroupPath}' in '{targetSoftware}'. Use 'plc_get_software_tree' to discover valid group paths.");
+
+                    var existing = GetTypes(targetSoftware).FirstOrDefault(t => t.Name.Equals(finalName, StringComparison.OrdinalIgnoreCase));
+
+                    if (existing != null && !overwrite)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"A type named '{finalName}' already exists at '{GetTypePath(existing)}' in '{targetSoftware}'. " +
+                            "Choose another 'newName', or set 'overwrite' to replace it.");
+                    }
+
+                    var directory = CreateTempExportDirectory();
+
+                    try
+                    {
+                        var file = new FileInfo(Path.Combine(directory, "type.xml"));
+
+                        source.Export(file, ExportOptions.None);
+
+                        if (!finalName.Equals(source.Name, StringComparison.Ordinal))
+                        {
+                            File.WriteAllText(file.FullName, RewriteExportedObject(File.ReadAllText(file.FullName), finalName, null));
+                        }
+
+                        targetGroup.Types.Import(file, overwrite ? ImportOptions.Override : ImportOptions.None);
+                    }
+                    finally
+                    {
+                        DeleteTempExportDirectory(directory);
+                    }
+
+                    // With 'overwrite' the replaced type keeps the group it already lived in.
+                    return targetGroup.Types.Find(finalName)
+                        ?? GetTypes(targetSoftware).FirstOrDefault(t => t.Name.Equals(finalName, StringComparison.OrdinalIgnoreCase))
+                        ?? throw new PortalException(PortalErrorCode.ImportFailed,
+                            $"Type '{finalName}' was imported into '{targetGroupPath}' but could not be found afterwards.");
+                },
+                ("softwarePath", softwarePath), ("typePath", typePath), ("targetGroupPath", targetGroupPath),
+                ("newName", newName), ("targetSoftwarePath", targetSoftwarePath));
         }
 
-        public PlcType MoveType(string softwarePath, string typePath, string targetGroupPath, bool overwrite = false)
+        /// <summary>
+        /// Moves a PLC data type into another group of the same PLC: export, delete the
+        /// original, import into the target. See MoveBlock for why the delete comes first and
+        /// how a failed import is undone.
+        /// </summary>
+        public PlcType MoveType(string softwarePath, string typePath, string targetGroupPath)
         {
             return Operation.Run(_logger, nameof(MoveType), PortalErrorCode.ImportFailed,
-                () => TransferType(softwarePath, typePath, targetGroupPath, overwrite, true),
-                ("softwarePath", softwarePath), ("typePath", typePath), ("targetGroupPath", targetGroupPath));
-        }
-
-        private PlcType TransferType(string softwarePath, string typePath, string targetGroupPath, bool overwrite, bool deleteSource)
-        {
-            var source = GetType(softwarePath, typePath)
-                ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"Type not found at '{typePath}'. Use 'GetTypes' to list the available types.");
-
-            EnsureNotKnowHowProtected(source);
-            EnsureConsistent(source);
-
-            var sourceGroupPath = source.Parent is PlcTypeGroup sourceGroup
-                ? GetPlcTypeGroupPath(sourceGroup, false)
-                : string.Empty;
-
-            EnsureDifferentGroup(sourceGroupPath, targetGroupPath, source.Name);
-
-            var targetGroup = GetPlcTypeGroupByPath(softwarePath, targetGroupPath)
-                ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"Type group not found at '{targetGroupPath}'. Use 'GetSoftwareTree' to discover valid group paths.");
-
-            var name = source.Name;
-            var directory = CreateTempExportDirectory();
-
-            try
-            {
-                var file = new FileInfo(Path.Combine(directory, name + ".xml"));
-
-                source.Export(file, ExportOptions.None);
-                targetGroup.Types.Import(file, overwrite ? ImportOptions.Override : ImportOptions.None);
-
-                if (deleteSource)
+                () =>
                 {
-                    source.Delete();
-                }
-            }
-            finally
-            {
-                DeleteTempExportDirectory(directory);
-            }
+                    var source = GetType(softwarePath, typePath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Type not found at '{typePath}'. Use 'plc_get_types' to list the available types.");
 
-            return targetGroup.Types.Find(name)
-                ?? throw new PortalException(PortalErrorCode.ImportFailed,
-                    $"Type '{name}' was imported into '{targetGroupPath}' but could not be found afterwards.");
+                    EnsureNotKnowHowProtected(source);
+                    EnsureConsistent(source);
+
+                    var sourceGroup = source.Parent as PlcTypeGroup
+                        ?? throw new PortalException(PortalErrorCode.InvalidState,
+                            $"Type '{source.Name}' is not inside a type group and cannot be moved.");
+
+                    var targetGroup = GetPlcTypeGroupByPath(softwarePath, targetGroupPath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Type group not found at '{targetGroupPath}'. Use 'plc_get_software_tree' to discover valid group paths.");
+
+                    EnsureDifferentGroup(GetPlcTypeGroupPath(sourceGroup, false), GetPlcTypeGroupPath(targetGroup, false), source.Name);
+
+                    var name = source.Name;
+                    var directory = CreateTempExportDirectory();
+
+                    try
+                    {
+                        var file = new FileInfo(Path.Combine(directory, "type.xml"));
+
+                        source.Export(file, ExportOptions.None);
+                        source.Delete();
+
+                        try
+                        {
+                            targetGroup.Types.Import(file, ImportOptions.None);
+                        }
+                        catch (Exception importError)
+                        {
+                            RestoreAfterFailedMove(() => sourceGroup.Types.Import(file, ImportOptions.None), "Type", name, importError);
+
+                            throw;
+                        }
+                    }
+                    finally
+                    {
+                        DeleteTempExportDirectory(directory);
+                    }
+
+                    return targetGroup.Types.Find(name)
+                        ?? throw new PortalException(PortalErrorCode.ImportFailed,
+                            $"Type '{name}' was imported into '{targetGroupPath}' but could not be found afterwards.");
+                },
+                ("softwarePath", softwarePath), ("typePath", typePath), ("targetGroupPath", targetGroupPath));
         }
 
         #endregion

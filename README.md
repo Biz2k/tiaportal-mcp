@@ -165,14 +165,25 @@ group the type already lives in to replace it.
 
 These are not gaps in this server - the underlying API offers no operation for them.
 
-- __No move or copy for blocks and types.__ `CopyBlock`, `MoveBlock`, `CopyType` and `MoveType`
-  are composed from export, import and (for a move) deleting the source once the import
-  succeeds. Two consequences are visible: the object must be consistent, because TIA Portal
-  refuses to export an inconsistent one, and its block number travels with it, so importing
-  into the same PLC can hit a number collision. Renaming during a copy is not offered - it
-  would mean rewriting the exported XML.
-- __No generic "create block".__ Only `CreateFB` and `CreateInstanceDB` exist; every other kind
-  of block has to arrive through `ImportXmlBlock`.
+- __No move or copy for blocks and types.__ `plc_copy_block`, `plc_move_block`, `plc_copy_type`
+  and `plc_move_type` are composed from export and import. What follows from that:
+  - The object must be consistent, because TIA Portal refuses to export an inconsistent one.
+    Compile first.
+  - A block name, a block number and a type name are unique within a PLC. A copy inside the same
+    PLC therefore needs `newName`, and a copied block gets the first free number of its kind. To
+    keep the name, copy into another PLC with `targetSoftwarePath`.
+  - A move exports the object, deletes the original and imports it into the target group; name
+    and number are kept. If the import fails, the object is imported back into its original
+    group. Blocks that use a moved block (its instance DBs, its callers) are inconsistent
+    afterwards until the PLC is compiled again.
+- __No generic "create block".__ `PlcBlockComposition.CreateFB` only creates ProDiag blocks.
+  `plc_create_fb` therefore creates an SCL block from a one-block source text and a LAD, FBD or
+  STL block by importing a minimal SimaticML document; other languages (GRAPH, ...) are refused.
+  A ProDiag block brings its own instance DB and the `ProDiagOB` with it. Every other kind of
+  block arrives through `plc_create_scl_block` or `import_objects`.
+- __Block numbers.__ Openness takes a block number literally even when auto numbering is requested
+  - an instance DB created with number 0 really becomes `DB0`, which does not compile. The server
+  picks the first free number itself and reports it in the response.
 - __Read-only objects.__ System constants cannot be created or changed, the force table cannot
   be created or deleted (the system owns one per PLC), the default tag table cannot be deleted,
   and the system groups (`Program blocks`, `PLC data types`, `PLC tags`, ...) cannot be renamed

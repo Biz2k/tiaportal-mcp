@@ -19,6 +19,22 @@
   replaced with a generic message. Clients that parsed `Unexpected error` out of a successful
   result must check `isError` instead.
 
+- __`plc_create_fb` creates function blocks.__ It always failed with `CreateFB failed`: Openness
+  creates only ProDiag blocks through `CreateFB`. SCL blocks are now generated from a source text,
+  LAD, FBD and STL blocks are imported from a minimal SimaticML document, ProDiag keeps using
+  `CreateFB`; other languages are refused with an explanation.
+- __`plc_create_instance_db` no longer creates `DB0`.__ The server picks the first free number, checks
+  an explicit one before creating anything, and checks that the function block exists.
+  `plc_create_fb` and `plc_create_instance_db` return the block number.
+- __`plc_copy_block` and `plc_copy_type` work.__ A copy into the same PLC could never succeed, because
+  names and block numbers are unique within a PLC. New parameters: `newName` (required inside the same
+  PLC; the copy also gets a free block number) and `targetSoftwarePath` (copy into another PLC,
+  keeping the name).
+- __`plc_move_block` and `plc_move_type` work.__ The original is now deleted before the import instead
+  of after it, and imported back if the import fails. The `overwrite` parameter is gone: it could
+  not do anything useful and led to "Access to a disposed object".
+- __`plc_compile_block` compiles.__ It answered "Block is not compilable" for every block, because the
+  compiler is a service of the block, not an interface it implements.
 - __Names containing `/` are addressable.__ TIA Portal allows the slash in group, table and station
   names (`Inputs/Outputs`, `S7-1500/ET200MP station_1`), but paths were split on every `/`, so
   `plc_resolve_object_path` returned `Inputs/Outputs/AI_Handler` and no tool could open it. Paths

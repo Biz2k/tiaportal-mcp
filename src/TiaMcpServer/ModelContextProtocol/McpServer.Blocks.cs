@@ -597,38 +597,53 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "plc_create_fb", Title = "Create function block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Create an empty function block. Openness has no generic create-block operation: FB and instance DB are the only kinds creatable without importing XML")]
+         Description("Create an empty function block in LAD, FBD, STL, SCL or ProDiag. For a block with code use 'plc_create_scl_block' (SCL text) or 'import_objects' (exported XML). The response carries the block number TIA Portal assigned")]
         public static ResponseCreated CreateFB(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: root-relative block group that receives the FB; empty uses the Program blocks root")] string groupPath,
-            [Description("name: name of the new function block, without a slash")] string name,
-            [Description("language: programming language such as LAD (default), FBD, STL, SCL or GRAPH")] string language = "LAD",
-            [Description("autoNumber: let TIA Portal assign the block number (default true)")] bool autoNumber = true,
-            [Description("number: explicit block number, used only when autoNumber is false")] int number = 0)
+            [Description("name: name of the new function block, without a slash; must not exist in the PLC yet")] string name,
+            [Description("language: LAD (default), FBD, STL, SCL or ProDiag")] string language = "LAD",
+            [Description("autoNumber: let the server pick the first free FB number (default true)")] bool autoNumber = true,
+            [Description("number: explicit block number from 1, used only when autoNumber is false; must be free")] int number = 0)
         {
             return Guarded(nameof(CreateFB), () =>
             {
                 var block = Portal.CreateFB(softwarePath, groupPath, name, autoNumber, number, language);
-                return Created("FB", block.Name, JoinPath(groupPath, block.Name));
+
+                return CreatedBlock("FB", block);
             });
         }
 
         [WriteTool]
         [McpServerTool(Name = "plc_create_instance_db", Title = "Create instance data block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Create an instance data block for an existing function block")]
+         Description("Create an instance data block for an existing function block. The response carries the block number TIA Portal assigned")]
         public static ResponseCreated CreateInstanceDB(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: root-relative block group that receives the DB; empty uses the Program blocks root")] string groupPath,
-            [Description("name: name of the new instance data block, without a slash")] string name,
+            [Description("name: name of the new instance data block, without a slash; must not exist in the PLC yet")] string name,
             [Description("instanceOfName: name of the function block this instance DB belongs to")] string instanceOfName,
-            [Description("autoNumber: let TIA Portal assign the block number (default true)")] bool autoNumber = true,
-            [Description("number: explicit block number, used only when autoNumber is false")] int number = 0)
+            [Description("autoNumber: let the server pick the first free DB number (default true)")] bool autoNumber = true,
+            [Description("number: explicit block number from 1, used only when autoNumber is false; must be free")] int number = 0)
         {
             return Guarded(nameof(CreateInstanceDB), () =>
             {
                 var block = Portal.CreateInstanceDB(softwarePath, groupPath, name, instanceOfName, autoNumber, number);
-                return Created("InstanceDB", block.Name, JoinPath(groupPath, block.Name));
+
+                return CreatedBlock("InstanceDB", block);
             });
+        }
+
+        private static ResponseCreated CreatedBlock(string kind, PlcBlock block)
+        {
+            return new ResponseCreated
+            {
+                Kind = kind,
+                Name = block.Name,
+                Path = Portal.GetBlockPath(block),
+                Number = block.Number,
+                Message = $"{kind} '{block.Name}' created with number {block.Number}. {SaveHint}",
+                Meta = OkMeta()
+            };
         }
 
         #endregion
@@ -637,42 +652,38 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "plc_copy_block", Title = "Copy block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Copy a program block into another block group of the same plc software. Implemented as export plus import because Openness has no copy operation, so the block must be consistent and keeps its block number")]
+         Description("Copy a program block. Block names and numbers are unique within a PLC, so a copy inside the same PLC requires 'newName' and gets a free block number; to keep the name, copy into another PLC with 'targetSoftwarePath'. To change only the group use 'plc_move_block'. Implemented as export plus import, so the block must be consistent (compile first)")]
         public static ResponseCreated CopyBlock(
-            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("softwarePath: defines the path in the project structure to the plc software holding the block")] string softwarePath,
             [Description("blockPath: root-relative path of the block to copy, e.g. 1_Tests/FC_Block_1")] string blockPath,
             [Description("targetGroupPath: root-relative block group that receives the copy; empty means the Program blocks root")] string targetGroupPath,
-            [Description("overwrite: replace a block of the same name already in the target group (default false)")] bool overwrite = false)
+            [Description("newName: name of the copy. Required when copying inside the same PLC; empty keeps the name when copying into another PLC")] string newName = "",
+            [Description("targetSoftwarePath: plc software that receives the copy; empty (default) means the same PLC")] string targetSoftwarePath = "",
+            [Description("overwrite: replace a block of the final name that already exists in the target PLC (default false)")] bool overwrite = false)
         {
             return Guarded(nameof(CopyBlock), () =>
             {
-                var block = Portal.CopyBlock(softwarePath, blockPath, targetGroupPath, overwrite);
-                var newPath = JoinPath(targetGroupPath, block.Name);
+                var block = Portal.CopyBlock(softwarePath, blockPath, targetGroupPath, newName, targetSoftwarePath, overwrite);
+                var created = CreatedBlock("Block", block);
 
-                return new ResponseCreated
-                {
-                    Kind = "Block",
-                    Name = block.Name,
-                    Path = newPath,
-                    Message = $"Block '{blockPath}' copied to '{newPath}'. {SaveHint}",
-                    Meta = OkMeta()
-                };
+                created.Message = $"Block '{blockPath}' copied to '{created.Path}' as number {block.Number}. {SaveHint}";
+
+                return created;
             });
         }
 
         [WriteTool]
         [McpServerTool(Name = "plc_move_block", Title = "Move block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Move a program block into another block group of the same plc software. Implemented as export, import and deleting the original; the original is only removed after the import succeeds")]
+         Description("Move a program block into another block group of the same plc software; name and number are kept. Implemented as export, deleting the original and import, so the block must be consistent (compile first). If the import fails the block is restored in its original group")]
         public static ResponseRenamed MoveBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: root-relative path of the block to move, e.g. 1_Tests/FC_Block_1")] string blockPath,
-            [Description("targetGroupPath: root-relative block group that receives the block; empty means the Program blocks root")] string targetGroupPath,
-            [Description("overwrite: replace a block of the same name already in the target group (default false)")] bool overwrite = false)
+            [Description("targetGroupPath: root-relative block group that receives the block; empty means the Program blocks root")] string targetGroupPath)
         {
             return Guarded(nameof(MoveBlock), () =>
             {
-                var block = Portal.MoveBlock(softwarePath, blockPath, targetGroupPath, overwrite);
-                var newPath = JoinPath(targetGroupPath, block.Name);
+                var block = Portal.MoveBlock(softwarePath, blockPath, targetGroupPath);
+                var newPath = Portal.GetBlockPath(block);
 
                 return new ResponseRenamed
                 {

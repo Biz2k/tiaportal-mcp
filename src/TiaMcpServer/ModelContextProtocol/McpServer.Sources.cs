@@ -548,37 +548,22 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             return Guarded(nameof(CreateSclBlock), () =>
             {
-                var tempFile = Path.Combine(Path.GetTempPath(), "TiaMcpServer", Guid.NewGuid().ToString("N") + ".scl");
-                Directory.CreateDirectory(Path.GetDirectoryName(tempFile));
-                File.WriteAllText(tempFile, sclCode);
-                
-                string sourceName = "AI_Gen_" + Guid.NewGuid().ToString("N").Substring(0, 8);
-                try
+                var names = Portal.GenerateFromSclText(softwarePath, sclCode, targetGroupPath, keepOnError);
+
+                return new ResponseGenerateBlocks
                 {
-                    Portal.CreateExternalSourceFromFile(softwarePath, "", sourceName, tempFile);
-                    var names = Portal.ImportSourceBlocks(softwarePath, sourceName, targetGroupPath, keepOnError);
-                    
-                    try { Portal.DeleteExternalSource(softwarePath, sourceName); } catch { /* Ignore cleanup errors */ }
-                    
-                    return new ResponseGenerateBlocks
+                    GeneratedNames = names,
+                    Count = names.Count,
+                    Message = $"{names.Count} object(s) generated from SCL code. {SaveHint}",
+                    Meta = new JsonObject
                     {
-                        GeneratedNames = names,
-                        Count = names.Count,
-                        Message = $"{names.Count} object(s) generated from SCL code. {SaveHint}",
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true,
-                            ["pendingSave"] = true,
-                            ["generatedCount"] = names.Count,
-                            ["keepOnError"] = keepOnError
-                        }
-                    };
-                }
-                finally
-                {
-                    if (File.Exists(tempFile)) File.Delete(tempFile);
-                }
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = true,
+                        ["pendingSave"] = true,
+                        ["generatedCount"] = names.Count,
+                        ["keepOnError"] = keepOnError
+                    }
+                };
             });
         }
 
