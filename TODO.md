@@ -131,7 +131,7 @@ the gap is explicit rather than implied.
   ```
 
 - [ ] Roll out PortalException + context enrichment pattern beyond ExportXmlBlock
-  Affected: `ImportXmlBlock`, `ExportXmlBlocks`, `ExportXmlType`, `ImportXmlType`, `ExportBlocksAsDocuments`, `ImportFromDocuments`, etc.
+  Affected: `ImportXmlBlock`, `ExportXmlBlocks`, `export_xml_type`, `import_xml_type`, `ExportBlocksAsDocuments`, `ImportFromDocuments`, etc.
   Rules:
   - Short messages + `PortalErrorCode` only (no param echoing in message)
   - Attach context in `Exception.Data` in a single catch per portal method, just before rethrow (see docs/error-model.md)
@@ -281,9 +281,9 @@ the gap is explicit rather than implied.
 ## Hardware Configuration & Topology (Аппаратная часть) - Deferred Tasks
 - [x] **Чтение аппаратной конфигурации:** Инструменты для получения списка устройств, модулей, их заказных номеров (MLFB) и версий прошивок (Firmware).
 - [x] **Сетевая топология:** Инструменты для получения информации о подсетях (Subnets), IP-адресах устройств и связях PROFINET/PROFIBUS.
-- [x] **Добавление нового оборудования:** Инструменты для программного добавления новых PLC, станций ET200 и HMI панелей в проект (`CreateHardwareDevice`, `PlugHardwareModule`). Примечание: для Classic HMI-панелей требуется установленный HSP-пакет; Unified HMI поддерживается.
-- [x] **Удаление и управление оборудованием:** Инструменты для удаления устройств (`DeleteHardwareDevice`).
-- [x] **Работа с сетями и IO-системами:** Назначение интерфейсов в подсети (`ConnectSubnet`, `DisconnectSubnet`), создание IO-систем PROFINET (`CreateIoSystem`) и подключение к ним распределенной периферии (`ConnectToIoSystem`).
+- [x] **Добавление нового оборудования:** Инструменты для программного добавления новых PLC, станций ET200 и HMI панелей в проект (`create_hardware_device`, `plug_hardware_module`). Примечание: для Classic HMI-панелей требуется установленный HSP-пакет; Unified HMI поддерживается.
+- [x] **Удаление и управление оборудованием:** Инструменты для удаления устройств (`delete_hardware_device`).
+- [x] **Работа с сетями и IO-системами:** Назначение интерфейсов в подсети (`connect_subnet`, `disconnect_subnet`), создание IO-систем PROFINET (`create_io_system`) и подключение к ним распределенной периферии (`ConnectToIoSystem`).
 
 ## PLC Logic & Data (ПЛК Логика и Данные) - Deferred Tasks
 - [x] **Создание и редактирование PLC тегов:** Инструменты для добавления тегов в таблицы тегов (Tag Tables) и назначения им адресов.

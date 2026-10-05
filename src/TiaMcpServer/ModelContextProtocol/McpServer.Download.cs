@@ -8,7 +8,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public partial class McpServer
     {
-        [McpServerTool(Name = "GetDownloadTargets", Title = "Get download targets", Destructive = false, OpenWorld = false, UseStructuredContent = true)]
+        [McpServerTool(Name = "get_download_targets", Title = "Get download targets", Destructive = false, OpenWorld = false, UseStructuredContent = true)]
         [Description("Returns available download targets (modes and interfaces) for a PLC.")]
         public static List<string> GetDownloadTargets(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
@@ -17,7 +17,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "DownloadToPlc", Title = "Download to PLC", Destructive = true, OpenWorld = false, UseStructuredContent = true)]
+        [McpServerTool(Name = "download_to_plc", Title = "Download to PLC", Destructive = true, OpenWorld = false, UseStructuredContent = true)]
         [Description("Downloads hardware and/or software configuration to a PLC. Requires target interface from get_download_targets.")]
         public static ResponseDownloadResult DownloadToPlc(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,

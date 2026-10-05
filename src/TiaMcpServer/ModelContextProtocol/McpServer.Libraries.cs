@@ -8,7 +8,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static partial class McpServer
     {
-        [McpServerTool(Name = "GetLibraries", Title = "Get opened libraries", Destructive = false, OpenWorld = false, UseStructuredContent = true), Description("Lists the project library and any globally opened libraries")]
+        [McpServerTool(Name = "get_libraries", Title = "Get opened libraries", Destructive = false, OpenWorld = false, UseStructuredContent = true), Description("Lists the project library and any globally opened libraries")]
         public static ResponseLibraries GetLibraries()
         {
             try
@@ -27,7 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "OpenGlobalLibrary", Title = "Open global library", Destructive = false, OpenWorld = false, UseStructuredContent = true), Description("Opens a global library file (.al1x) into the current TIA Portal session")]
+        [McpServerTool(Name = "open_global_library", Title = "Open global library", Destructive = false, OpenWorld = false, UseStructuredContent = true), Description("Opens a global library file (.al1x) into the current TIA Portal session")]
         public static ResponseMessage OpenGlobalLibrary(
             [Description("filePath: absolute path to the global library file")] string filePath)
         {
@@ -46,7 +46,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetMasterCopies", Title = "Get Master Copies in library", Destructive = false, OpenWorld = false, UseStructuredContent = true), Description("Lists all Master Copies inside a specified library recursively")]
+        [McpServerTool(Name = "get_master_copies", Title = "Get Master Copies in library", Destructive = false, OpenWorld = false, UseStructuredContent = true), Description("Lists all Master Copies inside a specified library recursively")]
         public static ResponseMasterCopies GetMasterCopies(
             [Description("libraryName: name of the library (use 'ProjectLibrary' for the project's library)")] string libraryName)
         {
@@ -66,7 +66,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "InstantiateMasterCopy", Title = "Instantiate Master Copy", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Instantiates a Master Copy from a library into the project (e.g. into a PLC's block or type group)")]
+        [McpServerTool(Name = "instantiate_master_copy", Title = "Instantiate Master Copy", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Instantiates a Master Copy from a library into the project (e.g. into a PLC's block or type group)")]
         public static ResponseMessage InstantiateMasterCopy(
             [Description("libraryName: name of the library (e.g., 'ProjectLibrary')")] string libraryName,
             [Description("masterCopyPath: relative path of the master copy (e.g. 'ProjectLibrary/MasterCopy_1')")] string masterCopyPath,

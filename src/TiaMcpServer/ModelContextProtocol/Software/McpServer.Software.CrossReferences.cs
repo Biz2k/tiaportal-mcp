@@ -35,7 +35,7 @@ namespace TiaMcpServer.ModelContextProtocol
             public int ReferenceCount;
         }
 
-        [McpServerTool(Name = "GetCrossReferences", Title = "Get cross references", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "get_cross_references", Title = "Get cross references", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Get cross references for a PLC software or for one block, type, tag table, tag or block group inside it. Watch tables, force tables and external sources have no cross references")]
         public static ResponseCrossReferences GetCrossReferences(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -159,7 +159,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region insight
 
-        [McpServerTool(Name = "WhereUsed", Title = "Where used", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "where_used", Title = "Where used", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Answer 'what uses this?' for a tag, block, PLC data type or tag table by name. Resolves the name, picks the right object kind and flattens the cross-reference tree to a plain list of users. Use 'GetCrossReferences' instead when the full nested result or a specific filter is needed")]
         public static ResponseWhereUsed WhereUsed(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
