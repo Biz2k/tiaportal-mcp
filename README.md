@@ -1,10 +1,15 @@
-# TIA-Portal MCP-Server
+# TIA Portal MCP Server
 
-A MCP server which connects to Siemens TIA Portal.
+**English** | [Русский](README_ru.md)
+
+> This document is available in two languages. Use the links above to switch.
+
+An MCP server that lets an AI assistant work with Siemens TIA Portal through the Openness API:
+read a project, edit PLC software, hardware and HMI, and download to a PLC.
 
 ## Features
 
-- Connect to a running TIA Portal instance and open a project or a multiuser local session
+- Connect to a running TIA Portal and open a project or a multiuser local session
 - Read the PLC software: program blocks, PLC data types, tags and constants, watch and force
   tables, external source files, cross references, and the source text of blocks and types
 - Create, rename, delete, copy, move, import and compile PLC objects
@@ -13,18 +18,84 @@ A MCP server which connects to Siemens TIA Portal.
 - Download hardware and software to a PLC or a simulated PLC
 
 Starting and controlling PLCSIM is deliberately not part of this server; it lives in a separate
-MCP server. `download_to_plc` expects the target to be running already.
+MCP server, [plcsim-mcp](https://github.com/Biz2k/plcsim-mcp). `download_to_plc` expects the target
+to be running already.
 
-## Command Line Arguments
+## Requirements
 
-| Argument                  | Description                                                                  |
-| ------------------------- | ---------------------------------------------------------------------------- |
-| `--tia-major-version <n>` | TIA Portal major version to bind against. Default `21`.                      |
-| `--logging <1\|2\|3>`     | `1` stderr, `2` debug output, `3` Windows event log. Omit for no logging.    |
-| `--doctor`                | Print the environment report and exit without starting the MCP server.       |
-| `--read-only`             | Do not register the tools that change the project. See below.                |
+- Windows with **.NET Framework 4.8**
+- **Siemens TIA Portal V21** installed and **running** (earlier versions are selected with `--tia-major-version`)
+- The Windows user is a member of the group `Siemens TIA Openness`
+- The user environment variable `TiaPortalLocation` points at the installation, for example
+  `C:\Program Files\Siemens\Automation\Portal V21`
+
+Check all of this without starting the MCP server:
+
+```text
+> TiaMcpServer.exe --doctor
+Diagnose:
+├─ Connected = False
+├─ Project: No project open
+├─ Active Version: V21
+├─ Installed TIA Portal versions:
+│  └─ V21: C:\Program Files\Siemens\Automation\Portal V21
+│     ├─ Engineering: OK
+│     └─ Portal:      OK
+├─ User in 'Siemens TIA Openness' user group: True
+└─ Write mode: enabled
+```
+
+The same report is available to MCP clients through the `doctor` tool. Both are read-only: they
+never connect to TIA Portal, open a project, or change group membership.
+
+## Installation
+
+A ready-to-run build is in [`Install/TiaMcpServer`](Install/TiaMcpServer). Copy the folder anywhere
+and point your MCP client at `TiaMcpServer.exe`. Step-by-step instructions for Claude Code,
+Claude Desktop and VS Code-style clients are in [`Install/INSTALL.md`](Install/INSTALL.md)
+([Russian](Install/INSTALL_RU.md)).
+
+Claude Code:
+
+```bash
+claude mcp add tia-mcp-server -- C:\path\to\TiaMcpServer\TiaMcpServer.exe
+```
+
+Clients configured with JSON (Claude Desktop uses `mcpServers`, VS Code uses `servers`):
+
+```json
+{
+  "mcpServers": {
+    "tia-mcp-server": {
+      "command": "C:\\path\\to\\TiaMcpServer\\TiaMcpServer.exe",
+      "args": []
+    }
+  }
+}
+```
+
+The first time a new build attaches to TIA Portal, TIA Portal asks whether to grant Openness
+access. Confirm it in the TIA Portal window.
+
+## Quick start
+
+1. Start TIA Portal. The server attaches to a running instance and does not start one on its own.
+2. Call `open_tia_project` with the absolute path of a `.apXX` project or `.alsXX` session. It
+   connects, opens the project and returns the PLC software paths.
+3. Explore with `get_project_tree`, `plc_get_software_tree` and `get_devices`.
+4. Read or change objects with the `plc_*`, `hw_*`, `net_*` and `hmi_*` tools.
+5. Call `save_project` to keep the changes. Until then they exist only in memory.
+
+## Command line arguments
+
+| Argument                  | Description                                                                    |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| `--tia-major-version <n>` | TIA Portal major version to bind against. Default `21`.                        |
+| `--read-only`             | Do not register the tools that change the project. See below.                  |
+| `--logging <1\|2\|3>`     | `1` stderr, `2` debug output, `3` Windows event log. Omit for no logging.      |
+| `--doctor`                | Print the environment report and exit without starting the MCP server.         |
+| `--debug-tools`           | Register the server-development tools (`hmi_debug_*`, `hmi_test_faceplate`).   |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
-| `--debug-tools`           | Register the server-development tools (`hmi_debug_*`, `hmi_test_faceplate`). |
 
 ## Write mode
 
@@ -49,7 +120,8 @@ running the server and never modify the project.
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. 115 tools are registered by default.
+when the registered tools and that file disagree. 115 tools are registered by default. A short
+description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Always available (57):
 
@@ -91,206 +163,179 @@ Left out with `--read-only` (58):
 `blocks,types,tags,watch,sources`, default `all` - to keep the output small on a large PLC.
 `plc_get_cross_references` accepts `maxDepth` (1-3, default 1) for the same reason.
 
-Paths used by these tools are **root-relative**: `1_Tests/FC_Block_1`, not
-`Program blocks/1_Tests/FC_Block_1`. Use `get_project_tree` and `plc_get_software_tree` to
-discover them; `plc_resolve_object_path` turns a bare name into a path.
+## Paths
+
+Paths are **root-relative**: `1_Tests/FC_Block_1`, not `Program blocks/1_Tests/FC_Block_1`. Use
+`get_project_tree` and `plc_get_software_tree` to discover them; `plc_resolve_object_path` turns a
+bare name into a path.
+
 TIA Portal allows `/` inside a name (a block group `Inputs/Outputs`, a station
 `S7-1500/ET200MP station_1`). In a path such a slash is written `%2F`:
 `Inputs%2FOutputs/AI_Handler`. Listings return paths in this form. The unescaped form
 `Inputs/Outputs/AI_Handler` is accepted as well; if both a group `Inputs/Outputs` and a group
 `Inputs` with a subgroup `Outputs` exist, the unescaped form means the nested one.
 
-## Resources
+A device is found by its path from `get_devices`, by its Openness name, or by the name of its CPU
+as the project tree shows it (`PLC_1`). A name that fits several devices is rejected with the
+candidate paths.
 
-- [TIA Portal Openness API Documentation](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows)
-- [TIA Portal Openness API Overview](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api)
-- [TIA Portal Openness API for automation of engineering workflows](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows)
-- [TIA Portal Openness API for automation of engineering workflows - Export/Import Documentation](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import)
+## Hardware and network
 
-## Requirements
+- `hw_search_catalog` finds the type identifiers that `hw_create_device` and `hw_plug_module` need,
+  by article number or product name.
+- `hw_create_device` with an `OrderNumber:` or `GSD:` identifier creates a station around that head
+  module. With a `System:Device.` identifier it creates an empty station: add the rack with
+  `hw_plug_module` and an empty `parentItemName`, then plug the head module into the rack.
+- A PROFINET IO system is built in a fixed order, and each step refuses to run before the previous
+  one: `net_connect_subnet` (PLC interface) → `net_create_io_system` → `net_connect_subnet` (IO
+  device interface, same subnet) → `net_connect_to_io_system`.
 
-- __.net Framework 4.8__ installed
-- __Siemens TIA Portal V21__ installed and running on your machine
-- Check if under `Environment Variables/User variable for user <name>` the variable `TiaPortalLocation` is set to `C:\Program Files\Siemens\Automation\Portal V21`
-- User must be in Windows User Group `Siemens TIA Openness`
+## Downloading to a PLC
 
-### Diagnose the environment
+1. Start the PLC or the PLCSIM instance yourself and make sure its address matches the project.
+2. `get_download_targets` lists the targets as `mode / PC interface / target interface`.
+3. `download_to_plc` takes those three values plus `hardware` and `software`.
 
-Run the server with `--doctor` to check all of the above without starting the MCP server:
+The CPU is neither stopped nor started unless you pass `stopPlc` / `startPlc`; a download that needs
+a stop is refused with that explanation. The response lists every configuration step TIA Portal
+raised, the answer given to it, and the messages of the result. A step the server has no answer for
+keeps TIA Portal's own preset and is listed as such; pass `selections` (`StepType=Option`) to decide
+differently. There is no preview: a call loads.
 
-```text
-> TiaMcpServer.exe --doctor
-Diagnose:
-├─ Connected = False
-├─ Project: No project open
-├─ Active Version: V21
-├─ Installed TIA Portal versions:
-│  └─ V21: C:\Program Files\Siemens\Automation\Portal V21
-│     ├─ Engineering: OK
-│     └─ Portal:      OK
-├─ User in 'Siemens TIA Openness' user group: True
-└─ Write mode (--allow-write): disabled, read-only tools only
-```
+## TIA Portal versions
 
-The same report is available to MCP clients through the `doctor` tool, which additionally returns
-the findings as structured content. Both are read-only: they never connect to TIA Portal, open a
-project, or change user group membership.
+- **V21** is the default. Earlier versions need `--tia-major-version`.
+- Source documents (`.s7dcl` / `.s7res`) for blocks need TIA Portal V20 or newer.
+- Source documents for PLC data types need **V21** or newer: Openness only added
+  `PlcType.ExportAsDocuments` and `PlcTypeComposition.ImportFromDocuments` in V21.
+- The verification of this server was done on V21. `plc_create_fb` for LAD, FBD and STL uses a
+  SimaticML template taken from a V21 export and has not been tried on earlier versions.
 
-## TIA-Portal Versions
-
-- __V21__ is the default version.
-- Previous versions are also supported, but must use the `--tia-major-version` argument to specify the version.
-- Export as documents (.s7dcl/.s7res) via `export_objects` requires TIA Portal V20 or newer.
-- Import from documents (.s7dcl/.s7res) via `import_objects` also requires TIA Portal V20 or newer.
-- The same for PLC data types - `export_objects`,
-  `import_objects` - requires TIA Portal **V21** or newer:
-  Openness only added `PlcType.ExportAsDocuments` and `PlcTypeComposition.ImportFromDocuments`
-  in V21.
-
-## SIMATIC Source Documents
+## SIMATIC source documents
 
 A source document is the readable, git-diffable form of an object: `<Name>.s7dcl` holds the
-declaration and body as SCL/LAD/STL text, the optional `<Name>.s7res` holds comments and
-language resources. Every other export in this server writes SimaticML XML instead, which
-diffs poorly.
+declaration and body as SCL/LAD/STL text, the optional `<Name>.s7res` holds comments and language
+resources. The `xml` format of `export_objects` writes SimaticML XML instead, which diffs poorly.
 
-The file names come from TIA Portal, not from this server: an export response lists the files
-that were actually written, and a batch import discovers a document set by base name rather
-than assuming one extension. Tag tables and watch tables have no document API in Openness V21
-and remain XML-only.
+The file names come from TIA Portal, not from this server: an export response lists the files that
+were actually written. Tag tables and watch tables have no document API in Openness V21 and remain
+XML-only.
 
-With `preservePath` the export mirrors the project tree below the system folder - `Program
-blocks` for blocks, `PLC data types` for types - using the folder name as TIA Portal reports it
-in the current interface language. `import_objects`
-accept that folder name back as a leading segment of `groupPath`, so an export can be fed
-straight back in.
+A PLC data type name is unique across the whole PLC, not just within its group. Importing a name
+that already exists into a *different* group therefore fails even when overwriting; target the
+group the type already lives in.
 
-A PLC data type name is unique across the whole PLC, not just within its group. Importing a
-name that already exists into a *different* group therefore fails with "an object with the name
-... already exists in the plc", even with `importOption: Override`; point `groupPath` at the
-group the type already lives in to replace it.
+## Known limitations
 
-## Known Limitations
+- Importing ladder (LAD) blocks from source documents requires the companion `.s7res` file to
+  contain en-US entries for all items; otherwise the import may fail. This is a limitation of TIA
+  Portal Openness (observed 2025-09-02).
+- **Watch table entries** cannot be created or deleted through this server yet.
+- **A subnet cannot be deleted** through this server; `net_connect_subnet` creates one when needed.
+- **HMI tools** were verified on WinCC Unified only.
 
-- As of 2025-09-02: Importing Ladder (LAD) blocks from SIMATIC SD documents requires the companion `.s7res` file to contain en-US tags for all items; otherwise import may fail. This is a known limitation/bug in TIA Portal Openness.
- - `export_objects` requires a fully qualified `blockPath` like `Group/Subgroup/Name`. If only a name is provided, the tool fails with an error result that may include suggestions for likely full paths.
+Limits imposed by the Openness API itself - no input makes these work:
 
-### Limits imposed by the Openness API itself
-
-These are not gaps in this server - the underlying API offers no operation for them.
-
-- __No move or copy for blocks and types.__ `plc_copy_block`, `plc_move_block`, `plc_copy_type`
-  and `plc_move_type` are composed from export and import. What follows from that:
+- **No move or copy for blocks and types.** `plc_copy_block`, `plc_move_block`, `plc_copy_type` and
+  `plc_move_type` are composed from export and import. What follows from that:
   - The object must be consistent, because TIA Portal refuses to export an inconsistent one.
     Compile first.
   - A block name, a block number and a type name are unique within a PLC. A copy inside the same
     PLC therefore needs `newName`, and a copied block gets the first free number of its kind. To
     keep the name, copy into another PLC with `targetSoftwarePath`.
-  - A move exports the object, deletes the original and imports it into the target group; name
-    and number are kept. If the import fails, the object is imported back into its original
-    group. Blocks that use a moved block (its instance DBs, its callers) are inconsistent
-    afterwards until the PLC is compiled again.
-- __No generic "create block".__ `PlcBlockComposition.CreateFB` only creates ProDiag blocks.
-  `plc_create_fb` therefore creates an SCL block from a one-block source text and a LAD, FBD or
-  STL block by importing a minimal SimaticML document; other languages (GRAPH, ...) are refused.
-  A ProDiag block brings its own instance DB and the `ProDiagOB` with it. Every other kind of
-  block arrives through `plc_create_scl_block` or `import_objects`.
-- __Block numbers.__ Openness takes a block number literally even when auto numbering is requested
-  - an instance DB created with number 0 really becomes `DB0`, which does not compile. The server
-  picks the first free number itself and reports it in the response.
-- __Read-only objects.__ System constants cannot be created or changed, the force table cannot
-  be created or deleted (the system owns one per PLC), the default tag table cannot be deleted,
-  and the system groups (`Program blocks`, `PLC data types`, `PLC tags`, ...) cannot be renamed
-  or deleted. These all fail with a `NotSupported` message rather than an opaque Openness error.
-- __No cross references__ for watch tables, force tables or external sources; `plc_get_cross_references`
-  reports `NotSupported` for them.
-- __Watch table entries__ cannot be created or deleted through this server yet. The Openness
-  composition holding them exposes only a comment-row creator, so adding a real entry needs an
-  untyped creation call whose required attribute names must first be read from the live API.
-- __Safety programs.__ F-blocks and safety tags reject most edits, sometimes requiring the safety
-  password. The server does not pre-guess Siemens' rules: the underlying error is passed through
-  with its original message.
-- __Know-how protected__ blocks and types are rejected before any edit, with a message asking you
+  - A move exports the object, deletes the original and imports it into the target group; name and
+    number are kept. If the import fails, the object is imported back into its original group.
+    Blocks that use a moved block (its instance DBs, its callers) are inconsistent afterwards until
+    the PLC is compiled again.
+- **No generic "create block".** `PlcBlockComposition.CreateFB` only creates ProDiag blocks.
+  `plc_create_fb` therefore creates an SCL block from a one-block source text and a LAD, FBD or STL
+  block by importing a minimal SimaticML document; other languages (GRAPH, ...) are refused. A
+  ProDiag block brings its own instance DB and the `ProDiagOB` with it. Every other kind of block
+  arrives through `plc_create_scl_block` or `import_objects`.
+- **Block numbers.** Openness takes a block number literally even when auto numbering is
+  requested - an instance DB created with number 0 really becomes `DB0`, which does not compile.
+  The server picks the first free number itself and reports it in the response.
+- **Read-only objects.** System constants cannot be created or changed, the force table cannot be
+  created or deleted, the default tag table cannot be deleted, and the system groups
+  (`Program blocks`, `PLC data types`, `PLC tags`, ...) cannot be renamed or deleted. These fail
+  with a `NotSupported` message rather than an opaque Openness error.
+- **No cross references** for watch tables, force tables or external sources.
+- **Safety programs.** F-blocks and safety tags reject most edits, sometimes requiring the safety
+  password. The underlying error is passed through with its original message.
+- **Know-how protected** blocks and types are rejected before any edit, with a message asking you
   to remove the protection in TIA Portal first.
+- **No download preview.** The configuration steps of a download can only be seen by answering
+  them, and answering them is what starts the load.
 
-## Testing
+## Error handling
 
-- See `tests/TiaMcpServer.Test/README.md` for environment prerequisites and test asset setup.
-- Standard command: `dotnet test` (run from the repo root).
-- Test execution policy: offer to run tests, but only execute after explicit user confirmation. Details in `AGENTS.md`.
+- A failed tool returns a result with `isError: true` and a message the model can act on, not a
+  JSON-RPC error. The message carries the reason reported by TIA Portal, an error code and the
+  paths the call was about, for example
+  `CreateFB failed: <Openness text> [code: CreateFailed; softwarePath: 'PLC_1'; groupPath: 'Tests']`.
+- Error codes: `NotFound`, `InvalidParams`, `InvalidState`, `ExportFailed`, `ImportFailed`,
+  `CreateFailed`, `DeleteFailed`, `RenameFailed`, `NotSupported`.
+- TIA Portal never exports inconsistent blocks or types. A single export fails with a message to
+  compile first; a bulk export skips inconsistent items and lists them.
+- All Openness calls are serialized behind one lock: Openness objects are not thread-safe and the
+  MCP SDK may dispatch tool calls concurrently.
 
-## Contributing
+The design is described in [`docs/error-model.md`](docs/error-model.md).
 
-- See `agents.md` for guidance on working with agentic assistants and the test execution policy (offer to run tests only with explicit user confirmation).
+## MCP protocol and transports
 
-## Error Handling
+- Built on the [ModelContextProtocol](https://www.nuget.org/packages/ModelContextProtocol) .NET
+  SDK **2.2.0**. Protocol revisions negotiated during `initialize`: `2024-11-05`, `2025-03-26`,
+  `2025-06-18`, `2025-11-25`.
+- Every tool advertises a human-readable `title` and behaviour annotations (`readOnlyHint`,
+  `destructiveHint`, `idempotentHint`, `openWorldHint`). Most tools publish an `outputSchema` and
+  return `structuredContent`.
+- 78 prompts are registered alongside the tools.
+- Transport: **stdio** only. For stdio, logs go to stderr so they do not corrupt JSON-RPC.
+- Streamable HTTP is not available from this process: the SDK ships it for .NET 8+, while this
+  server targets `net48`, which TIA Openness requires. A separate proxy process would be needed.
 
-- The Portal layer throws `PortalException` with a short message and `PortalErrorCode`
-  (`NotFound`, `InvalidParams`, `InvalidState`, `ExportFailed`, `ImportFailed`, `CreateFailed`,
-  `DeleteFailed`, `RenameFailed`, `NotSupported`, `WriteDisabled`), and attaches `softwarePath`, `blockPath`, `exportPath` in `Exception.Data` while preserving `InnerException` on export failures.
-- The MCP layer rethrows these as `McpException`. Since SDK 2.x, an `McpException` thrown from a tool is returned to the client as a `CallToolResult` with `isError: true` and the message as text content, rather than as a JSON-RPC error, so the model can read the reason and self-correct. For `ExportFailed` the message includes a concise reason from the underlying error; for `NotFound` it may suggest likely full block paths if a bare name was provided.
-- Consistency required: TIA Portal never exports inconsistent blocks/types. Single export returns `InvalidParams` with a message to compile first. Bulk export skips inconsistent items and returns them in an `Inconsistent` list alongside `Items`.
-- Standardization: Exception context metadata is attached in a single catch per portal method right before rethrow, not at inline throw sites. See `docs/error-model.md`.
-- Since 0.2.0 this is implemented once, in the `Operation.Run` helper, which every portal method
-  added for tags, watch tables, external sources, cross references and the write operations
-  routes through. The older export/import methods still carry their hand-written equivalent of
-  the same block; migrating them is tracked in `TODO.md`.
-- `Operation.Run` also serializes all Openness calls behind a lock. Openness objects are not
-  thread-safe and the MCP SDK may dispatch tool calls concurrently; with write tools enabled an
-  unsynchronized race could corrupt project state rather than merely return stale data.
+## Building and testing
 
-## MCP Protocol
+```powershell
+dotnet build TiaMcpServer.sln -c Release
+```
 
-- Built on the [ModelContextProtocol](https://www.nuget.org/packages/ModelContextProtocol) .NET SDK **2.2.0**.
-- Protocol revisions negotiated during `initialize`: `2024-11-05`, `2025-03-26`, `2025-06-18`, `2025-11-25` (the SDK picks the highest the client also supports).
-- Every tool advertises a human-readable `title` and behaviour annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`).
-- 27 read tools and all 37 write tools publish an `outputSchema` and return `structuredContent`.
-- Long-running export/import tools report progress via `notifications/progress` when the client supplies a `progressToken`.
-- Tool failures are returned as tool results with `isError: true` (not JSON-RPC errors), so the model can read the message and retry.
+The result is in `src\TiaMcpServer\bin\Release\net48`.
 
-## Transports
+Tests that need no TIA Portal (tool registration, error texts, paths, block transfer, download
+arguments, command line):
 
-- Supported today: `stdio`
-  - Program wires `AddMcpServer().WithStdioServerTransport()`.
-  - For stdio, logs must go to stderr to avoid corrupting JSON-RPC.
-- Available via SDK: `stream` (custom streams)
-  - The SDK exposes `WithStreamServerTransport(Stream input, Stream output)` which can be used to host over TCP sockets or other streams.
-  - Not wired in this repo yet.
-- HTTP/Streamable HTTP: not implemented yet
-  - `ModelContextProtocol` 2.2.0 ships its Streamable HTTP server transport in `ModelContextProtocol.AspNetCore`, which targets .NET 8+.
-  - This server targets `net48` (required by TIA Openness), so Streamable HTTP cannot be hosted from this process.
-  - A separate .NET 8+ proxy process would be required to expose this server over HTTP.
+```powershell
+dotnet test tests\TiaMcpServer.Test\TiaMcpServer.Test.csproj -c Release --filter "FullyQualifiedName~Test7|FullyQualifiedName~Test8|FullyQualifiedName~Test9|FullyQualifiedName~Test10|FullyQualifiedName~Test11|FullyQualifiedName~Test12"
+```
 
-## Copilot Chat
+The remaining tests need a running TIA Portal and the project assets described in
+[`tests/TiaMcpServer.Test/README.md`](tests/TiaMcpServer.Test/README.md).
 
-- Example mcp.json, when using VS Code extension [TIA-Portal MCP-Server](https://marketplace.visualstudio.com/items?itemName=JHeilingbrunner.vscode-tiaportal-mcp) and TIA-Portal V18
-  ```json
-  {
-      "servers": {
-          "vscode-tiaportal-mcp": {
-          "command": "c:\\Users\\<user>\\.vscode\\extensions\\jheilingbrunner.vscode-tiaportal-mcp-<version>\\srv\\net48\\TiaMcpServer.exe",
-          "args": [
-              "--tia-major-version",
-              "18"
-          ],
-          "env": {}
-          }
-      }
-  }
-  ```
+If you work on this repository with an AI assistant, read [`AGENTS.md`](AGENTS.md) first: tests and
+anything that touches TIA Portal are run only after explicit confirmation.
 
-## Claude Desktop
+## Project documents
 
-- Create/Edit to add/remove server to `C:\Users\<user>\AppData\Roaming\Claude\claude_desktop_config.json`:
+| Document | Content |
+| -------- | ------- |
+| [`CHANGELOG.md`](CHANGELOG.md) | What changed in each version |
+| [`docs/tools-list.txt`](docs/tools-list.txt) | The registered tool names |
+| [`Implemented_Tools.md`](Implemented_Tools.md) | One-line description of each tool (Russian) |
+| [`docs/error-model.md`](docs/error-model.md) | How errors are raised and reported |
+| [`docs/fix-plan-test-report-2026-10-05.md`](docs/fix-plan-test-report-2026-10-05.md) | Open work and proposals (Russian) |
+| [`TODO.md`](TODO.md) | Longer-term task list (Russian) |
+| [`Install/INSTALL.md`](Install/INSTALL.md) | Installation and client integration |
 
-  ```json
-  {
-    "mcpServers": {
-      "vscode-tiaportal-mcp": {
-        "command": "<path-to>\\TiaMcpServer.exe",
-        "args": [],
-        "env": {}
-      }
-    }
-  }
-  ```
+## Resources
+
+- [TIA Portal Openness API documentation](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows)
+- [Openness export/import documentation](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import)
+
+## Origin and license
+
+This project started as a fork of
+[heilingbrunner/tiaportal-mcp](https://github.com/heilingbrunner/tiaportal-mcp) by J. Heilingbrunner
+and is now developed independently. Licensed under the MIT License, see
+[`LICENSE.txt`](LICENSE.txt).

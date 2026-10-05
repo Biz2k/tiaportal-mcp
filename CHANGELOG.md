@@ -95,6 +95,9 @@
   since then (hardware, network, HMI, download) have not been written.
 - Assembly version is 0.4.0 (it was still 0.1.0).
 - `README.md` and `Implemented_Tools.md` describe the current tool names, flags and write mode.
+- `README.md` is restructured around installation, a quick start and the tool areas, and no longer
+  points at the VS Code extension of the original project. `README_ru.md` is its Russian
+  counterpart; each links to the other at the top.
 ### Added
 
 - __`hw_search_catalog`__: search the installed hardware catalog by article number or name and get the

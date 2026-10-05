@@ -1,0 +1,352 @@
+# MCP-сервер для TIA Portal
+
+[English](README.md) | **Русский**
+
+> Документ доступен на двух языках. Переключить язык можно по ссылкам выше.
+
+MCP-сервер, через который ИИ-ассистент работает с Siemens TIA Portal по интерфейсу Openness:
+читает проект, изменяет программу ПЛК, оборудование и HMI, выполняет загрузку в ПЛК.
+
+## Возможности
+
+- Подключение к запущенному TIA Portal, открытие проекта или локальной сессии
+  многопользовательского проекта
+- Чтение программы ПЛК: блоки, типы данных, теги и константы, таблицы наблюдения и
+  принудительных значений, внешние исходные файлы, перекрёстные ссылки, исходный текст блоков
+  и типов
+- Создание, переименование, удаление, копирование, перемещение, импорт и компиляция объектов ПЛК
+- Чтение аппаратной топологии, создание устройств, установка модулей, построение подсетей и
+  систем PROFINET IO
+- Чтение и изменение экранов, элементов экранов, тегов и фейсплейтов WinCC Unified / WinCC
+- Загрузка конфигурации оборудования и программы в ПЛК или симулятор
+
+Запуск PLCSIM и управление им намеренно не входят в этот сервер: для этого есть отдельный
+MCP-сервер [plcsim-mcp](https://github.com/Biz2k/plcsim-mcp). Инструмент `download_to_plc`
+рассчитывает, что цель загрузки уже запущена.
+
+## Требования
+
+- Windows с **.NET Framework 4.8**
+- **Siemens TIA Portal V21**, установленный и **запущенный** (более ранние версии выбираются
+  параметром `--tia-major-version`)
+- Пользователь Windows входит в группу `Siemens TIA Openness`
+- Пользовательская переменная среды `TiaPortalLocation` указывает на каталог установки, например
+  `C:\Program Files\Siemens\Automation\Portal V21`
+
+Проверить всё это можно, не запуская MCP-сервер:
+
+```text
+> TiaMcpServer.exe --doctor
+Diagnose:
+├─ Connected = False
+├─ Project: No project open
+├─ Active Version: V21
+├─ Installed TIA Portal versions:
+│  └─ V21: C:\Program Files\Siemens\Automation\Portal V21
+│     ├─ Engineering: OK
+│     └─ Portal:      OK
+├─ User in 'Siemens TIA Openness' user group: True
+└─ Write mode: enabled
+```
+
+Тот же отчёт клиент MCP получает инструментом `doctor`. Оба варианта только читают: они не
+подключаются к TIA Portal, не открывают проект и не меняют членство в группах.
+
+## Установка
+
+Готовая сборка лежит в [`Install/TiaMcpServer`](Install/TiaMcpServer). Скопируйте папку в любое
+место и укажите клиенту MCP путь к `TiaMcpServer.exe`. Пошаговые инструкции для Claude Code,
+Claude Desktop и клиентов на базе VS Code — в [`Install/INSTALL_RU.md`](Install/INSTALL_RU.md)
+([на английском](Install/INSTALL.md)).
+
+Claude Code:
+
+```bash
+claude mcp add tia-mcp-server -- C:\path\to\TiaMcpServer\TiaMcpServer.exe
+```
+
+Клиенты с настройкой через JSON (в Claude Desktop раздел называется `mcpServers`, в VS Code —
+`servers`):
+
+```json
+{
+  "mcpServers": {
+    "tia-mcp-server": {
+      "command": "C:\\path\\to\\TiaMcpServer\\TiaMcpServer.exe",
+      "args": []
+    }
+  }
+}
+```
+
+Когда новая сборка впервые подключается к TIA Portal, он спрашивает, разрешить ли доступ
+Openness. Подтвердите запрос в окне TIA Portal.
+
+## Быстрый старт
+
+1. Запустите TIA Portal. Сервер подключается к работающему экземпляру и сам его не запускает.
+2. Вызовите `open_tia_project` с абсолютным путём к проекту `.apXX` или сессии `.alsXX`.
+   Инструмент подключится, откроет проект и вернёт пути к программам ПЛК.
+3. Осмотритесь с помощью `get_project_tree`, `plc_get_software_tree` и `get_devices`.
+4. Читайте и изменяйте объекты инструментами `plc_*`, `hw_*`, `net_*` и `hmi_*`.
+5. Сохраните изменения вызовом `save_project`. До этого они существуют только в памяти.
+
+## Параметры командной строки
+
+| Параметр                  | Назначение                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| `--tia-major-version <n>` | Версия TIA Portal, с которой работает сервер. По умолчанию `21`.                |
+| `--read-only`             | Не регистрировать инструменты, изменяющие проект. См. ниже.                     |
+| `--logging <1\|2\|3>`     | `1` — stderr, `2` — отладочный вывод, `3` — журнал событий Windows. Без параметра журнал не ведётся. |
+| `--doctor`                | Вывести отчёт об окружении и завершиться, не запуская MCP-сервер.               |
+| `--debug-tools`           | Зарегистрировать инструменты разработки сервера (`hmi_debug_*`, `hmi_test_faceplate`). |
+| `--allow-write`           | Принимается для старых конфигураций; запись включена по умолчанию, параметр ничего не меняет. |
+
+## Режим записи
+
+Инструменты, изменяющие проект, доступны по умолчанию. Чтобы их убрать, запустите сервер с
+параметром `--read-only`.
+
+- С `--read-only` 58 изменяющих инструментов **не регистрируются вообще** и не появляются в
+  `tools/list`. Модель не может вызвать то, чего не видит.
+- Без параметра они регистрируются с пометкой `destructiveHint: true`, так что клиент может
+  запрашивать подтверждение перед каждым вызовом.
+- `get_state` и отчёт `--doctor` показывают `allowWrite`: клиент может понять, что инструментов
+  нет из-за настройки, а не из-за версии.
+- Операции записи меняют проект **только в памяти**. Об этом говорит каждый ответ на запись;
+  изменения сохраняет `save_project` (для локальной сессии он сохраняет сессию).
+- Каждая запись выполняется в транзакции TIA Portal, если он её предоставляет: неудачная запись
+  откатывается, удачная становится одной записью в истории отмены.
+
+`export_objects` и `plc_generate_sources` доступны всегда: они только пишут файлы на машине, где
+работает сервер, и не изменяют проект.
+
+## Инструменты
+
+Точный список имён инструментов — в [`docs/tools-list.txt`](docs/tools-list.txt); тест падает,
+если зарегистрированные инструменты расходятся с этим файлом. По умолчанию регистрируется
+115 инструментов. Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
+
+Доступны всегда (57):
+
+| Область                          | Инструменты |
+| -------------------------------- | ----------- |
+| Подключение и состояние          | `connect`, `disconnect`, `get_state`, `doctor` |
+| Проект и сессия                  | `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
+| Структура проекта                | `get_project_tree`, `get_devices`, `hw_get_device_info`, `get_device_item_info`, `get_hardware_topology`, `hw_search_catalog` |
+| Программа ПЛК                    | `get_plc_summary`, `plc_get_software_info`, `plc_get_software_tree`, `plc_compile_software` |
+| Блоки                            | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `get_block_interface`, `plc_get_block_source` |
+| Типы данных                      | `plc_get_types`, `plc_get_type_info`, `plc_get_type_source` |
+| Теги и константы                 | `plc_get_tag_tables`, `plc_get_tag_table_info`, `plc_get_tags`, `plc_get_tag_info`, `plc_get_constants` |
+| Таблицы наблюдения               | `plc_get_watch_tables`, `plc_get_watch_table_info`, `plc_get_force_tables` |
+| Внешние исходные файлы           | `plc_get_external_sources`, `plc_get_external_source_info`, `plc_generate_sources` |
+| Поиск и ссылки                   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
+| Экспорт и предпросмотр           | `export_objects`, `preview_import` |
+| Библиотеки                       | `get_libraries`, `open_global_library`, `get_master_copies` |
+| HMI                              | `hmi_get_screens`, `hmi_get_screen_items`, `hmi_get_screen_item_properties`, `hmi_get_tags`, `hmi_get_connections`, `hmi_get_library_types`, `hmi_get_library_faceplates` |
+| Загрузка                         | `get_download_targets` |
+
+Не регистрируются с `--read-only` (58):
+
+| Область                          | Инструменты |
+| -------------------------------- | ----------- |
+| Импорт                           | `import_objects`, `instantiate_master_copy` |
+| Группы блоков и типов            | `plc_create_block_group`, `plc_delete_block_group`, `plc_create_type_group`, `plc_delete_type_group` |
+| Блоки                            | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block` |
+| Типы данных                      | `plc_rename_type`, `plc_delete_type`, `plc_copy_type`, `plc_move_type` |
+| Таблицы тегов                    | `plc_create_tag_table`, `plc_rename_tag_table`, `plc_delete_tag_table`, `plc_create_tag_table_group`, `plc_delete_tag_table_group` |
+| Теги и константы                 | `plc_create_tag`, `plc_update_tag`, `plc_delete_tag`, `plc_create_user_constant`, `plc_update_user_constant`, `plc_delete_user_constant`, `plc_manage_tag_table_entries` |
+| Таблицы наблюдения               | `plc_create_watch_table`, `plc_rename_watch_table`, `plc_delete_watch_table`, `plc_create_watch_table_group`, `plc_delete_watch_table_group` |
+| Внешние исходные файлы           | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
+| Оборудование                     | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
+| Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
+| HMI                              | `hmi_create_screen`, `hmi_delete_screen`, `hmi_create_screen_item`, `hmi_delete_screen_item`, `hmi_configure_screen_item`, `hmi_set_screen_item_property`, `hmi_set_unified_screen_item_event`, `hmi_configure_unified_trend_control`, `hmi_configure_unified_trend_companion`, `hmi_create_faceplate_instance`, `hmi_manage_unified_faceplate` |
+| Загрузка                         | `download_to_plc` |
+
+`plc_get_software_tree` принимает параметр `sections` — любое подмножество
+`blocks,types,tags,watch,sources` через запятую, по умолчанию `all`, — чтобы ответ оставался
+небольшим на крупном ПЛК. С той же целью `plc_get_cross_references` принимает `maxDepth` (1–3,
+по умолчанию 1).
+
+## Пути
+
+Пути указываются **от корня области**: `1_Tests/FC_Block_1`, а не
+`Program blocks/1_Tests/FC_Block_1`. Узнать их можно через `get_project_tree` и
+`plc_get_software_tree`; `plc_resolve_object_path` превращает имя объекта в путь.
+
+TIA Portal допускает `/` внутри имени (группа блоков `Inputs/Outputs`, станция
+`S7-1500/ET200MP station_1`). В пути такая косая черта записывается как `%2F`:
+`Inputs%2FOutputs/AI_Handler`. В этой форме пути возвращают все листинги. Неэкранированная форма
+`Inputs/Outputs/AI_Handler` тоже принимается; если существуют и группа `Inputs/Outputs`, и группа
+`Inputs` с подгруппой `Outputs`, неэкранированная форма означает вложенную.
+
+Устройство находится по пути из `get_devices`, по имени в Openness или по имени его CPU, как оно
+показано в дереве проекта (`PLC_1`). Если имя подходит нескольким устройствам, вызов отклоняется
+со списком подходящих путей.
+
+## Оборудование и сеть
+
+- `hw_search_catalog` ищет по артикулу или названию идентификаторы типов, которые нужны
+  `hw_create_device` и `hw_plug_module`.
+- `hw_create_device` с идентификатором `OrderNumber:` или `GSD:` создаёт станцию вокруг этого
+  головного модуля. С идентификатором `System:Device.` создаётся пустая станция: добавьте стойку
+  через `hw_plug_module` с пустым `parentItemName`, затем установите головной модуль в стойку.
+- Система PROFINET IO строится в фиксированном порядке, и каждый шаг отказывается выполняться
+  раньше предыдущего: `net_connect_subnet` (интерфейс ПЛК) → `net_create_io_system` →
+  `net_connect_subnet` (интерфейс IO-устройства, та же подсеть) → `net_connect_to_io_system`.
+
+## Загрузка в ПЛК
+
+1. Запустите ПЛК или экземпляр PLCSIM сами и убедитесь, что его адрес совпадает с проектом.
+2. `get_download_targets` перечисляет цели в виде `режим / интерфейс ПК / целевой интерфейс`.
+3. `download_to_plc` принимает эти три значения, а также `hardware` и `software`.
+
+CPU не останавливается и не запускается, пока вы не передадите `stopPlc` / `startPlc`; загрузка,
+которой нужна остановка, отклоняется с этим объяснением. В ответе перечислены все шаги
+конфигурации, которые задал TIA Portal, данный на каждый ответ и сообщения результата. Шаг, для
+которого у сервера нет ответа, остаётся с предустановкой TIA Portal и помечается в ответе; чтобы
+решить иначе, передайте `selections` (`ТипШага=Вариант`). Предварительного просмотра нет: вызов
+выполняет загрузку.
+
+## Версии TIA Portal
+
+- По умолчанию используется **V21**. Для более ранних версий нужен параметр `--tia-major-version`.
+- Исходные документы (`.s7dcl` / `.s7res`) для блоков требуют TIA Portal V20 или новее.
+- Исходные документы для типов данных ПЛК требуют **V21** или новее: методы
+  `PlcType.ExportAsDocuments` и `PlcTypeComposition.ImportFromDocuments` появились в Openness
+  только в V21.
+- Сервер проверялся на V21. `plc_create_fb` для LAD, FBD и STL использует шаблон SimaticML,
+  взятый из экспорта V21, и на более ранних версиях не проверялся.
+
+## Исходные документы SIMATIC
+
+Исходный документ — это читаемая форма объекта, пригодная для сравнения в git: `<Имя>.s7dcl`
+содержит объявление и тело в виде текста SCL/LAD/STL, необязательный `<Имя>.s7res` — комментарии
+и языковые ресурсы. Формат `xml` инструмента `export_objects` пишет вместо этого XML SimaticML,
+который сравнивать неудобно.
+
+Имена файлов задаёт TIA Portal, а не сервер: ответ на экспорт перечисляет файлы, которые были
+записаны на самом деле. У таблиц тегов и таблиц наблюдения в Openness V21 нет интерфейса
+документов, для них остаётся только XML.
+
+Имя типа данных ПЛК уникально во всём ПЛК, а не только в своей группе. Поэтому импорт уже
+существующего имени в *другую* группу завершается ошибкой даже с перезаписью; указывайте группу,
+в которой тип уже находится.
+
+## Известные ограничения
+
+- Импорт блоков LAD из исходных документов требует, чтобы файл `.s7res` содержал записи en-US для
+  всех элементов; иначе импорт может не пройти. Это ограничение TIA Portal Openness (замечено
+  02.09.2025).
+- **Записи таблиц наблюдения** пока нельзя создавать и удалять через сервер.
+- **Подсеть нельзя удалить** через сервер; `net_connect_subnet` создаёт её при необходимости.
+- **Инструменты HMI** проверялись только на WinCC Unified.
+
+Ограничения самого интерфейса Openness — их не обойти никакими параметрами:
+
+- **Нет перемещения и копирования блоков и типов.** `plc_copy_block`, `plc_move_block`,
+  `plc_copy_type` и `plc_move_type` собраны из экспорта и импорта. Отсюда следует:
+  - Объект должен быть согласованным: несогласованный TIA Portal не экспортирует. Сначала
+    скомпилируйте.
+  - Имя блока, номер блока и имя типа уникальны в пределах ПЛК. Поэтому копии внутри того же ПЛК
+    нужен `newName`, а скопированный блок получает первый свободный номер своего вида. Чтобы
+    сохранить имя, копируйте в другой ПЛК через `targetSoftwarePath`.
+  - Перемещение экспортирует объект, удаляет оригинал и импортирует его в целевую группу; имя и
+    номер сохраняются. Если импорт не удался, объект импортируется обратно в исходную группу.
+    Блоки, использующие перемещённый (его экземплярные DB, вызывающие блоки), становятся
+    несогласованными до следующей компиляции ПЛК.
+- **Нет универсального «создать блок».** `PlcBlockComposition.CreateFB` создаёт только блоки
+  ProDiag. Поэтому `plc_create_fb` создаёт блок SCL из текста источника с одним блоком, а блоки
+  LAD, FBD и STL — импортом минимального документа SimaticML; остальные языки (GRAPH и другие)
+  отклоняются. Блок ProDiag приносит с собой экземплярный DB и `ProDiagOB`. Блоки всех прочих
+  видов создаются через `plc_create_scl_block` или `import_objects`.
+- **Номера блоков.** Openness принимает номер блока буквально даже при автонумерации:
+  экземплярный DB, созданный с номером 0, действительно становится `DB0` и не компилируется.
+  Сервер сам подбирает первый свободный номер и сообщает его в ответе.
+- **Объекты только для чтения.** Системные константы нельзя создавать и изменять, таблицу
+  принудительных значений — создавать и удалять, таблицу тегов по умолчанию — удалять, а
+  системные группы (`Program blocks`, `PLC data types`, `PLC tags` и другие) — переименовывать и
+  удалять. В этих случаях возвращается сообщение `NotSupported`, а не невнятная ошибка Openness.
+- **Нет перекрёстных ссылок** для таблиц наблюдения, таблиц принудительных значений и внешних
+  исходных файлов.
+- **Программы безопасности.** F-блоки и теги безопасности отклоняют большинство изменений, иногда
+  требуя пароль безопасности. Исходная ошибка передаётся с её собственным текстом.
+- **Блоки и типы с защитой know-how** отклоняются до любого изменения, с просьбой сначала снять
+  защиту в TIA Portal.
+- **Нет предпросмотра загрузки.** Шаги конфигурации загрузки можно увидеть, только ответив на
+  них, а ответ и запускает загрузку.
+
+## Обработка ошибок
+
+- Неудавшийся инструмент возвращает результат с `isError: true` и сообщением, по которому модель
+  может действовать, а не ошибку JSON-RPC. Сообщение содержит причину от TIA Portal, код ошибки и
+  пути, о которых шла речь, например
+  `CreateFB failed: <текст Openness> [code: CreateFailed; softwarePath: 'PLC_1'; groupPath: 'Tests']`.
+- Коды ошибок: `NotFound`, `InvalidParams`, `InvalidState`, `ExportFailed`, `ImportFailed`,
+  `CreateFailed`, `DeleteFailed`, `RenameFailed`, `NotSupported`.
+- TIA Portal не экспортирует несогласованные блоки и типы. Одиночный экспорт завершается
+  сообщением о необходимости компиляции; пакетный пропускает несогласованные объекты и
+  перечисляет их.
+- Все вызовы Openness выполняются под одной блокировкой: объекты Openness не потокобезопасны, а
+  SDK MCP может запускать вызовы инструментов параллельно.
+
+Устройство модели ошибок описано в [`docs/error-model.md`](docs/error-model.md) (на английском).
+
+## Протокол MCP и транспорт
+
+- Сервер построен на .NET SDK
+  [ModelContextProtocol](https://www.nuget.org/packages/ModelContextProtocol) **2.2.0**. Версии
+  протокола, согласуемые при `initialize`: `2024-11-05`, `2025-03-26`, `2025-06-18`, `2025-11-25`.
+- У каждого инструмента есть читаемый `title` и аннотации поведения (`readOnlyHint`,
+  `destructiveHint`, `idempotentHint`, `openWorldHint`). Большинство инструментов публикуют
+  `outputSchema` и возвращают `structuredContent`.
+- Вместе с инструментами зарегистрировано 78 подсказок (prompts).
+- Транспорт — только **stdio**. Журнал при этом пишется в stderr, чтобы не повредить JSON-RPC.
+- Streamable HTTP из этого процесса недоступен: SDK поставляет его для .NET 8+, а сервер собран
+  под `net48`, как того требует TIA Openness. Понадобился бы отдельный процесс-посредник.
+
+## Сборка и тестирование
+
+```powershell
+dotnet build TiaMcpServer.sln -c Release
+```
+
+Результат — в `src\TiaMcpServer\bin\Release\net48`.
+
+Тесты, которым не нужен TIA Portal (регистрация инструментов, тексты ошибок, пути, перенос блоков,
+аргументы загрузки, командная строка):
+
+```powershell
+dotnet test tests\TiaMcpServer.Test\TiaMcpServer.Test.csproj -c Release --filter "FullyQualifiedName~Test7|FullyQualifiedName~Test8|FullyQualifiedName~Test9|FullyQualifiedName~Test10|FullyQualifiedName~Test11|FullyQualifiedName~Test12"
+```
+
+Остальным тестам нужны запущенный TIA Portal и тестовый проект, описанные в
+[`tests/TiaMcpServer.Test/README.md`](tests/TiaMcpServer.Test/README.md).
+
+Если вы работаете с репозиторием вместе с ИИ-ассистентом, сначала прочитайте
+[`AGENTS.md`](AGENTS.md): тесты и всё, что затрагивает TIA Portal, запускаются только после явного
+подтверждения.
+
+## Документы проекта
+
+| Документ | Содержание |
+| -------- | ---------- |
+| [`CHANGELOG.md`](CHANGELOG.md) | Что изменилось в каждой версии (на английском) |
+| [`docs/tools-list.txt`](docs/tools-list.txt) | Имена зарегистрированных инструментов |
+| [`Implemented_Tools.md`](Implemented_Tools.md) | Описание каждого инструмента одной строкой |
+| [`docs/error-model.md`](docs/error-model.md) | Как возникают и передаются ошибки (на английском) |
+| [`docs/fix-plan-test-report-2026-10-05.md`](docs/fix-plan-test-report-2026-10-05.md) | Незавершённые работы и предложения |
+| [`TODO.md`](TODO.md) | Долгосрочный список задач |
+| [`Install/INSTALL_RU.md`](Install/INSTALL_RU.md) | Установка и подключение к клиентам |
+
+## Материалы
+
+- [Документация TIA Portal Openness API](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows)
+- [Документация Openness по экспорту и импорту](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import)
+
+## Происхождение и лицензия
+
+Проект начинался как форк
+[heilingbrunner/tiaportal-mcp](https://github.com/heilingbrunner/tiaportal-mcp) (автор —
+J. Heilingbrunner) и теперь развивается самостоятельно. Распространяется по лицензии MIT, см.
+[`LICENSE.txt`](LICENSE.txt).
