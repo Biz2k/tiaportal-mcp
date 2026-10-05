@@ -102,7 +102,7 @@ access. Confirm it in the TIA Portal window.
 The tools that change the project are available by default. Start the server with `--read-only`
 to leave them out.
 
-- With `--read-only` the 58 project-changing tools are **not registered at all**, so they never
+- With `--read-only` the 57 project-changing tools are **not registered at all**, so they never
   appear in `tools/list`. A model cannot call what it cannot see.
 - Without it they are registered and annotated `destructiveHint: true`, so a client can still
   prompt before each call.
@@ -120,7 +120,7 @@ running the server and never modify the project.
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. 115 tools are registered by default. A short
+when the registered tools and that file disagree. 114 tools are registered by default. A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Always available (57):
@@ -142,7 +142,7 @@ Always available (57):
 | HMI                     | `hmi_get_screens`, `hmi_get_screen_items`, `hmi_get_screen_item_properties`, `hmi_get_tags`, `hmi_get_connections`, `hmi_get_library_types`, `hmi_get_library_faceplates` |
 | Download                | `get_download_targets` |
 
-Left out with `--read-only` (58):
+Left out with `--read-only` (57):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
@@ -156,7 +156,7 @@ Left out with `--read-only` (58):
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Hardware                | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| HMI                     | `hmi_create_screen`, `hmi_delete_screen`, `hmi_create_screen_item`, `hmi_delete_screen_item`, `hmi_configure_screen_item`, `hmi_set_screen_item_property`, `hmi_set_unified_screen_item_event`, `hmi_configure_unified_trend_control`, `hmi_configure_unified_trend_companion`, `hmi_create_faceplate_instance`, `hmi_manage_unified_faceplate` |
+| HMI                     | `hmi_create_screen`, `hmi_delete_screen`, `hmi_create_screen_item`, `hmi_delete_screen_item`, `hmi_manage_items`, `hmi_set_unified_screen_item_event`, `hmi_configure_unified_trend_control`, `hmi_configure_unified_trend_companion`, `hmi_create_faceplate_instance`, `hmi_manage_unified_faceplate` |
 | Download                | `download_to_plc` |
 
 `plc_get_software_tree` accepts a `sections` argument - any comma separated subset of
@@ -189,6 +189,38 @@ candidate paths.
 - A PROFINET IO system is built in a fixed order, and each step refuses to run before the previous
   one: `net_connect_subnet` (PLC interface) → `net_create_io_system` → `net_connect_subnet` (IO
   device interface, same subnet) → `net_connect_to_io_system`.
+
+## HMI screen items
+
+`hmi_manage_items` creates, updates, upserts and deletes items on WinCC Unified screens, several at
+once. Each property gets either a static value or a dynamization:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1",
+  "actions": [
+    {
+      "action": "upsert", "screenName": "Screen_1", "itemName": "Speed", "itemType": "HmiIOField",
+      "properties": {
+        "Left": 100, "Width": 200,
+        "IOFieldType": "Output",
+        "BackColor": "#FFFFFF",
+        "ProcessValue": { "tag": "Pump1_Speed" }
+      }
+    },
+    { "action": "update", "screenName": "Screen_1", "itemName": "Start", "properties": { "Text": "Start" } }
+  ]
+}
+```
+
+- A plain value is a static value of the property's own type: a number, a boolean, a string, an
+  enum member by name, a color as `#RRGGBB` or by name.
+- `{ "tag": "..." }` binds the property to an HMI tag, `{ "script": "..." }` gives it a script
+  dynamization, `{ "dynamization": "none" }` removes the dynamization.
+- A text is given as plain text and stored in the format WinCC Unified uses; a string sets every
+  project language, `{ "texts": { "en-US": "..." } }` sets single ones.
+- A call applies **all of its actions or none**. If one fails, the error names the action and the
+  property, and the project is left as it was.
 
 ## Downloading to a PLC
 
@@ -232,7 +264,11 @@ group the type already lives in.
   Portal Openness (observed 2025-09-02).
 - **Watch table entries** cannot be created or deleted through this server yet.
 - **A subnet cannot be deleted** through this server; `net_connect_subnet` creates one when needed.
-- **HMI tools** were verified on WinCC Unified only.
+- **HMI editing is WinCC Unified only.** For WinCC Comfort, Advanced and Professional the Openness
+  API has no object model for screens: a screen cannot be created and its items cannot be read or
+  changed, only exported and imported as XML. On such an HMI `hmi_get_screens`, `hmi_get_tags`
+  and `hmi_get_connections` work; `hmi_manage_items` and the other editing tools refuse with that
+  explanation.
 
 Limits imposed by the Openness API itself - no input makes these work:
 

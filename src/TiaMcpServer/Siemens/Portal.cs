@@ -862,6 +862,13 @@ namespace TiaMcpServer.Siemens
         /// What the operator sees: the exclusive-access banner while it runs, and the undo entry
         /// afterwards. Keep it short and name the tool.
         /// </param>
+        /// <summary>
+        /// True while a write runs inside a TIA Portal transaction. A batch operation uses it to
+        /// say truthfully what a failure left behind: inside a transaction everything is rolled
+        /// back, without one the steps that succeeded stay.
+        /// </summary>
+        private bool _inTransaction;
+
         public T InTransaction<T>(string description, Func<T> body)
         {
             if (_portal == null || _project is not ITransactionSupport persistence)
@@ -901,7 +908,18 @@ namespace TiaMcpServer.Siemens
 
                 using (transaction)
                 {
-                    var result = body();
+                    T result;
+
+                    _inTransaction = true;
+
+                    try
+                    {
+                        result = body();
+                    }
+                    finally
+                    {
+                        _inTransaction = false;
+                    }
 
                     // Only reached when the body did not throw. Without this call the using
                     // block rolls the transaction back on dispose.

@@ -15,7 +15,6 @@ get_plc_summary
 get_project
 get_project_tree
 get_state
-hmi_configure_screen_item
 hmi_configure_unified_trend_companion
 hmi_configure_unified_trend_control
 hmi_create_faceplate_instance
@@ -30,8 +29,8 @@ hmi_get_screen_item_properties
 hmi_get_screen_items
 hmi_get_screens
 hmi_get_tags
+hmi_manage_items
 hmi_manage_unified_faceplate
-hmi_set_screen_item_property
 hmi_set_unified_screen_item_event
 hw_create_device
 hw_delete_device

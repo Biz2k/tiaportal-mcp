@@ -87,6 +87,13 @@
 
 - A `preservePath` export of a group whose name contains `/` now writes one folder
   (`Inputs%2FOutputs`) instead of nested ones (`Inputs\Outputs`); the result imports back.
+### Removed
+
+- __Breaking: `hmi_configure_screen_item` and `hmi_set_screen_item_property`__ are replaced by
+  `hmi_manage_items`. They were two partial answers to one question: the first set six fixed
+  properties and silently skipped the ones that failed; its `processValue` was a string that always
+  became a tag binding, so a constant could not be set through it. The second set one property per
+  call and could not bind a tag. 114 tools are registered by default.
 ### Changed
 
 - __Writing is on by default, `--read-only` turns it off.__ The code already registered the write
@@ -107,18 +114,23 @@
   counterpart; each links to the other at the top.
 ### Added
 
+- __`hmi_manage_items`__: create, update, upsert and delete items on WinCC Unified screens, several per
+  call, each with any number of properties. A property takes a static value of its own type (number,
+  boolean, string, enum member by name, color) or a dynamization: `{"tag": ...}`, `{"script": ...}`,
+  or `{"dynamization": "none"}` to remove one. Plain text is stored in the document format Unified
+  uses for item texts. A call applies all of its actions or none.
 - __`hw_search_catalog`__: search the installed hardware catalog by article number or name and get the
   type identifiers `hw_create_device` and `hw_plug_module` need.
 - __`--debug-tools`__: `hmi_debug_reflect`, `hmi_debug_screen_item` and `hmi_test_faceplate` are
-  development aids and are now registered only with this flag. The normal tool list has 115 tools.
+  development aids and are now registered only with this flag.
 - `docs/tools-list.txt`: the tool names the server registers, as a baseline for spotting tools that
   disappear or get renamed.
 - `Test8ErrorReporting`: tests for error texts and attribute serialization; they need no TIA Portal.
 
 - __Batch CRUD operations (Stage 3 & 5)__: 
   - `plc_manage_tag_table_entries` for efficient bulk create/update/delete of tags and constants via JSON arrays.
-  - `hmi_manage_items` for upserting HMI screen items in bulk was announced here, but no such tool is
-    registered: only the `Portal.ManageHmiItems` method exists. Tracked in `TODO.md`.
+  - `hmi_manage_items` for upserting HMI screen items in bulk was announced here before the tool
+    existed; it is implemented now, see above.
   - `hmi_create_faceplate_instance` (formerly `create_hmi_faceplate_instance`) updated to robustly handle complex faceplate parameterization.
 - __Consolidated Read operations (Stage 4)__: `plc_get_block_data` combines block information, interface, and source into a single call with flags.
 

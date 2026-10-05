@@ -232,97 +232,6 @@ namespace TiaMcpServer.Siemens
             return info;
         }
 
-        public List<System.Text.Json.Nodes.JsonObject> ManageHmiItems(string softwarePath, List<TiaMcpServer.ModelContextProtocol.HmiItemAction> actions)
-        {
-            var softwareContainer = RequireHmiContainer(softwarePath);
-            
-            bool isUnified = softwareContainer.Software is global::Siemens.Engineering.HmiUnified.HmiSoftware;
-            var results = new List<System.Text.Json.Nodes.JsonObject>();
-
-            foreach (var action in actions)
-            {
-                var res = new System.Text.Json.Nodes.JsonObject { ["action"] = action.action, ["screenName"] = action.screenName, ["itemName"] = action.itemName };
-                try
-                {
-                    dynamic? screen = null;
-                    if (isUnified) {
-                        try {
-                            dynamic target = softwareContainer.Software;
-                            foreach(var s in target.Screens) {
-                                if (s.Name == action.screenName) { screen = s; break; }
-                            }
-                        } catch { }
-                    } else {
-                        dynamic target = softwareContainer.Software;
-                        screen = FindScreenInFolder(target.ScreenFolder, action.screenName);
-                    }
-
-                    if (screen == null) throw new System.Exception($"Screen '{action.screenName}' not found.");
-
-                    dynamic? itemsColl = null;
-                    try { itemsColl = screen.ScreenItems; } 
-                    catch { 
-                        try { itemsColl = screen.Elements; } 
-                        catch { throw new System.Exception("Cannot access screen items collection."); }
-                    }
-
-                    dynamic? item = null;
-                    try { item = itemsColl.Find(action.itemName); } catch { }
-
-                    if ((action.action ?? string.Empty).ToLower() == "create")
-                    {
-                        if (item != null) throw new System.Exception($"Item '{action.itemName}' already exists.");
-                        if (string.IsNullOrEmpty(action.itemType)) throw new System.Exception("itemType is required for create.");
-                        try {
-                            item = itemsColl.Create(action.itemType, action.itemName);
-                        } catch (System.Exception ex) {
-                            throw new System.Exception($"Creation of '{action.itemType}' failed (API might not support this on the current HMI target). Inner: {ex.Message}");
-                        }
-                    }
-                    else if ((action.action ?? string.Empty).ToLower() == "delete")
-                    {
-                        if (item == null) throw new System.Exception($"Item '{action.itemName}' not found.");
-                        item.Delete();
-                    }
-
-                    if ((action.action ?? string.Empty).ToLower() == "update" || (action.action ?? string.Empty).ToLower() == "create")
-                    {
-                        if (item == null) throw new System.Exception($"Item '{action.itemName}' not found.");
-                        
-                        if (action.left.HasValue) item.Left = action.left.Value;
-                        if (action.top.HasValue) item.Top = action.top.Value;
-                        if (action.width.HasValue) item.Width = action.width.Value;
-                        if (action.height.HasValue) item.Height = action.height.Value;
-                        if (action.text != null) {
-                            try { item.Text = action.text; } catch { }
-                        }
-
-                        if (action.properties != null)
-                        {
-                            var targetProps = item.Properties;
-                            foreach (var prop in action.properties)
-                            {
-                                try {
-                                    var p = targetProps.Find(prop.Key);
-                                    if (p != null) p.Value = prop.Value;
-                                } catch (System.Exception pex) {
-                                    throw new System.Exception($"Failed to set property '{prop.Key}': {pex.Message}");
-                                }
-                            }
-                        }
-                    }
-                    res["status"] = "success";
-                }
-                catch (System.Exception ex)
-                {
-                    res["status"] = "error";
-                    res["error"] = ex.Message;
-                }
-                results.Add(res);
-            }
-            return results;
-        }
-
         public List<Dictionary<string, object>> GetHmiConnections(string softwarePath)
         {
             var softwareContainer = RequireHmiContainer(softwarePath);
@@ -471,64 +380,6 @@ namespace TiaMcpServer.Siemens
             } catch { }
 
             return props;
-        }
-
-        public string SetHmiScreenItemProperty(string softwarePath, string screenName, string itemName, string propertyName, object? propertyValue)
-        {
-            var softwareContainer = RequireHmiContainer(softwarePath);
-            dynamic dynSoftware = softwareContainer.Software;
-            
-            object? targetScreen = null;
-            try { targetScreen = FindScreenInFolder(dynSoftware.ScreenFolder, screenName); }
-            catch {
-                foreach (var screen in dynSoftware.Screens) {
-                    if (screen.Name == screenName) { targetScreen = screen; break; }
-                }
-            }
-            if (targetScreen == null) throw new System.Exception($"Screen '{screenName}' not found.");
-
-            dynamic? targetItem = null;
-            if (!string.IsNullOrEmpty(itemName)) {
-                foreach (var item in ((dynamic)targetScreen).ScreenItems) {
-                    if (item.Name == itemName) { targetItem = item; break; }
-                }
-                if (targetItem == null) throw new System.Exception($"Item '{itemName}' not found on screen '{screenName}'.");
-            } else {
-                targetItem = targetScreen;
-            }
-
-            try {
-                // If it's a color hex string, try to convert it
-                if (propertyValue is string strVal && strVal.StartsWith("#") && (strVal.Length == 7 || strVal.Length == 9)) {
-                    try { propertyValue = System.Drawing.ColorTranslator.FromHtml(strVal); } catch { }
-                }
-                
-                bool handledAsInterface = false;
-                try {
-                    var interfaceProp = targetItem.GetType().GetProperty("Interface");
-                    if (interfaceProp != null) {
-                        dynamic ifaceList = interfaceProp.GetValue(targetItem);
-                        if (ifaceList != null) {
-                            foreach (var iProp in ifaceList) {
-                                string? iPropName = iProp.GetType().GetProperty("PropertyName")?.GetValue(iProp)?.ToString();
-                                if (string.Equals(iPropName, propertyName, System.StringComparison.OrdinalIgnoreCase)) {
-                                    iProp.GetType().GetProperty("Value")?.SetValue(iProp, propertyValue);
-                                    handledAsInterface = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                } catch { }
-
-                if (!handledAsInterface) {
-                    targetItem.SetAttribute(propertyName, propertyValue);
-                }
-                
-                return $"Property '{propertyName}' updated successfully on '{itemName}'.";
-            } catch (System.Exception ex) {
-                throw new System.Exception($"Failed to set property '{propertyName}': {ex.Message}");
-            }
         }
 
         public object DebugScreenItem(string softwarePath, string screenName, string itemName)
@@ -891,7 +742,7 @@ namespace TiaMcpServer.Siemens
                     if (targetTypeName.IndexOf("Faceplate", System.StringComparison.OrdinalIgnoreCase) < 0)
                     {
                         throw new PortalException(PortalErrorCode.InvalidParams,
-                            $"Item '{itemName}' is a {targetTypeName}, not a faceplate container, so it has no faceplate interface. Use 'hmi_set_screen_item_property' for ordinary screen items.");
+                            $"Item '{itemName}' is a {targetTypeName}, not a faceplate container, so it has no faceplate interface. Use 'hmi_manage_items' for ordinary screen items.");
                     }
 
                     var interfaceCol = targetItem.Interface;
@@ -929,93 +780,6 @@ namespace TiaMcpServer.Siemens
                 if (ex.InnerException != null) result.Error += " Inner: " + ex.InnerException.Message;
             }
             return result;
-        }
-
-        public string ConfigureHmiScreenItem(string softwarePath, string screenName, string itemName, 
-            int? left, int? top, int? width, int? height, string? processValue, string? text)
-        {
-            var softwareContainer = RequireHmiContainer(softwarePath);
-            dynamic dynSoftware = softwareContainer.Software;
-            dynamic? screen = null;
-
-            if (dynSoftware is HmiTarget target) {
-                screen = FindScreenInFolder(target.ScreenFolder, screenName);
-            } else if (dynSoftware is HmiSoftware unified) {
-                foreach (var s in unified.Screens) { if (s.Name == screenName) { screen = s; break; } }
-            }
-
-            if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
-
-            dynamic? targetItem = null;
-            try { foreach (var item in screen.ScreenItems) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
-            if (targetItem == null) {
-                try { foreach (var item in screen.Elements) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
-            }
-            if (targetItem == null) throw new System.Exception($"Item '{itemName}' not found.");
-
-            var results = new System.Collections.Generic.List<string>();
-            
-            if (left.HasValue) { try { targetItem.Left = left.Value; results.Add("Left"); } catch { } }
-            if (top.HasValue) { try { targetItem.Top = top.Value; results.Add("Top"); } catch { } }
-            if (width.HasValue) { 
-                try { targetItem.Width = (uint)width.Value; results.Add("Width"); } 
-                catch { 
-                    try { targetItem.Width = width.Value; results.Add("Width"); }
-                    catch { }
-                } 
-            }
-            if (height.HasValue) { 
-                try { targetItem.Height = (uint)height.Value; results.Add("Height"); } 
-                catch { 
-                    try { targetItem.Height = height.Value; results.Add("Height"); }
-                    catch { }
-                } 
-            }
-            if (processValue != null) { 
-                try { 
-                    if (dynSoftware is HmiSoftware) {
-                        // WinCC Unified
-                        object dynamizations = targetItem.Dynamizations;
-                        if (dynamizations != null) {
-                            var dynBaseType = dynamizations.GetType();
-                            var tagDynType = System.Linq.Enumerable.FirstOrDefault(dynBaseType.Assembly.GetTypes(), t => t.Name == "TagDynamization");
-                            if (tagDynType != null) {
-                                var createMethod = System.Linq.Enumerable.FirstOrDefault(dynBaseType.GetMethods(), m => m.Name == "Create" && m.IsGenericMethod);
-                                if (createMethod != null) {
-                                    var genericCreate = createMethod.MakeGenericMethod(tagDynType);
-                                    dynamic dynObj = genericCreate.Invoke(dynamizations, new object[] { "ProcessValue" });
-                                    dynObj.Tag = processValue;
-                                    results.Add("ProcessValue(Unified TagDynamization)");
-                                }
-                            }
-                        }
-                    } else if (dynSoftware is HmiTarget) {
-                        // WinCC Comfort / Advanced / Professional
-                        targetItem.ProcessValue = processValue; 
-                        results.Add("ProcessValue(Classic)"); 
-                    }
-                } catch (System.Exception ex) {
-                    results.Add($"ProcessValue(Error: {ex.Message})");
-                } 
-            }
-            
-            if (text != null) { 
-                try { 
-                    targetItem.Text = text; 
-                    results.Add("Text"); 
-                } catch { 
-                    try { 
-                        var ml = targetItem.Text;
-                        if (ml is not null && ml.Items.Count > 0) {
-                            var en = System.Linq.Enumerable.First(ml!.Items); // non-null: checked on the line above; a dynamic call resets the compiler's null state
-                            en.Text = text;
-                            results.Add("Text(Multilingual)");
-                        }
-                    } catch { }
-                } 
-            }
-
-            return $"Item '{itemName}' configured successfully. Updated properties: {string.Join(", ", results)}";
         }
 
         public string ConfigureHmiTrendCompanion(string softwarePath, string screenName, string companionName, string sourceTrendControlName)

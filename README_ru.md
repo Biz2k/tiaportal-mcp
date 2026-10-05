@@ -107,7 +107,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 Инструменты, изменяющие проект, доступны по умолчанию. Чтобы их убрать, запустите сервер с
 параметром `--read-only`.
 
-- С `--read-only` 58 изменяющих инструментов **не регистрируются вообще** и не появляются в
+- С `--read-only` 57 изменяющих инструментов **не регистрируются вообще** и не появляются в
   `tools/list`. Модель не может вызвать то, чего не видит.
 - Без параметра они регистрируются с пометкой `destructiveHint: true`, так что клиент может
   запрашивать подтверждение перед каждым вызовом.
@@ -125,7 +125,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 
 Точный список имён инструментов — в [`docs/tools-list.txt`](docs/tools-list.txt); тест падает,
 если зарегистрированные инструменты расходятся с этим файлом. По умолчанию регистрируется
-115 инструментов. Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
+114 инструментов. Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Доступны всегда (57):
 
@@ -146,7 +146,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | HMI                              | `hmi_get_screens`, `hmi_get_screen_items`, `hmi_get_screen_item_properties`, `hmi_get_tags`, `hmi_get_connections`, `hmi_get_library_types`, `hmi_get_library_faceplates` |
 | Загрузка                         | `get_download_targets` |
 
-Не регистрируются с `--read-only` (58):
+Не регистрируются с `--read-only` (57):
 
 | Область                          | Инструменты |
 | -------------------------------- | ----------- |
@@ -160,7 +160,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Внешние исходные файлы           | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Оборудование                     | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| HMI                              | `hmi_create_screen`, `hmi_delete_screen`, `hmi_create_screen_item`, `hmi_delete_screen_item`, `hmi_configure_screen_item`, `hmi_set_screen_item_property`, `hmi_set_unified_screen_item_event`, `hmi_configure_unified_trend_control`, `hmi_configure_unified_trend_companion`, `hmi_create_faceplate_instance`, `hmi_manage_unified_faceplate` |
+| HMI                              | `hmi_create_screen`, `hmi_delete_screen`, `hmi_create_screen_item`, `hmi_delete_screen_item`, `hmi_manage_items`, `hmi_set_unified_screen_item_event`, `hmi_configure_unified_trend_control`, `hmi_configure_unified_trend_companion`, `hmi_create_faceplate_instance`, `hmi_manage_unified_faceplate` |
 | Загрузка                         | `download_to_plc` |
 
 `plc_get_software_tree` принимает параметр `sections` — любое подмножество
@@ -194,6 +194,39 @@ TIA Portal допускает `/` внутри имени (группа блок
 - Система PROFINET IO строится в фиксированном порядке, и каждый шаг отказывается выполняться
   раньше предыдущего: `net_connect_subnet` (интерфейс ПЛК) → `net_create_io_system` →
   `net_connect_subnet` (интерфейс IO-устройства, та же подсеть) → `net_connect_to_io_system`.
+
+## Элементы экранов HMI
+
+`hmi_manage_items` создаёт, изменяет, создаёт-или-изменяет (`upsert`) и удаляет элементы на
+экранах WinCC Unified, сразу несколько за вызов. Каждому свойству задаётся либо статическое
+значение, либо динамизация:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1",
+  "actions": [
+    {
+      "action": "upsert", "screenName": "Screen_1", "itemName": "Speed", "itemType": "HmiIOField",
+      "properties": {
+        "Left": 100, "Width": 200,
+        "IOFieldType": "Output",
+        "BackColor": "#FFFFFF",
+        "ProcessValue": { "tag": "Pump1_Speed" }
+      }
+    },
+    { "action": "update", "screenName": "Screen_1", "itemName": "Start", "properties": { "Text": "Пуск" } }
+  ]
+}
+```
+
+- Простое значение — это статическое значение того типа, который у свойства: число, логическое,
+  строка, член перечисления по имени, цвет в виде `#RRGGBB` или по названию.
+- `{ "tag": "..." }` привязывает свойство к HMI-тегу, `{ "script": "..." }` задаёт динамизацию
+  скриптом, `{ "dynamization": "none" }` убирает динамизацию.
+- Текст задаётся обычной строкой и сохраняется в формате WinCC Unified; строка задаёт текст для
+  всех языков проекта, `{ "texts": { "en-US": "..." } }` — для отдельных.
+- Вызов применяет **все действия или ни одного**. Если одно не удалось, ошибка называет действие
+  и свойство, а проект остаётся прежним.
 
 ## Загрузка в ПЛК
 
@@ -240,7 +273,11 @@ CPU не останавливается и не запускается, пока
   02.09.2025).
 - **Записи таблиц наблюдения** пока нельзя создавать и удалять через сервер.
 - **Подсеть нельзя удалить** через сервер; `net_connect_subnet` создаёт её при необходимости.
-- **Инструменты HMI** проверялись только на WinCC Unified.
+- **Редактирование HMI — только для WinCC Unified.** Для WinCC Comfort, Advanced и Professional в
+  Openness нет объектной модели экранов: экран нельзя создать, а его элементы — прочитать или
+  изменить; возможен только экспорт и импорт в XML. На таком HMI работают `hmi_get_screens`,
+  `hmi_get_tags` и `hmi_get_connections`; `hmi_manage_items` и остальные инструменты
+  редактирования отказывают с этим объяснением.
 
 Ограничения самого интерфейса Openness — их не обойти никакими параметрами:
 

@@ -161,36 +161,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [WriteTool]
-        [McpServerTool(Name = "hmi_set_screen_item_property", Title = "Set HMI screen item generic property", Destructive = false, OpenWorld = false, UseStructuredContent = true),
-         Description("Set an arbitrary property of a screen element by its exact property name (e.g. 'BackColor', 'Visible'). Use GetHmiScreenItemProperties to find the correct property names. If itemName is empty, modifies the screen itself.")]
-        public static object SetHmiScreenItemProperty(
-            [Description("softwarePath: path to HMI software")] string softwarePath,
-            [Description("screenName: name of the screen")] string screenName,
-            [Description("itemName: name of the item to modify (leave empty to modify the screen)")] string itemName,
-            [Description("propertyName: exact name of the property to set (e.g. 'Visible', 'BackColor')")] string propertyName,
-            [Description("propertyValue: the value to set (can be string, boolean, number, or hex color '#RRGGBB')")] JsonNode propertyValue)
-        {
-            try {
-                // Convert JsonNode to native .NET type based on its value kind
-                object? nativeValue = null;
-                if (propertyValue is JsonValue jval) {
-                    if (jval.TryGetValue(out string? s)) nativeValue = s;
-                    else if (jval.TryGetValue(out bool b)) nativeValue = b;
-                    else if (jval.TryGetValue(out int i)) nativeValue = i;
-                    else if (jval.TryGetValue(out double d)) nativeValue = d;
-                    else nativeValue = jval.ToString();
-                } else if (propertyValue != null) {
-                    nativeValue = propertyValue.ToString();
-                }
-
-                string msg = Portal.SetHmiScreenItemProperty(softwarePath, screenName, itemName, propertyName, nativeValue);
-                return new { Message = msg, Meta = OkMeta() };
-            } catch (Exception ex) {
-                throw ToolError(ex);
-            }
-        }
-
         [McpServerTool(Name = "hmi_get_connections", Title = "Get HMI connections", ReadOnly = true, Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("List all HMI connections to PLCs with their attributes.")]
         public static object GetHmiConnections(
@@ -261,28 +231,6 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try {
                 string msg = Portal.DeleteHmiScreenItem(softwarePath, screenName, itemName);
-                return new { Message = msg, Meta = OkMeta() };
-            } catch (Exception ex) {
-                throw ToolError(ex);
-            }
-        }
-
-        [WriteTool]
-        [McpServerTool(Name = "hmi_configure_screen_item", Title = "Configure HMI screen item", Destructive = false, OpenWorld = false, UseStructuredContent = true),
-         Description("Configure an item (e.g. dimensions, text, processValue binding) on the given HMI screen.")]
-        public static object ConfigureHmiScreenItem(
-            [Description("softwarePath: path to HMI software")] string softwarePath,
-            [Description("screenName: name of the screen")] string screenName,
-            [Description("itemName: name of the item to configure")] string itemName,
-            [Description("left: X coordinate (optional)")] int? left = null,
-            [Description("top: Y coordinate (optional)")] int? top = null,
-            [Description("width: Item width (optional)")] int? width = null,
-            [Description("height: Item height (optional)")] int? height = null,
-            [Description("processValue: tag binding or value for ProcessValue property (optional)")] string? processValue = null,
-            [Description("text: string for the Text property (optional)")] string? text = null)
-        {
-            try {
-                string msg = Portal.ConfigureHmiScreenItem(softwarePath, screenName, itemName, left, top, width, height, processValue, text);
                 return new { Message = msg, Meta = OkMeta() };
             } catch (Exception ex) {
                 throw ToolError(ex);

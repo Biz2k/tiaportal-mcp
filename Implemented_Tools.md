@@ -3,7 +3,6 @@
 `close_project`: Закрыть текущий проект/сессию TIA-Portal
 `plc_compile_block`: Скомпилировать программный блок. Возвращает результат компиляции с ошибками или предупреждениями.
 `plc_compile_software`: Скомпилировать всю программу ПЛК. Возвращает детальный результат компиляции с ошибками и предупреждениями.
-`hmi_configure_screen_item`: Настроить элемент (например, размеры, текст, привязку ProcessValue) на заданном экране HMI.
 `hmi_configure_unified_trend_companion`: Привязать HmiTrendCompanion к HmiTrendControl. Только для WinCC Unified.
 `hmi_configure_unified_trend_control`: Добавить тренд/перо в HmiTrendControl и привязать к источнику данных. Только для WinCC Unified.
 `connect`: Подключиться к запущенному TIA Portal. Если он не запущен — ошибка; запуск нового экземпляра только при `startIfNotRunning=true`.
@@ -101,4 +100,6 @@
 `hw_search_catalog`: Поиск в установленном аппаратном каталоге по артикулу или названию; возвращает идентификаторы типов для `hw_create_device` и `hw_plug_module`.
 `hmi_test_faceplate`, `hmi_debug_reflect`, `hmi_debug_screen_item`: отладочные инструменты разработки сервера; регистрируются только с флагом `--debug-tools`.
 
-Полный список имён инструментов — в `docs/tools-list.txt` (115 инструментов по умолчанию, 57 с флагом `--read-only`).
+`hmi_manage_items`: Пакетное создание, изменение, upsert и удаление элементов экранов WinCC Unified. Свойству задаётся статическое значение либо динамизация (тег, скрипт). Вызов применяет все действия или ни одного.
+
+Полный список имён инструментов — в `docs/tools-list.txt` (114 инструментов по умолчанию, 57 с флагом `--read-only`).
