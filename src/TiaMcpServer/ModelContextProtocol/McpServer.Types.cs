@@ -53,7 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving type info from '{typePath}' in '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving type info from '{typePath}' in '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -108,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving user defined types with regex '{regexName}' in '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving user defined types with regex '{regexName}' in '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -162,7 +162,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting type from '{typePath}' to '{exportPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error exporting type from '{typePath}' to '{exportPath}': {Why(ex)}", ex);
             }
         }
 
@@ -193,7 +193,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error importing type from '{importPath}' to '{groupPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error importing type from '{importPath}' to '{groupPath}': {Why(ex)}", ex);
             }
         }
 
@@ -332,7 +332,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 progress.Report(new ProgressNotificationValue { Progress = 0, Total = 0, Message = $"Type export failed: {ex.Message}" });
                 
                 Logger?.LogError(ex, $"Failed exporting types '{regexName}' from '{softwarePath}' to {exportPath}");
-                throw new McpException($"Unexpected error exporting types '{regexName}' from '{softwarePath}' to {exportPath}: {ex.Message}", ex);
+                throw new McpException($"Unexpected error exporting types '{regexName}' from '{softwarePath}' to {exportPath}: {Why(ex)}", ex);
             }
         }
 
@@ -410,17 +410,19 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "plc_copy_type", Title = "Copy type", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Copy a PLC data type (UDT) into another type group of the same plc software. Implemented as export plus import because Openness has no copy operation, so the type must be consistent")]
+         Description("Copy a PLC data type (UDT). A type name is unique across the whole PLC, so a copy inside the same PLC requires 'newName'; to keep the name, copy into another PLC with 'targetSoftwarePath'. To change only the group use 'plc_move_type'. Implemented as export plus import, so the type must be consistent (compile first)")]
         public static ResponseCreated CopyType(
-            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("softwarePath: defines the path in the project structure to the plc software holding the type")] string softwarePath,
             [Description("typePath: root-relative path of the type to copy, e.g. Common/CarrierRegister/ML_SubstratState")] string typePath,
             [Description("targetGroupPath: root-relative type group that receives the copy; empty means the PLC data types root")] string targetGroupPath,
-            [Description("overwrite: replace a type of the same name already in the target group (default false)")] bool overwrite = false)
+            [Description("newName: name of the copy. Required when copying inside the same PLC; empty keeps the name when copying into another PLC")] string newName = "",
+            [Description("targetSoftwarePath: plc software that receives the copy; empty (default) means the same PLC")] string targetSoftwarePath = "",
+            [Description("overwrite: replace a type of the final name that already exists in the target PLC (default false)")] bool overwrite = false)
         {
             return Guarded(nameof(CopyType), () =>
             {
-                var type = Portal.CopyType(softwarePath, typePath, targetGroupPath, overwrite);
-                var newPath = JoinPath(targetGroupPath, type.Name);
+                var type = Portal.CopyType(softwarePath, typePath, targetGroupPath, newName, targetSoftwarePath, overwrite);
+                var newPath = Portal.GetTypePath(type);
 
                 return new ResponseCreated
                 {
@@ -435,17 +437,16 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "plc_move_type", Title = "Move type", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Move a PLC data type (UDT) into another type group of the same plc software. Implemented as export, import and deleting the original; the original is only removed after the import succeeds")]
+         Description("Move a PLC data type (UDT) into another type group of the same plc software; the name is kept. Implemented as export, deleting the original and import, so the type must be consistent (compile first). If the import fails the type is restored in its original group")]
         public static ResponseRenamed MoveType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("typePath: root-relative path of the type to move")] string typePath,
-            [Description("targetGroupPath: root-relative type group that receives the type; empty means the PLC data types root")] string targetGroupPath,
-            [Description("overwrite: replace a type of the same name already in the target group (default false)")] bool overwrite = false)
+            [Description("targetGroupPath: root-relative type group that receives the type; empty means the PLC data types root")] string targetGroupPath)
         {
             return Guarded(nameof(MoveType), () =>
             {
-                var type = Portal.MoveType(softwarePath, typePath, targetGroupPath, overwrite);
-                var newPath = JoinPath(targetGroupPath, type.Name);
+                var type = Portal.MoveType(softwarePath, typePath, targetGroupPath);
+                var newPath = Portal.GetTypePath(type);
 
                 return new ResponseRenamed
                 {

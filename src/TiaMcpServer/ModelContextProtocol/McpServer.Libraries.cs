@@ -23,7 +23,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error listing libraries: {ex.Message}", ex);
+                throw new McpException($"Unexpected error listing libraries: {Why(ex)}", ex);
             }
         }
 
@@ -42,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error opening global library: {ex.Message}", ex);
+                throw new McpException($"Unexpected error opening global library: {Why(ex)}", ex);
             }
         }
 
@@ -62,10 +62,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error getting Master Copies: {ex.Message}", ex);
+                throw new McpException($"Unexpected error getting Master Copies: {Why(ex)}", ex);
             }
         }
 
+        [WriteTool]
         [McpServerTool(Name = "instantiate_master_copy", Title = "Instantiate Master Copy", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Instantiates a Master Copy from a library into the project (e.g. into a PLC's block or type group)")]
         public static ResponseMessage InstantiateMasterCopy(
             [Description("libraryName: name of the library (e.g., 'ProjectLibrary')")] string libraryName,
@@ -85,7 +86,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error instantiating Master Copy: {ex.Message}", ex);
+                throw new McpException($"Unexpected error instantiating Master Copy: {Why(ex)}", ex);
             }
         }
     }

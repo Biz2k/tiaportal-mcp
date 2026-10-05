@@ -75,17 +75,19 @@ namespace TiaMcpServer
 
         /// <summary>
         /// The read-only tools are always registered. The project-mutating tools are the
-        /// McpServer methods marked [WriteTool]; they are only registered with '--allow-write',
+        /// McpServer methods marked [WriteTool]; they are left out with '--read-only',
         /// which is what keeps them out of 'tools/list' rather than merely refusing them when
         /// called. Tools are created one by one (the SDK's type-based registration would take
-        /// every [McpServerTool] method of the class).
+        /// every [McpServerTool] method of the class). The [DebugTool] methods are left out the same
+        /// way unless '--debug-tools' was passed.
         /// </summary>
-        public static IEnumerable<global::ModelContextProtocol.Server.McpServerTool> BuildTools(bool allowWrite)
+        public static IEnumerable<global::ModelContextProtocol.Server.McpServerTool> BuildTools(bool allowWrite, bool debugTools = false)
         {
             return typeof(McpServer)
                 .GetMethods(BindingFlags.Public | BindingFlags.Static)
                 .Where(m => m.GetCustomAttribute<global::ModelContextProtocol.Server.McpServerToolAttribute>() != null)
                 .Where(m => allowWrite || m.GetCustomAttribute<WriteToolAttribute>() == null)
+                .Where(m => debugTools || m.GetCustomAttribute<DebugToolAttribute>() == null)
                 .Select(m => global::ModelContextProtocol.Server.McpServerTool.Create(m))
                 .ToList();
         }
@@ -140,17 +142,18 @@ namespace TiaMcpServer
                         };
 
                         serverOptions.ServerInstructions =
-                            "Exposes Siemens TIA Portal via Openness. Call 'Connect' first, then 'OpenProject' with an " +
-                            "absolute .apXX project or .alsXX session path. Use 'GetProjectTree' or 'GetSoftwareTree' to " +
-                            "discover the path strings that the other tools expect. Export and import tools operate on " +
-                            "the local file system of the machine running this server." +
+                            "Exposes Siemens TIA Portal via Openness. Call 'open_tia_project' with an absolute .apXX " +
+                            "project or .alsXX session path (or 'connect', then 'open_project'); TIA Portal must " +
+                            "already be running. Use 'get_project_tree' and 'plc_get_software_tree' to discover the " +
+                            "path strings the other tools expect; a '/' inside a name is written '%2F'. Export and " +
+                            "import tools operate on the local file system of the machine running this server." +
                             (WritePolicy.AllowWrite
-                                ? " Write mode is enabled: tools that create, rename or delete project objects are " +
-                                  "available. Their changes stay in memory until 'SaveProject' (or 'SaveSession')."
-                                : string.Empty);
+                                ? " Tools that create, rename or delete project objects are available. Their " +
+                                  "changes stay in memory until 'save_project'."
+                                : " The server runs read-only: tools that change the project are not available.");
                     })
                     .WithStdioServerTransport()
-                    .WithTools(BuildTools(WritePolicy.AllowWrite))
+                    .WithTools(BuildTools(WritePolicy.AllowWrite, options?.DebugTools ?? false))
                     .WithPrompts((IEnumerable<Type>)new[] { typeof(McpPrompts) });
 
                 // Register the Portal service for dependency injection

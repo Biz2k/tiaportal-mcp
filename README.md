@@ -4,81 +4,101 @@ A MCP server which connects to Siemens TIA Portal.
 
 ## Features
 
-- Connect to a TIA Portal instance
-- Browse and interact with TIA Portal projects
-- Perform basic project operations from within VS Code
-- Read the full PLC software: program blocks, PLC data types, tags and constants, watch and
-  force tables, external source files, and cross references
-- Optionally create, rename, delete, move and import project objects (see [Write mode](#write-mode))
+- Connect to a running TIA Portal instance and open a project or a multiuser local session
+- Read the PLC software: program blocks, PLC data types, tags and constants, watch and force
+  tables, external source files, cross references, and the source text of blocks and types
+- Create, rename, delete, copy, move, import and compile PLC objects
+- Read the hardware topology, create devices, plug modules, build subnets and PROFINET IO systems
+- Read and edit WinCC Unified / WinCC HMI screens, screen items, tags and faceplates
+- Download hardware and software to a PLC or a simulated PLC
+
+Starting and controlling PLCSIM is deliberately not part of this server; it lives in a separate
+MCP server. `download_to_plc` expects the target to be running already.
 
 ## Command Line Arguments
 
-| Argument                  | Description                                                               |
-| ------------------------- | ------------------------------------------------------------------------- |
-| `--tia-major-version <n>` | TIA Portal major version to bind against. Default `21`.                   |
-| `--logging <1\|2\|3>`     | `1` stderr, `2` debug output, `3` Windows event log. Omit for no logging. |
-| `--doctor`                | Print the environment report and exit without starting the MCP server.    |
-| `--allow-write`           | Register the project-mutating tools. Omitted by default; see below.       |
+| Argument                  | Description                                                                  |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `--tia-major-version <n>` | TIA Portal major version to bind against. Default `21`.                      |
+| `--logging <1\|2\|3>`     | `1` stderr, `2` debug output, `3` Windows event log. Omit for no logging.    |
+| `--doctor`                | Print the environment report and exit without starting the MCP server.       |
+| `--read-only`             | Do not register the tools that change the project. See below.                |
+| `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
+| `--debug-tools`           | Register the server-development tools (`hmi_debug_*`, `hmi_test_faceplate`). |
 
 ## Write mode
 
-The server is read-only unless it is started with `--allow-write`.
+The tools that change the project are available by default. Start the server with `--read-only`
+to leave them out.
 
-- Without the flag the 37 project-mutating tools are **not registered at all**, so they never
-  appear in `tools/list`. A model cannot call what it cannot see, and the tool list stays small.
-- With the flag they are registered and annotated `destructiveHint: true`, so a client can still
+- With `--read-only` the 58 project-changing tools are **not registered at all**, so they never
+  appear in `tools/list`. A model cannot call what it cannot see.
+- Without it they are registered and annotated `destructiveHint: true`, so a client can still
   prompt before each call.
-- `GetState` and the `--doctor` report both expose `AllowWrite`, so a client can tell whether the
+- `get_state` and the `--doctor` report both expose `allowWrite`, so a client can tell whether the
   tools are missing by configuration rather than by version.
-- Write operations change the project **in memory only**. Every write response says so and names
-  the tool that persists it: `SaveProject`, or `SaveSession` when a multiuser local session is open.
+- Write operations change the project **in memory only**. Every write response says so;
+  `save_project` persists the changes (it saves the session when a multiuser local session is
+  open).
+- Each write runs inside a TIA Portal transaction when TIA Portal grants one, so a failed write
+  rolls back and a successful one is a single entry in the undo stack.
 
-Export tools are intentionally *not* gated. `ExportXmlBlock`, `ExportXmlTagTable`, `ExportXmlWatchTable`
-and friends only write files on the machine running the server; they never modify the project.
-They are annotated `destructiveHint: true` because they can overwrite files on disk.
-
-To enable write mode, add the argument to your client configuration, for example
-`"args": ["--allow-write"]`.
+`export_objects` and `plc_generate_sources` are not gated: they only write files on the machine
+running the server and never modify the project.
 
 ## Tools
 
-Read-only tools (59) are always available.
+The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
+when the registered tools and that file disagree. 115 tools are registered by default.
 
-| Area                          | Tools                                                                                                                                                                                                  |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Portal and state              | `Connect`, `Disconnect`, `GetState`, `Doctor`                                                                                                                                                          |
-| Project and session           | `GetProject`, `OpenProject`, `SaveProject`, `SaveAsProject`, `CloseProject`                                                                                                                            |
-| Devices                       | `GetProjectTree`, `GetDevices`, `GetDeviceInfo`, `GetDeviceItemInfo`                                                                                                                                   |
-| PLC software                  | `GetSoftwareInfo`, `GetSoftwareTree`, `CompileSoftware`                                                                                                                                                |
-| Blocks                        | `GetBlocks`, `GetBlockInfo`, `GetBlocksWithHierarchy`, `ExportXmlBlock`, `ExportXmlBlocks`, `ImportXmlBlock`                                                                                           |
-| Types                         | `GetTypes`, `GetTypeInfo`, `ExportXmlType`, `ExportXmlTypes`, `ImportXmlType`                                                                                                                          |
-| Tags and constants            | `GetTagTables`, `GetTagTableInfo`, `GetTags`, `GetTagInfo`, `GetConstants`, `ExportXmlTagTable`                                                                                                        |
-| Watch and force tables        | `GetWatchTables`, `GetWatchTableInfo`, `GetForceTables`, `ExportXmlWatchTable`                                                                                                                         |
-| External sources              | `GetExternalSources`, `GetExternalSourceInfo`, `ExportSourceBlock`, `ExportSourceType`                                                                                                                 |
-| Cross references              | `GetCrossReferences`                                                                                                                                                                                   |
-| Block documents (V20+)        | `ExportAsDocuments`, `ExportBlocksAsDocuments`, `ImportFromDocuments`, `ImportBlocksFromDocuments`                                                                                                     |
-| Type documents (V21+)         | `ExportTypeAsDocuments`, `ExportTypesAsDocuments`                                                                                                                                                      |
-| Understand and read (comfort) | `GetPlcSummary`, `ResolveObjectPath`, `WhereUsed`, `FindInCode`, `GetBlockSource`, `GetTypeSource`, `GetBlockInterface`, `PreviewImport`, `OpenTiaProject`, `ExportPlcAsDocuments`, `GenerateSources` |
+Always available (57):
 
-Write tools (40) require `--allow-write`.
+| Area                    | Tools |
+| ----------------------- | ----- |
+| Portal and state        | `connect`, `disconnect`, `get_state`, `doctor` |
+| Project and session     | `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
+| Project structure       | `get_project_tree`, `get_devices`, `hw_get_device_info`, `get_device_item_info`, `get_hardware_topology`, `hw_search_catalog` |
+| PLC software            | `get_plc_summary`, `plc_get_software_info`, `plc_get_software_tree`, `plc_compile_software` |
+| Blocks                  | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `get_block_interface`, `plc_get_block_source` |
+| Types                   | `plc_get_types`, `plc_get_type_info`, `plc_get_type_source` |
+| Tags and constants      | `plc_get_tag_tables`, `plc_get_tag_table_info`, `plc_get_tags`, `plc_get_tag_info`, `plc_get_constants` |
+| Watch and force tables  | `plc_get_watch_tables`, `plc_get_watch_table_info`, `plc_get_force_tables` |
+| External sources        | `plc_get_external_sources`, `plc_get_external_source_info`, `plc_generate_sources` |
+| Search and references   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
+| Export and preview      | `export_objects`, `preview_import` |
+| Libraries               | `get_libraries`, `open_global_library`, `get_master_copies` |
+| HMI                     | `hmi_get_screens`, `hmi_get_screen_items`, `hmi_get_screen_item_properties`, `hmi_get_tags`, `hmi_get_connections`, `hmi_get_library_types`, `hmi_get_library_faceplates` |
+| Download                | `get_download_targets` |
 
-| Area                  | Tools                                                                                                                                                   |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Block and type groups | `CreateBlockGroup`, `DeleteBlockGroup`, `CreateTypeGroup`, `DeleteTypeGroup`                                                                            |
-| Blocks and types      | `DeleteBlock`, `RenameBlock`, `DeleteType`, `RenameType`, `CreateFB`, `CreateInstanceDB`                                                                |
-| Copy and move         | `CopyBlock`, `MoveBlock`, `CopyType`, `MoveType`                                                                                                        |
-| Tag tables            | `CreateTagTable`, `DeleteTagTable`, `RenameTagTable`, `CreateTagTableGroup`, `DeleteTagTableGroup`, `ImportXmlTagTable`                                    |
-| Tags and constants    | `CreateTag`, `UpdateTag`, `DeleteTag`, `CreateUserConstant`, `UpdateUserConstant`, `DeleteUserConstant`                                                 |
-| Watch tables          | `CreateWatchTable`, `RenameWatchTable`, `DeleteWatchTable`, `CreateWatchTableGroup`, `DeleteWatchTableGroup`, `ImportWatchTable`                        |
-| External sources      | `CreateExternalSourceFromFile`, `DeleteExternalSource`, `CreateExternalSourceGroup`, `DeleteExternalSourceGroup`, `ImportSourceBlocks`, `ImportSources` |
-| Type documents (V21+) | `ImportTypeFromDocuments`, `ImportTypesFromDocuments`                                                                                                   |
+Left out with `--read-only` (58):
 
-`GetSoftwareTree` accepts a `sections` argument - any comma separated subset of
+| Area                    | Tools |
+| ----------------------- | ----- |
+| Import                  | `import_objects`, `instantiate_master_copy` |
+| Block and type groups   | `plc_create_block_group`, `plc_delete_block_group`, `plc_create_type_group`, `plc_delete_type_group` |
+| Blocks                  | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block` |
+| Types                   | `plc_rename_type`, `plc_delete_type`, `plc_copy_type`, `plc_move_type` |
+| Tag tables              | `plc_create_tag_table`, `plc_rename_tag_table`, `plc_delete_tag_table`, `plc_create_tag_table_group`, `plc_delete_tag_table_group` |
+| Tags and constants      | `plc_create_tag`, `plc_update_tag`, `plc_delete_tag`, `plc_create_user_constant`, `plc_update_user_constant`, `plc_delete_user_constant`, `plc_manage_tag_table_entries` |
+| Watch tables            | `plc_create_watch_table`, `plc_rename_watch_table`, `plc_delete_watch_table`, `plc_create_watch_table_group`, `plc_delete_watch_table_group` |
+| External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
+| Hardware                | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
+| Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
+| HMI                     | `hmi_create_screen`, `hmi_delete_screen`, `hmi_create_screen_item`, `hmi_delete_screen_item`, `hmi_configure_screen_item`, `hmi_set_screen_item_property`, `hmi_set_unified_screen_item_event`, `hmi_configure_unified_trend_control`, `hmi_configure_unified_trend_companion`, `hmi_create_faceplate_instance`, `hmi_manage_unified_faceplate` |
+| Download                | `download_to_plc` |
+
+`plc_get_software_tree` accepts a `sections` argument - any comma separated subset of
 `blocks,types,tags,watch,sources`, default `all` - to keep the output small on a large PLC.
-`GetCrossReferences` accepts `maxDepth` (1-3, default 1) for the same reason.
+`plc_get_cross_references` accepts `maxDepth` (1-3, default 1) for the same reason.
 
 Paths used by these tools are **root-relative**: `1_Tests/FC_Block_1`, not
-`Program blocks/1_Tests/FC_Block_1`. Use `GetProjectTree` and `GetSoftwareTree` to discover them.
+`Program blocks/1_Tests/FC_Block_1`. Use `get_project_tree` and `plc_get_software_tree` to
+discover them; `plc_resolve_object_path` turns a bare name into a path.
+TIA Portal allows `/` inside a name (a block group `Inputs/Outputs`, a station
+`S7-1500/ET200MP station_1`). In a path such a slash is written `%2F`:
+`Inputs%2FOutputs/AI_Handler`. Listings return paths in this form. The unescaped form
+`Inputs/Outputs/AI_Handler` is accepted as well; if both a group `Inputs/Outputs` and a group
+`Inputs` with a subgroup `Outputs` exist, the unescaped form means the nested one.
 
 ## Resources
 
@@ -112,7 +132,7 @@ Diagnose:
 └─ Write mode (--allow-write): disabled, read-only tools only
 ```
 
-The same report is available to MCP clients through the `Doctor` tool, which additionally returns
+The same report is available to MCP clients through the `doctor` tool, which additionally returns
 the findings as structured content. Both are read-only: they never connect to TIA Portal, open a
 project, or change user group membership.
 
@@ -120,10 +140,10 @@ project, or change user group membership.
 
 - __V21__ is the default version.
 - Previous versions are also supported, but must use the `--tia-major-version` argument to specify the version.
-- Export as documents (.s7dcl/.s7res) via `ExportAsDocuments`/`ExportBlocksAsDocuments` requires TIA Portal V20 or newer.
-- Import from documents (.s7dcl/.s7res) via `ImportFromDocuments`/`ImportBlocksFromDocuments` also requires TIA Portal V20 or newer.
-- The same for PLC data types - `ExportTypeAsDocuments`, `ExportTypesAsDocuments`,
-  `ImportTypeFromDocuments`, `ImportTypesFromDocuments` - requires TIA Portal **V21** or newer:
+- Export as documents (.s7dcl/.s7res) via `export_objects` requires TIA Portal V20 or newer.
+- Import from documents (.s7dcl/.s7res) via `import_objects` also requires TIA Portal V20 or newer.
+- The same for PLC data types - `export_objects`,
+  `import_objects` - requires TIA Portal **V21** or newer:
   Openness only added `PlcType.ExportAsDocuments` and `PlcTypeComposition.ImportFromDocuments`
   in V21.
 
@@ -141,7 +161,7 @@ and remain XML-only.
 
 With `preservePath` the export mirrors the project tree below the system folder - `Program
 blocks` for blocks, `PLC data types` for types - using the folder name as TIA Portal reports it
-in the current interface language. `ImportTypeFromDocuments` and `ImportTypesFromDocuments`
+in the current interface language. `import_objects`
 accept that folder name back as a leading segment of `groupPath`, so an export can be fed
 straight back in.
 
@@ -153,25 +173,36 @@ group the type already lives in to replace it.
 ## Known Limitations
 
 - As of 2025-09-02: Importing Ladder (LAD) blocks from SIMATIC SD documents requires the companion `.s7res` file to contain en-US tags for all items; otherwise import may fail. This is a known limitation/bug in TIA Portal Openness.
- - `ExportXmlBlock` requires a fully qualified `blockPath` like `Group/Subgroup/Name`. If only a name is provided, the tool fails with an error result that may include suggestions for likely full paths.
+ - `export_objects` requires a fully qualified `blockPath` like `Group/Subgroup/Name`. If only a name is provided, the tool fails with an error result that may include suggestions for likely full paths.
 
 ### Limits imposed by the Openness API itself
 
 These are not gaps in this server - the underlying API offers no operation for them.
 
-- __No move or copy for blocks and types.__ `CopyBlock`, `MoveBlock`, `CopyType` and `MoveType`
-  are composed from export, import and (for a move) deleting the source once the import
-  succeeds. Two consequences are visible: the object must be consistent, because TIA Portal
-  refuses to export an inconsistent one, and its block number travels with it, so importing
-  into the same PLC can hit a number collision. Renaming during a copy is not offered - it
-  would mean rewriting the exported XML.
-- __No generic "create block".__ Only `CreateFB` and `CreateInstanceDB` exist; every other kind
-  of block has to arrive through `ImportXmlBlock`.
+- __No move or copy for blocks and types.__ `plc_copy_block`, `plc_move_block`, `plc_copy_type`
+  and `plc_move_type` are composed from export and import. What follows from that:
+  - The object must be consistent, because TIA Portal refuses to export an inconsistent one.
+    Compile first.
+  - A block name, a block number and a type name are unique within a PLC. A copy inside the same
+    PLC therefore needs `newName`, and a copied block gets the first free number of its kind. To
+    keep the name, copy into another PLC with `targetSoftwarePath`.
+  - A move exports the object, deletes the original and imports it into the target group; name
+    and number are kept. If the import fails, the object is imported back into its original
+    group. Blocks that use a moved block (its instance DBs, its callers) are inconsistent
+    afterwards until the PLC is compiled again.
+- __No generic "create block".__ `PlcBlockComposition.CreateFB` only creates ProDiag blocks.
+  `plc_create_fb` therefore creates an SCL block from a one-block source text and a LAD, FBD or
+  STL block by importing a minimal SimaticML document; other languages (GRAPH, ...) are refused.
+  A ProDiag block brings its own instance DB and the `ProDiagOB` with it. Every other kind of
+  block arrives through `plc_create_scl_block` or `import_objects`.
+- __Block numbers.__ Openness takes a block number literally even when auto numbering is requested
+  - an instance DB created with number 0 really becomes `DB0`, which does not compile. The server
+  picks the first free number itself and reports it in the response.
 - __Read-only objects.__ System constants cannot be created or changed, the force table cannot
   be created or deleted (the system owns one per PLC), the default tag table cannot be deleted,
   and the system groups (`Program blocks`, `PLC data types`, `PLC tags`, ...) cannot be renamed
   or deleted. These all fail with a `NotSupported` message rather than an opaque Openness error.
-- __No cross references__ for watch tables, force tables or external sources; `GetCrossReferences`
+- __No cross references__ for watch tables, force tables or external sources; `plc_get_cross_references`
   reports `NotSupported` for them.
 - __Watch table entries__ cannot be created or deleted through this server yet. The Openness
   composition holding them exposes only a comment-row creator, so adding a real entry needs an

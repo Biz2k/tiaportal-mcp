@@ -93,7 +93,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     catch (Exception ex)
                     {
-                        results.Add(new { status = "error", path = path, error = ex.Message });
+                        results.Add(new { status = "error", path = path, error = Why(ex) });
                     }
                 }
 
@@ -106,10 +106,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
 
+        [WriteTool]
         [McpServerTool(Name = "import_objects", Title = "Import objects", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Universal tool to import files into the PLC. format must be 'xml', 'document', or 'source'. For document/xml imports conflict_resolution must be 'overwrite', 'skip', or 'rename'.")]
         public static object ImportObjects(
@@ -163,7 +164,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     catch (Exception ex)
                     {
-                        results.Add(new { status = "error", file = file, error = ex.Message });
+                        results.Add(new { status = "error", file = file, error = Why(ex) });
                     }
                 }
 
@@ -176,7 +177,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                return new { Message = $"Unexpected error: {ex.Message}" };
+                throw ToolError(ex);
             }
         }
     }

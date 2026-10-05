@@ -1111,7 +1111,7 @@ namespace TiaMcpServer.Siemens
                     g => g is PlcExternalSourceSystemGroup,
                     includeSystemRoot: false);
 
-                return string.IsNullOrEmpty(groupPath) ? source.Name : $"{groupPath}/{source.Name}";
+                return JoinLeaf(groupPath, source.Name);
             }
 
             return source.Name;
@@ -1222,6 +1222,58 @@ namespace TiaMcpServer.Siemens
                     return true;
                 },
                 ("softwarePath", softwarePath), ("groupPath", groupPath));
+        }
+
+        /// <summary>
+        /// Generates blocks or types from SCL text: the text is written to a temporary file,
+        /// added as an external source, compiled, and the source is removed again. Callers: the
+        /// plc_create_scl_block tool and CreateFB (an SCL function block cannot be created any
+        /// other way). File I/O: one temporary .scl under the OS temp directory, deleted in a
+        /// finally block.
+        /// </summary>
+        public List<string> GenerateFromSclText(string softwarePath, string sclCode, string targetGroupPath = "", bool keepOnError = false)
+        {
+            return Operation.Run(_logger, nameof(GenerateFromSclText), PortalErrorCode.CreateFailed,
+                () =>
+                {
+                    if (string.IsNullOrWhiteSpace(sclCode))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, "The SCL source text is empty.");
+                    }
+
+                    var directory = CreateTempExportDirectory();
+                    var sourceName = "MCP_Gen_" + Guid.NewGuid().ToString("N").Substring(0, 8);
+
+                    try
+                    {
+                        var file = Path.Combine(directory, sourceName + ".scl");
+
+                        File.WriteAllText(file, sclCode);
+                        CreateExternalSourceFromFile(softwarePath, string.Empty, sourceName, file);
+
+                        try
+                        {
+                            return ImportSourceBlocks(softwarePath, sourceName, targetGroupPath, keepOnError);
+                        }
+                        finally
+                        {
+                            try
+                            {
+                                DeleteExternalSource(softwarePath, sourceName);
+                            }
+                            catch (Exception ex)
+                            {
+                                // A leftover helper source must not turn a generated block into a failure.
+                                _logger?.LogWarning(ex, "Could not remove temporary external source {Source}", sourceName);
+                            }
+                        }
+                    }
+                    finally
+                    {
+                        DeleteTempExportDirectory(directory);
+                    }
+                },
+                ("softwarePath", softwarePath), ("targetGroupPath", targetGroupPath));
         }
 
         /// <summary>

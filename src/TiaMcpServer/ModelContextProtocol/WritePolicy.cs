@@ -5,7 +5,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     /// <summary>
     /// Marks a tool method that modifies the TIA Portal project. Program.cs leaves marked tools
-    /// out of the registered tool list unless '--allow-write' was passed, which keeps them out of
+    /// out of the registered tool list when '--read-only' was passed, which keeps them out of
     /// 'tools/list' entirely even though they share the McpServer class with the read-only tools.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
@@ -14,7 +14,19 @@ namespace TiaMcpServer.ModelContextProtocol
     }
 
     /// <summary>
-    /// Gates the project-mutating tools behind the '--allow-write' command line flag.
+    /// Marks a tool that exists for developing this server - reflecting over Openness types,
+    /// poking at one screen item - rather than for engineering a project. Program.cs registers
+    /// marked tools only with '--debug-tools', so they do not take up room in 'tools/list' or
+    /// invite a model to call them.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    public sealed class DebugToolAttribute : System.Attribute
+    {
+    }
+
+    /// <summary>
+    /// Gates the project-mutating tools. They are available by default and switched off with the
+    /// '--read-only' command line flag ('--allow-write' is accepted for older configurations).
     ///
     /// Callers: Program.cs (sets AllowWrite from CliOptions and conditionally registers the
     /// write tools) and every [WriteTool] tool in McpServer. Affected API: none existing - this
@@ -30,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     public static class WritePolicy
     {
-        public static bool AllowWrite { get; set; }
+        public static bool AllowWrite { get; set; } = true;
 
         public static void EnsureEnabled(string toolName)
         {
@@ -38,7 +50,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 throw new McpException(
                     $"Tool '{toolName}' modifies the TIA Portal project and is disabled. " +
-                    "Restart the MCP server with '--allow-write' to enable write operations.");
+                    "The MCP server was started with '--read-only'; restart it without that flag to enable write operations.");
             }
         }
     }

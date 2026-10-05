@@ -20,6 +20,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>Root-relative path of the new object, where one applies.</summary>
         public string? Path { get; set; }
+
+        /// <summary>Block number TIA Portal ended up with; null for objects that have none.</summary>
+        public int? Number { get; set; }
     }
 
     public class ResponseDeleted : ResponseMessage

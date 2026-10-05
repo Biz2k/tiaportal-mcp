@@ -22,7 +22,7 @@ Run the following command in your terminal, making sure to use the correct path 
 claude mcp add tia-mcp-server -- C:\Users\<YourUsername>\AppData\Local\TiaMcpServer\TiaMcpServer.exe
 ```
 
-This will automatically configure Claude Code to launch and communicate with `TiaMcpServer` via `stdio`. You can test it by running `claude` and asking it to `"Use the tia-mcp-server to list plcsim instances"`.
+This will automatically configure Claude Code to launch and communicate with `TiaMcpServer` via `stdio`. You can test it by running `claude` and asking it to `"Use the tia-mcp-server: run doctor and show the result"`.
 
 ---
 
@@ -73,3 +73,26 @@ To use `TiaMcpServer` directly in the Claude Desktop app:
 }
 ```
 3. Fully quit and restart Claude Desktop.
+---
+
+## Start-up options
+
+Options go into `args` of the client configuration, for example `"args": ["--read-only"]`.
+
+| Option | Purpose |
+| --- | --- |
+| `--tia-major-version <n>` | TIA Portal version. Default `21`. |
+| `--read-only` | Do not register the tools that change the project. Without it, writing is available. |
+| `--logging <1\|2\|3>` | `1` stderr, `2` debug output, `3` Windows event log. |
+| `--doctor` | Print the environment report and exit. |
+| `--debug-tools` | Register the server-development tools. |
+
+TIA Portal must be running before you connect: the `connect` tool does not start it (unless called
+with `startIfNotRunning=true`). PLCSIM control lives in a separate MCP server; for `download_to_plc`
+the download target must already be running.
+
+## Updating
+
+The server files are locked while the MCP client runs. Close the client (or disable the server in
+its settings) before replacing the contents of the `TiaMcpServer` folder. On the first start of a
+new build TIA Portal asks for Openness access; confirm it.

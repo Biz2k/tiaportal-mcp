@@ -42,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving software tree from '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving software tree from '{softwarePath}': {Why(ex)}", ex);
             }
         }
 

@@ -64,7 +64,7 @@ namespace TiaMcpServer.Siemens
                     }
 
                     // A caller may paste a full path back in; only the leaf can match a name.
-                    var leaf = name.Contains("/") ? name.Substring(name.LastIndexOf('/') + 1) : name;
+                    var leaf = SplitPath(name).LeafName;
 
                     var exact = Collect(softwarePath, kind, leaf, exactOnly: true);
 
@@ -118,7 +118,7 @@ namespace TiaMcpServer.Siemens
                     {
                         Kind = "tag",
                         Name = tag.Name,
-                        Path = table == null ? tag.Name : $"{GetTagTablePath(table)}/{tag.Name}"
+                        Path = table == null ? EscapeSegment(tag.Name) : JoinLeaf(GetTagTablePath(table), tag.Name)
                     });
                 }
             }

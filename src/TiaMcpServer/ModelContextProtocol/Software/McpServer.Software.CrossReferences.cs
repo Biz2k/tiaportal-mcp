@@ -80,11 +80,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (TiaMcpServer.Siemens.PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving cross references from '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving cross references from '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -216,11 +216,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error resolving usages of '{name}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error resolving usages of '{name}': {Why(ex)}", ex);
             }
         }
 

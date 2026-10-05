@@ -18,7 +18,82 @@ namespace TiaMcpServer.Siemens
 {
     public partial class Portal
     {
+        // Device and device item lookup.
+        //
+        // Callers: the device tools in McpServer.Devices.cs, the hardware and network methods in
+        // Portal.Hardware.cs, and Test3Devices. Affected API: GetDevices, GetDevice and
+        // GetDeviceItem keep their signatures; GetDevices now also returns the devices of the
+        // ungrouped devices group, GetDevice throws on an ambiguous name instead of picking one.
+        // Reads/writes no data files.
+        //
+        // A device is addressable in more ways than a block, because what TIA Portal shows is
+        // not what Openness names: a hardware PLC station is called "S7-1500/ET200MP station_1"
+        // in Openness (with a slash) while the project tree shows its CPU, "PLC_1". Every form a
+        // caller can read off a listing is accepted here, in one place, so the tools agree.
+
         #region devices
+
+        /// <summary>
+        /// Every device of the project with its path: top-level devices, devices in user groups
+        /// at any depth, and the ungrouped devices group that holds distributed IO stations.
+        /// </summary>
+        private List<(Device Device, string GroupPath, string Path)> EnumerateDevices()
+        {
+            var result = new List<(Device, string, string)>();
+
+            if (_project == null)
+            {
+                return result;
+            }
+
+            void Add(IEnumerable<Device>? devices, string groupPath)
+            {
+                if (devices == null)
+                {
+                    return;
+                }
+
+                foreach (var device in devices)
+                {
+                    if (device != null)
+                    {
+                        result.Add((device, groupPath, JoinLeaf(groupPath, device.Name)));
+                    }
+                }
+            }
+
+            void AddGroups(IEnumerable<DeviceUserGroup>? groups, string parentPath)
+            {
+                if (groups == null)
+                {
+                    return;
+                }
+
+                foreach (var group in groups)
+                {
+                    var groupPath = JoinLeaf(parentPath, group.Name);
+
+                    Add(group.Devices, groupPath);
+                    AddGroups(group.Groups, groupPath);
+                }
+            }
+
+            Add(_project.Devices, string.Empty);
+            AddGroups(_project.DeviceGroups, string.Empty);
+
+            try
+            {
+                // The ungrouped devices group has no path segment of its own: its devices are
+                // addressed like top-level ones, which is how the hardware tools always did it.
+                Add(_project.UngroupedDevicesGroup?.Devices, string.Empty);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogDebug(ex, "The ungrouped devices group is not available in this project");
+            }
+
+            return result;
+        }
 
         public List<Device> GetDevices(string regexName = "")
         {
@@ -31,220 +106,226 @@ namespace TiaMcpServer.Siemens
 
             var list = new List<Device>();
 
-            if (_project?.Devices != null)
+            foreach (var entry in EnumerateDevices())
             {
-                foreach (Device device in _project.Devices)
+                try
                 {
-                    list.Add(device);
+                    if (!string.IsNullOrEmpty(regexName) && !Regex.IsMatch(entry.Device.Name, regexName, RegexOptions.IgnoreCase))
+                    {
+                        continue;
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    // Invalid regex pattern - skip, as the block and type listings do.
+                    continue;
                 }
 
-                foreach (var group in _project.DeviceGroups)
-                {
-                    GetDevicesRecursive(group, list, regexName);
-                }
-
-                //foreach (var group in _project.UngroupedDevicesGroup)
-                //{
-                //    GetDevicesRecursive(_project.UngroupedDevicesGroup, list, regexName);
-                //}
+                list.Add(entry.Device);
             }
 
             return list;
         }
 
+        /// <summary>
+        /// The path GetDevice accepts back for this device, e.g. "Group1/PC-System_1" or
+        /// "S7-1500%2FET200MP station_1".
+        /// </summary>
+        public string GetDevicePath(Device device)
+        {
+            if (device == null)
+            {
+                return string.Empty;
+            }
+
+            var segments = new List<string> { EscapeSegment(device.Name) };
+
+            try
+            {
+                var parent = device.Parent;
+
+                while (parent is DeviceUserGroup group)
+                {
+                    segments.Insert(0, EscapeSegment(group.Name));
+                    parent = group.Parent;
+                }
+            }
+            catch (Exception)
+            {
+                // The parent chain is not walkable; the name alone still resolves when unique.
+            }
+
+            return string.Join("/", segments);
+        }
+
+        /// <summary>
+        /// Finds a device by any form a caller can read off a listing: its path, its Openness
+        /// name with or without the slash escaped, its bare name inside a group, or the name
+        /// of its head module as the project tree shows it. Returns null when nothing matches.
+        /// </summary>
+        /// <exception cref="PortalException">InvalidParams when the name fits several devices.</exception>
         public Device? GetDevice(string devicePath)
         {
             _logger?.LogInformation($"Getting device by path: {devicePath}");
 
-            if (IsProjectNull())
+            if (IsProjectNull() || string.IsNullOrWhiteSpace(devicePath))
             {
                 return null;
             }
 
-            // Retrieve the device by its path
-            return GetDeviceByPath(devicePath);
-        }
+            var devices = EnumerateDevices();
+            var wanted = NormalizeGroupPath(devicePath);
+            var plain = UnescapeSegment(wanted);
 
-        public DeviceItem? GetDeviceItem(string deviceItemPath)
-        {
-            _logger?.LogInformation($"Getting device item by path: {deviceItemPath}");
+            bool Same(string a, string b) => a.Equals(b, StringComparison.OrdinalIgnoreCase);
 
-            if (IsProjectNull())
+            // Most specific reading first; a later one is only tried when the earlier found nothing.
+            var readings = new Func<(Device Device, string GroupPath, string Path), bool>[]
             {
-                return null;
-            }
+                d => Same(d.Path, wanted),
+                d => Same(UnescapeSegment(d.Path), plain),
+                d => Same(d.Device.Name, plain),
+                d => d.Device.DeviceItems.Any(i => Same(i.Name, plain))
+            };
 
-            // Retrieve the device by its path
-            return GetDeviceItemByPath(deviceItemPath);
-
-        }
-
-        #endregion
-
-        #region get...by path
-
-        private Device? GetDeviceByPath(string devicePath)
-        {
-            if (_project?.Devices == null || string.IsNullOrWhiteSpace(devicePath))
-                return null;
-
-            var pathSegments = devicePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            if (pathSegments.Length == 0)
+            foreach (var reading in readings)
             {
-                return null;
-            }
+                var matches = devices.Where(reading).ToList();
 
-            // Try top-level device first
-            if (pathSegments.Length == 1)
-            {
-                return _project.Devices.FirstOrDefault(d => d.Name.Equals(pathSegments[0], StringComparison.OrdinalIgnoreCase));
-            }
-
-            // Traverse device groups
-            DeviceUserGroupComposition? groups = _project.DeviceGroups;
-            DeviceUserGroup? group = groups?.FirstOrDefault(g => g.Name.Equals(pathSegments[0], StringComparison.OrdinalIgnoreCase));
-
-            if (group == null)
-            {
-                return null;
-            }
-
-            for (int i = 1; i < pathSegments.Length; i++)
-            {
-                // Try to find device in current group
-                var device = group.Devices.FirstOrDefault(d => d.Name.Equals(pathSegments[i], StringComparison.OrdinalIgnoreCase));
-                if (device != null)
+                if (matches.Count == 1)
                 {
-                    return device;
+                    return matches[0].Device;
                 }
 
-                // Try to find subgroup
-                group = group.Groups.FirstOrDefault(g => g.Name.Equals(pathSegments[i], StringComparison.OrdinalIgnoreCase));
-                if (group == null)
+                if (matches.Count > 1)
                 {
-                    break;
+                    throw new PortalException(PortalErrorCode.InvalidParams,
+                        $"'{devicePath}' matches {matches.Count} devices: " +
+                        string.Join(", ", matches.Select(m => $"'{m.Path}'")) + ". Pass one of these paths.");
                 }
             }
 
             return null;
         }
 
-        private DeviceItem? GetDeviceItemByPath(string deviceItemPath)
+        /// <summary>
+        /// GetDevice for callers inside Operation.Run: a missing device becomes a NotFound that
+        /// names the tool listing the valid paths.
+        /// </summary>
+        private Device RequireDevice(string devicePath)
         {
-            if (_project == null || _project.Devices == null)
+            if (IsProjectNull())
+            {
+                throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
+            }
+
+            return GetDevice(devicePath)
+                ?? throw new PortalException(PortalErrorCode.NotFound,
+                    $"Device not found at '{devicePath}'. Use 'get_devices' to list the device paths.");
+        }
+
+        /// <summary>
+        /// Finds a device item. Accepted forms: "{device path}/{item}/{sub item}", the same
+        /// without the device name ("Group1/PLC_1", "PLC_1" - a hardware PLC is known by its CPU,
+        /// not by its station), and a device path alone when the device has an item of its name.
+        /// </summary>
+        public DeviceItem? GetDeviceItem(string deviceItemPath)
+        {
+            _logger?.LogInformation($"Getting device item by path: {deviceItemPath}");
+
+            if (IsProjectNull() || string.IsNullOrWhiteSpace(deviceItemPath))
             {
                 return null;
             }
 
-            // Split the device path by '/' to get each device name  
-            var pathSegments = deviceItemPath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            var segments = PathSegments(deviceItemPath);
 
-            DeviceItem? deviceItem = null;
-
-            // initial devices and groups
-            var devices = _project.Devices;
-            var groups = _project.DeviceGroups;
-
-            for (int index = 0; index < pathSegments.Length; index++)
+            if (segments.Length == 0)
             {
-                deviceItem = GetDeviceItemFromDevice(pathSegments, devices, index);
+                return null;
+            }
 
-                if (deviceItem == null)
+            static IEnumerable<DeviceItem> Children(DeviceItem item) => item.DeviceItems;
+            static string Name(DeviceItem item) => item.Name;
+
+            var devices = EnumerateDevices();
+
+            // 1. Qualified: the path starts with a device path.
+            foreach (var entry in devices)
+            {
+                var devicePath = PathSegments(entry.Path);
+                var consumed = MatchPrefix(segments, devicePath);
+
+                if (consumed < 0)
                 {
-                    // search in groups
-                    var group = groups?.FirstOrDefault(g => g.Name.Equals(pathSegments[index], StringComparison.OrdinalIgnoreCase));
-                    if (group != null)
-                    {
-                        devices = group.Devices;
-                        if (devices != null)
-                        {
-                            deviceItem = GetDeviceItemFromDevice(pathSegments, devices, index + 1);
-                        }
-
-                        if (deviceItem != null)
-                        {
-                            return deviceItem;
-                        }
-
-                        // not found, but on the path
-                        groups = group.Groups;
-                        devices = group.Devices;
-                    }
+                    continue;
                 }
-                else
+
+                var item = consumed == segments.Length
+                    ? entry.Device.DeviceItems.FirstOrDefault(i => i.Name.Equals(entry.Device.Name, StringComparison.OrdinalIgnoreCase))
+                    : WalkNamed(entry.Device.DeviceItems, segments, consumed, Children, Name);
+
+                if (item != null)
                 {
-                    return deviceItem;
+                    return item;
                 }
             }
 
-            return deviceItem;
+            // 2. Unqualified: the group path, then the item, with the device name left out.
+            foreach (var entry in devices)
+            {
+                var consumed = MatchPrefix(segments, PathSegments(entry.GroupPath));
+
+                if (consumed < 0 || consumed == segments.Length)
+                {
+                    continue;
+                }
+
+                var item = WalkNamed(entry.Device.DeviceItems, segments, consumed, Children, Name);
+
+                if (item != null)
+                {
+                    return item;
+                }
+            }
+
+            return null;
         }
 
-        private static DeviceItem? GetDeviceItemFromDevice(string[] pathSegments, DeviceComposition? devices, int index)
+        /// <summary>
+        /// How many leading segments of <paramref name="path"/> spell out
+        /// <paramref name="prefix"/>, or -1 when they do not. A prefix segment holding an
+        /// escaped slash also matches the same name written unescaped across several segments.
+        /// </summary>
+        internal static int MatchPrefix(string[] path, string[] prefix)
         {
-            string segment = pathSegments[index];
-            string nextSegment = index + 1 < pathSegments.Length ? pathSegments[index + 1] : string.Empty;
+            var index = 0;
 
-            DeviceItem? deviceItem = null;
-
-            // a pc based plc has a Device.Name = 'PC-System_1' or something like that, which is visible in the TIA-Portal IDE
-            // use segment to find device
-            var device = devices.FirstOrDefault(d => d.Name.Equals(segment, StringComparison.OrdinalIgnoreCase));
-            if (device != null)
+            foreach (var segment in prefix)
             {
-                // then use next segment to find device item
-                deviceItem = device.DeviceItems.FirstOrDefault(di => di.Name.Equals(nextSegment, StringComparison.OrdinalIgnoreCase));
+                var name = UnescapeSegment(segment);
+                var matched = false;
 
-            }
-
-            // a hardware plc has a Device.Name = 'S7-1500/ET200MP-Station_1' or something like that, which is not visible in the TIA-Portal IDE
-            if (device == null)
-            {
-                deviceItem = devices
-                .SelectMany(d => d.DeviceItems)
-                .FirstOrDefault(di => di.Name.Equals(segment, StringComparison.OrdinalIgnoreCase));
-            }
-
-            return deviceItem;
-        }
-
-        #endregion
-
-        #region get recursive ...
-
-        private bool GetDevicesRecursive(DeviceUserGroup group, List<Device> list, string regexName = "")
-        {
-            var anySuccess = false;
-
-            foreach (var composition in group.Devices)
-            {
-                if (composition is Device device)
+                for (var take = 1; index + take <= path.Length; take++)
                 {
-                    try
-                    {
-                        if (!string.IsNullOrEmpty(regexName) && !Regex.IsMatch(device.Name, regexName, RegexOptions.IgnoreCase))
-                        {
-                            continue; // Skip this device if it doesn't match the pattern
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        // Invalid regex pattern, skip this device
-                        continue;
-                    }
+                    var candidate = string.Join("/", path.Skip(index).Take(take).Select(UnescapeSegment));
 
-                    list.Add(device);
+                    if (candidate.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        index += take;
+                        matched = true;
 
-                    anySuccess = true;
+                        break;
+                    }
+                }
+
+                if (!matched)
+                {
+                    return -1;
                 }
             }
 
-            foreach (var subgroup in group.Groups)
-            {
-                anySuccess = GetDevicesRecursive(subgroup, list, regexName);
-            }
-
-            return anySuccess;
+            return index;
         }
 
         #endregion

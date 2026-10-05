@@ -71,11 +71,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error reading the source of '{objectPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error reading the source of '{objectPath}': {Why(ex)}", ex);
             }
         }
 
@@ -121,11 +121,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error snapshotting '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error snapshotting '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -235,11 +235,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error generating sources for '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error generating sources for '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -269,11 +269,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting {what}: {ex.Message}", ex);
+                throw new McpException($"Unexpected error exporting {what}: {Why(ex)}", ex);
             }
         }
 
@@ -302,11 +302,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (PortalException pex)
             {
-                throw new McpException(pex.Message, pex);
+                throw ToolError(pex);
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error generating the source of '{objectPath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error generating the source of '{objectPath}': {Why(ex)}", ex);
             }
         }
 
@@ -336,7 +336,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region import sources (write)
 
-        [WriteTool]
         // [McpServerTool(Name = "import_sources", Title = "Import sources", Destructive = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Compile every block and PLC data type source file (*.db, *.awl, *.scl, *.udt) under a folder tree back into the project - the counterpart to 'GenerateSources'. Each file is placed into the block or PLC data type group its folder path implies, matching the layout 'GenerateSources' writes; a folder whose group does not yet exist in the project fails that file rather than being created automatically. Existing blocks/types of the same name are overwritten")]
         public static ResponseImportedSources ImportSources(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -406,7 +405,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving external sources from '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving external sources from '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -430,7 +429,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving external source info from '{sourcePath}' in '{softwarePath}': {ex.Message}", ex);
+                throw new McpException($"Unexpected error retrieving external source info from '{sourcePath}' in '{softwarePath}': {Why(ex)}", ex);
             }
         }
 
@@ -508,7 +507,6 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
-        [WriteTool]
         // [McpServerTool(Name = "import_source_blocks", Title = "Import source blocks", Destructive = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Compile an external source file into program blocks and PLC data types. A target must be a block user group: blocks cannot be generated into the Program blocks root")]
         public static ResponseGenerateBlocks ImportSourceBlocks(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -548,37 +546,22 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             return Guarded(nameof(CreateSclBlock), () =>
             {
-                var tempFile = Path.Combine(Path.GetTempPath(), "TiaMcpServer", Guid.NewGuid().ToString("N") + ".scl");
-                Directory.CreateDirectory(Path.GetDirectoryName(tempFile));
-                File.WriteAllText(tempFile, sclCode);
-                
-                string sourceName = "AI_Gen_" + Guid.NewGuid().ToString("N").Substring(0, 8);
-                try
+                var names = Portal.GenerateFromSclText(softwarePath, sclCode, targetGroupPath, keepOnError);
+
+                return new ResponseGenerateBlocks
                 {
-                    Portal.CreateExternalSourceFromFile(softwarePath, "", sourceName, tempFile);
-                    var names = Portal.ImportSourceBlocks(softwarePath, sourceName, targetGroupPath, keepOnError);
-                    
-                    try { Portal.DeleteExternalSource(softwarePath, sourceName); } catch { /* Ignore cleanup errors */ }
-                    
-                    return new ResponseGenerateBlocks
+                    GeneratedNames = names,
+                    Count = names.Count,
+                    Message = $"{names.Count} object(s) generated from SCL code. {SaveHint}",
+                    Meta = new JsonObject
                     {
-                        GeneratedNames = names,
-                        Count = names.Count,
-                        Message = $"{names.Count} object(s) generated from SCL code. {SaveHint}",
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true,
-                            ["pendingSave"] = true,
-                            ["generatedCount"] = names.Count,
-                            ["keepOnError"] = keepOnError
-                        }
-                    };
-                }
-                finally
-                {
-                    if (File.Exists(tempFile)) File.Delete(tempFile);
-                }
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = true,
+                        ["pendingSave"] = true,
+                        ["generatedCount"] = names.Count,
+                        ["keepOnError"] = keepOnError
+                    }
+                };
             });
         }
 

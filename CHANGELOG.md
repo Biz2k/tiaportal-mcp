@@ -2,11 +2,113 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- __Failures now say why.__ A failed Openness call used to reach the client as `CreateFB failed`,
+  `DownloadToPlc failed` or `CopyBlock failed`, with the reason left in `InnerException`, which the
+  MCP SDK never sends. `Operation.Run` now puts the Openness text into the message, and the new
+  `McpServer.ToolError` appends the error code and the paths the call was about. See
+  `docs/error-model.md`.
+- __`get_project`, `get_devices`, `hw_get_device_info` and `get_device_item_info`__ returned a bare
+  `An error occurred invoking '...'`: attribute values such as `FileInfo` and engineering objects
+  could not be serialized. Attribute values are now reduced to JSON-safe values
+  (`Helper.ToJsonSafe`), and one unreadable attribute no longer fails the whole call.
+- __HMI tools, `export_objects`, `import_objects` and `get_download_targets`__ report a failure as
+  an error result (`isError: true`) with its reason. Before, the HMI tools returned it as an
+  ordinary result with the text `Unexpected error: ...`, or threw a plain `Exception` that the SDK
+  replaced with a generic message. Clients that parsed `Unexpected error` out of a successful
+  result must check `isError` instead.
+
+- __`import_objects` respects the write gate.__ It changes the project but was registered in read-only
+  mode.
+- __`download_to_plc` reports what happened.__ It answered TIA Portal's configuration steps through
+  `dynamic` inside an empty `catch` and returned three numbers, so any download that needed a decision
+  ended as `DownloadToPlc failed`. Every step is now recorded with its options and the answer given,
+  the message tree of the result is returned (informational lines capped by `maxMessages`, errors and
+  warnings always in full), and a failure names the stage and the step that blocked it. New
+  parameters: `stopPlc` and `startPlc` (both default false - the CPU is not touched unless asked),
+  `selections` to answer a step differently, `maxMessages`. A download that needs the CPU stopped is
+  refused with that explanation when `stopPlc` is false.
+- __Hardware, network and library edits respect the write gate.__ `hw_create_device`, `hw_plug_module`,
+  `hw_delete_device`, the four `net_*` tools, `instantiate_master_copy`, `hmi_create_faceplate_instance`
+  and `hmi_manage_unified_faceplate` change the project but were registered even without
+  `--allow-write`. They now carry `[WriteTool]`, and the hardware and network tools run under the
+  shared lock and inside a transaction like every other write.
+- __`hw_create_device` accepts station types.__ `System:Device.ET200SP` was rejected because every
+  identifier went to `CreateWithItem`. A `System:` identifier now creates an empty station; the rack is
+  added with `hw_plug_module` and an empty `parentItemName`, then the head module goes into the rack.
+  New parameter `stationName`; the response lists the path and the items of the new device.
+- __`net_create_io_system` and `net_connect_to_io_system` say which step is missing__ - no subnet yet,
+  no such IO system (with the ones that exist) - instead of failing inside Openness.
+- __`hw_plug_module` explains a refusal__ with the occupied positions of the rack.
+- __A wrong HMI path is an error.__ `hmi_get_screens` and `hmi_get_tags` returned an empty list for a
+  path that does not exist; a PLC path produced a binder error.
+- __`hmi_manage_unified_faceplate` reports failure as an error result__, and rejects an item that is
+  not a faceplate container before touching its interface.
+- __`plc_create_fb` creates function blocks.__ It always failed with `CreateFB failed`: Openness
+  creates only ProDiag blocks through `CreateFB`. SCL blocks are now generated from a source text,
+  LAD, FBD and STL blocks are imported from a minimal SimaticML document, ProDiag keeps using
+  `CreateFB`; other languages are refused with an explanation.
+- __`plc_create_instance_db` no longer creates `DB0`.__ The server picks the first free number, checks
+  an explicit one before creating anything, and checks that the function block exists.
+  `plc_create_fb` and `plc_create_instance_db` return the block number.
+- __`plc_copy_block` and `plc_copy_type` work.__ A copy into the same PLC could never succeed, because
+  names and block numbers are unique within a PLC. New parameters: `newName` (required inside the same
+  PLC; the copy also gets a free block number) and `targetSoftwarePath` (copy into another PLC,
+  keeping the name).
+- __`plc_move_block` and `plc_move_type` work.__ The original is now deleted before the import instead
+  of after it, and imported back if the import fails. The `overwrite` parameter is gone: it could
+  not do anything useful and led to "Access to a disposed object".
+- __`plc_compile_block` compiles.__ It answered "Block is not compilable" for every block, because the
+  compiler is a service of the block, not an interface it implements.
+- __Names containing `/` are addressable.__ TIA Portal allows the slash in group, table and station
+  names (`Inputs/Outputs`, `S7-1500/ET200MP station_1`), but paths were split on every `/`, so
+  `plc_resolve_object_path` returned `Inputs/Outputs/AI_Handler` and no tool could open it. Paths
+  now write such a slash as `%2F` (`Inputs%2FOutputs/AI_Handler`), and the unescaped form is still
+  accepted: a segment that does not resolve as written is joined with the following ones.
+- __Device lookup is one resolver.__ `hw_get_device_info`, `get_device_item_info`, `get_devices` and
+  every `hw_*` / `net_*` tool accept the same forms: the path, the Openness device name, the bare
+  name inside a group, or the CPU name the project tree shows. Devices in the ungrouped devices
+  group (distributed IO) are found and listed. `get_devices`, `hw_get_device_info` and
+  `get_hardware_topology` return a `path`. A name matching several devices is rejected with the
+  candidate paths instead of silently picking the first.
+- __Exact names win over patterns.__ A block or type path whose last segment contains a regex
+  character (`A5.01`) is matched literally first and as a regular expression only if no object has
+  that name.
+
+### Changed
+
+- A `preservePath` export of a group whose name contains `/` now writes one folder
+  (`Inputs%2FOutputs`) instead of nested ones (`Inputs\Outputs`); the result imports back.
+### Changed
+
+- __Writing is on by default, `--read-only` turns it off.__ The code already registered the write
+  tools unconditionally while the documentation described an opt-in `--allow-write`; the flag did
+  nothing and there was no way to switch writing off. `--read-only` now leaves the 58
+  project-changing tools out of `tools/list`. `--allow-write` is still accepted and is a no-op.
+- __Breaking: `connect` no longer starts TIA Portal.__ With no TIA Portal running it used to launch a
+  new instance with its window. It now fails with an explanation; pass `startIfNotRunning=true` to
+  get the old behaviour. `open_tia_project` likewise needs a running TIA Portal.
+- __Prompts follow the tools.__ The prompt texts named tools that were renamed or removed. They now
+  name the current tools; the 34 prompts for the per-kind export and import tools that
+  `export_objects` and `import_objects` replaced are gone (78 prompts remain). Prompts for tools added
+  since then (hardware, network, HMI, download) have not been written.
+- Assembly version is 0.4.0 (it was still 0.1.0).
+- `README.md` and `Implemented_Tools.md` describe the current tool names, flags and write mode.
 ### Added
+
+- __`hw_search_catalog`__: search the installed hardware catalog by article number or name and get the
+  type identifiers `hw_create_device` and `hw_plug_module` need.
+- __`--debug-tools`__: `hmi_debug_reflect`, `hmi_debug_screen_item` and `hmi_test_faceplate` are
+  development aids and are now registered only with this flag. The normal tool list has 115 tools.
+- `docs/tools-list.txt`: the tool names the server registers, as a baseline for spotting tools that
+  disappear or get renamed.
+- `Test8ErrorReporting`: tests for error texts and attribute serialization; they need no TIA Portal.
 
 - __Batch CRUD operations (Stage 3 & 5)__: 
   - `plc_manage_tag_table_entries` for efficient bulk create/update/delete of tags and constants via JSON arrays.
-  - `hmi_manage_items` for upserting HMI screen items and configurations in bulk.
+  - `hmi_manage_items` for upserting HMI screen items in bulk was announced here, but no such tool is
+    registered: only the `Portal.ManageHmiItems` method exists. Tracked in `TODO.md`.
   - `hmi_create_faceplate_instance` (formerly `create_hmi_faceplate_instance`) updated to robustly handle complex faceplate parameterization.
 - __Consolidated Read operations (Stage 4)__: `plc_get_block_data` combines block information, interface, and source into a single call with flags.
 
