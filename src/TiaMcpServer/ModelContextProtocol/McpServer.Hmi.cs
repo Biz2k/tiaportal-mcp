@@ -114,6 +114,34 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "list_hmi_library_types", Title = "List HMI Library Types", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Get a structured list of all types available in the Project Library, including Faceplates and Scripts, with their versions and ContainedType formats.")]
+        public static object ListHmiLibraryTypes()
+        {
+            try {
+                var types = Portal.ListHmiLibraryTypes();
+                return new { Message = $"Retrieved {types.Count} types from Project Library", Items = types, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
+
+        [McpServerTool(Name = "create_hmi_faceplate_instance", Title = "Create HMI Faceplate Instance", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Create a Faceplate container on the given HMI screen and bind it to a library Faceplate type.")]
+        public static object CreateHmiFaceplateInstance(
+            [Description("Path to the HMI software (e.g. 'HMI_1/HMI_RT_1')")] string softwarePath,
+            [Description("Name of the screen to modify")] string screenName,
+            [Description("Name of the Faceplate instance to create")] string instanceName,
+            [Description("The ContainedType string (e.g. 'V0.0.1\\\\MyFaceplate'). Get this from list_hmi_library_types.")] string containedType)
+        {
+            try {
+                string msg = Portal.CreateHmiFaceplateInstance(softwarePath, screenName, instanceName, containedType);
+                return new { Message = msg, Meta = OkMeta() };
+            } catch (Exception ex) {
+                return new { Message = $"Unexpected error: {ex.Message}" };
+            }
+        }
+
         [McpServerTool(Name = "get_hmi_screen_item_properties", Title = "Get HMI screen item complete properties", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Get a complete dictionary of all properties dynamically available for a specific screen element via Openness. If itemName is empty, returns properties of the screen itself.")]
         public static object GetHmiScreenItemProperties(

@@ -268,6 +268,24 @@ namespace TiaMcpServer.Siemens
                 throw new System.Exception($"Failed to get attributes: {ex.Message}");
             }
 
+            // Extract Interface (specifically for Faceplates)
+            var interfaceList = new List<Dictionary<string, object>>();
+            try {
+                var ifaceProp = targetItem.GetType().GetProperty("Interface");
+                if (ifaceProp != null) {
+                    var iface = ifaceProp.GetValue(targetItem);
+                    foreach (var iProp in iface) {
+                        var iDict = new Dictionary<string, object>();
+                        iDict["__Type"] = iProp.GetType().Name;
+                        foreach (var p in iProp.GetType().GetProperties()) {
+                            try { iDict[p.Name] = p.GetValue(iProp)?.ToString(); } catch { }
+                        }
+                        interfaceList.Add(iDict);
+                    }
+                }
+            } catch { }
+            if (interfaceList.Count > 0) props["_Interface"] = interfaceList;
+
             // Extract Dynamizations
             var dynList = new List<Dictionary<string, object>>();
             props["_Dynamizations"] = dynList;
@@ -433,6 +451,72 @@ namespace TiaMcpServer.Siemens
             return faceplates;
         }
 
+        public List<System.Collections.Generic.Dictionary<string, object>> ListHmiLibraryTypes()
+        {
+            var typesList = new List<System.Collections.Generic.Dictionary<string, object>>();
+            if (_project == null) return typesList;
+
+            try {
+                dynamic projLib = _project.ProjectLibrary;
+                GetLibraryTypesRecursive(projLib.TypeFolder, typesList, "");
+            } catch { }
+            
+            return typesList;
+        }
+
+        private void GetLibraryTypesRecursive(dynamic folder, List<System.Collections.Generic.Dictionary<string, object>> typesList, string path)
+        {
+            try {
+                foreach (var type in folder.Types) {
+                    var typeInfo = new System.Collections.Generic.Dictionary<string, object>();
+                    typeInfo["Name"] = type.Name;
+                    typeInfo["Path"] = path;
+                    
+                    string kind = "Unknown";
+                    try { kind = type.GetType().Name; } catch { }
+                    typeInfo["Kind"] = kind;
+
+                    // Classify the target system / specific use
+                    string targetSystem = "Unknown";
+                    if (kind == "FaceplateLibraryType") {
+                        targetSystem = "WinCC Comfort/Advanced/Professional";
+                    } else if (kind == "LibraryType") {
+                        // In TIA Openness, WinCC Unified Faceplates, Scripts, and Graphics fall under generic LibraryType
+                        targetSystem = "WinCC Unified (Faceplate / Script / Graphic)";
+                    } else if (kind == "PlcTypeLibraryType") {
+                        targetSystem = "PLC Data Type (UDT)";
+                    } else if (kind.Contains("MasterCopy")) {
+                        targetSystem = "Master Copy";
+                    } else {
+                        targetSystem = kind;
+                    }
+                    typeInfo["TargetSystem"] = targetSystem;
+
+                    var versions = new List<System.Collections.Generic.Dictionary<string, object>>();
+                    try {
+                        foreach (var v in type.Versions) {
+                            var verInfo = new System.Collections.Generic.Dictionary<string, object>();
+                            try { verInfo["Version"] = v.VersionNumber; } catch { }
+                            try { verInfo["State"] = v.State.ToString(); } catch { }
+                            
+                            // For Faceplates (both Advanced and Unified), generate the ContainedType format
+                            if (kind.Contains("Faceplate") || kind == "LibraryType") {
+                                try { verInfo["ContainedTypeFormat"] = $"V{v.VersionNumber}\\{type.Name}"; } catch { }
+                            }
+                            versions.Add(verInfo);
+                        }
+                    } catch { }
+                    
+                    typeInfo["Versions"] = versions;
+                    typesList.Add(typeInfo);
+                }
+
+                foreach (var subFolder in folder.Folders) {
+                    GetLibraryTypesRecursive(subFolder, typesList, path + (string.IsNullOrEmpty(path) ? "" : "/") + subFolder.Name);
+                }
+            } catch { }
+        }
+
         public string CreateHmiScreen(string softwarePath, string screenName)
         {
             var softwareContainer = GetSoftwareContainer(softwarePath);
@@ -529,6 +613,45 @@ namespace TiaMcpServer.Siemens
             }
         }
 
+        public string CreateHmiFaceplateInstance(string softwarePath, string screenName, string instanceName, string containedTypeString)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            dynamic dynSoftware = softwareContainer.Software;
+            dynamic screen = null;
+
+            if (dynSoftware is HmiTarget target) {
+                screen = FindScreenInFolder(target.ScreenFolder, screenName);
+            } else if (dynSoftware is HmiSoftware unified) {
+                foreach (var s in unified.Screens) { if (s.Name == screenName) { screen = s; break; } }
+            }
+
+            if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
+
+            dynamic faceplateItem = null;
+            try {
+                // Determine what type to create based on Classic vs Unified
+                if (dynSoftware is HmiTarget) {
+                    screen.ScreenItems.Create("HmiFaceplate", instanceName); 
+                    foreach (var item in screen.ScreenItems) { if (item.Name == instanceName) { faceplateItem = item; break; } }
+                } else {
+                    // Unified
+                    CreateHmiScreenItem(softwarePath, screenName, "HmiFaceplateContainer", instanceName);
+                    foreach (var item in screen.ScreenItems) { if (item.Name == instanceName) { faceplateItem = item; break; } }
+                }
+            } catch (System.Exception ex) {
+                throw new System.Exception($"Failed to instantiate faceplate container '{instanceName}': {ex.Message}");
+            }
+
+            if (faceplateItem == null) throw new System.Exception($"Could not locate the created faceplate container '{instanceName}'.");
+
+            try {
+                faceplateItem.ContainedType = containedTypeString;
+                return $"Faceplate instance '{instanceName}' created and bound to '{containedTypeString}'.";
+            } catch (System.Exception ex) {
+                throw new System.Exception($"Created container, but failed to assign contained type '{containedTypeString}': {ex.Message}");
+            }
+        }
         public string DeleteHmiScreenItem(string softwarePath, string screenName, string itemName)
         {
             var softwareContainer = GetSoftwareContainer(softwarePath);
