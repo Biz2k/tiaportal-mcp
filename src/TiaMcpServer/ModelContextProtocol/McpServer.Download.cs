@@ -33,16 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return MapDownloadResult(result);
             });
         }
-        
-        [McpServerTool(Name = "start_plcsim_and_download_all", Title = "Start PLCSIM and Download All", OpenWorld = false)]
-        [Description("Searches for PLCSIM executable, starts it, waits for it to initialize, and then attempts to download all PLCs in the project to the PLCSIM Virtual Ethernet Adapter.")]
-        public static string StartPlcSimAndDownloadAll()
-        {
-            return GuardedNoTransaction("StartPlcSimAndDownloadAll", () =>
-            {
-                return Portal.StartPlcSimAndDownloadAll();
-            });
-        }
+
 
         private static ResponseDownloadResult MapDownloadResult(DownloadResult? result)
         {
