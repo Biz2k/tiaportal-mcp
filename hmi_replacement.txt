@@ -1,0 +1,3 @@
+﻿        [WriteTool]
+        [McpServerTool(Name = "hmi_manage_items", Title = "Manage HMI items", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Batch Create/Update/Delete HMI screen items (Buttons, Faceplates, etc.). Provide a JSON array of actions.")]

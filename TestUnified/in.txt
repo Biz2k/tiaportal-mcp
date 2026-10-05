@@ -1,0 +1,3 @@
+{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "connect", "arguments": {}}}
+{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "get_hmi_screen_item_properties", "arguments": {"softwarePath": "HMI (A7)/HMI_RT_3", "screenName": "A7", "itemName": "Valve_01"}}}
+

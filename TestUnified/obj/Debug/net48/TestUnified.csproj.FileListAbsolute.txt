@@ -1,0 +1,11 @@
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net48\TestUnified.csproj.AssemblyReference.cache
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net48\TestUnified.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net48\TestUnified.AssemblyInfoInputs.cache
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net48\TestUnified.AssemblyInfo.cs
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net48\TestUnified.csproj.CoreCompileInputs.cache
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net48\TestUnified.sourcelink.json
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\bin\Debug\net48\TestUnified.exe.config
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\bin\Debug\net48\TestUnified.exe
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\bin\Debug\net48\TestUnified.pdb
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net48\TestUnified.exe
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net48\TestUnified.pdb

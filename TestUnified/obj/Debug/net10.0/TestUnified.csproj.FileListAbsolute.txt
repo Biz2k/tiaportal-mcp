@@ -1,0 +1,15 @@
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\bin\Debug\net10.0\TestUnified.exe
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\bin\Debug\net10.0\TestUnified.deps.json
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\bin\Debug\net10.0\TestUnified.runtimeconfig.json
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\bin\Debug\net10.0\TestUnified.dll
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\bin\Debug\net10.0\TestUnified.pdb
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net10.0\TestUnified.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net10.0\TestUnified.AssemblyInfoInputs.cache
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net10.0\TestUnified.AssemblyInfo.cs
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net10.0\TestUnified.csproj.CoreCompileInputs.cache
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net10.0\TestUnified.sourcelink.json
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net10.0\TestUnified.dll
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net10.0\refint\TestUnified.dll
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net10.0\TestUnified.pdb
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net10.0\TestUnified.genruntimeconfig.cache
+C:\Users\Biz\Antigravity\MCP_TIA_Portal\TestUnified\obj\Debug\net10.0\ref\TestUnified.dll

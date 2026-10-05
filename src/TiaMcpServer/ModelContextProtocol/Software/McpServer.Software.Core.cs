@@ -15,7 +15,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         #region plc software
 
-        [McpServerTool(Name = "get_software_info", Title = "Get software info", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get plc software info")]
+        [McpServerTool(Name = "plc_get_software_info", Title = "Get software info", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get plc software info")]
         public static ResponseSoftwareInfo GetSoftwareInfo(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
         {
@@ -51,7 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "compile_software", Title = "Compile software", Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "plc_compile_software", Title = "Compile software", Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Compile the plc software and report every compiler message with the object it belongs to, so errors can be fixed without re-reading the whole PLC. Warnings are reported as a successful compile with detail; only errors fail the call")]
         public static ResponseCompileSoftware CompileSoftware(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -152,3 +152,4 @@ namespace TiaMcpServer.ModelContextProtocol
         #endregion
     }
 }
+

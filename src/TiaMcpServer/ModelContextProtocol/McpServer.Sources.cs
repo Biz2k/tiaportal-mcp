@@ -26,7 +26,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region source
 
-        [McpServerTool(Name = "get_block_source", Title = "Get block source", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "plc_get_block_source", Title = "Get block source", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Return the source text of one program block directly, instead of exporting a file and reading it back. 'document' gives readable SCL/LAD/STL (SIMATIC Source Document, V20+); objects TIA Portal cannot represent that way - STL and mixed-language blocks - fall back to XML automatically, and the response says which format was produced")]
         public static ResponseSourceText GetBlockSource(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -79,7 +79,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "get_type_source", Title = "Get type source", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "plc_get_type_source", Title = "Get type source", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Return the source text of one PLC data type directly, instead of exporting a file and reading it back. 'document' gives the readable TYPE ... END_TYPE declaration (SIMATIC Source Document, requires TIA Portal V21); 'xml' gives the SimaticML export")]
         public static ResponseSourceText GetTypeSource(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -204,7 +204,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 exportPath);
         }
 
-        [McpServerTool(Name = "generate_sources", Title = "Generate sources",Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "plc_generate_sources", Title = "Generate sources",Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Write every block and PLC data type of one PLC software as external source files into a folder tree that mirrors the project groups: '<exportPath>/Program blocks/...' and '<exportPath>/PLC data types/...', one file per object. The compilable counterpart to 'ExportPlcAsDocuments'. Objects with no source form (LAD, FBD, GRAPH), inconsistent objects and know-how protected ones are reported in 'Skipped' instead of failing the run")]
         public static ResponseGeneratedSources GenerateSources(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -387,7 +387,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region external sources
 
-        [McpServerTool(Name = "get_external_sources", Title = "Get external sources", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "plc_get_external_sources", Title = "Get external sources", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("List the external source files of a plc software, optionally filtered by a regular expression on the source name")]
         public static ResponseExternalSources GetExternalSources(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -410,7 +410,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "get_external_source_info", Title = "Get external source info", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "plc_get_external_source_info", Title = "Get external source info", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Get a single external source file. Beyond its name, all metadata is returned in the generic Attributes list")]
         public static ResponseExternalSourceInfo GetExternalSourceInfo(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -450,7 +450,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region external sources (write)
 
         [WriteTool]
-        [McpServerTool(Name = "create_external_source_from_file", Title = "Create external source from file", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "plc_create_external_source", Title = "Create external source from file", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Add a source file (for example an SCL file) from the file system into the external source files of the plc software")]
         public static ResponseCreated CreateExternalSourceFromFile(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -466,7 +466,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "delete_external_source", Title = "Delete external source", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "plc_delete_external_source", Title = "Delete external source", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Remove an external source file from the plc software")]
         public static ResponseDeleted DeleteExternalSource(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -480,7 +480,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "create_external_source_group", Title = "Create external source group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "plc_create_external_source_group", Title = "Create external source group", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Create a group below the External source files root of the plc software")]
         public static ResponseCreated CreateExternalSourceGroup(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -495,7 +495,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "delete_external_source_group", Title = "Delete external source group", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "plc_delete_external_source_group", Title = "Delete external source group", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Delete an external source group and everything inside it. The External source files system group itself cannot be deleted")]
         public static ResponseDeleted DeleteExternalSourceGroup(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -538,7 +538,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "create_scl_block", Title = "Create SCL block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "plc_create_scl_block", Title = "Create SCL block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Create a block directly from SCL source code text.")]
         public static ResponseGenerateBlocks CreateSclBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -585,3 +585,4 @@ namespace TiaMcpServer.ModelContextProtocol
         #endregion
     }
 }
+

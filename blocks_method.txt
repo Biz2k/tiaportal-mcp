@@ -1,0 +1,49 @@
+        [McpServerTool(Name = "plc_get_block_data", Title = "Get Block Data", Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Get comprehensive block information including metadata, interface, and source code depending on requested parts.")]
+        public static object GetBlockData(string softwarePath, string blockName, System.Text.Json.Nodes.JsonArray parts)
+        {
+            var pList = new List<string>();
+            if (parts != null) {
+                foreach(var p in parts) pList.Add(p.GetValue<string>().ToLowerInvariant());
+            }
+
+            var block = Portal.GetBlock(softwarePath, blockName);
+            if (block == null) throw new Exception($"Block {blockName} not found.");
+
+            string xmlContent = null;
+            if (pList.Contains("interface") || pList.Contains("source")) {
+                string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), blockName + "_" + Guid.NewGuid().ToString() + ".xml");
+                try {
+                    Portal.ExportXmlBlock(softwarePath, blockName, tempFile, false);
+                    xmlContent = System.IO.File.ReadAllText(tempFile);
+                } finally {
+                    if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile);
+                }
+            }
+
+            var result = new Dictionary<string, object>();
+            result["name"] = block.Name;
+            
+            if (pList.Contains("metadata") || pList.Count == 0) {
+                result["metadata"] = new {
+                    Number = block.Number,
+                    Language = block.ProgrammingLanguage.ToString(),
+                    AutoNumber = block.AutoNumber,
+                    IsConsistent = block.IsConsistent,
+                    MemoryReserve = block.MemoryReserve
+                };
+            }
+
+            if (xmlContent != null) {
+                if (pList.Contains("interface")) {
+                    var match = System.Text.RegularExpressions.Regex.Match(xmlContent, @"<Interface>.*?</Interface>", System.Text.RegularExpressions.RegexOptions.Singleline);
+                    if (match.Success) result["interface"] = match.Value;
+                }
+                if (pList.Contains("source")) {
+                    var match = System.Text.RegularExpressions.Regex.Match(xmlContent, @"<ObjectList>.*?</ObjectList>", System.Text.RegularExpressions.RegexOptions.Singleline);
+                    if (match.Success) result["source"] = match.Value;
+                }
+            }
+
+            return result;
+        }

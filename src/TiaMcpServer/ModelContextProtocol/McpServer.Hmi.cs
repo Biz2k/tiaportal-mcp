@@ -9,7 +9,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static partial class McpServer
     {
-        [McpServerTool(Name = "get_hmi_screens", Title = "Get HMI screens", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_get_screens", Title = "Get HMI screens", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Get a list of all screens in an HMI target (WinCC Basic/Comfort/Advanced/Professional or Unified).")]
         public static ResponseHmiScreens GetHmiScreens(
             [Description("softwarePath: defines the path in the project structure to the HMI software")] string softwarePath)
@@ -30,7 +30,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "get_hmi_tags", Title = "Get HMI tags", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_get_tags", Title = "Get HMI tags", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Get a list of all tags in an HMI target (WinCC Basic/Comfort/Advanced/Professional or Unified).")]
         public static ResponseHmiTags GetHmiTags(
             [Description("softwarePath: defines the path in the project structure to the HMI software")] string softwarePath)
@@ -51,7 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "get_hmi_screen_items", Title = "Get HMI screen items", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_get_screen_items", Title = "Get HMI screen items", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Get a list of all items (buttons, IO fields, graphics, etc.) on a specific HMI screen.")]
         public static ResponseHmiScreenItems GetHmiScreenItems(
             [Description("softwarePath: defines the path in the project structure to the HMI software")] string softwarePath,
@@ -73,7 +73,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "debug_reflect", Title = "Debug Reflect", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_debug_reflect", Title = "Debug Reflect", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Reflect over an assembly")]
         public static object DebugReflect([Description("typeName")] string typeName)
         {
@@ -89,7 +89,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "debug_screen_item", Title = "Debug Screen Item", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_debug_screen_item", Title = "Debug Screen Item", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Reflect over a screen item")]
         public static object DebugScreenItem([Description("softwarePath")] string softwarePath, [Description("screenName")] string screenName, [Description("itemName")] string itemName)
         {
@@ -102,7 +102,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new { message = ex.Message };
             }
         }
-        [McpServerTool(Name = "get_library_faceplates", Title = "Get Project Library Faceplates", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_get_library_faceplates", Title = "Get Project Library Faceplates", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Get a list of all Faceplates available in the Project Library.")]
         public static object GetLibraryFaceplates()
         {
@@ -114,7 +114,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "list_hmi_library_types", Title = "List HMI Library Types", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_get_library_types", Title = "List HMI Library Types", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Get a structured list of all types available in the Project Library, including Faceplates and Scripts, with their versions and ContainedType formats.")]
         public static object ListHmiLibraryTypes()
         {
@@ -126,7 +126,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "create_hmi_faceplate_instance", Title = "Create HMI Faceplate Instance", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_create_faceplate_instance", Title = "Create HMI Faceplate Instance", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Create a Faceplate container on the given HMI screen and bind it to a library Faceplate type.")]
         public static object CreateHmiFaceplateInstance(
             [Description("Path to the HMI software (e.g. 'HMI_1/HMI_RT_1')")] string softwarePath,
@@ -142,7 +142,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "get_hmi_screen_item_properties", Title = "Get HMI screen item complete properties", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_get_screen_item_properties", Title = "Get HMI screen item complete properties", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Get a complete dictionary of all properties dynamically available for a specific screen element via Openness. If itemName is empty, returns properties of the screen itself.")]
         public static object GetHmiScreenItemProperties(
             [Description("softwarePath: defines the path in the project structure to the HMI software")] string softwarePath,
@@ -158,7 +158,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "set_hmi_screen_item_property", Title = "Set HMI screen item generic property", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_set_screen_item_property", Title = "Set HMI screen item generic property", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Set an arbitrary property of a screen element by its exact property name (e.g. 'BackColor', 'Visible'). Use GetHmiScreenItemProperties to find the correct property names. If itemName is empty, modifies the screen itself.")]
         public static object SetHmiScreenItemProperty(
             [Description("softwarePath: path to HMI software")] string softwarePath,
@@ -187,7 +187,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "get_hmi_connections", Title = "Get HMI connections", ReadOnly = true, Destructive = false, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_get_connections", Title = "Get HMI connections", ReadOnly = true, Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("List all HMI connections to PLCs with their attributes.")]
         public static object GetHmiConnections(
             [Description("softwarePath: path to HMI software")] string softwarePath)
@@ -201,7 +201,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "create_hmi_screen", Title = "Create HMI screen", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_create_screen", Title = "Create HMI screen", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Create a new HMI screen in the given HMI target.")]
         public static object CreateHmiScreen(
             [Description("softwarePath: path to HMI software")] string softwarePath,
@@ -216,7 +216,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "delete_hmi_screen", Title = "Delete HMI screen", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_delete_screen", Title = "Delete HMI screen", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Delete an HMI screen from the given HMI target.")]
         public static object DeleteHmiScreen(
             [Description("softwarePath: path to HMI software")] string softwarePath,
@@ -231,7 +231,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "create_hmi_screen_item", Title = "Create HMI screen item", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_create_screen_item", Title = "Create HMI screen item", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Create an item (e.g. HmiButton, HmiIOField, HmiFaceplate) on the given HMI screen.")]
         public static object CreateHmiScreenItem(
             [Description("softwarePath: path to HMI software")] string softwarePath,
@@ -248,7 +248,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "delete_hmi_screen_item", Title = "Delete HMI screen item", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_delete_screen_item", Title = "Delete HMI screen item", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Delete an item from the given HMI screen.")]
         public static object DeleteHmiScreenItem(
             [Description("softwarePath: path to HMI software")] string softwarePath,
@@ -264,7 +264,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "configure_hmi_screen_item", Title = "Configure HMI screen item", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_configure_screen_item", Title = "Configure HMI screen item", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Configure an item (e.g. dimensions, text, processValue binding) on the given HMI screen.")]
         public static object ConfigureHmiScreenItem(
             [Description("softwarePath: path to HMI software")] string softwarePath,
@@ -286,7 +286,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "configure_unified_trend_control", Title = "Configure HMI Trend Control", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_configure_unified_trend_control", Title = "Configure HMI Trend Control", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Add a trend/pen to an HmiTrendControl and bind it to a Data Source (e.g. Logged Tag). WinCC Unified only.")]
         public static object ConfigureHmiTrendControl(
             [Description("softwarePath: path to HMI software")] string softwarePath,
@@ -307,7 +307,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "configure_unified_trend_companion", Title = "Configure HMI Trend Companion", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_configure_unified_trend_companion", Title = "Configure HMI Trend Companion", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Bind an HmiTrendCompanion to an HmiTrendControl. WinCC Unified only.")]
         public static object ConfigureHmiTrendCompanion(
             [Description("softwarePath: path to HMI software")] string softwarePath,
@@ -324,7 +324,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "set_hmi_unified_screen_item_event", Title = "Set HMI screen item event (WinCC Unified only)", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_set_unified_screen_item_event", Title = "Set HMI screen item event (WinCC Unified only)", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Set an event handler (like Click) with JS script for a WinCC Unified screen item.")]
         public static object SetHmiUnifiedScreenItemEvent(
             [Description("softwarePath: path to HMI software")] string softwarePath,
@@ -353,7 +353,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var res = Portal.ManageHmiUnifiedFaceplate(softwarePath, screenName, action, itemName, faceplateType, dict);
             return new ResponseHmiManageItems { Results = new List<HmiItemResult> { res }, SuccessCount = res.Status == "success" ? 1 : 0 };
         }
-        [McpServerTool(Name = "test_faceplate", Title = "Test Faceplate", Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+        [McpServerTool(Name = "hmi_test_faceplate", Title = "Test Faceplate", Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Test faceplate interface")]
         public static string TestFaceplate(string softwarePath, string screenName, string itemName, string propName, string propValue, bool asTag)
         {
@@ -390,3 +390,4 @@ namespace TiaMcpServer.ModelContextProtocol
         }
     }
 }
+

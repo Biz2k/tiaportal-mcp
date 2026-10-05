@@ -14,7 +14,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         #region devices
 
-        [McpServerTool(Name = "get_device_info", Title = "Get device info", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get info from a device from the current project/session")]
+        [McpServerTool(Name = "hw_get_device_info", Title = "Get device info", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get info from a device from the current project/session")]
         public static ResponseDeviceInfo GetDeviceInfo(
             [Description("devicePath: defines the path in the project structure to the device")] string devicePath)
         {
@@ -135,3 +135,4 @@ namespace TiaMcpServer.ModelContextProtocol
         #endregion
     }
 }
+
