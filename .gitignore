@@ -3,3 +3,10 @@ export/
 .gemini/
 .claude/
 .github/
+
+# Build output. The project folders have their own rules; these catch anything built elsewhere,
+# which is how the bin/ and obj/ folders of three scratch projects once ended up in the history.
+bin/
+obj/
+TestResults/
+*.user
