@@ -14,6 +14,17 @@ namespace TiaMcpServer.ModelContextProtocol
     }
 
     /// <summary>
+    /// Marks a tool that exists for developing this server - reflecting over Openness types,
+    /// poking at one screen item - rather than for engineering a project. Program.cs registers
+    /// marked tools only with '--debug-tools', so they do not take up room in 'tools/list' or
+    /// invite a model to call them.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    public sealed class DebugToolAttribute : System.Attribute
+    {
+    }
+
+    /// <summary>
     /// Gates the project-mutating tools behind the '--allow-write' command line flag.
     ///
     /// Callers: Program.cs (sets AllowWrite from CliOptions and conditionally registers the

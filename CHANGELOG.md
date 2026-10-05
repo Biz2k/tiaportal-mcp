@@ -19,6 +19,22 @@
   replaced with a generic message. Clients that parsed `Unexpected error` out of a successful
   result must check `isError` instead.
 
+- __Hardware, network and library edits respect the write gate.__ `hw_create_device`, `hw_plug_module`,
+  `hw_delete_device`, the four `net_*` tools, `instantiate_master_copy`, `hmi_create_faceplate_instance`
+  and `hmi_manage_unified_faceplate` change the project but were registered even without
+  `--allow-write`. They now carry `[WriteTool]`, and the hardware and network tools run under the
+  shared lock and inside a transaction like every other write.
+- __`hw_create_device` accepts station types.__ `System:Device.ET200SP` was rejected because every
+  identifier went to `CreateWithItem`. A `System:` identifier now creates an empty station; the rack is
+  added with `hw_plug_module` and an empty `parentItemName`, then the head module goes into the rack.
+  New parameter `stationName`; the response lists the path and the items of the new device.
+- __`net_create_io_system` and `net_connect_to_io_system` say which step is missing__ - no subnet yet,
+  no such IO system (with the ones that exist) - instead of failing inside Openness.
+- __`hw_plug_module` explains a refusal__ with the occupied positions of the rack.
+- __A wrong HMI path is an error.__ `hmi_get_screens` and `hmi_get_tags` returned an empty list for a
+  path that does not exist; a PLC path produced a binder error.
+- __`hmi_manage_unified_faceplate` reports failure as an error result__, and rejects an item that is
+  not a faceplate container before touching its interface.
 - __`plc_create_fb` creates function blocks.__ It always failed with `CreateFB failed`: Openness
   creates only ProDiag blocks through `CreateFB`. SCL blocks are now generated from a source text,
   LAD, FBD and STL blocks are imported from a minimal SimaticML document, ProDiag keeps using
@@ -56,6 +72,10 @@
   (`Inputs%2FOutputs`) instead of nested ones (`Inputs\Outputs`); the result imports back.
 ### Added
 
+- __`hw_search_catalog`__: search the installed hardware catalog by article number or name and get the
+  type identifiers `hw_create_device` and `hw_plug_module` need.
+- __`--debug-tools`__: `hmi_debug_reflect`, `hmi_debug_screen_item` and `hmi_test_faceplate` are
+  development aids and are now registered only with this flag. The normal tool list has 115 tools.
 - `docs/tools-list.txt`: the tool names the server registers, as a baseline for spotting tools that
   disappear or get renamed.
 - `Test8ErrorReporting`: tests for error texts and attribute serialization; they need no TIA Portal.

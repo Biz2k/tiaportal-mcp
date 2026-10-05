@@ -27,7 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                throw new McpException($"Unexpected error retrieving HMI screens from '{softwarePath}': {Why(ex)}", ex);
+                throw ToolError(ex, ex is TiaMcpServer.Siemens.PortalException ? null : $"Unexpected error retrieving HMI screens from '{softwarePath}'");
             }
         }
 
@@ -48,7 +48,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                throw new McpException($"Unexpected error retrieving HMI tags from '{softwarePath}': {Why(ex)}", ex);
+                throw ToolError(ex, ex is TiaMcpServer.Siemens.PortalException ? null : $"Unexpected error retrieving HMI tags from '{softwarePath}'");
             }
         }
 
@@ -70,10 +70,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex)
             {
-                throw new McpException($"Unexpected error retrieving screen items from '{screenName}': {Why(ex)}", ex);
+                throw ToolError(ex, ex is TiaMcpServer.Siemens.PortalException ? null : $"Unexpected error retrieving screen items from '{screenName}'");
             }
         }
 
+        [DebugTool]
         [McpServerTool(Name = "hmi_debug_reflect", Title = "Debug Reflect", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Reflect over an assembly")]
         public static object DebugReflect([Description("typeName")] string typeName)
@@ -90,6 +91,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [DebugTool]
         [McpServerTool(Name = "hmi_debug_screen_item", Title = "Debug Screen Item", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Reflect over a screen item")]
         public static object DebugScreenItem([Description("softwarePath")] string softwarePath, [Description("screenName")] string screenName, [Description("itemName")] string itemName)
@@ -127,6 +129,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [WriteTool]
         [McpServerTool(Name = "hmi_create_faceplate_instance", Title = "Create HMI Faceplate Instance", Destructive = false, OpenWorld = false, UseStructuredContent = true),
          Description("Create a Faceplate container on the given HMI screen and bind it to a library Faceplate type.")]
         public static object CreateHmiFaceplateInstance(
@@ -341,6 +344,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw ToolError(ex);
             }
         }
+        [WriteTool]
         [McpServerTool(Name = "hmi_manage_unified_faceplate", Title = "Manage Unified Faceplate", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
          Description("Create and parameterize faceplates in WinCC Unified")]
         public static ResponseHmiManageItems ManageHmiUnifiedFaceplate(string softwarePath, string screenName, string action, string itemName, string faceplateType, JsonObject interfaceTags)
@@ -353,11 +357,21 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             try {
                 var res = Portal.ManageHmiUnifiedFaceplate(softwarePath, screenName, action, itemName, faceplateType, dict);
+
+                // One action, one outcome: a failure has to be an error result, not a
+                // successful response that happens to carry status 'error'.
+                if (res.Status != "success")
+                {
+                    throw new McpException(res.Error ?? $"'{action}' on '{itemName}' failed.");
+                }
+
                 return new ResponseHmiManageItems { Results = new List<HmiItemResult> { res }, SuccessCount = res.Status == "success" ? 1 : 0 };
             } catch (Exception ex) {
                 throw ToolError(ex);
             }
         }
+        [DebugTool]
+        [WriteTool]
         [McpServerTool(Name = "hmi_test_faceplate", Title = "Test Faceplate", Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Test faceplate interface")]
         public static string TestFaceplate(string softwarePath, string screenName, string itemName, string propName, string propValue, bool asTag)

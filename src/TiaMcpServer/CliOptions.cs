@@ -6,6 +6,7 @@ namespace TiaMcpServer
         public int? Logging { get; set; } // "stdio" or "http"
         public bool Doctor { get; set; } // print environment diagnostics and exit
         public bool AllowWrite { get; set; } = true; // register the project-mutating tools by default
+        public bool DebugTools { get; set; } // register the server-development tools ([DebugTool])
 
         public static CliOptions ParseArgs(string[] args)
         {
@@ -31,6 +32,11 @@ namespace TiaMcpServer
                     case "-allow-write":
                     case "--allow-write":
                         options.AllowWrite = true;
+                        break;
+
+                    case "-debug-tools":
+                    case "--debug-tools":
+                        options.DebugTools = true;
                         break;
 
                     case "-logging":

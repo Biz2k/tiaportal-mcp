@@ -744,6 +744,32 @@ namespace TiaMcpServer.ModelContextProtocol
         public IEnumerable<ResponseHardwareItem>? DeviceItems { get; set; }
     }
 
+    public class ResponseDeviceCreated : ResponseMessage
+    {
+        /// <summary>Path that the device, hardware and network tools accept back.</summary>
+        public string? Path { get; set; }
+        public string? Name { get; set; }
+
+        /// <summary>Top-level items of the new device - the rack to plug modules into is among them.</summary>
+        public IEnumerable<string>? Items { get; set; }
+    }
+
+    public class ResponseCatalogEntry
+    {
+        /// <summary>What 'hw_create_device' and 'hw_plug_module' take as typeIdentifier.</summary>
+        public string? TypeIdentifier { get; set; }
+        public string? ArticleNumber { get; set; }
+        public string? Version { get; set; }
+        public string? TypeName { get; set; }
+        public string? Description { get; set; }
+        public string? CatalogPath { get; set; }
+    }
+
+    public class ResponseCatalogSearch : ResponseMessage
+    {
+        public IEnumerable<ResponseCatalogEntry>? Items { get; set; }
+    }
+
     public class ResponseHardwareTopology : ResponseMessage
     {
         public IEnumerable<ResponseHardwareDevice>? Devices { get; set; }

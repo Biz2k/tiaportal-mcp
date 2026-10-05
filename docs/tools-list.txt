@@ -21,8 +21,6 @@ hmi_configure_unified_trend_control
 hmi_create_faceplate_instance
 hmi_create_screen
 hmi_create_screen_item
-hmi_debug_reflect
-hmi_debug_screen_item
 hmi_delete_screen
 hmi_delete_screen_item
 hmi_get_connections
@@ -35,11 +33,11 @@ hmi_get_tags
 hmi_manage_unified_faceplate
 hmi_set_screen_item_property
 hmi_set_unified_screen_item_event
-hmi_test_faceplate
 hw_create_device
 hw_delete_device
 hw_get_device_info
 hw_plug_module
+hw_search_catalog
 import_objects
 instantiate_master_copy
 net_connect_subnet

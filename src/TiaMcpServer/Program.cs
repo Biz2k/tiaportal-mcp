@@ -78,14 +78,16 @@ namespace TiaMcpServer
         /// McpServer methods marked [WriteTool]; they are only registered with '--allow-write',
         /// which is what keeps them out of 'tools/list' rather than merely refusing them when
         /// called. Tools are created one by one (the SDK's type-based registration would take
-        /// every [McpServerTool] method of the class).
+        /// every [McpServerTool] method of the class). The [DebugTool] methods are left out the same
+        /// way unless '--debug-tools' was passed.
         /// </summary>
-        public static IEnumerable<global::ModelContextProtocol.Server.McpServerTool> BuildTools(bool allowWrite)
+        public static IEnumerable<global::ModelContextProtocol.Server.McpServerTool> BuildTools(bool allowWrite, bool debugTools = false)
         {
             return typeof(McpServer)
                 .GetMethods(BindingFlags.Public | BindingFlags.Static)
                 .Where(m => m.GetCustomAttribute<global::ModelContextProtocol.Server.McpServerToolAttribute>() != null)
                 .Where(m => allowWrite || m.GetCustomAttribute<WriteToolAttribute>() == null)
+                .Where(m => debugTools || m.GetCustomAttribute<DebugToolAttribute>() == null)
                 .Select(m => global::ModelContextProtocol.Server.McpServerTool.Create(m))
                 .ToList();
         }
@@ -150,7 +152,7 @@ namespace TiaMcpServer
                                 : string.Empty);
                     })
                     .WithStdioServerTransport()
-                    .WithTools(BuildTools(WritePolicy.AllowWrite))
+                    .WithTools(BuildTools(WritePolicy.AllowWrite, options?.DebugTools ?? false))
                     .WithPrompts((IEnumerable<Type>)new[] { typeof(McpPrompts) });
 
                 // Register the Portal service for dependency injection

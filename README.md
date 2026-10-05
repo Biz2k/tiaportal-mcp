@@ -19,6 +19,7 @@ A MCP server which connects to Siemens TIA Portal.
 | `--logging <1\|2\|3>`     | `1` stderr, `2` debug output, `3` Windows event log. Omit for no logging. |
 | `--doctor`                | Print the environment report and exit without starting the MCP server.    |
 | `--allow-write`           | Register the project-mutating tools. Omitted by default; see below.       |
+| `--debug-tools`           | Register the server-development tools (`hmi_debug_*`, `hmi_test_faceplate`). |
 
 ## Write mode
 

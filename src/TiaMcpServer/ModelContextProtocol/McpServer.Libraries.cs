@@ -66,6 +66,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [WriteTool]
         [McpServerTool(Name = "instantiate_master_copy", Title = "Instantiate Master Copy", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Instantiates a Master Copy from a library into the project (e.g. into a PLC's block or type group)")]
         public static ResponseMessage InstantiateMasterCopy(
             [Description("libraryName: name of the library (e.g., 'ProjectLibrary')")] string libraryName,

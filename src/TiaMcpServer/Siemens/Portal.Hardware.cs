@@ -178,35 +178,233 @@ namespace TiaMcpServer.Siemens
             return results.Count > 0 ? results : null;
         }
 
-        public Device CreateHardwareDevice(string typeIdentifier, string name)
-        {
-            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
+        // Hardware and network edits.
+        //
+        // Callers: the hw_* and net_* tools in McpServer.Hardware.cs, registered only under
+        // '--allow-write'. Affected API: the methods keep their names; CreateHardwareDevice gained
+        // an optional station name and now returns the device for System: identifiers too.
+        // Reads/writes no data files; changes stay in the open project until it is saved.
+        //
+        // Every method runs inside Operation.Run, like the rest of the portal layer: that is what
+        // serializes it against concurrent tool calls and turns an Openness failure into a
+        // PortalException that names the device it was about.
 
-            _logger?.LogInformation($"Creating device '{name}' with type '{typeIdentifier}'");
-            return _project!.Devices.CreateWithItem(typeIdentifier, name, name);
+        #region hardware (write)
+
+        /// <summary>
+        /// Creates a device. How depends on what the identifier names:
+        /// - "OrderNumber:..." or "GSD:..." names a head module (a CPU, an interface module);
+        ///   the station is created around it.
+        /// - "System:Device...." names a bare station type (an empty rack); the head module is
+        ///   plugged afterwards with PlugHardwareModule. CreateWithItem rejects these.
+        /// </summary>
+        /// <param name="name">Name of the head module, or of the station for a System: identifier.</param>
+        /// <param name="stationName">Name of the station; empty uses <paramref name="name"/>.</param>
+        public Device CreateHardwareDevice(string typeIdentifier, string name, string stationName = "")
+        {
+            return Operation.Run(_logger, nameof(CreateHardwareDevice), PortalErrorCode.CreateFailed,
+                () =>
+                {
+                    if (IsProjectNull())
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, "The name must not be empty.");
+                    }
+
+                    var identifier = (typeIdentifier ?? string.Empty).Trim();
+                    var station = string.IsNullOrWhiteSpace(stationName) ? name : stationName.Trim();
+
+                    if (EnumerateDevices().Any(d => d.Device.Name.Equals(station, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"A device named '{station}' already exists. Choose another name.");
+                    }
+
+                    if (identifier.StartsWith("OrderNumber:", StringComparison.OrdinalIgnoreCase)
+                        || identifier.StartsWith("GSD:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger?.LogInformation("Creating device {Station} with head module {Name} ({Identifier})", station, name, identifier);
+
+                        return _project!.Devices.CreateWithItem(identifier, name, station);
+                    }
+
+                    if (identifier.StartsWith("System:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger?.LogInformation("Creating empty station {Station} ({Identifier})", station, identifier);
+
+                        return _project!.Devices.Create(identifier, station);
+                    }
+
+                    throw new PortalException(PortalErrorCode.InvalidParams,
+                        $"'{typeIdentifier}' is not a type identifier. Use 'OrderNumber:<article number>/<firmware version>' for a head module " +
+                        "(e.g. 'OrderNumber:6ES7 516-3AN02-0AB0/V2.9'), 'GSD:<file>/<type>' for a GSD device, or 'System:Device.<type>' " +
+                        "for an empty station (e.g. 'System:Device.ET200SP'). 'hw_search_catalog' finds identifiers by article number or name.");
+                },
+                ("typeIdentifier", typeIdentifier), ("name", name), ("stationName", stationName));
         }
 
         public DeviceItem PlugHardwareModule(string deviceName, string parentItemName, int positionNumber, string typeIdentifier, string moduleName)
         {
-            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
+            return Operation.Run(_logger, nameof(PlugHardwareModule), PortalErrorCode.CreateFailed,
+                () =>
+                {
+                    var device = RequireDevice(deviceName);
 
-            var device = RequireDevice(deviceName);
+                    // An empty parent means the station itself. That is where a rack goes: a
+                    // station created from a 'System:Device.' identifier has no items at all.
+                    if (string.IsNullOrWhiteSpace(parentItemName))
+                    {
+                        if (!device.CanPlugNew(typeIdentifier, moduleName, positionNumber))
+                        {
+                            throw new PortalException(PortalErrorCode.InvalidParams,
+                                $"TIA Portal will not plug '{typeIdentifier}' at position {positionNumber} directly into station '{device.Name}'. " +
+                                "Only a rack goes there (e.g. 'System:Rack.ET200SP' at position 0); modules are plugged into the rack. " +
+                                (device.DeviceItems.Any()
+                                    ? $"The station already has: {string.Join(", ", device.DeviceItems.Select(i => $"'{i.Name}'"))}."
+                                    : "The station is still empty."));
+                        }
 
-            var parentItem = FindDeviceItem(device.DeviceItems, parentItemName);
-            if (parentItem == null) throw new InvalidOperationException($"Parent item '{parentItemName}' not found in device '{deviceName}'");
+                        return device.PlugNew(typeIdentifier, moduleName, positionNumber);
+                    }
 
-            _logger?.LogInformation($"Plugging module '{moduleName}' ({typeIdentifier}) at position {positionNumber} in '{parentItemName}'");
-            
-            // Check if we can plug
-            if (parentItem.CanPlugNew(typeIdentifier, moduleName, positionNumber))
-            {
-                return parentItem.PlugNew(typeIdentifier, moduleName, positionNumber);
-            }
-            else
-            {
-                throw new InvalidOperationException($"Cannot plug module '{typeIdentifier}' at position {positionNumber} in '{parentItemName}'");
-            }
+                    var parentItem = RequireDeviceItem(device, parentItemName);
+
+                    if (!parentItem.CanPlugNew(typeIdentifier, moduleName, positionNumber))
+                    {
+                        // Items lists what is plugged into the rack; DeviceItems would be its
+                        // own sub-items, which a rack does not have.
+                        var occupied = parentItem.Items
+                            .OrderBy(i => i.PositionNumber)
+                            .Select(i => $"{i.PositionNumber} ({i.Name})")
+                            .ToList();
+
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"TIA Portal will not plug '{typeIdentifier}' at position {positionNumber} of '{parentItem.Name}'. " +
+                            (occupied.Count == 0
+                                ? "No position of this item is occupied, so the type identifier does not fit this rack or is not installed. "
+                                : $"Occupied positions: {string.Join(", ", occupied)}. ") +
+                            "Check the position, and the identifier with 'hw_search_catalog'.");
+                    }
+
+                    _logger?.LogInformation("Plugging {Module} ({Identifier}) at position {Position} of {Parent}", moduleName, typeIdentifier, positionNumber, parentItem.Name);
+
+                    return parentItem.PlugNew(typeIdentifier, moduleName, positionNumber);
+                },
+                ("deviceName", deviceName), ("parentItemName", parentItemName), ("positionNumber", positionNumber),
+                ("typeIdentifier", typeIdentifier), ("moduleName", moduleName));
         }
+
+        public void DeleteHardwareDevice(string deviceName)
+        {
+            Operation.Run(_logger, nameof(DeleteHardwareDevice), PortalErrorCode.DeleteFailed,
+                () =>
+                {
+                    var device = RequireDevice(deviceName);
+
+                    _logger?.LogInformation("Deleting device {Device}", device.Name);
+                    device.Delete();
+                },
+                ("deviceName", deviceName));
+        }
+
+        #endregion
+
+        #region network (write)
+
+        public void ConnectToSubnet(string deviceName, string interfaceName, string subnetName)
+        {
+            Operation.Run(_logger, nameof(ConnectToSubnet), PortalErrorCode.CreateFailed,
+                () =>
+                {
+                    if (string.IsNullOrWhiteSpace(subnetName))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, "The subnet name must not be empty.");
+                    }
+
+                    var node = RequireNode(deviceName, interfaceName);
+                    var subnet = _project!.Subnets.Find(subnetName);
+
+                    if (subnet == null)
+                    {
+                        _logger?.LogInformation("Creating PN/IE subnet {Subnet}", subnetName);
+                        subnet = _project.Subnets.Create("System:Subnet.Ethernet", subnetName);
+                    }
+
+                    node.ConnectToSubnet(subnet);
+                },
+                ("deviceName", deviceName), ("interfaceName", interfaceName), ("subnetName", subnetName));
+        }
+
+        public void DisconnectSubnet(string deviceName, string interfaceName)
+        {
+            Operation.Run(_logger, nameof(DisconnectSubnet), PortalErrorCode.DeleteFailed,
+                () => RequireNode(deviceName, interfaceName).DisconnectFromSubnet(),
+                ("deviceName", deviceName), ("interfaceName", interfaceName));
+        }
+
+        public void CreateIoSystem(string deviceName, string interfaceName, string ioSystemName)
+        {
+            Operation.Run(_logger, nameof(CreateIoSystem), PortalErrorCode.CreateFailed,
+                () =>
+                {
+                    var networkInterface = RequireNetworkInterface(deviceName, interfaceName);
+
+                    var ioController = networkInterface.IoControllers.FirstOrDefault()
+                        ?? throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"Interface '{interfaceName}' of '{deviceName}' is not an IO controller, so it cannot own an IO system. " +
+                            "Call this on the PROFINET interface of a PLC.");
+
+                    if (networkInterface.Nodes.FirstOrDefault()?.ConnectedSubnet == null)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidState,
+                            $"Interface '{interfaceName}' of '{deviceName}' is not connected to a subnet. " +
+                            "Call 'net_connect_subnet' first: an IO system lives on a subnet.");
+                    }
+
+                    ioController.CreateIoSystem(ioSystemName);
+                },
+                ("deviceName", deviceName), ("interfaceName", interfaceName), ("ioSystemName", ioSystemName));
+        }
+
+        public void ConnectToIoSystem(string deviceName, string interfaceName, string ioSystemName)
+        {
+            Operation.Run(_logger, nameof(ConnectToIoSystem), PortalErrorCode.CreateFailed,
+                () =>
+                {
+                    var networkInterface = RequireNetworkInterface(deviceName, interfaceName);
+
+                    var ioConnector = networkInterface.IoConnectors.FirstOrDefault()
+                        ?? throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"Interface '{interfaceName}' of '{deviceName}' is not an IO device interface, so it cannot join an IO system.");
+
+                    var available = _project!.Subnets.SelectMany(s => s.IoSystems).ToList();
+
+                    var ioSystem = available.FirstOrDefault(s => s.Name.Equals(ioSystemName, StringComparison.OrdinalIgnoreCase))
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"IO system '{ioSystemName}' not found. " +
+                            (available.Count == 0
+                                ? "The project has no IO system yet; create one with 'net_create_io_system' on the PLC interface."
+                                : $"Available: {string.Join(", ", available.Select(s => $"'{s.Name}'"))}."));
+
+                    if (networkInterface.Nodes.FirstOrDefault()?.ConnectedSubnet == null)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidState,
+                            $"Interface '{interfaceName}' of '{deviceName}' is not connected to a subnet. " +
+                            "Call 'net_connect_subnet' with the subnet of the IO system first.");
+                    }
+
+                    ioConnector.ConnectToIoSystem(ioSystem);
+                },
+                ("deviceName", deviceName), ("interfaceName", interfaceName), ("ioSystemName", ioSystemName));
+        }
+
+        #endregion
+
+        #region hardware lookup
 
         private DeviceItem? FindDeviceItem(DeviceItemComposition items, string targetName)
         {
@@ -224,107 +422,104 @@ namespace TiaMcpServer.Siemens
             return null;
         }
 
-        public void DeleteHardwareDevice(string deviceName)
+        private DeviceItem RequireDeviceItem(Device device, string itemName)
         {
-            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
-
-            var device = RequireDevice(deviceName);
-
-            _logger?.LogInformation($"Deleting device '{deviceName}'");
-            device.Delete();
+            return FindDeviceItem(device.DeviceItems, itemName)
+                ?? throw new PortalException(PortalErrorCode.NotFound,
+                    $"Item '{itemName}' not found in device '{device.Name}'. Its top-level items are: " +
+                    string.Join(", ", device.DeviceItems.Select(i => $"'{i.Name}'")) +
+                    ". 'get_hardware_topology' shows the full item tree.");
         }
 
-        public void ConnectToSubnet(string deviceName, string interfaceName, string subnetName)
+        private NetworkInterface RequireNetworkInterface(string deviceName, string interfaceName)
         {
-            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
-
             var device = RequireDevice(deviceName);
+            var item = RequireDeviceItem(device, interfaceName);
 
-            var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
-            if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
+            return item.GetService<NetworkInterface>()
+                ?? throw new PortalException(PortalErrorCode.InvalidParams,
+                    $"'{interfaceName}' of '{device.Name}' is not a network interface. Pass an interface item such as 'PROFINET interface_1'.");
+        }
 
-            var netIf = interfaceItem.GetService<NetworkInterface>();
-            if (netIf == null || netIf.Nodes == null || netIf.Nodes.Count == 0)
-                throw new InvalidOperationException($"Interface '{interfaceName}' has no nodes to connect");
+        private Node RequireNode(string deviceName, string interfaceName)
+        {
+            return RequireNetworkInterface(deviceName, interfaceName).Nodes.FirstOrDefault()
+                ?? throw new PortalException(PortalErrorCode.InvalidState,
+                    $"Interface '{interfaceName}' of '{deviceName}' has no network node to connect.");
+        }
 
-            var subnet = _project!.Subnets.Find(subnetName);
-            if (subnet == null)
+        /// <summary>
+        /// Searches the installed hardware catalog. Read through 'dynamic': the catalog API
+        /// arrived in a later Openness version than this server's oldest supported one, and a
+        /// typed reference would stop the assembly from loading there.
+        /// </summary>
+        public List<ResponseCatalogEntry> SearchHardwareCatalog(string query, int maxResults = 20)
+        {
+            return Operation.Run(_logger, nameof(SearchHardwareCatalog), PortalErrorCode.NotSupported,
+                () =>
+                {
+                    if (_portal == null)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidState, "Not connected to TIA Portal. Call 'connect' first.");
+                    }
+
+                    if (string.IsNullOrWhiteSpace(query) || query.Trim().Length < 3)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            "Pass at least three characters of an article number or product name, e.g. '6ES7 155-6AU01' or 'IM 155-6 PN'.");
+                    }
+
+                    dynamic portal = _portal;
+                    dynamic entries;
+
+                    try
+                    {
+                        entries = portal.HardwareCatalog.Find(query.Trim());
+                    }
+                    catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException ex)
+                    {
+                        throw new PortalException(PortalErrorCode.NotSupported,
+                            "This TIA Portal version does not offer a hardware catalog search through Openness.", null, ex);
+                    }
+
+                    var result = new List<ResponseCatalogEntry>();
+
+                    foreach (var entry in entries)
+                    {
+                        if (result.Count >= Math.Max(1, maxResults))
+                        {
+                            break;
+                        }
+
+                        result.Add(new ResponseCatalogEntry
+                        {
+                            TypeIdentifier = ReadCatalogText(() => entry.TypeIdentifier),
+                            ArticleNumber = ReadCatalogText(() => entry.ArticleNumber),
+                            Version = ReadCatalogText(() => entry.Version),
+                            TypeName = ReadCatalogText(() => entry.TypeName),
+                            Description = ReadCatalogText(() => entry.Description),
+                            CatalogPath = ReadCatalogText(() => entry.CatalogPath)
+                        });
+                    }
+
+                    return result;
+                },
+                ("query", query));
+        }
+
+        private static string? ReadCatalogText(Func<object?> read)
+        {
+            try
             {
-                _logger?.LogInformation($"Creating PN/IE subnet '{subnetName}'");
-                subnet = _project.Subnets.Create("System:Subnet.Ethernet", subnetName);
+                return read()?.ToString();
             }
-
-            _logger?.LogInformation($"Connecting interface '{interfaceName}' to subnet '{subnetName}'");
-            netIf.Nodes[0].ConnectToSubnet(subnet);
-        }
-
-        public void DisconnectSubnet(string deviceName, string interfaceName)
-        {
-            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
-
-            var device = RequireDevice(deviceName);
-
-            var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
-            if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
-
-            var netIf = interfaceItem.GetService<NetworkInterface>();
-            if (netIf == null || netIf.Nodes == null || netIf.Nodes.Count == 0)
-                throw new InvalidOperationException($"Interface '{interfaceName}' has no nodes to disconnect");
-
-            _logger?.LogInformation($"Disconnecting interface '{interfaceName}' from subnet");
-            netIf.Nodes[0].DisconnectFromSubnet();
-        }
-
-        public void CreateIoSystem(string deviceName, string interfaceName, string ioSystemName)
-        {
-            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
-
-            var device = RequireDevice(deviceName);
-
-            var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
-            if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
-
-            var netIf = interfaceItem.GetService<NetworkInterface>();
-            if (netIf == null)
-                throw new InvalidOperationException($"Interface '{interfaceName}' does not support network operations");
-
-            var ioController = netIf.IoControllers.FirstOrDefault();
-            if (ioController == null)
-                throw new InvalidOperationException($"Interface '{interfaceName}' is not an IO controller and cannot create an IO system");
-
-            _logger?.LogInformation($"Creating IO system '{ioSystemName}' on '{interfaceName}'");
-            ioController.CreateIoSystem(ioSystemName);
-        }
-
-        public void ConnectToIoSystem(string deviceName, string interfaceName, string ioSystemName)
-        {
-            if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
-
-            var device = RequireDevice(deviceName);
-
-            var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
-            if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
-
-            var netIf = interfaceItem.GetService<NetworkInterface>();
-            if (netIf == null)
-                throw new InvalidOperationException($"Interface '{interfaceName}' does not support network operations");
-
-            var ioConnector = netIf.IoConnectors.FirstOrDefault();
-            if (ioConnector == null)
-                throw new InvalidOperationException($"Interface '{interfaceName}' is not an IO connector (IO device)");
-
-            IoSystem? targetIoSystem = null;
-            foreach (var subnet in _project!.Subnets)
+            catch (Exception)
             {
-                targetIoSystem = subnet.IoSystems.FirstOrDefault(s => s.Name == ioSystemName);
-                if (targetIoSystem != null) break;
+                // Not every catalog entry carries every attribute.
+                return null;
             }
-
-            if (targetIoSystem == null)
-                throw new InvalidOperationException($"IO system '{ioSystemName}' not found in any subnet");
-
-            _logger?.LogInformation($"Connecting IO connector '{interfaceName}' to IO system '{ioSystemName}'");
-            ioConnector.ConnectToIoSystem(targetIoSystem);
         }
+
+        #endregion
     }
 }

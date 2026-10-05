@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using TiaMcpServer.ModelContextProtocol;
@@ -15,9 +16,9 @@ namespace TiaMcpServer.Test
     [DoNotParallelize]
     public class Test7ToolRegistration
     {
-        private const string SampleReadTool = "GetTags";
-        private const string SampleWriteTool = "CreateTag";
-        private const string SampleDocumentWriteTool = "ImportSources";
+        private const string SampleReadTool = "plc_get_tags";
+        private const string SampleWriteTool = "plc_create_tag";
+        private const string SampleDocumentWriteTool = "plc_create_external_source";
 
         [TestInitialize]
         public void ClassInit()
@@ -77,10 +78,101 @@ namespace TiaMcpServer.Test
                 "[WriteTool] on a method that is not a tool has no effect: " + string.Join(", ", withoutToolAttribute));
         }
 
+        [TestMethod]
+        public void Test_703_BuildTools_WithoutAllowWrite_ExcludesHardwareNetworkAndLibraryEdits()
+        {
+            // Arrange: every tool here changes the project and used to be registered regardless.
+            var edits = new[]
+            {
+                "hw_create_device", "hw_plug_module", "hw_delete_device",
+                "net_connect_subnet", "net_disconnect_subnet", "net_create_io_system", "net_connect_to_io_system",
+                "instantiate_master_copy", "hmi_create_faceplate_instance", "hmi_manage_unified_faceplate"
+            };
+
+            // Act
+            var readOnly = Program.BuildTools(allowWrite: false).Select(t => t.ProtocolTool.Name).ToList();
+            var withWrite = Program.BuildTools(allowWrite: true).Select(t => t.ProtocolTool.Name).ToList();
+
+            // Assert
+            foreach (var edit in edits)
+            {
+                Assert.IsFalse(readOnly.Contains(edit), $"'{edit}' changes the project and must not be registered without --allow-write");
+                Assert.IsTrue(withWrite.Contains(edit), $"'{edit}' must be registered with --allow-write");
+            }
+
+            Assert.IsTrue(readOnly.Contains("hw_search_catalog"), "The catalog search only reads");
+            Assert.IsTrue(readOnly.Contains("get_hardware_topology"), "The topology listing only reads");
+        }
+
+        [TestMethod]
+        public void Test_704_BuildTools_RegistersDebugToolsOnlyOnRequest()
+        {
+            // Arrange
+            var debugTools = new[] { "hmi_debug_reflect", "hmi_debug_screen_item", "hmi_test_faceplate" };
+
+            // Act
+            var normal = Program.BuildTools(allowWrite: true).Select(t => t.ProtocolTool.Name).ToList();
+            var withDebug = Program.BuildTools(allowWrite: true, debugTools: true).Select(t => t.ProtocolTool.Name).ToList();
+            var debugWithoutWrite = Program.BuildTools(allowWrite: false, debugTools: true).Select(t => t.ProtocolTool.Name).ToList();
+
+            // Assert
+            foreach (var tool in debugTools)
+            {
+                Assert.IsFalse(normal.Contains(tool), $"'{tool}' is a development tool and must stay out of the normal tool list");
+                Assert.IsTrue(withDebug.Contains(tool), $"'{tool}' must be registered with --debug-tools");
+            }
+
+            Assert.IsFalse(debugWithoutWrite.Contains("hmi_test_faceplate"), "A debug tool that writes still needs --allow-write");
+        }
+
+        [TestMethod]
+        public void Test_705_BuildTools_MatchesTheRecordedToolList()
+        {
+            // Arrange: docs/tools-list.txt is the reviewed list of tool names. A tool that
+            // disappears or is renamed breaks every client that calls it, so it has to show up
+            // as a deliberate change to that file.
+            var file = FindRepositoryFile(Path.Combine("docs", "tools-list.txt"));
+            var recorded = File.ReadAllLines(file).Where(l => l.Trim().Length > 0).Select(l => l.Trim()).ToList();
+
+            // Act
+            var actual = Program.BuildTools(allowWrite: true).Select(t => t.ProtocolTool.Name).OrderBy(n => n, System.StringComparer.Ordinal).ToList();
+
+            // Assert
+            var missing = recorded.Except(actual).ToList();
+            var added = actual.Except(recorded).ToList();
+
+            Assert.IsTrue(missing.Count == 0 && added.Count == 0,
+                $"The registered tools differ from docs/tools-list.txt. No longer registered: [{string.Join(", ", missing)}]. " +
+                $"Not recorded: [{string.Join(", ", added)}]. If the change is intended, update the file.");
+        }
+
+        private static string FindRepositoryFile(string relativePath)
+        {
+            var directory = new DirectoryInfo(System.AppContext.BaseDirectory);
+
+            while (directory != null)
+            {
+                var candidate = Path.Combine(directory.FullName, relativePath);
+
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+
+                directory = directory.Parent;
+            }
+
+            Assert.Fail($"'{relativePath}' was not found above '{System.AppContext.BaseDirectory}'.");
+
+            return string.Empty;
+        }
+
         private static System.Collections.Generic.List<MethodInfo> WriteToolMethods() =>
             typeof(McpServer)
                 .GetMethods(BindingFlags.Public | BindingFlags.Static)
                 .Where(m => m.GetCustomAttribute<WriteToolAttribute>() != null)
+                // Development tools are registered separately, see Test_704.
+                .Where(m => m.GetCustomAttribute<DebugToolAttribute>() == null)
                 .ToList();
     }
 }

@@ -550,7 +550,6 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
-        [WriteTool]
         // [McpServerTool(Name = "import_xml_tag_table", Title = "Import tag table", Destructive = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Import tag table from XML")]
         public static ResponseImported ImportXmlTagTable(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -774,7 +773,6 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
-        [WriteTool]
         // [McpServerTool(Name = "import_watch_table", Title = "Import watch table", Destructive = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Import watch table from XML")]
         public static ResponseImported ImportWatchTable(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,

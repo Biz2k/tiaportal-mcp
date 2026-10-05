@@ -184,7 +184,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region type documents (write)
 
-        [WriteTool]
         // [McpServerTool(Name = "import_type_from_documents", Title = "Import type from documents", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Import type from documents (.s7dcl plus an optional .s7res)")]
         public static ResponseImportTypeFromDocuments ImportTypeFromDocuments(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -209,7 +208,6 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
-        [WriteTool]
         // [McpServerTool(Name = "import_types_from_documents", Title = "Import types from documents", Destructive = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Import types from documents (.s7dcl plus an optional .s7res)")]
         public static async Task<ResponseImportTypesFromDocuments> ImportTypesFromDocuments(
             IProgress<ProgressNotificationValue> progress,

@@ -31,11 +31,38 @@ namespace TiaMcpServer.Siemens
 
     public partial class Portal
     {
+        /// <summary>
+        /// Resolves the HMI software every HMI method works on. A wrong path used to come back
+        /// as an empty screen or tag list, which reads like "this HMI has no screens"; and a PLC
+        /// path produced a binder error deep inside the dynamic calls.
+        /// </summary>
+        private global::Siemens.Engineering.HW.Features.SoftwareContainer RequireHmiContainer(string softwarePath)
+        {
+            if (IsProjectNull())
+            {
+                throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
+            }
+
+            var container = GetSoftwareContainer(softwarePath);
+
+            if (container?.Software == null)
+            {
+                throw new PortalException(PortalErrorCode.NotFound,
+                    $"No HMI software found at '{softwarePath}'. Use 'get_project_tree' to find it: the path is the device name followed by the runtime item, e.g. 'HMI_1/HMI_RT_1'.");
+            }
+
+            if (container.Software is global::Siemens.Engineering.SW.PlcSoftware)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams,
+                    $"'{softwarePath}' is PLC software, not an HMI. Pass the path of an HMI runtime, e.g. 'HMI_1/HMI_RT_1'.");
+            }
+
+            return container;
+        }
         public List<HmiScreenInfo> GetHmiScreens(string softwarePath)
         {
             var screens = new List<HmiScreenInfo>();
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null) return screens;
+            var softwareContainer = RequireHmiContainer(softwarePath);
 
             if (softwareContainer.Software is HmiTarget target)
             {
@@ -66,8 +93,7 @@ namespace TiaMcpServer.Siemens
         public List<HmiTagInfo> GetHmiTags(string softwarePath)
         {
             var tags = new List<HmiTagInfo>();
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null) return tags;
+            var softwareContainer = RequireHmiContainer(softwarePath);
 
             if (softwareContainer.Software is HmiTarget target)
             {
@@ -92,13 +118,9 @@ namespace TiaMcpServer.Siemens
 
         public List<HmiScreenItemInfo> GetHmiScreenItems(string softwarePath, string screenName)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
+            var softwareContainer = RequireHmiContainer(softwarePath);
             var items = new List<HmiScreenItemInfo>();
 
-            if (softwareContainer == null || softwareContainer.Software == null)
-            {
-                throw new System.Exception($"HMI Software '{softwarePath}' not found");
-            }
 
             dynamic dynSoftware = softwareContainer.Software;
             object targetScreen = null;
@@ -212,11 +234,7 @@ namespace TiaMcpServer.Siemens
 
         public List<System.Text.Json.Nodes.JsonObject> ManageHmiItems(string softwarePath, List<TiaMcpServer.ModelContextProtocol.HmiItemAction> actions)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null)
-            {
-                throw new System.Exception($"HMI Software '{softwarePath}' not found");
-            }
+            var softwareContainer = RequireHmiContainer(softwarePath);
             
             bool isUnified = softwareContainer.Software is global::Siemens.Engineering.HmiUnified.HmiSoftware;
             var results = new List<System.Text.Json.Nodes.JsonObject>();
@@ -307,8 +325,7 @@ namespace TiaMcpServer.Siemens
 
         public List<Dictionary<string, object>> GetHmiConnections(string softwarePath)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             
             var connectionList = new List<Dictionary<string, object>>();
@@ -342,8 +359,7 @@ namespace TiaMcpServer.Siemens
 
         public Dictionary<string, object> GetHmiScreenItemProperties(string softwarePath, string screenName, string itemName)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             
             object targetScreen = null;
@@ -459,8 +475,7 @@ namespace TiaMcpServer.Siemens
 
         public string SetHmiScreenItemProperty(string softwarePath, string screenName, string itemName, string propertyName, object propertyValue)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             
             object targetScreen = null;
@@ -518,8 +533,7 @@ namespace TiaMcpServer.Siemens
 
         public object DebugScreenItem(string softwarePath, string screenName, string itemName)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             
             dynamic dynSoftware = softwareContainer.Software;
             object targetScreen = null;
@@ -656,8 +670,7 @@ namespace TiaMcpServer.Siemens
 
         public string CreateHmiScreen(string softwarePath, string screenName)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             try
             {
@@ -676,8 +689,7 @@ namespace TiaMcpServer.Siemens
 
         public string DeleteHmiScreen(string softwarePath, string screenName)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             try
             {
@@ -696,8 +708,7 @@ namespace TiaMcpServer.Siemens
 
         public string CreateHmiScreenItem(string softwarePath, string screenName, string typeName, string itemName)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             dynamic screen = null;
 
@@ -752,8 +763,7 @@ namespace TiaMcpServer.Siemens
 
         public string CreateHmiFaceplateInstance(string softwarePath, string screenName, string instanceName, string containedTypeString)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             dynamic screen = null;
 
@@ -791,8 +801,7 @@ namespace TiaMcpServer.Siemens
         }
         public string DeleteHmiScreenItem(string softwarePath, string screenName, string itemName)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             dynamic screen = null;
 
@@ -829,8 +838,7 @@ namespace TiaMcpServer.Siemens
             var result = new TiaMcpServer.ModelContextProtocol.HmiItemResult { Action = action, ScreenName = screenName, ItemName = itemName };
             try
             {
-                var softwareContainer = GetSoftwareContainer(softwarePath);
-                if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+                var softwareContainer = RequireHmiContainer(softwarePath);
                 dynamic dynSoftware = softwareContainer.Software;
                 if (!(dynSoftware is global::Siemens.Engineering.HmiUnified.HmiSoftware)) throw new System.Exception("This tool is strictly for WinCC Unified faceplates. HMI target is not WinCC Unified.");
 
@@ -879,6 +887,13 @@ namespace TiaMcpServer.Siemens
                 // Map interface properties
                 if (interfaceTags != null && interfaceTags.Count > 0)
                 {
+                    string targetTypeName = ((object)targetItem).GetType().Name;
+                    if (targetTypeName.IndexOf("Faceplate", System.StringComparison.OrdinalIgnoreCase) < 0)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"Item '{itemName}' is a {targetTypeName}, not a faceplate container, so it has no faceplate interface. Use 'hmi_set_screen_item_property' for ordinary screen items.");
+                    }
+
                     var interfaceCol = targetItem.Interface;
                     foreach (var kvp in interfaceTags)
                     {
@@ -919,8 +934,7 @@ namespace TiaMcpServer.Siemens
         public string ConfigureHmiScreenItem(string softwarePath, string screenName, string itemName, 
             int? left, int? top, int? width, int? height, string processValue, string text)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             dynamic screen = null;
 
@@ -1006,8 +1020,7 @@ namespace TiaMcpServer.Siemens
 
         public string ConfigureHmiTrendCompanion(string softwarePath, string screenName, string companionName, string sourceTrendControlName)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             if (!(dynSoftware is HmiSoftware)) throw new System.Exception("This method is only supported for WinCC Unified (HmiSoftware).");
 
@@ -1027,8 +1040,7 @@ namespace TiaMcpServer.Siemens
         public string ConfigureHmiTrendControl(string softwarePath, string screenName, string trendControlName, string trendName, string dataSource, string trendMode = null, int? lineWidth = null, string lineColor = null)
         {
             var results = new System.Collections.Generic.List<string>();
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             if (!(dynSoftware is HmiSoftware)) throw new System.Exception("This method is only supported for WinCC Unified (HmiSoftware).");
 
@@ -1131,8 +1143,7 @@ namespace TiaMcpServer.Siemens
         }
         public string SetHmiUnifiedScreenItemEvent(string softwarePath, string screenName, string itemName, string eventName, string scriptCode)
         {
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+            var softwareContainer = RequireHmiContainer(softwarePath);
             dynamic dynSoftware = softwareContainer.Software;
             if (!(dynSoftware is HmiSoftware)) throw new System.Exception("This method is only supported for WinCC Unified (HmiSoftware).");
 

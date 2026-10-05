@@ -37,163 +37,203 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #endregion
 
-        #region create hardware
+        #region hardware catalog
 
-        [McpServerTool(Name = "hw_create_device", Title = "Create hardware device", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Creates a new hardware device (PLC, HMI, ET200 station, etc) at the project level")]
-        public static ResponseMessage CreateHardwareDevice(
-            [Description("typeIdentifier: the Openness type identifier (e.g., 'OrderNumber:6ES7 516-3AN01-0AB0/V2.8')")] string typeIdentifier,
-            [Description("name: the name for the new station and device")] string name)
+        [McpServerTool(Name = "hw_search_catalog", Title = "Search hardware catalog", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Search the installed hardware catalog by article number or product name and get the type identifiers that 'hw_create_device' and 'hw_plug_module' need. Needs a connection to TIA Portal, not an open project")]
+        public static ResponseCatalogSearch SearchHardwareCatalog(
+            [Description("query: at least three characters of an article number or product name, e.g. '6ES7 155-6AU01' or 'IM 155-6 PN'")] string query,
+            [Description("maxResults: stop after this many entries (default 20)")] int maxResults = 20)
         {
             try
             {
-                Portal.CreateHardwareDevice(typeIdentifier, name);
+                var entries = Portal.SearchHardwareCatalog(query, maxResults);
 
-                return new ResponseMessage
+                return new ResponseCatalogSearch
                 {
-                    Message = $"Hardware device '{name}' created successfully",
+                    Items = entries,
+                    Message = entries.Count == 0
+                        ? $"Nothing in the hardware catalog matches '{query}'. Try a shorter part of the article number."
+                        : $"{entries.Count} catalog entr{(entries.Count == 1 ? "y" : "ies")} match '{query}'. Pass 'typeIdentifier' to 'hw_create_device' or 'hw_plug_module'.",
                     Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
                 };
             }
-            catch (Exception ex) when (ex is not McpException)
+            catch (Exception ex)
             {
-                throw new McpException($"Unexpected error creating device '{name}': {Why(ex)}", ex);
-            }
-        }
-
-        [McpServerTool(Name = "hw_plug_module", Title = "Plug hardware module", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Plugs a new module into an existing device item (e.g. into a Rack) at a specific position")]
-        public static ResponseMessage PlugHardwareModule(
-            [Description("deviceName: the name of the root device station")] string deviceName,
-            [Description("parentItemName: the name of the parent device item to plug into (e.g. 'Rack_0')")] string parentItemName,
-            [Description("positionNumber: the slot/position number to plug into (e.g. 1)")] int positionNumber,
-            [Description("typeIdentifier: the Openness type identifier of the new module (e.g. 'OrderNumber:6ES7 131-6BH01-0BA0/V0.0')")] string typeIdentifier,
-            [Description("moduleName: the name for the new module")] string moduleName)
-        {
-            try
-            {
-                Portal.PlugHardwareModule(deviceName, parentItemName, positionNumber, typeIdentifier, moduleName);
-
-                return new ResponseMessage
-                {
-                    Message = $"Module '{moduleName}' plugged successfully into '{parentItemName}' at position {positionNumber}",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
-                };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error plugging module '{moduleName}': {Why(ex)}", ex);
-            }
-        }
-
-        [McpServerTool(Name = "hw_delete_device", Title = "Delete hardware device", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Deletes a hardware device (PLC, HMI, etc) from the project")]
-        public static ResponseMessage DeleteHardwareDevice([Description("deviceName: the name of the device to delete")] string deviceName)
-        {
-            try
-            {
-                Portal.DeleteHardwareDevice(deviceName);
-                return new ResponseMessage
-                {
-                    Message = $"Hardware device '{deviceName}' deleted successfully",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
-                };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error deleting device '{deviceName}': {Why(ex)}", ex);
+                throw ToolError(ex);
             }
         }
 
         #endregion
 
-        #region network and subnets
+        #region create hardware
 
-        [McpServerTool(Name = "net_connect_subnet", Title = "Connect interface to subnet", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Connects a network interface to a subnet (creates the PN/IE subnet if it doesn't exist)")]
-        public static ResponseMessage ConnectSubnet(
-            [Description("deviceName: the name of the device")] string deviceName,
-            [Description("interfaceName: the name of the PROFINET/Ethernet interface (e.g. 'PROFINET interface_1')")] string interfaceName,
-            [Description("subnetName: the name of the subnet to connect to (e.g. 'PN/IE_1')")] string subnetName)
+        [WriteTool]
+        [McpServerTool(Name = "hw_create_device", Title = "Create hardware device", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create a hardware device (PLC, HMI, IO station) at the project level. With an 'OrderNumber:' or 'GSD:' identifier the station is created around that head module. With a 'System:Device.' identifier an empty station is created and the head module is added with 'hw_plug_module'. Use 'hw_search_catalog' to find identifiers")]
+        public static ResponseDeviceCreated CreateHardwareDevice(
+            [Description("typeIdentifier: 'OrderNumber:<article>/<firmware>' (e.g. 'OrderNumber:6ES7 516-3AN02-0AB0/V2.9'), 'GSD:<file>/<type>', or 'System:Device.<type>' for an empty station (e.g. 'System:Device.ET200SP')")] string typeIdentifier,
+            [Description("name: name of the head module (the CPU or interface module); for a 'System:' identifier, the name of the station")] string name,
+            [Description("stationName: name of the station that holds the head module; empty (default) uses 'name'")] string stationName = "")
         {
-            try
+            return Guarded(nameof(CreateHardwareDevice), () =>
             {
-                Portal.ConnectToSubnet(deviceName, interfaceName, subnetName);
-                return new ResponseMessage
+                var device = Portal.CreateHardwareDevice(typeIdentifier, name, stationName);
+                var items = new List<string>();
+
+                foreach (var item in device.DeviceItems)
                 {
-                    Message = $"Interface '{interfaceName}' connected to subnet '{subnetName}' successfully",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    items.Add(item.Name);
+                }
+
+                return new ResponseDeviceCreated
+                {
+                    Path = Portal.GetDevicePath(device),
+                    Name = device.Name,
+                    Items = items,
+                    Message = items.Count == 0
+                        ? $"Empty station '{device.Name}' created. Add a rack with 'hw_plug_module' (empty parentItemName, e.g. typeIdentifier 'System:Rack.ET200SP', position 0), then plug the head module into the rack. {SaveHint}"
+                        : $"Hardware device '{device.Name}' created with items: {string.Join(", ", items)}. {SaveHint}",
+                    Meta = OkMeta()
                 };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error connecting to subnet: {Why(ex)}", ex);
-            }
+            });
         }
 
-        [McpServerTool(Name = "net_disconnect_subnet", Title = "Disconnect interface from subnet", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Disconnects a network interface from its current subnet")]
-        public static ResponseMessage DisconnectSubnet(
-            [Description("deviceName: the name of the device")] string deviceName,
-            [Description("interfaceName: the name of the PROFINET/Ethernet interface")] string interfaceName)
+        [WriteTool]
+        [McpServerTool(Name = "hw_plug_module", Title = "Plug hardware module", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Plug a new module into a rack or module of an existing device at a position. 'get_hardware_topology' shows the racks and what is already plugged")]
+        public static ResponseMessage PlugHardwareModule(
+            [Description("deviceName: path or name of the device, as 'get_devices' returns it")] string deviceName,
+            [Description("parentItemName: name of the item to plug into, usually the rack (e.g. 'Rack_0' or 'Rail_0'). Empty plugs into the station itself, which is how a rack is added to an empty station (typeIdentifier e.g. 'System:Rack.ET200SP', position 0)")] string parentItemName,
+            [Description("positionNumber: the slot to plug into (e.g. 1)")] int positionNumber,
+            [Description("typeIdentifier: Openness type identifier of the module (e.g. 'OrderNumber:6ES7 131-6BH01-0BA0/V0.0'); 'hw_search_catalog' finds it")] string typeIdentifier,
+            [Description("moduleName: the name for the new module")] string moduleName)
         {
-            try
+            return Guarded(nameof(PlugHardwareModule), () =>
             {
-                Portal.DisconnectSubnet(deviceName, interfaceName);
+                var module = Portal.PlugHardwareModule(deviceName, parentItemName, positionNumber, typeIdentifier, moduleName);
+
                 return new ResponseMessage
                 {
-                    Message = $"Interface '{interfaceName}' disconnected from subnet successfully",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Message = $"Module '{module.Name}' plugged into '{(string.IsNullOrWhiteSpace(parentItemName) ? deviceName : parentItemName)}' at position {positionNumber}. {SaveHint}",
+                    Meta = OkMeta()
                 };
-            }
-            catch (Exception ex) when (ex is not McpException)
+            });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "hw_delete_device", Title = "Delete hardware device", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Delete a hardware device (PLC, HMI, IO station) and everything in it from the project")]
+        public static ResponseMessage DeleteHardwareDevice(
+            [Description("deviceName: path or name of the device, as 'get_devices' returns it")] string deviceName)
+        {
+            return Guarded(nameof(DeleteHardwareDevice), () =>
             {
-                throw new McpException($"Unexpected error disconnecting from subnet: {Why(ex)}", ex);
-            }
+                Portal.DeleteHardwareDevice(deviceName);
+
+                return new ResponseMessage
+                {
+                    Message = $"Hardware device '{deviceName}' deleted. {SaveHint}",
+                    Meta = OkMeta()
+                };
+            });
+        }
+
+        #endregion
+
+        // Building a PROFINET IO system is a fixed sequence, and each step refuses to run before
+        // the previous one:
+        //   1. net_connect_subnet        - PLC interface onto a subnet (created if missing)
+        //   2. net_create_io_system      - IO system on that PLC interface
+        //   3. net_connect_subnet        - IO device interface onto the same subnet
+        //   4. net_connect_to_io_system  - IO device interface into the IO system
+        // The tool descriptions repeat the step number so a model does not have to guess the order.
+
+        #region network and subnets
+
+        [WriteTool]
+        [McpServerTool(Name = "net_connect_subnet", Title = "Connect interface to subnet", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Connect a network interface to a subnet; a PN/IE subnet of that name is created if it does not exist. Steps 1 and 3 of building a PROFINET IO system: connect the PLC interface, create the IO system ('net_create_io_system'), connect the IO device interface to the same subnet, then 'net_connect_to_io_system'")]
+        public static ResponseMessage ConnectSubnet(
+            [Description("deviceName: path or name of the device, as 'get_devices' returns it")] string deviceName,
+            [Description("interfaceName: name of the PROFINET/Ethernet interface item (e.g. 'PROFINET interface_1')")] string interfaceName,
+            [Description("subnetName: name of the subnet to connect to (e.g. 'PN/IE_1')")] string subnetName)
+        {
+            return Guarded(nameof(ConnectSubnet), () =>
+            {
+                Portal.ConnectToSubnet(deviceName, interfaceName, subnetName);
+
+                return new ResponseMessage
+                {
+                    Message = $"Interface '{interfaceName}' of '{deviceName}' connected to subnet '{subnetName}'. {SaveHint}",
+                    Meta = OkMeta()
+                };
+            });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "net_disconnect_subnet", Title = "Disconnect interface from subnet", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Disconnect a network interface from its subnet. An IO device leaves its IO system with it")]
+        public static ResponseMessage DisconnectSubnet(
+            [Description("deviceName: path or name of the device, as 'get_devices' returns it")] string deviceName,
+            [Description("interfaceName: name of the PROFINET/Ethernet interface item")] string interfaceName)
+        {
+            return Guarded(nameof(DisconnectSubnet), () =>
+            {
+                Portal.DisconnectSubnet(deviceName, interfaceName);
+
+                return new ResponseMessage
+                {
+                    Message = $"Interface '{interfaceName}' of '{deviceName}' disconnected from its subnet. {SaveHint}",
+                    Meta = OkMeta()
+                };
+            });
         }
 
         #endregion
 
         #region IO systems
 
-        [McpServerTool(Name = "net_create_io_system", Title = "Create IO system on controller", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Assigns (creates) a PROFINET IO system to a PLC network interface")]
+        [WriteTool]
+        [McpServerTool(Name = "net_create_io_system", Title = "Create IO system on controller", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create a PROFINET IO system on a PLC network interface. Step 2 of building an IO system: the interface must already be connected to a subnet with 'net_connect_subnet'")]
         public static ResponseMessage CreateIoSystem(
-            [Description("deviceName: the name of the PLC device")] string deviceName,
-            [Description("interfaceName: the name of the PROFINET interface (e.g. 'PROFINET interface_1')")] string interfaceName,
-            [Description("ioSystemName: the name of the IO system to create (e.g. 'PROFINET IO-System (100)')")] string ioSystemName)
+            [Description("deviceName: path or name of the PLC device, as 'get_devices' returns it")] string deviceName,
+            [Description("interfaceName: name of the PROFINET interface item of the PLC (e.g. 'PROFINET interface_1')")] string interfaceName,
+            [Description("ioSystemName: name of the IO system to create (e.g. 'PROFINET IO-System (100)')")] string ioSystemName)
         {
-            try
+            return Guarded(nameof(CreateIoSystem), () =>
             {
                 Portal.CreateIoSystem(deviceName, interfaceName, ioSystemName);
+
                 return new ResponseMessage
                 {
-                    Message = $"IO system '{ioSystemName}' created on interface '{interfaceName}' successfully",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Message = $"IO system '{ioSystemName}' created on interface '{interfaceName}' of '{deviceName}'. {SaveHint}",
+                    Meta = OkMeta()
                 };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error creating IO system: {Why(ex)}", ex);
-            }
+            });
         }
 
-        [McpServerTool(Name = "net_connect_to_io_system", Title = "Connect IO device to IO system", Destructive = true, OpenWorld = false, UseStructuredContent = true), Description("Connects an IO device's network interface to an existing IO system")]
+        [WriteTool]
+        [McpServerTool(Name = "net_connect_to_io_system", Title = "Connect IO device to IO system", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Connect the network interface of an IO device to an existing IO system. Step 4 of building an IO system: the IO device interface must already be on the IO system's subnet ('net_connect_subnet')")]
         public static ResponseMessage ConnectToIoSystem(
-            [Description("deviceName: the name of the IO device")] string deviceName,
-            [Description("interfaceName: the name of the PROFINET interface on the IO device")] string interfaceName,
-            [Description("ioSystemName: the name of the target IO system to connect to")] string ioSystemName)
+            [Description("deviceName: path or name of the IO device, as 'get_devices' returns it")] string deviceName,
+            [Description("interfaceName: name of the PROFINET interface item of the IO device")] string interfaceName,
+            [Description("ioSystemName: name of the IO system to join")] string ioSystemName)
         {
-            try
+            return Guarded(nameof(ConnectToIoSystem), () =>
             {
                 Portal.ConnectToIoSystem(deviceName, interfaceName, ioSystemName);
+
                 return new ResponseMessage
                 {
-                    Message = $"Interface '{interfaceName}' connected to IO system '{ioSystemName}' successfully",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Message = $"Interface '{interfaceName}' of '{deviceName}' connected to IO system '{ioSystemName}'. {SaveHint}",
+                    Meta = OkMeta()
                 };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error connecting to IO system: {Why(ex)}", ex);
-            }
+            });
         }
 
         #endregion
     }
 }
-

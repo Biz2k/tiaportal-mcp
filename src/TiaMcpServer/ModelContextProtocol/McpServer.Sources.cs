@@ -336,7 +336,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region import sources (write)
 
-        [WriteTool]
         // [McpServerTool(Name = "import_sources", Title = "Import sources", Destructive = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Compile every block and PLC data type source file (*.db, *.awl, *.scl, *.udt) under a folder tree back into the project - the counterpart to 'GenerateSources'. Each file is placed into the block or PLC data type group its folder path implies, matching the layout 'GenerateSources' writes; a folder whose group does not yet exist in the project fails that file rather than being created automatically. Existing blocks/types of the same name are overwritten")]
         public static ResponseImportedSources ImportSources(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -508,7 +507,6 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
-        [WriteTool]
         // [McpServerTool(Name = "import_source_blocks", Title = "Import source blocks", Destructive = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Compile an external source file into program blocks and PLC data types. A target must be a block user group: blocks cannot be generated into the Program blocks root")]
         public static ResponseGenerateBlocks ImportSourceBlocks(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
