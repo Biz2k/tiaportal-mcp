@@ -19,6 +19,14 @@
   replaced with a generic message. Clients that parsed `Unexpected error` out of a successful
   result must check `isError` instead.
 
+- __`download_to_plc` reports what happened.__ It answered TIA Portal's configuration steps through
+  `dynamic` inside an empty `catch` and returned three numbers, so any download that needed a decision
+  ended as `DownloadToPlc failed`. Every step is now recorded with its options and the answer given,
+  the message tree of the result is returned (informational lines capped by `maxMessages`, errors and
+  warnings always in full), and a failure names the stage and the step that blocked it. New
+  parameters: `stopPlc` and `startPlc` (both default false - the CPU is not touched unless asked),
+  `selections` to answer a step differently, `maxMessages`. A download that needs the CPU stopped is
+  refused with that explanation when `stopPlc` is false.
 - __Hardware, network and library edits respect the write gate.__ `hw_create_device`, `hw_plug_module`,
   `hw_delete_device`, the four `net_*` tools, `instantiate_master_copy`, `hmi_create_faceplate_instance`
   and `hmi_manage_unified_faceplate` change the project but were registered even without
