@@ -1,11 +1,11 @@
-﻿namespace TiaMcpServer
+namespace TiaMcpServer
 {
     public class CliOptions
     {
         public int? TiaMajorVersion { get; set; }
         public int? Logging { get; set; } // "stdio" or "http"
         public bool Doctor { get; set; } // print environment diagnostics and exit
-        public bool AllowWrite { get; set; } // register the project-mutating tools
+        public bool AllowWrite { get; set; } = true; // register the project-mutating tools by default
 
         public static CliOptions ParseArgs(string[] args)
         {
