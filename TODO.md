@@ -1,86 +1,86 @@
-# TODO / Enhancements
+# TODO / Улучшения
 
-Centralized list of actionable improvements gathered from initial repo review. Use this to track, prioritize, and reference across PRs. See file paths in backticks.
+Централизованный список задач и улучшений, собранных после первоначального обзора репозитория. Используйте этот список для отслеживания, приоритизации и ссылок в пулл-реквестах (PR). См. пути к файлам в обратных кавычках.
 
-## Documentation
-- [x] Added a "Command Line Arguments" section to `README.md` documenting `--tia-major-version <int>` and `--logging <1|2|3>` with defaults and effect (1=stderr, 2=Debug, 3=Event Log). Cross-link to samples.
-- [ ] Add a "Build and Run" section to `README.md` showing `dotnet build`, `dotnet run --project src/TiaMcpServer/TiaMcpServer.csproj`, and running compiled `TiaMcpServer.exe`.
-- [ ] Add a "Testing" section to `README.md` summarizing prerequisites (TIA Portal V20, `.NET Framework 4.8`, env var `TiaPortalLocation`, Windows group membership "Siemens TIA Openness"), how to run `dotnet test`, and expected limitations if environment is not present. Link to `tests/TiaMcpServer.Test/README.md` and mention manual multi-user session creation.
-- [ ] Cross-link the `samples/` directory from `README.md`; reference `samples/vscode/mcp.json` and `samples/claude/claude_desktop_config.json`.
-- [ ] Reduce duplication between `gemini.md` and `src/TiaMcpServer/README.md`: consolidate content or keep one as an overview and link to the other.
-- [ ] Expand Known Limitations: Document that as of 2025-09-02, importing Ladder (LAD) blocks from SIMATIC SD documents requires the `.s7res` to contain en-US tags for all items; otherwise import may fail.
+## Документация
+- [x] Добавлен раздел "Аргументы командной строки" в `README.md` с описанием `--tia-major-version <int>` и `--logging <1|2|3>` с их значениями по умолчанию и эффектом (1=stderr, 2=Debug, 3=Event Log). Сделать перекрестные ссылки на примеры.
+- [ ] Добавить раздел "Сборка и запуск" в `README.md`, показывающий команды `dotnet build`, `dotnet run --project src/TiaMcpServer/TiaMcpServer.csproj` и запуск скомпилированного `TiaMcpServer.exe`.
+- [ ] Добавить раздел "Тестирование" в `README.md` с кратким описанием предварительных требований (TIA Portal V20, `.NET Framework 4.8`, переменная среды `tia_portal_location`, членство в группе Windows "Siemens TIA Openness"), описанием запуска `dotnet test` и ожидаемых ограничений, если среда не настроена. Дать ссылку на `tests/TiaMcpServer.Test/README.md` и упомянуть ручное создание многопользовательской сессии (multi-user session).
+- [ ] Добавить перекрестные ссылки на директорию `samples/` из `README.md`; дать ссылку на `samples/vscode/mcp.json` и `samples/claude/claude_desktop_config.json`.
+- [ ] Уменьшить дублирование между `gemini.md` и `src/TiaMcpServer/README.md`: объединить содержимое или оставить один в качестве обзора, дав ссылку на другой.
+- [ ] Дополнить раздел "Известные ограничения": задокументировать, что по состоянию на 02.09.2025, импорт LAD блоков из документов SIMATIC SD требует, чтобы файл `.s7res` содержал теги en-US для всех элементов, иначе импорт может завершиться ошибкой.
 
-## CLI / Logging
-- [ ] Update `src/TiaMcpServer/CliOptions.cs` `Logging` comment to match current numeric modes (1=stderr, 2=Debug, 3=Event Log) or switch to string values (e.g., "stdio", "debug", "eventlog"). Align parsing and docs accordingly.
-- [ ] In `src/TiaMcpServer/Program.cs`, remove hard-coded `options.Logging = 1;` override so CLI-provided logging is honored. Instead, set default only when not provided.
-- [ ] Document logging behavior (destinations, filters, minimum levels) in `README.md` or a dedicated `docs/logging.md` and link it.
+## CLI / Логирование
+- [ ] Обновить комментарий `logging` в `src/TiaMcpServer/CliOptions.cs`, чтобы он соответствовал текущим числовым режимам (1=stderr, 2=Debug, 3=Event Log) или перейти на строковые значения (например, "stdio", "debug", "eventlog"). Согласовать парсинг и документацию.
+- [ ] В `src/TiaMcpServer/Program.cs` удалить жестко заданное переопределение `options.Logging = 1;`, чтобы учитывалось логирование из командной строки. Устанавливать значение по умолчанию только если оно не задано.
+- [ ] Задокументировать поведение логирования (пункты назначения, фильтры, минимальные уровни) в `README.md` или в отдельном файле `docs/logging.md` и добавить ссылку на него.
 
-## Consistency
-- [ ] Standardize naming to "TIA Portal" (no hyphen) across all docs and headings; ensure consistent section titles (e.g., clarify "Copilot Chat" vs. "VS Code").
-- [ ] Ensure requirements are consistently listed across docs: `.NET Framework 4.8`, `TIA Portal V20`, env var `TiaPortalLocation`, and Windows group membership.
+## Единообразие
+- [ ] Стандартизировать написание "TIA Portal" (без дефиса) во всей документации и заголовках; обеспечить единообразие названий разделов (например, прояснить "Copilot Chat" в сравнении с "VS Code").
+- [ ] Убедиться, что требования везде указаны одинаково: `.NET Framework 4.8`, `TIA Portal V20`, переменная окружения `tia_portal_location` и членство в группе Windows.
 
-## Changelog
-- [ ] Fix typo in `CHANGELOG.md`: "Narketplace" → "Marketplace".
+## История изменений (Changelog)
+- [ ] Исправить опечатку в `CHANGELOG.md`: "Narketplace" -> "Marketplace".
 
-## Tests
-- [ ] In `tests/TiaMcpServer.Test/README.md`, double-check instructions for creating `TestSession1.als20` and referencing paths in `Settings.cs`; link this from the main `README.md` Testing section.
-- [ ] Consider documenting how to selectively run tests or skip environment-dependent ones (e.g., via MSTest categories) when TIA is unavailable.
+## Тесты
+- [ ] В `tests/TiaMcpServer.Test/README.md` дважды проверить инструкции по созданию `TestSession1.als20` и указанию путей в `Settings.cs`; добавить ссылку на это из основного раздела "Тестирование" в `README.md`.
+- [ ] Рассмотреть возможность документирования того, как выборочно запускать тесты или пропускать тесты, зависящие от окружения (например, через категории MSTest), если TIA недоступен.
 
-## Housekeeping
-- [x] Add a "Contributing" link in `README.md` pointing to `agents.md`.
+## Порядок в коде
+- [x] Добавить ссылку "Contributing" в `README.md`, указывающую на `agents.md`.
 
-## Transports (HTTP / TCP)
+## Транспорты (HTTP / TCP)
 
-Streamable HTTP is **not reachable from this project**: the SDK ships it in
-`ModelContextProtocol.AspNetCore`, which requires .NET 8+, while this server is
-pinned to `net48` by TIA Openness. The former plan to hand-roll an `HttpListener`
-host is retired — it would not be spec-compliant Streamable HTTP.
+Streamable HTTP **недоступен из этого проекта**: SDK поставляет его в
+`ModelContextProtocol.AspNetCore`, который требует .NET 8+, в то время как этот сервер 
+привязан к `net48` из-за TIA Openness. Предыдущий план по созданию собственного хоста `HttpListener` 
+отменен — он не будет соответствовать спецификации Streamable HTTP.
 
-- [ ] Decide whether remote access is wanted at all (stdio covers the VS Code extension today)
-- [ ] If yes, evaluate a separate .NET 8+ proxy that speaks Streamable HTTP to clients and stdio to this server
-- [ ] Cheaper interim option: TCP transport via `.WithStreamServerTransport(input, output)` with a TCP listener
-  - Not MCP Streamable HTTP; only useful for bespoke clients
-- [ ] Documentation
-  - Keep the "Transports" and "MCP Protocol" sections in both READMEs in sync with whatever is chosen
+- [ ] Решить, нужен ли удаленный доступ вообще (на сегодня stdio покрывает требования расширения VS Code).
+- [ ] Если да, оценить вариант отдельного прокси на .NET 8+, который общается по Streamable HTTP с клиентами и по stdio с этим сервером.
+- [ ] Более простой временный вариант: TCP транспорт через `.WithStreamServerTransport(input, output)` с TCP слушателем.
+  - Не является MCP Streamable HTTP; полезно только для кастомных клиентов.
+- [ ] Документация
+  - Синхронизировать разделы "Транспорты" и "MCP Протокол" в обоих файлах README с тем, что будет выбрано.
 
-## Openness API Coverage Roadmap
+## План покрытия Openness API 
 
-Version 0.2.0 completed the __PLC software__ area: tags and constants, watch and force tables,
-external source files, cross references, and create/rename/delete/copy/move for blocks, types
-and their groups. The areas below are still entirely uncovered - no design work done, listed so
-the gap is explicit rather than implied.
+Версия 0.2.0 завершила область __программного обеспечения ПЛК (PLC software)__: теги и константы, таблицы наблюдения (watch/force), 
+внешние исходные файлы, перекрестные ссылки, а также создание/переименование/удаление/копирование/перемещение блоков, типов 
+и их групп. Нижеприведенные области пока совершенно не покрыты - работа по проектированию не проводилась, они перечислены, чтобы 
+пробелы были явными, а не подразумеваемыми.
 
-- [ ] __Online and device operations__: go online/offline, upload, online diagnostics
-  and module state. Needs real hardware or a simulator to test.
-  - [x] download, PLCSIM simulation (completed)
-- [ ] __Hardware and network configuration__: create and delete devices, GSD import, plug and
-  unplug modules, subnets, nodes, IO systems, connections.
-- [x] __Libraries__: project and global libraries, master copies, library types and versioning,
-  `UpdateProject`. Note that `CreateFrom(MasterCopy)` already exists on several compositions, so
-  this would also unlock a native copy path for blocks and types.
-- [ ] __HMI__: screens, HMI tags, text lists, cycles, connections. Today `HmiTarget` and
-  `HmiSoftware` are only printed by name in the project tree.
-- [ ] __Project infrastructure__: language settings, project-wide settings, CAx import/export,
-  compare (offline/online and project), multiuser server projects and check-in/check-out.
-- [ ] __Watch and force table entries__: blocked on reading the required attribute names from
-  `GetCreationInfos()` against a live project; see the 0.2.0 "Known gaps" entry in `CHANGELOG.md`.
+- [ ] __Онлайн и операции с устройствами__: подключение/отключение онлайн, загрузка с устройства (upload), онлайн диагностика 
+  и статус модуля. Требует реального оборудования или симулятора для тестирования.
+  - [x] загрузка в ПЛК (download), симуляция PLCSIM (завершено)
+- [ ] __Конфигурация оборудования и сетей__: создание и удаление устройств, импорт GSD, установка и
+  извлечение модулей, подсети, узлы, системы IO, соединения.
+- [x] __Библиотеки__: библиотеки проекта и глобальные библиотеки, мастер-копии, типы библиотек и версионирование,
+  `UpdateProject`. Обратите внимание, что `CreateFrom(MasterCopy)` уже существует для нескольких композиций, так что
+  это также откроет нативный путь для копирования блоков и типов.
+- [ ] __HMI__: экраны, HMI теги, текстовые списки, циклы, соединения. Сейчас `HmiTarget` и
+  `HmiSoftware` выводятся только по имени в дереве проекта.
+- [ ] __Инфраструктура проекта__: настройки языка, настройки всего проекта, импорт/экспорт CAx,
+  сравнение (офлайн/онлайн и проектов), многопользовательские серверные проекты (multiuser) и операции check-in/check-out.
+- [ ] __Элементы таблиц наблюдения и принудительных значений__: заблокировано из-за чтения требуемых имен атрибутов из
+  `GetCreationInfos()` в реальном проекте; см. запись "Известные пробелы" для версии 0.2.0 в `CHANGELOG.md`.
 
-### Verification debt from 0.2.0
+### Долг по верификации из версии 0.2.0
 
-- [ ] The live MSTest suite last passed in full (79/79) against the Phase 0 refactor only. The
-  tag, watch table, external source, cross reference and write features have compile-time and
-  MCP smoke verification (`tools/list` gating probed in both modes) but no test coverage yet.
-- [ ] Two attempts to re-run the suite hung with TIA Portal open and idle; investigate whether a
-  modal Portal dialog blocks the run, since `ConnectPortal` uses `TiaPortalMode.WithUserInterface`.
-- [ ] Add the test classes and fixture objects planned for the new areas: a user tag table group
-  with tags and user constants, a watch table with entries, an external source with a small
-  `.scl`, and blocks that reference each other so cross references are non-empty.
+- [ ] Полный набор тестов MSTest последний раз успешно проходил (79/79) только на этапе Phase 0 рефакторинга.
+  Функции тегов, таблиц наблюдения, внешних исходников, перекрестных ссылок и записи имеют верификацию на этапе компиляции и
+  первичную проверку MCP (smoke tests) (фильтрация `tools/list` проверяется в обоих режимах), но пока не покрыты тестами.
+- [ ] Две попытки перезапустить набор тестов зависли при открытом и простаивающем TIA Portal; исследовать,
+  блокирует ли модальное диалоговое окно Portal выполнение, так как `ConnectPortal` использует `TiaPortalMode.WithUserInterface`.
+- [ ] Добавить тестовые классы и фикстуры, запланированные для новых областей: группа пользовательских таблиц тегов
+  с тегами и константами, таблица наблюдения с записями, внешний исходный файл с небольшим
+  `.scl`, и блоки, которые ссылаются друг на друга, чтобы перекрестные ссылки не были пустыми.
 
-## Siemens Wrappers Refactor (Duplication/Exceptions)
+## Рефакторинг оберток Siemens (Дублирование/Исключения)
 
-- [x] Centralize exception handling in Siemens wrappers (0.2.0: `Siemens/Operation.cs`. New portal methods route through it; the pre-0.2.0 export/import methods still carry the hand-written block.)
-  Reasoning: `Portal*.cs` contains many `try/catch (Exception)` blocks that return `false`/`null` without consistent logging or context. A small helper reduces boilerplate and improves observability.
-  Excerpt (today):
+- [x] Централизовать обработку исключений в обертках Siemens (0.2.0: `Siemens/Operation.cs`. Новые методы портала проходят через нее; методы экспорта/импорта до версии 0.2.0 все еще содержат ручные блоки).
+  Обоснование: `Portal*.cs` содержит много блоков `try/catch (Exception)`, которые возвращают `false`/`null` без последовательного логирования или контекста. Небольшой помощник (helper) уменьшает шаблонный код и улучшает наблюдаемость.
+  Выдержка (как сейчас):
   ```csharp
   try
   {
@@ -93,7 +93,7 @@ the gap is explicit rather than implied.
       return false;
   }
   ```
-  Example (proposed helper usage):
+  Пример (предлагаемое использование помощника):
   ```csharp
   return Operation.Run(_logger, "Disconnecting from TIA Portal", () =>
   {
@@ -102,48 +102,48 @@ the gap is explicit rather than implied.
   });
   ```
 
-- [x] Add guard + not-found helpers for Siemens entities (0.2.0: `GetPlcSoftwareOrThrow`, `RequireTagTable`, `RequireWatchTable`, `RequireUserConstant`, `EnsureUserGroup`, `EnsureValidName`, `EnsureNotKnowHowProtected`, `EnsureConsistent`.)
-  Reasoning: Repeated null checks (GetDevice/GetType/GetBlock, etc.) and ad-hoc error messages create inconsistencies. A guard establishes consistent messages and reduces lines.
-  Excerpt (today):
+- [x] Добавить помощники для проверки (guards) и обработки "не найдено" для сущностей Siemens (0.2.0: `GetPlcSoftwareOrThrow`, `RequireTagTable`, `RequireWatchTable`, `RequireUserConstant`, `EnsureUserGroup`, `EnsureValidName`, `EnsureNotKnowHowProtected`, `EnsureConsistent`.)
+  Обоснование: Повторяющиеся проверки на null (GetDevice/GetType/GetBlock и т.д.) и разрозненные сообщения об ошибках создают несоответствия. Использование guard создает одинаковые сообщения и сокращает код.
+  Выдержка (как сейчас):
   ```csharp
   var device = GetDevice(devicePath);
   if (device == null)
   {
-      return false; // or throw later in MCP layer
+      return false; // или выбросить исключение позже на уровне MCP
   }
   ```
-  Example (proposed):
+  Пример (предлагаемый):
   ```csharp
   var device = Guard.RequireNotNull(GetDevice(devicePath),
       () => McpErrors.NotFound("Device", devicePath));
   ```
 
-- [x] Introduce DTO mappers for attributes → response objects (0.2.0: `ToTagTableInfo`, `ToTagInfo`, `ToWatchTableInfo`, `ToForceTableInfo`, `ToEntryList`, `ToExternalSourceInfo`, `ToSource`, `ToLocation`, plus `Helper.FirstText`.)
-  Reasoning: Mapping attributes and common fields is repeated across blocks/types/devices. Central mappers keep shape changes consistent.
-  Excerpt (today):
+- [x] Внедрить мапперы DTO для преобразования атрибутов -> объекты ответа (0.2.0: `ToTagTableInfo`, `ToTagInfo`, `ToWatchTableInfo`, `ToForceTableInfo`, `ToEntryList`, `ToExternalSourceInfo`, `ToSource`, `ToLocation`, плюс `Helper.FirstText`.)
+  Обоснование: Маппинг атрибутов и общих полей повторяется для блоков/типов/устройств. Централизованные мапперы сохраняют согласованность изменений структуры.
+  Выдержка (как сейчас):
   ```csharp
   var attrs = Helper.GetAttributeList(block);
   var dto = new ResponseBlockInfo { Name = block.Name, Attributes = attrs, /* ... */ };
   ```
-  Example (proposed):
+  Пример (предлагаемый):
   ```csharp
   var dto = DtoMapper.ToBlockInfo(block);
   ```
 
-- [ ] Roll out PortalException + context enrichment pattern beyond ExportXmlBlock
-  Affected: `ImportXmlBlock`, `ExportXmlBlocks`, `export_xml_type`, `import_xml_type`, `ExportBlocksAsDocuments`, `ImportFromDocuments`, etc.
-  Rules:
-  - Short messages + `PortalErrorCode` only (no param echoing in message)
-  - Attach context in `Exception.Data` in a single catch per portal method, just before rethrow (see docs/error-model.md)
-  - Preserve `InnerException` for operation failures and log once with structured fields
+- [ ] Внедрить шаблон `PortalException` + обогащение контекстом за пределами `ExportXmlBlock`
+  Затрагивает: `ImportXmlBlock`, `ExportXmlBlocks`, `export_xml_type`, `import_xml_type`, `ExportBlocksAsDocuments`, `ImportFromDocuments` и т.д.
+  Правила:
+  - Короткие сообщения + только `PortalErrorCode` (без вывода параметров в сообщении).
+  - Прикреплять контекст в `Exception.Data` в единственном `catch` для каждого метода портала, прямо перед повторным выбросом исключения (см. `docs/error-model.md`).
+  - Сохранять `InnerException` для сбоев операций и логировать один раз со структурированными полями.
 
-- [x] Add helpers for path resolution parity (0.2.0: `GetTypePath`, plus `GetTagTablePath`, `GetWatchTablePath`, `GetForceTablePath`, `GetExternalSourcePath`. `GetBlockPath` now returns a root-relative path that round-trips into `GetBlock`.)
-  - `GetTypePath(PlcType)` analogous to `GetBlockPath(PlcBlock)` for building fully-qualified paths.
-  - Use these from MCP when building “Did you mean…” suggestions.
+- [x] Добавить помощники для паритета разрешения путей (0.2.0: `GetTypePath`, плюс `GetTagTablePath`, `GetWatchTablePath`, `GetForceTablePath`, `GetExternalSourcePath`. `GetBlockPath` теперь возвращает путь относительно корня, который обратно парсится в `GetBlock`.)
+  - `GetTypePath(PlcType)` аналогичен `GetBlockPath(PlcBlock)` для построения полностью квалифицированных путей.
+  - Использовать их из MCP при построении предложений "Возможно, вы имели в виду...".
 
-- [ ] Create a list mapping helper for collection projections
-  Reasoning: Multiple `foreach` loops project Siemens objects into response lists with null filters. A helper simplifies and standardizes this.
-  Excerpt (today):
+- [ ] Создать помощник маппинга списков для проекций коллекций
+  Обоснование: Множественные циклы `foreach` проецируют объекты Siemens в списки ответов с фильтрацией null. Помощник упрощает и стандартизирует это.
+  Выдержка (как сейчас):
   ```csharp
   var list = new List<ResponseBlockInfo>();
   foreach (var b in blocks)
@@ -151,19 +151,19 @@ the gap is explicit rather than implied.
       if (b != null) list.Add(DtoMapper.ToBlockInfo(b));
   }
   ```
-  Example (proposed):
+  Пример (предлагаемый):
   ```csharp
   var list = ListMapper.Map(blocks, DtoMapper.ToBlockInfo);
   ```
 
-- [ ] Generalize ASCII tree printing (project/software trees)
-  Reasoning: Several recursive methods build prefixed tree strings with near-identical logic. A generic tree printer would remove duplication and reduce bugs.
-  Excerpt (today):
+- [ ] Обобщить печать ASCII-деревьев (деревья проекта/программы)
+  Обоснование: Несколько рекурсивных методов строят строки с префиксами для дерева с почти идентичной логикой. Обобщенный принтер дерева устранит дублирование и уменьшит количество ошибок.
+  Выдержка (как сейчас):
   ```csharp
   private void GetProjectTreeDevices(StringBuilder sb, DeviceComposition devices, List<bool> ancestorStates) { /*...*/ }
   private void GetProjectTreeGroups(StringBuilder sb, DeviceUserGroupComposition groups, List<bool> ancestorStates) { /*...*/ }
   ```
-  Example (proposed):
+  Пример (предлагаемый):
   ```csharp
   TreePrinter.Write(sb, root,
       children: n => n.Children,
@@ -171,66 +171,66 @@ the gap is explicit rather than implied.
       hasMore:  n => n.HasMore);
   ```
 
-- [ ] Replace boolean returns with lightweight result objects (internals)
-  Reasoning: Widespread `return true/false` makes error sources opaque. A `Result` type can carry messages and improves upstream decisions without changing public MCP contracts yet.
-  Excerpt (today):
+- [ ] Заменить логические значения возврата (boolean) на легковесные объекты результатов (для внутренних нужд)
+  Обоснование: Повсеместное использование `return true/false` делает источники ошибок непрозрачными. Тип `Result` может содержать сообщения и улучшает принятие решений на верхнем уровне, пока не изменяя публичные контракты MCP.
+  Выдержка (как сейчас):
   ```csharp
   if (!Compile()) return false;
   ```
-  Example (proposed):
+  Пример (предлагаемый):
   ```csharp
   var r = Compile();
-  if (!r.Success) return r; // r.Message contains context
+  if (!r.Success) return r; // r.Message содержит контекст
   ```
 
-- [ ] Consolidate progress reporting for export/import operations
-  Reasoning: ExportXmlBlocks/ExportXmlTypes/ExportBlocksAsDocuments share progress calculations and error notifications. A wrapper reduces scattered try/catch and progress-token checks.
-  Excerpt (today):
+- [ ] Объединить отчеты о прогрессе для операций экспорта/импорта
+  Обоснование: ExportXmlBlocks/ExportXmlTypes/ExportBlocksAsDocuments используют общие вычисления прогресса и уведомления об ошибках. Обертка уменьшает разбросанные `try/catch` и проверки `progress-token`.
+  Выдержка (как сейчас):
   ```csharp
   // compute totals, send start; for each item send progress; on error send error progress
   ```
-  Example (proposed):
+  Пример (предлагаемый):
   ```csharp
   await ProgressRunner.Run(total, progressToken, onStart, onItem, onComplete, onError);
   ```
 
-- [ ] Address nullable warnings in `Portal*.cs` with guards
-  Reasoning: Build shows nullability warnings for software tree groups; explicit guards make intent clear and avoid runtime NREs.
-  Excerpt (warnings):
-  - CS8602: Dereference of a possibly null reference.
-  - CS8604: Possible null reference argument for parameter `blockGroup`/`typeGroup`.
-  Example (proposed):
+- [ ] Устранить предупреждения о возможности null в `Portal*.cs` с помощью guards
+  Обоснование: При сборке появляются предупреждения о null для групп дерева программы; явные guards делают намерения понятными и избегают `NullReferenceException` во время выполнения.
+  Выдержка (предупреждения):
+  - CS8602: Разыменование вероятной пустой ссылки.
+  - CS8604: Возможно пустой аргумент для параметра `blockGroup`/`typeGroup`.
+  Пример (предлагаемый):
   ```csharp
-  var group = Guard.RequireNotNull(blockGroup, () => new InvalidOperationException("Block group missing"));
+  var group = Guard.RequireNotNull(blockGroup, () => new InvalidOperationException("Группа блоков отсутствует"));
   GetSoftwareTreeBlockGroup(sb, group, ancestorStates, label, isLast);
   ```
-- [ ] Verify that all fenced code blocks in Markdown include language hints per `style.md` and wrap lines for readability.
+- [ ] Убедиться, что все блоки кода в Markdown включают подсказки языка согласно `style.md` и переносятся по строкам для читаемости.
 
-## MCP Tools Docs (Export/Import)
-- [ ] Create per-tool docs under `docs/tools/`:
+## Документация инструментов MCP (Экспорт/Импорт)
+- [ ] Создать документацию для каждого инструмента в `docs/tools/`:
   - `docs/tools/export-blocks.md`
   - `docs/tools/import-blocks.md`
-  Each should include: Overview, Preconditions, Parameters (names/types/defaults), Order of operations (numbered), Error model, Examples (request/response for MCP), Troubleshooting, Performance/limits. Include a Mermaid sequence diagram for call flow.
-- [ ] Define a shared error mapping in `docs/error-model.md` (validation → `InvalidParams`, not found → `NotFound`, Openness API → `OpennessError` with native code; guidance for partial vs. overall failure).
-- [ ] Add a "Tools" section to `README.md` linking to `docs/tools/` and `docs/error-model.md`; reference `samples/` configs.
-- [ ] Add XML documentation comments to export/import methods in `ModelContextProtocol/McpServer.cs` and corresponding Siemens wrappers (e.g., `Siemens/Portal*.cs`, `Siemens/Openness.cs`). Cover summary, pre/postconditions, ordered steps, params/returns, exceptions, thread-safety/cancellation, and `<seealso>` links to tool docs.
-- [ ] Enable XML documentation file generation in `src/TiaMcpServer/TiaMcpServer.csproj` (set `DocumentationFile` for `net48`) so IDE tooltips and doc generation work.
-- [ ] Add usage recipes under `docs/recipes/` (e.g., export only FBs matching `FB_Prod.*`, import with overwrite/skip, preservePath false) with minimal and full payloads and expected responses.
+  Каждый должен включать: Обзор, Предварительные условия, Параметры (имена/типы/значения по умолчанию), Порядок операций (пронумерованный), Модель ошибок, Примеры (запрос/ответ для MCP), Устранение неполадок, Производительность/ограничения. Включить диаграмму последовательности Mermaid для потока вызовов.
+- [ ] Определить общее сопоставление ошибок в `docs/error-model.md` (валидация -> `InvalidParams`, не найдено -> `NotFound`, API Openness -> `OpennessError` с нативным кодом; руководство для частичных и полных сбоев).
+- [ ] Добавить раздел "Инструменты" в `README.md` со ссылками на `docs/tools/` и `docs/error-model.md`; сослаться на конфигурации `samples/`.
+- [ ] Добавить XML-комментарии документации к методам экспорта/импорта в `ModelContextProtocol/McpServer.cs` и соответствующим оберткам Siemens (например, `Siemens/Portal*.cs`, `Siemens/Openness.cs`). Охватить summary, пред/постусловия, упорядоченные шаги, параметры/возвращаемые значения, исключения, потокобезопасность/отмену, и ссылки `<seealso>` на документацию инструментов.
+- [ ] Включить генерацию файла XML-документации в `src/TiaMcpServer/TiaMcpServer.csproj` (установить `DocumentationFile` для `net48`), чтобы работали подсказки IDE и генерация документации.
+- [ ] Добавить рецепты использования в `docs/recipes/` (например, экспорт только FB, соответствующих `FB_Prod.*`, импорт с перезаписью/пропуском, preservePath false) с минимальными и полными полезными нагрузками (payloads) и ожидаемыми ответами.
 
-- [ ] Document block path rules and suggestions
-  - In `docs/tools/export-blocks.md` and server README, state that `blockPath` must be `Group/Subgroup/Name` and that MCP suggests candidates for single-name inputs by regex searching all blocks and formatting paths via `Portal.GetBlockPath`.
-- [ ] Cross-link: from tool docs to relevant tests in `tests/TiaMcpServer.Test` and from code via `<seealso>` to markdown docs; from README to samples and tool docs.
-- [ ] Optional: Evaluate DocFX (or similar) to generate API docs from XML comments; if adopted, add a short `docs/README.md` and build instructions.
-- [ ] Optional CI: add markdown linting and doc build validation to the pipeline (skippable locally if TIA isn’t installed).
+- [ ] Задокументировать правила и предложения для путей к блокам
+  - В `docs/tools/export-blocks.md` и README сервера указать, что `blockPath` должен быть вида `Group/Subgroup/Name` и что MCP предлагает кандидатов для однословных вводов путем поиска по регулярному выражению среди всех блоков и форматирования путей через `Portal.GetBlockPath`.
+- [ ] Перекрестные ссылки: из документации инструментов к соответствующим тестам в `tests/TiaMcpServer.Test` и из кода через `<seealso>` к документации markdown; из README к примерам и документации инструментов.
+- [ ] Дополнительно: Оценить DocFX (или аналог) для генерации API-документации из XML-комментариев; если будет принято, добавить краткий `docs/README.md` и инструкции по сборке.
+- [ ] Опционально CI: добавить линтинг markdown и валидацию сборки документации в пайплайн (с возможностью пропуска локально, если TIA не установлен).
 
-### Version Gating (Export as Documents)
-- [ ] Document that `ExportAsDocuments` and `ExportBlocksAsDocuments` require TIA Portal V20+; update prompts and README accordingly.
+### Ограничения версий (Экспорт как документы)
+- [ ] Задокументировать, что `ExportAsDocuments` и `ExportBlocksAsDocuments` требуют TIA Portal V20+; обновить промпты и README соответственно.
 
-## Import From Documents (V20+)
-- [ ] Add tests for `ImportFromDocuments`: single import happy path, version gating (<20), invalid `importPath`, invalid `fileNameWithoutExtension`.
-- [ ] Add tests for `ImportBlocksFromDocuments`: regex filtering on `.s7dcl`, progress notifications, partial failures aggregation, empty directory behavior.
-- [ ] Validate enum mapping for `importOption` (Override/None; extend if environment exposes more values).
-- [ ] Add docs pages under `docs/tools/` for import-from-documents tools; include file discovery rules (.s7dcl/.s7res), name derivation, and option mapping.
+## Импорт из документов (V20+)
+- [ ] Добавить тесты для `ImportFromDocuments`: одиночный импорт (успешный сценарий), ограничение по версии (<20), неверный `importPath`, неверный `fileNameWithoutExtension`.
+- [ ] Добавить тесты для `ImportBlocksFromDocuments`: фильтрация по регулярному выражению для `.s7dcl`, уведомления о прогрессе, агрегация частичных сбоев, поведение пустой директории.
+- [ ] Валидировать маппинг перечисления (enum) для `importOption` (Override/None; расширить, если среда предоставляет больше значений).
+- [ ] Добавить страницы документации в `docs/tools/` для инструментов импорта из документов; включить правила обнаружения файлов (.s7dcl/.s7res), извлечение имен и маппинг опций.
 
 ## HMI (Human Machine Interface) - Deferred Tasks
 - [x] **Настройка событий (Event Handlers):** Инструменты для привязки системных функций к событиям элементов (например, назначение функции `ChangeScreen` на событие `Click` для кнопки). 
@@ -305,4 +305,3 @@ the gap is explicit rather than implied.
 ## Управление проектом и компиляция - Deferred Tasks
 - [x] **Полная компиляция проекта:** Запуск компиляции как Hardware, так и Software с возвращением структурированных логов.
 - [x] **Загрузка в ПЛК (Download):** Инструменты для загрузки конфигурации и блоков в реальный ПЛК или в виртуальный адаптер. (Управление самим PLCSIM Advanced вынесено в отдельный проект `plcsim-mcp`).
-
