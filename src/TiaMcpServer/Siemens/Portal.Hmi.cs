@@ -22,6 +22,7 @@ namespace TiaMcpServer.Siemens
         public string Text { get; set; }
         public string ProcessValue { get; set; }
         public List<string> Events { get; set; } = new List<string>();
+        public Dictionary<string, object> Properties { get; set; } = new Dictionary<string, object>();
     }
 
     public class HmiTagInfo {
@@ -186,7 +187,122 @@ namespace TiaMcpServer.Siemens
                     info.Events.Add(evt.Name);
                 }
             } catch { }
+            try {
+                var props = item.Properties;
+                if (props != null) {
+                    foreach (var prop in props) {
+                                                try {
+                            object val = prop.Value;
+                            if (val != null) {
+                                var type = val.GetType();
+                                if (type.IsPrimitive || type == typeof(string)) {
+                                    info.Properties[prop.Name] = val;
+                                } else {
+                                    info.Properties[prop.Name] = val.ToString();
+                                }
+                            } else {
+                                info.Properties[prop.Name] = null;
+                            }
+                        } catch { }
+                    }
+                }
+            } catch { }
             return info;
+        }
+
+        public List<System.Text.Json.Nodes.JsonObject> ManageHmiItems(string softwarePath, List<TiaMcpServer.ModelContextProtocol.HmiItemAction> actions)
+        {
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (softwareContainer == null || softwareContainer.Software == null)
+            {
+                throw new System.Exception($"HMI Software '{softwarePath}' not found");
+            }
+            
+            bool isUnified = softwareContainer.Software is global::Siemens.Engineering.HmiUnified.HmiSoftware;
+            var results = new List<System.Text.Json.Nodes.JsonObject>();
+
+            foreach (var action in actions)
+            {
+                var res = new System.Text.Json.Nodes.JsonObject { ["action"] = action.action, ["screenName"] = action.screenName, ["itemName"] = action.itemName };
+                try
+                {
+                    dynamic screen = null;
+                    if (isUnified) {
+                        try {
+                            dynamic target = softwareContainer.Software;
+                            foreach(var s in target.Screens) {
+                                if (s.Name == action.screenName) { screen = s; break; }
+                            }
+                        } catch { }
+                    } else {
+                        dynamic target = softwareContainer.Software;
+                        screen = FindScreenInFolder(target.ScreenFolder, action.screenName);
+                    }
+
+                    if (screen == null) throw new System.Exception($"Screen '{action.screenName}' not found.");
+
+                    dynamic itemsColl = null;
+                    try { itemsColl = screen.ScreenItems; } 
+                    catch { 
+                        try { itemsColl = screen.Elements; } 
+                        catch { throw new System.Exception("Cannot access screen items collection."); }
+                    }
+
+                    dynamic item = null;
+                    try { item = itemsColl.Find(action.itemName); } catch { }
+
+                    if (action.action.ToLower() == "create")
+                    {
+                        if (item != null) throw new System.Exception($"Item '{action.itemName}' already exists.");
+                        if (string.IsNullOrEmpty(action.itemType)) throw new System.Exception("itemType is required for create.");
+                        try {
+                            item = itemsColl.Create(action.itemType, action.itemName);
+                        } catch (System.Exception ex) {
+                            throw new System.Exception($"Creation of '{action.itemType}' failed (API might not support this on the current HMI target). Inner: {ex.Message}");
+                        }
+                    }
+                    else if (action.action.ToLower() == "delete")
+                    {
+                        if (item == null) throw new System.Exception($"Item '{action.itemName}' not found.");
+                        item.Delete();
+                    }
+
+                    if (action.action.ToLower() == "update" || action.action.ToLower() == "create")
+                    {
+                        if (item == null) throw new System.Exception($"Item '{action.itemName}' not found.");
+                        
+                        if (action.left.HasValue) item.Left = action.left.Value;
+                        if (action.top.HasValue) item.Top = action.top.Value;
+                        if (action.width.HasValue) item.Width = action.width.Value;
+                        if (action.height.HasValue) item.Height = action.height.Value;
+                        if (action.text != null) {
+                            try { item.Text = action.text; } catch { }
+                        }
+
+                        if (action.properties != null)
+                        {
+                            var targetProps = item.Properties;
+                            foreach (var prop in action.properties)
+                            {
+                                try {
+                                    var p = targetProps.Find(prop.Key);
+                                    if (p != null) p.Value = prop.Value;
+                                } catch (System.Exception pex) {
+                                    throw new System.Exception($"Failed to set property '{prop.Key}': {pex.Message}");
+                                }
+                            }
+                        }
+                    }
+                    res["status"] = "success";
+                }
+                catch (System.Exception ex)
+                {
+                    res["status"] = "error";
+                    res["error"] = ex.Message;
+                }
+                results.Add(res);
+            }
+            return results;
         }
 
         public List<Dictionary<string, object>> GetHmiConnections(string softwarePath)
@@ -708,6 +824,97 @@ namespace TiaMcpServer.Siemens
 
             throw new System.Exception($"Item '{itemName}' not found on screen '{screenName}'.");
         }
+        public TiaMcpServer.ModelContextProtocol.HmiItemResult ManageHmiUnifiedFaceplate(string softwarePath, string screenName, string action, string itemName, string faceplateType, System.Collections.Generic.Dictionary<string, string> interfaceTags)
+        {
+            var result = new TiaMcpServer.ModelContextProtocol.HmiItemResult { Action = action, ScreenName = screenName, ItemName = itemName };
+            try
+            {
+                var softwareContainer = GetSoftwareContainer(softwarePath);
+                if (softwareContainer == null || softwareContainer.Software == null) throw new System.Exception("Software not found");
+                dynamic dynSoftware = softwareContainer.Software;
+                if (!(dynSoftware is global::Siemens.Engineering.HmiUnified.HmiSoftware)) throw new System.Exception("This tool is strictly for WinCC Unified faceplates. HMI target is not WinCC Unified.");
+
+                dynamic screen = null;
+                foreach (var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
+                if (screen == null) throw new System.Exception($"Screen '{screenName}' not found.");
+
+                dynamic targetItem = null;
+                try { foreach (var item in screen.ScreenItems) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
+                if (targetItem == null) {
+                    try { foreach (var item in screen.Elements) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
+                }
+
+                if (action == "create")
+                {
+                    if (targetItem == null)
+                    {
+                        try {
+                            // Unified
+                            object screenItems = screen.ScreenItems;
+                            System.Type screenItemsType = screenItems.GetType();
+                            var targetAssembly = screenItemsType.Assembly;
+                            System.Type itemType = System.Linq.Enumerable.FirstOrDefault(targetAssembly.GetTypes(), t => t.Name.Equals("HmiFaceplateContainer", System.StringComparison.OrdinalIgnoreCase));
+                            if (itemType != null) {
+                                var createMethod = System.Linq.Enumerable.FirstOrDefault(screenItemsType.GetMethods(), m => m.Name == "Create" && m.IsGenericMethod);
+                                if (createMethod != null) {
+                                    var genericCreate = createMethod.MakeGenericMethod(itemType);
+                                    genericCreate.Invoke(screenItems, new object[] { itemName });
+                                }
+                            }
+                            // Re-fetch
+                            try { foreach (var item in screen.ScreenItems) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
+                            if (targetItem == null) {
+                                try { foreach (var item in screen.Elements) { if (item.Name == itemName) { targetItem = item; break; } } } catch { }
+                            }
+                        } catch (System.Exception ex) {
+                            throw new System.Exception($"Failed to create HmiFaceplateContainer: {ex.Message}");
+                        }
+                    }
+                    if (targetItem == null) throw new System.Exception("Creation failed, item not found after creation.");
+                    if (!string.IsNullOrEmpty(faceplateType)) targetItem.ContainedType = faceplateType;
+                }
+
+                if (targetItem == null) throw new System.Exception($"Item '{itemName}' not found for update.");
+                
+                // Map interface properties
+                if (interfaceTags != null && interfaceTags.Count > 0)
+                {
+                    var interfaceCol = targetItem.Interface;
+                    foreach (var kvp in interfaceTags)
+                    {
+                        dynamic ifaceProp = null;
+                        try {
+                            foreach (var ip in interfaceCol) {
+                                if (ip.PropertyName == kvp.Key) {
+                                    ifaceProp = ip; break;
+                                }
+                            }
+                        } catch { }
+
+                        if (ifaceProp != null)
+                        {
+                            try {
+                                ifaceProp.Value = kvp.Value;
+                            } catch (System.Exception ex) {
+                                throw new System.Exception($"Failed to set property '{kvp.Key}' to '{kvp.Value}': {ex.Message}");
+                            }
+                        }
+                        else
+                        {
+                            throw new System.Exception($"Interface property '{kvp.Key}' not found on faceplate.");
+                        }
+                    }
+                }
+                result.Status = "success";
+            }
+            catch (System.Exception ex)
+            {
+                result.Status = "error";
+                result.Error = ex.Message;
+                if (ex.InnerException != null) result.Error += " Inner: " + ex.InnerException.Message;
+            }
+            return result;
+        }
 
         public string ConfigureHmiScreenItem(string softwarePath, string screenName, string itemName, 
             int? left, int? top, int? width, int? height, string processValue, string text)
@@ -968,3 +1175,10 @@ namespace TiaMcpServer.Siemens
         }
     }
 }
+
+
+
+
+
+
+

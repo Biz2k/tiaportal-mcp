@@ -340,5 +340,53 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new { Message = $"Unexpected error: {ex.Message}" };
             }
         }
+        [McpServerTool(Name = "hmi_manage_unified_faceplate", Title = "Manage Unified Faceplate", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Create and parameterize faceplates in WinCC Unified")]
+        public static ResponseHmiManageItems ManageHmiUnifiedFaceplate(string softwarePath, string screenName, string action, string itemName, string faceplateType, JsonObject interfaceTags)
+        {
+            var dict = new Dictionary<string, string>();
+            if (interfaceTags != null) {
+                foreach (var kvp in interfaceTags) {
+                    dict[kvp.Key] = kvp.Value?.ToString();
+                }
+            }
+            var res = Portal.ManageHmiUnifiedFaceplate(softwarePath, screenName, action, itemName, faceplateType, dict);
+            return new ResponseHmiManageItems { Results = new List<HmiItemResult> { res }, SuccessCount = res.Status == "success" ? 1 : 0 };
+        }
+        [McpServerTool(Name = "test_faceplate", Title = "Test Faceplate", Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Test faceplate interface")]
+        public static string TestFaceplate(string softwarePath, string screenName, string itemName, string propName, string propValue, bool asTag)
+        {
+            try {
+                var softwareContainer = Portal.GetSoftwareContainer(softwarePath);
+                dynamic dynSoftware = softwareContainer.Software;
+                dynamic screen = null;
+                foreach (var s in dynSoftware.Screens) { if (s.Name == screenName) { screen = s; break; } }
+                dynamic targetItem = null;
+                foreach (var item in screen.ScreenItems) { if (item.Name == itemName) { targetItem = item; break; } }
+                
+                var interfaceCol = targetItem.Interface;
+                dynamic ifaceProp = null;
+                foreach(var ip in interfaceCol) {
+                    if (ip.PropertyName == propName) { ifaceProp = ip; break; }
+                }
+                
+                if (ifaceProp == null) return "Property not found";
+                
+                if (asTag) {
+                    object dynamizations = ifaceProp.Dynamizations;
+                    var dynBaseType = dynamizations.GetType();
+                    var tagDynType = System.Linq.Enumerable.FirstOrDefault(dynBaseType.Assembly.GetTypes(), t => t.Name == "TagDynamization");
+                    var createMethod = System.Linq.Enumerable.FirstOrDefault(dynBaseType.GetMethods(), m => m.Name == "Create" && m.IsGenericMethod);
+                    var genericCreate = createMethod.MakeGenericMethod(tagDynType);
+                    dynamic dynObj = genericCreate.Invoke(dynamizations, new object[] { "Value" }); // Try "Value" first
+                    dynObj.Tag = propValue;
+                    return "Set as Tag OK";
+                } else {
+                    ifaceProp.Value = propValue;
+                    return "Set as Value OK";
+                }
+            } catch (Exception ex) { return ex.ToString(); }
+        }
     }
 }
