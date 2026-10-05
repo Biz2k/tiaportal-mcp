@@ -155,7 +155,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "export_xml_block", Title = "Export block as XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export block as XML")]
+        // [McpServerTool(Name = "export_xml_block", Title = "Export block as XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export block as XML")]
         public static ResponseExportXmlBlock ExportXmlBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: full path to the block in the project structure, e.g. 'Group/Subgroup/Name' (single names are ambiguous)")] string blockPath,
@@ -294,7 +294,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "import_xml_block", Title = "Import block as XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import block from XML")]
+        // [McpServerTool(Name = "import_xml_block", Title = "Import block as XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Import block from XML")]
         public static ResponseImportXmlBlock ImportXmlBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the block")] string groupPath,
@@ -325,7 +325,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "export_xml_blocks", Title = "Export blocks as XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export blocks as XML")]
+        // [McpServerTool(Name = "export_xml_blocks", Title = "Export blocks as XML", Destructive = true, Idempotent = true, OpenWorld = false), Description("Export blocks as XML")]
         public static async Task<ResponseExportXmlBlocks> ExportXmlBlocks(
             IProgress<ProgressNotificationValue> progress,
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,

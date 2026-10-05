@@ -177,8 +177,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "export_xml_tag_table", Title = "Export tag table as XML", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Export tag table as XML")]
+        // [McpServerTool(Name = "export_xml_tag_table", Title = "Export tag table as XML", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Export tag table as XML")]
         public static ResponseExportXmlTagTable ExportXmlTagTable(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("tagTablePath: root-relative path of the tag table, e.g. 'TagGroup1/Table1'")] string tagTablePath,
@@ -340,8 +339,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "export_xml_watch_table", Title = "Export watch table as XML", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Export watch table as XML")]
+        // [McpServerTool(Name = "export_xml_watch_table", Title = "Export watch table as XML", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Export watch table as XML")]
         public static ResponseExportXmlWatchTable ExportXmlWatchTable(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("watchTablePath: root-relative path of the watch table, e.g. 'WatchGroup1/WatchTable_1'")] string watchTablePath,
@@ -553,8 +551,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "import_xml_tag_table", Title = "Import tag table", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Import tag table from XML")]
+        // [McpServerTool(Name = "import_xml_tag_table", Title = "Import tag table", Destructive = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Import tag table from XML")]
         public static ResponseImported ImportXmlTagTable(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: root-relative tag table group that receives the table; empty uses the PLC tags root. A leading 'PLC tags' segment, as written by preservePath exports, is accepted and ignored")] string groupPath,
@@ -778,8 +775,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
-        [McpServerTool(Name = "import_watch_table", Title = "Import watch table", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Import watch table from XML")]
+        // [McpServerTool(Name = "import_watch_table", Title = "Import watch table", Destructive = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Import watch table from XML")]
         public static ResponseImported ImportWatchTable(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: root-relative watch table group that receives the table; empty uses the root")] string groupPath,
