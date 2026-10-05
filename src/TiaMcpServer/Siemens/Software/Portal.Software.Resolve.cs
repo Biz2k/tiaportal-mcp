@@ -81,6 +81,33 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>
+        /// How a '/' that is part of a name is written inside a path. TIA Portal allows the
+        /// slash in group, table and station names ("Inputs/Outputs", "S7-1500/ET200MP
+        /// station_1"), and '/' is also the path separator, so a path built from such a name
+        /// could not be parsed back. Percent-encoding was chosen because NormalizeGroupPath
+        /// already gives a meaning to both '\' (separator) and '//' (empty segment).
+        /// </summary>
+        private const string EscapedSlash = "%2F";
+
+        /// <summary>One name as a path segment: "Inputs/Outputs" becomes "Inputs%2FOutputs".</summary>
+        internal static string EscapeSegment(string? name)
+        {
+            return (name ?? string.Empty).Replace("/", EscapedSlash);
+        }
+
+        /// <summary>The name a path segment stands for; the inverse of <see cref="EscapeSegment"/>.</summary>
+        internal static string UnescapeSegment(string? segment)
+        {
+            return Regex.Replace(segment ?? string.Empty, EscapedSlash, "/", RegexOptions.IgnoreCase);
+        }
+
+        /// <summary>The segments of a path, still escaped.</summary>
+        internal static string[] PathSegments(string? path)
+        {
+            return NormalizeGroupPath(path).Split(['/'], StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        /// <summary>
         /// Walks a '/'-separated group path down from <paramref name="root"/>.
         /// An empty path returns the root itself. Returns null when a segment does not match.
         /// </summary>
@@ -91,20 +118,55 @@ namespace TiaMcpServer.Siemens
             Func<T, string> name)
             where T : class
         {
-            T? current = root;
+            var segments = PathSegments(groupPath);
 
-            foreach (var segment in NormalizeGroupPath(groupPath).Split(['/'], StringSplitOptions.RemoveEmptyEntries))
+            return segments.Length == 0 ? root : WalkNamed(children(root), segments, 0, children, name);
+        }
+
+        /// <summary>
+        /// Resolves <paramref name="segments"/> from <paramref name="index"/> on against a set
+        /// of named nodes and their descendants.
+        ///
+        /// A segment is matched as written first. If that leads nowhere, it is joined with the
+        /// following segments by '/', which is how a path reads when the caller copied a name
+        /// containing a slash without escaping it: "Inputs/Outputs/AI_Handler" still finds the
+        /// group "Inputs/Outputs". The as-written reading wins, so a real "Inputs" group with an
+        /// "Outputs" subgroup is never shadowed; the escaped form addresses the other one.
+        /// </summary>
+        internal static T? WalkNamed<T>(
+            IEnumerable<T> nodes,
+            string[] segments,
+            int index,
+            Func<T, IEnumerable<T>> children,
+            Func<T, string> name)
+            where T : class
+        {
+            var candidates = nodes.Where(n => n != null).ToList();
+
+            for (var take = 1; index + take <= segments.Length; take++)
             {
-                if (current == null)
+                var wanted = string.Join("/", segments.Skip(index).Take(take).Select(UnescapeSegment));
+                var node = candidates.FirstOrDefault(n => name(n).Equals(wanted, StringComparison.OrdinalIgnoreCase));
+
+                if (node == null)
                 {
-                    return null;
+                    continue;
                 }
 
-                current = children(current)
-                    .FirstOrDefault(g => name(g).Equals(segment, StringComparison.OrdinalIgnoreCase));
+                if (index + take == segments.Length)
+                {
+                    return node;
+                }
+
+                var deeper = WalkNamed(children(node), segments, index + take, children, name);
+
+                if (deeper != null)
+                {
+                    return deeper;
+                }
             }
 
-            return current;
+            return null;
         }
 
         /// <summary>
@@ -137,13 +199,13 @@ namespace TiaMcpServer.Siemens
                 {
                     if (includeSystemRoot)
                     {
-                        segments.Insert(0, name(current));
+                        segments.Insert(0, EscapeSegment(name(current)));
                     }
 
                     break;
                 }
 
-                segments.Insert(0, name(current));
+                segments.Insert(0, EscapeSegment(name(current)));
 
                 try
                 {
@@ -216,16 +278,54 @@ namespace TiaMcpServer.Siemens
 
         /// <summary>
         /// Splits "Group/Sub/Leaf" into ("Group/Sub", "Leaf"). A path without '/' yields an
-        /// empty group path, meaning the system root.
+        /// empty group path, meaning the system root. The group path stays escaped, ready for
+        /// WalkGroups; the leaf is returned as the plain name to compare objects against.
         /// </summary>
-        private static (string GroupPath, string LeafName) SplitPath(string path)
+        internal static (string GroupPath, string LeafName) SplitPath(string path)
         {
             var trimmed = NormalizeGroupPath(path);
             var index = trimmed.LastIndexOf('/');
 
             return index < 0
-                ? (string.Empty, trimmed)
-                : (trimmed.Substring(0, index), trimmed.Substring(index + 1));
+                ? (string.Empty, UnescapeSegment(trimmed))
+                : (trimmed.Substring(0, index), UnescapeSegment(trimmed.Substring(index + 1)));
+        }
+
+        /// <summary>Appends an object name to the (already escaped) path of its group.</summary>
+        internal static string JoinLeaf(string groupPath, string leafName)
+        {
+            var leaf = EscapeSegment(leafName);
+
+            return string.IsNullOrEmpty(groupPath) ? leaf : $"{groupPath}/{leaf}";
+        }
+
+        /// <summary>
+        /// Finds an object by the last segment of a path: the exact name first, and only if
+        /// nothing has that name is the segment tried as a regular expression. The old order -
+        /// regex whenever the name contained a regex character - made "A5.01" match "A5x01".
+        /// </summary>
+        private T? FindByName<T>(IEnumerable<T> items, string leafName, Func<T, string> name)
+            where T : class
+        {
+            var list = items.Where(i => i != null).ToList();
+            var exact = list.FirstOrDefault(i => name(i).Equals(leafName, StringComparison.OrdinalIgnoreCase));
+
+            if (exact != null || leafName.IndexOfAny(_regexChars) < 0)
+            {
+                return exact;
+            }
+
+            try
+            {
+                var regex = new Regex(leafName, RegexOptions.IgnoreCase);
+
+                return list.FirstOrDefault(i => regex.IsMatch(name(i)));
+            }
+            catch (ArgumentException)
+            {
+                // Not a valid pattern, and no object carries it as a literal name.
+                return null;
+            }
         }
 
         #endregion

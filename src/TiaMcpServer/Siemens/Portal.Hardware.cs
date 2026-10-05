@@ -69,6 +69,7 @@ namespace TiaMcpServer.Siemens
         {
             var res = new ResponseHardwareDevice
             {
+                Path = GetDevicePath(device),
                 Name = device.Name,
                 DeviceItems = new List<ResponseHardwareItem>()
             };
@@ -189,14 +190,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
 
-            var device = _project!.Devices.Find(deviceName);
-            if (device == null)
-            {
-                // check ungrouped devices
-                device = _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
-                if (device == null)
-                    throw new InvalidOperationException($"Device '{deviceName}' not found");
-            }
+            var device = RequireDevice(deviceName);
 
             var parentItem = FindDeviceItem(device.DeviceItems, parentItemName);
             if (parentItem == null) throw new InvalidOperationException($"Parent item '{parentItemName}' not found in device '{deviceName}'");
@@ -234,13 +228,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
 
-            var device = _project!.Devices.Find(deviceName);
-            if (device == null)
-            {
-                device = _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
-                if (device == null)
-                    throw new InvalidOperationException($"Device '{deviceName}' not found");
-            }
+            var device = RequireDevice(deviceName);
 
             _logger?.LogInformation($"Deleting device '{deviceName}'");
             device.Delete();
@@ -250,8 +238,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
 
-            var device = _project!.Devices.Find(deviceName) ?? _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
-            if (device == null) throw new InvalidOperationException($"Device '{deviceName}' not found");
+            var device = RequireDevice(deviceName);
 
             var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
             if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
@@ -260,7 +247,7 @@ namespace TiaMcpServer.Siemens
             if (netIf == null || netIf.Nodes == null || netIf.Nodes.Count == 0)
                 throw new InvalidOperationException($"Interface '{interfaceName}' has no nodes to connect");
 
-            var subnet = _project.Subnets.Find(subnetName);
+            var subnet = _project!.Subnets.Find(subnetName);
             if (subnet == null)
             {
                 _logger?.LogInformation($"Creating PN/IE subnet '{subnetName}'");
@@ -275,8 +262,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
 
-            var device = _project!.Devices.Find(deviceName) ?? _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
-            if (device == null) throw new InvalidOperationException($"Device '{deviceName}' not found");
+            var device = RequireDevice(deviceName);
 
             var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
             if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
@@ -293,8 +279,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
 
-            var device = _project!.Devices.Find(deviceName) ?? _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
-            if (device == null) throw new InvalidOperationException($"Device '{deviceName}' not found");
+            var device = RequireDevice(deviceName);
 
             var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
             if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
@@ -315,8 +300,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) throw new InvalidOperationException("Project is not open");
 
-            var device = _project!.Devices.Find(deviceName) ?? _project.UngroupedDevicesGroup?.Devices.Find(deviceName);
-            if (device == null) throw new InvalidOperationException($"Device '{deviceName}' not found");
+            var device = RequireDevice(deviceName);
 
             var interfaceItem = FindDeviceItem(device.DeviceItems, interfaceName);
             if (interfaceItem == null) throw new InvalidOperationException($"Interface '{interfaceName}' not found in device '{deviceName}'");
@@ -330,7 +314,7 @@ namespace TiaMcpServer.Siemens
                 throw new InvalidOperationException($"Interface '{interfaceName}' is not an IO connector (IO device)");
 
             IoSystem? targetIoSystem = null;
-            foreach (var subnet in _project.Subnets)
+            foreach (var subnet in _project!.Subnets)
             {
                 targetIoSystem = subnet.IoSystems.FirstOrDefault(s => s.Name == ioSystemName);
                 if (targetIoSystem != null) break;

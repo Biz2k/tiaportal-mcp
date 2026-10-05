@@ -1111,7 +1111,7 @@ namespace TiaMcpServer.Siemens
                     g => g is PlcExternalSourceSystemGroup,
                     includeSystemRoot: false);
 
-                return string.IsNullOrEmpty(groupPath) ? source.Name : $"{groupPath}/{source.Name}";
+                return JoinLeaf(groupPath, source.Name);
             }
 
             return source.Name;

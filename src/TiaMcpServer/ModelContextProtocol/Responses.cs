@@ -24,6 +24,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseDeviceInfo : ResponseAttributes
     {
+        /// <summary>Path that the device, hardware and network tools accept back, e.g. "Group1/PC-System_1".</summary>
+        public string? Path { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
     }
@@ -736,6 +738,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseHardwareDevice
     {
+        /// <summary>Path that the device, hardware and network tools accept back.</summary>
+        public string? Path { get; set; }
         public string? Name { get; set; }
         public IEnumerable<ResponseHardwareItem>? DeviceItems { get; set; }
     }

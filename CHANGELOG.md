@@ -19,6 +19,25 @@
   replaced with a generic message. Clients that parsed `Unexpected error` out of a successful
   result must check `isError` instead.
 
+- __Names containing `/` are addressable.__ TIA Portal allows the slash in group, table and station
+  names (`Inputs/Outputs`, `S7-1500/ET200MP station_1`), but paths were split on every `/`, so
+  `plc_resolve_object_path` returned `Inputs/Outputs/AI_Handler` and no tool could open it. Paths
+  now write such a slash as `%2F` (`Inputs%2FOutputs/AI_Handler`), and the unescaped form is still
+  accepted: a segment that does not resolve as written is joined with the following ones.
+- __Device lookup is one resolver.__ `hw_get_device_info`, `get_device_item_info`, `get_devices` and
+  every `hw_*` / `net_*` tool accept the same forms: the path, the Openness device name, the bare
+  name inside a group, or the CPU name the project tree shows. Devices in the ungrouped devices
+  group (distributed IO) are found and listed. `get_devices`, `hw_get_device_info` and
+  `get_hardware_topology` return a `path`. A name matching several devices is rejected with the
+  candidate paths instead of silently picking the first.
+- __Exact names win over patterns.__ A block or type path whose last segment contains a regex
+  character (`A5.01`) is matched literally first and as a regular expression only if no object has
+  that name.
+
+### Changed
+
+- A `preservePath` export of a group whose name contains `/` now writes one folder
+  (`Inputs%2FOutputs`) instead of nested ones (`Inputs\Outputs`); the result imports back.
 ### Added
 
 - `docs/tools-list.txt`: the tool names the server registers, as a baseline for spotting tools that

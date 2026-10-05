@@ -37,33 +37,12 @@ namespace TiaMcpServer.Siemens
 
                 if (blockGroup != null)
                 {
-                    var path = blockPath.Contains("/") ? blockPath.Substring(0, blockPath.LastIndexOf("/")) : string.Empty;
-                    var regexName = blockPath.Contains("/") ? blockPath.Substring(blockPath.LastIndexOf("/") + 1) : blockPath;
-
-                    PlcBlock? block = null;
+                    var (path, name) = SplitPath(blockPath);
 
                     var group = GetPlcBlockGroupByPath(softwarePath, path);
                     if (group != null)
                     {
-                        if (regexName.IndexOfAny(_regexChars) >= 0)
-                        {
-                            try
-                            {
-                                var regex = new Regex(regexName, RegexOptions.IgnoreCase);
-                                block = group.Blocks.FirstOrDefault(b => regex.IsMatch(b.Name)) as PlcBlock;
-                            }
-                            catch (Exception)
-                            {
-                                // Invalid regex, return null
-                                return null;
-                            }
-                        }
-                        else
-                        {
-                            block = group.Blocks.FirstOrDefault(b => b.Name.Equals(regexName, StringComparison.OrdinalIgnoreCase));
-                        }
-
-                        return block;
+                        return FindByName<PlcBlock>(group.Blocks, name, b => b.Name);
                     }
                 }
             }
@@ -86,7 +65,7 @@ namespace TiaMcpServer.Siemens
             if (block.Parent is PlcBlockGroup parentGroup)
             {
                 var groupPath = GetPlcBlockGroupPath(parentGroup, includeSystemRoot: false);
-                return string.IsNullOrEmpty(groupPath) ? block.Name : $"{groupPath}/{block.Name}";
+                return JoinLeaf(groupPath, block.Name);
             }
 
             return block.Name;

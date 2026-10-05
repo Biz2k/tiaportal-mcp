@@ -35,33 +35,12 @@ namespace TiaMcpServer.Siemens
 
                 if (typeGroup != null)
                 {
-                    var path = typePath.Contains("/") ? typePath.Substring(0, typePath.LastIndexOf("/")) : string.Empty;
-                    var regexName = typePath.Contains("/") ? typePath.Substring(typePath.LastIndexOf("/") + 1) : typePath;
-
-                    PlcType? type = null;
+                    var (path, name) = SplitPath(typePath);
 
                     var group = GetPlcTypeGroupByPath(softwarePath, path);
                     if (group != null)
                     {
-                        if (regexName.IndexOfAny(_regexChars) >= 0)
-                        {
-                            try
-                            {
-                                var regex = new Regex(regexName, RegexOptions.IgnoreCase);
-                                type = group.Types.FirstOrDefault(t => regex.IsMatch(t.Name)) as PlcType;
-                            }
-                            catch (Exception)
-                            {
-                                // Invalid regex, return null
-                                return null;
-                            }
-                        }
-                        else
-                        {
-                            type = group.Types.FirstOrDefault(t => t.Name.Equals(regexName, StringComparison.OrdinalIgnoreCase));
-                        }
-
-                        return type;
+                        return FindByName<PlcType>(group.Types, name, t => t.Name);
                     }
                 }
             }
@@ -82,7 +61,7 @@ namespace TiaMcpServer.Siemens
             if (type.Parent is PlcTypeGroup parentGroup)
             {
                 var groupPath = GetPlcTypeGroupPath(parentGroup, includeSystemRoot: false);
-                return string.IsNullOrEmpty(groupPath) ? type.Name : $"{groupPath}/{type.Name}";
+                return JoinLeaf(groupPath, type.Name);
             }
 
             return type.Name;

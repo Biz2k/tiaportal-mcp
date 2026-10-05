@@ -72,7 +72,7 @@ namespace TiaMcpServer.Siemens
                     g => g is PlcTagTableSystemGroup,
                     includeSystemRoot);
 
-                return string.IsNullOrEmpty(groupPath) ? table.Name : $"{groupPath}/{table.Name}";
+                return JoinLeaf(groupPath, table.Name);
             }
 
             return table.Name;
@@ -338,7 +338,7 @@ namespace TiaMcpServer.Siemens
                 g => g is PlcWatchAndForceTableSystemGroup,
                 includeSystemRoot: false);
 
-            return string.IsNullOrEmpty(groupPath) ? name : $"{groupPath}/{name}";
+            return JoinLeaf(groupPath, name);
         }
 
         public List<PlcWatchTable> GetWatchTables(string softwarePath, string regexName = "")

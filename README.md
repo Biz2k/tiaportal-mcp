@@ -80,6 +80,12 @@ Write tools (40) require `--allow-write`.
 Paths used by these tools are **root-relative**: `1_Tests/FC_Block_1`, not
 `Program blocks/1_Tests/FC_Block_1`. Use `GetProjectTree` and `GetSoftwareTree` to discover them.
 
+TIA Portal allows `/` inside a name (a block group `Inputs/Outputs`, a station
+`S7-1500/ET200MP station_1`). In a path such a slash is written `%2F`:
+`Inputs%2FOutputs/AI_Handler`. Listings return paths in this form. The unescaped form
+`Inputs/Outputs/AI_Handler` is accepted as well; if both a group `Inputs/Outputs` and a group
+`Inputs` with a subgroup `Outputs` exist, the unescaped form means the nested one.
+
 ## Resources
 
 - [TIA Portal Openness API Documentation](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows)
