@@ -13,8 +13,8 @@
   - Создать `plc_manage_tag_table_entries` (JSON-массив действий create/update/delete для тегов и констант).
 - [x] **Этап 4: Консолидация чтения данных блока (Умный Get)**
   - Создать `plc_get_block_data` (с флагами `include_interface`, `include_source`, `include_hierarchy`).
-- [x] **Этап 5: Объединение настройки элементов HMI**
-  - Создать `hmi_manage_items` (Upsert-логика для элементов экрана).
+- [ ] **Этап 5: Объединение настройки элементов HMI**
+  - Создать `hmi_manage_items` (Upsert-логика для элементов экрана). Инструмент `hmi_manage_items` в сервере не зарегистрирован: есть только метод `Portal.ManageHmiItems` и типы ответа, MCP-обёртки нет (проверено 05.10.2026).
 
 ## Документация
 - [x] Добавлен раздел "Аргументы командной строки" в `README.md` с описанием `--tia-major-version <int>` и `--logging <1|2|3>` с их значениями по умолчанию и эффектом (1=stderr, 2=Debug, 3=Event Log). Сделать перекрестные ссылки на примеры.
@@ -255,7 +255,7 @@ Streamable HTTP **недоступен из этого проекта**: SDK п�
   - [x] `list_hmi_library_types`: Получить список всех доступных библиотечных типов HMI
 - [ ] **Анимации и скрипты:** Возможность добавлять динамизацию через скрипты (JavaScript в Unified / VBScript или C-Script в Classic) напрямую через MCP-сервер.
 - [ ] **Экраны и элементы:** Чтение и настройка HMI экранов и их элементов
-    - [x] `hmi_manage_items` (в планах Этапа 5, заменит `create_hmi_screen_items`, `configure_hmi_screen_item`, `set_hmi_screen_item_property`)
+    - [ ] `hmi_manage_items` (не зарегистрирован как инструмент; в планах Этапа 5, заменит `create_hmi_screen_items`, `configure_hmi_screen_item`, `set_hmi_screen_item_property`)
     - [ ] `hmi_configure_screen`: Настроить свойства экрана, такие как размер и фон
     - [x] `hmi_get_screen_item_properties`: Получить подробные свойства конкретного экрана HMI (Реализовано как `get_hmi_screen_item_properties`)
     - [ ] `hmi_get_screen_global_elements`: Получить глобальные элементы экрана, общие для всех экранов
@@ -311,5 +311,5 @@ Streamable HTTP **недоступен из этого проекта**: SDK п�
 - [x] **Полная компиляция проекта:** Запуск компиляции как Hardware, так и Software с возвращением структурированных логов.
 - [x] **Загрузка в ПЛК (Download):** Инструменты для загрузки конфигурации и блоков в реальный ПЛК или в виртуальный адаптер. (Управление самим PLCSIM Advanced вынесено в отдельный проект `plcsim-mcp`).
 
-- [x] Этап 5: Объединение настройки элементов HMI (`hmi_manage_items`, `hmi_manage_unified_faceplate`).
+- [ ] Этап 5: Объединение настройки элементов HMI: `hmi_manage_unified_faceplate` реализован, `hmi_manage_items` — нет (MCP-обёртка отсутствует).
   *Реализовано базовое управление элементами HMI и специализированное создание WinCC Unified фейсплейтов.*

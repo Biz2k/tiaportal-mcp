@@ -5,7 +5,9 @@ namespace TiaMcpServer
         public int? TiaMajorVersion { get; set; }
         public int? Logging { get; set; } // "stdio" or "http"
         public bool Doctor { get; set; } // print environment diagnostics and exit
-        public bool AllowWrite { get; set; } = true; // register the project-mutating tools by default
+        // The project-mutating tools are registered unless '--read-only' is passed. '--allow-write'
+        // is still accepted, so client configurations written for the earlier opt-in keep working.
+        public bool AllowWrite { get; set; } = true;
         public bool DebugTools { get; set; } // register the server-development tools ([DebugTool])
 
         public static CliOptions ParseArgs(string[] args)
@@ -32,6 +34,11 @@ namespace TiaMcpServer
                     case "-allow-write":
                     case "--allow-write":
                         options.AllowWrite = true;
+                        break;
+
+                    case "-read-only":
+                    case "--read-only":
+                        options.AllowWrite = false;
                         break;
 
                     case "-debug-tools":

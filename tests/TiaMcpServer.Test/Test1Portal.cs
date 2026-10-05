@@ -44,7 +44,7 @@ namespace TiaMcpServer.Test
                 Assert.Fail("TIA-Portal instance is not initialized");
             }
 
-            var result = _portal.ConnectPortal();
+            var result = _portal.ConnectPortal(startIfNotRunning: true);
 
             Assert.IsTrue(result, "Failed to connect to TIA-Portal");
         }
@@ -70,7 +70,7 @@ namespace TiaMcpServer.Test
                 Assert.Fail("TIA-Portal instance is not initialized");
             }
 
-            var result = _portal.ConnectPortal();
+            var result = _portal.ConnectPortal(startIfNotRunning: true);
             result &= _portal.IsConnected();
             result &= _portal.DisconnectPortal();
             result &= !_portal.IsConnected();

@@ -86,7 +86,7 @@ namespace TiaMcpServer.Test
             {
                 "hw_create_device", "hw_plug_module", "hw_delete_device",
                 "net_connect_subnet", "net_disconnect_subnet", "net_create_io_system", "net_connect_to_io_system",
-                "instantiate_master_copy", "hmi_create_faceplate_instance", "hmi_manage_unified_faceplate"
+                "instantiate_master_copy", "import_objects", "hmi_create_faceplate_instance", "hmi_manage_unified_faceplate"
             };
 
             // Act

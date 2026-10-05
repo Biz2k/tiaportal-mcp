@@ -110,6 +110,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [WriteTool]
         [McpServerTool(Name = "import_objects", Title = "Import objects", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Universal tool to import files into the PLC. format must be 'xml', 'document', or 'source'. For document/xml imports conflict_resolution must be 'overwrite', 'skip', or 'rename'.")]
         public static object ImportObjects(

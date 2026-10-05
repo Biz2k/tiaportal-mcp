@@ -126,19 +126,34 @@ namespace TiaMcpServer.Siemens
 
         #region portal
 
-        public bool ConnectPortal()
+        /// <summary>
+        /// Attaches to a running TIA Portal.
+        /// </summary>
+        /// <param name="startIfNotRunning">
+        /// Start a new TIA Portal (with its window) when none is running. Off by default: a
+        /// caller that only wanted to look must not find a new application on the user's
+        /// desktop - which is what happened after a TIA Portal crash, when a plain reconnect
+        /// silently opened an empty instance (2026-10-05).
+        /// </param>
+        /// <exception cref="PortalException">InvalidState when no TIA Portal is running and none may be started.</exception>
+        public bool ConnectPortal(bool startIfNotRunning = false)
         {
             _logger?.LogInformation("Connecting to TIA Portal...");
 
+            _project = null;
+            _session = null;
+            _portal = null;
+
+            bool running;
+
             try
             {
-                _project = null;
-                _session = null;
-                _portal = null;
-
                 // connect to running TIA Portal
                 var processes = TiaPortal.GetProcesses();
-                if (processes.Any())
+
+                running = processes.Any();
+
+                if (running)
                 {
                     _portal = processes.First().Attach();
 
@@ -156,14 +171,31 @@ namespace TiaMcpServer.Siemens
 
                     return true;
                 }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Attaching to TIA Portal failed");
 
-                // start new TIA Portal
+                return false;
+            }
+
+            if (!startIfNotRunning)
+            {
+                throw new PortalException(PortalErrorCode.InvalidState,
+                    "TIA Portal is not running. Start it and try again, or call 'connect' with startIfNotRunning=true to let the server start a new instance.");
+            }
+
+            try
+            {
+                _logger?.LogInformation("Starting a new TIA Portal instance");
                 _portal = new TiaPortal(TiaPortalMode.WithUserInterface);
 
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger?.LogWarning(ex, "Starting TIA Portal failed");
+
                 return false;
             }
         }

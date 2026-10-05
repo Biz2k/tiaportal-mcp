@@ -34,7 +34,7 @@ namespace TiaMcpServer.Test
             ILogger<Portal> logger = loggerFactory.CreateLogger<Portal>();
             _portal ??= new(logger);
 
-            var result = _portal.ConnectPortal();
+            var result = _portal.ConnectPortal(startIfNotRunning: true);
         }
 
         [TestCleanup]

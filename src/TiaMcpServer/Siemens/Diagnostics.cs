@@ -27,7 +27,7 @@ namespace TiaMcpServer.Siemens
         public string? ProjectPath { get; set; }
         public bool IsUserInGroup { get; set; }
 
-        /// <summary>Whether the server was started with --allow-write.</summary>
+        /// <summary>Whether the project-mutating tools are available (false when started with --read-only).</summary>
         public bool AllowWrite { get; set; }
         public IReadOnlyList<TiaInstallation> Installations { get; set; } = new List<TiaInstallation>();
         public string? Text { get; set; }
@@ -104,7 +104,7 @@ namespace TiaMcpServer.Siemens
             }
 
             status += $"\n├─ User in 'Siemens TIA Openness' user group: {userInGroup}";
-            status += $"\n└─ Write mode (--allow-write): {(allowWrite ? "enabled" : "disabled, read-only tools only")}";
+            status += $"\n└─ Write mode: {(allowWrite ? "enabled" : "disabled by --read-only, read-only tools only")}";
 
             return new DiagnosticsReport
             {

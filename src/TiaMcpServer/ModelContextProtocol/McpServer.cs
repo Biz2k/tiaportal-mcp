@@ -53,14 +53,15 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region portal
 
-        [McpServerTool(Name = "connect", Title = "Connect to TIA Portal", Destructive = false, Idempotent = true, OpenWorld = false), Description("Connect to TIA-Portal")]
-        public static ResponseConnect Connect()
+        [McpServerTool(Name = "connect", Title = "Connect to TIA Portal", Destructive = false, Idempotent = true, OpenWorld = false), Description("Connect to a running TIA Portal. Fails when none is running, unless startIfNotRunning is set")]
+        public static ResponseConnect Connect(
+            [Description("startIfNotRunning: start a new TIA Portal window when none is running (default false)")] bool startIfNotRunning = false)
         {
             Logger?.LogInformation("Connecting to TIA Portal...");
 
             try
             {
-                if (Portal.ConnectPortal())
+                if (Portal.ConnectPortal(startIfNotRunning))
                 {
                     return new ResponseConnect
                     {
@@ -74,12 +75,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
-                    throw new McpException("Failed to connect to TIA-Portal");
+                    throw new McpException("Failed to connect to TIA-Portal. Run the 'doctor' tool to check the installation and user group membership.");
                 }
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error connecting to TIA-Portal: {Why(ex)}", ex);
+                throw ToolError(ex, ex is PortalException ? null : "Unexpected error connecting to TIA-Portal");
             }
         }
 
@@ -471,7 +472,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region lookup
 
         [McpServerTool(Name = "open_tia_project", Title = "Connect/open a project", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Connect to TIA Portal if not already connected, open the given project or session, and return the device and PLC software paths the other tools need. Replaces the Connect then OpenProject then GetProjectTree sequence")]
+         Description("Connect to the running TIA Portal if not already connected, open the given project or session, and return the device and PLC software paths the other tools need. Replaces the connect, open_project, get_project_tree sequence. TIA Portal must already be running")]
         public static ResponseOpenTiaProject OpenTiaProject(
             [Description("path: full path of the .apXX project or .alsXX session file on the machine running this server")] string path)
         {

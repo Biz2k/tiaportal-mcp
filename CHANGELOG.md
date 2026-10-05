@@ -19,6 +19,8 @@
   replaced with a generic message. Clients that parsed `Unexpected error` out of a successful
   result must check `isError` instead.
 
+- __`import_objects` respects the write gate.__ It changes the project but was registered in read-only
+  mode.
 - __`download_to_plc` reports what happened.__ It answered TIA Portal's configuration steps through
   `dynamic` inside an empty `catch` and returned three numbers, so any download that needed a decision
   ended as `DownloadToPlc failed`. Every step is now recorded with its options and the answer given,
@@ -78,6 +80,21 @@
 
 - A `preservePath` export of a group whose name contains `/` now writes one folder
   (`Inputs%2FOutputs`) instead of nested ones (`Inputs\Outputs`); the result imports back.
+### Changed
+
+- __Writing is on by default, `--read-only` turns it off.__ The code already registered the write
+  tools unconditionally while the documentation described an opt-in `--allow-write`; the flag did
+  nothing and there was no way to switch writing off. `--read-only` now leaves the 58
+  project-changing tools out of `tools/list`. `--allow-write` is still accepted and is a no-op.
+- __Breaking: `connect` no longer starts TIA Portal.__ With no TIA Portal running it used to launch a
+  new instance with its window. It now fails with an explanation; pass `startIfNotRunning=true` to
+  get the old behaviour. `open_tia_project` likewise needs a running TIA Portal.
+- __Prompts follow the tools.__ The prompt texts named tools that were renamed or removed. They now
+  name the current tools; the 34 prompts for the per-kind export and import tools that
+  `export_objects` and `import_objects` replaced are gone (78 prompts remain). Prompts for tools added
+  since then (hardware, network, HMI, download) have not been written.
+- Assembly version is 0.4.0 (it was still 0.1.0).
+- `README.md` and `Implemented_Tools.md` describe the current tool names, flags and write mode.
 ### Added
 
 - __`hw_search_catalog`__: search the installed hardware catalog by article number or name and get the
@@ -90,7 +107,8 @@
 
 - __Batch CRUD operations (Stage 3 & 5)__: 
   - `plc_manage_tag_table_entries` for efficient bulk create/update/delete of tags and constants via JSON arrays.
-  - `hmi_manage_items` for upserting HMI screen items and configurations in bulk.
+  - `hmi_manage_items` for upserting HMI screen items in bulk was announced here, but no such tool is
+    registered: only the `Portal.ManageHmiItems` method exists. Tracked in `TODO.md`.
   - `hmi_create_faceplate_instance` (formerly `create_hmi_faceplate_instance`) updated to robustly handle complex faceplate parameterization.
 - __Consolidated Read operations (Stage 4)__: `plc_get_block_data` combines block information, interface, and source into a single call with flags.
 

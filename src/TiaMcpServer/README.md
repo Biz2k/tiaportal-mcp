@@ -1,5 +1,10 @@
 # TiaMcpServer
 
+> **Note (2026-10-05):** this document still uses the tool names from before the rename to
+> prefixed snake_case (`GetBlocks` is now `plc_get_blocks`, the per-kind export and import tools are
+> now `export_objects` and `import_objects`). The names of the `Portal` methods it mentions are
+> current. The authoritative tool list is `docs/tools-list.txt`; see the root `README.md`.
+
 This document provides a comprehensive overview of the TiaMcpServer project, a C# application that acts as a Model Context Protocol (MCP) server to expose the Siemens TIA Portal API to Large Language Models (LLMs).
 
 ## 1. Project Overview
