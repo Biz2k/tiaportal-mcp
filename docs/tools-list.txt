@@ -110,11 +110,13 @@ unified_get_connections
 unified_get_graphic_lists
 unified_get_logging_tags
 unified_get_logs
+unified_get_runtime_settings
 unified_get_screen_groups
 unified_get_screen_item_properties
 unified_get_screen_items
 unified_get_screens
 unified_get_scripts
+unified_get_system_tags
 unified_get_tag_table_groups
 unified_get_tag_tables
 unified_get_tags
@@ -132,3 +134,4 @@ unified_manage_scripts
 unified_manage_tag_table_groups
 unified_manage_tag_tables
 unified_manage_tags
+unified_set_runtime_settings

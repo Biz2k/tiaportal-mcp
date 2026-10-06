@@ -28,6 +28,8 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
 
 ### Added
 
+- `unified_get_runtime_settings`, `unified_set_runtime_settings` (runtime settings of a WinCC Unified HMI by name, groups with a dot,
+  languages by name) and `unified_get_system_tags`. A screen window is made with `unified_manage_items` (`HmiScreenWindow`, `Screen`).
 - `net_get_connections`, `net_create_connection`, `net_delete_connection`: communication connections between PLCs (S7, TCP, ISO-on-TCP,
   ISO, UDP); reading also shows the HMI connections and the type-specific settings.
 - `net_delete_subnet`: deletes a subnet; one with connected interfaces or IO systems is refused with the list of them unless `force=true`.

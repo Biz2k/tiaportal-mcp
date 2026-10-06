@@ -290,6 +290,72 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "unified_get_runtime_settings", Title = "Get WinCC Unified runtime settings", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Get the runtime settings of a WinCC Unified HMI: start screen, screen resolution, auto log-off, and the groups for the OPC UA server, login lock, exclusive operation, reporting, telemetry, process diagnostics, tag handling and the languages with their fonts. Nested groups come as nested objects; 'unified_set_runtime_settings' changes them")]
+        public static ResponseUnifiedList GetUnifiedRuntimeSettings(
+            [Description(UnifiedPath)] string softwarePath)
+        {
+            try
+            {
+                var settings = Portal.GetUnifiedRuntimeSettings(softwarePath);
+
+                return new ResponseUnifiedList
+                {
+                    Message = $"Runtime settings of '{softwarePath}' retrieved",
+                    Items = new List<Dictionary<string, object?>> { settings },
+                    Meta = ReadMeta()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
+        [McpServerTool(Name = "unified_get_system_tags", Title = "Get WinCC Unified system tags", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the system tags of a WinCC Unified HMI (name and data type; read only). A long list: narrow it with nameFilter")]
+        public static ResponseUnifiedList GetUnifiedSystemTags(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("nameFilter: regular expression on the tag name, case-insensitive; empty returns every tag")] string nameFilter = "",
+            [Description("limit: the most items to return (default 200); 0 returns all")] int limit = 200,
+            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
+        {
+            try
+            {
+                var page = ListPage<Dictionary<string, object?>>.Of(Portal.GetUnifiedSystemTags(softwarePath, nameFilter), limit, offset);
+
+                return new ResponseUnifiedList
+                {
+                    Message = $"{page.Total} system tag(s) in '{softwarePath}'" + page.Note("nameFilter"),
+                    Items = page.Items,
+                    Meta = page.Meta(ReadMeta())
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "unified_set_runtime_settings", Title = "Set WinCC Unified runtime settings", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Set runtime settings of a WinCC Unified HMI by name. A setting of a group is written with a dotted name: {\"StartScreen\": \"Start\", \"OpcUaServerRuntimeSettings.MaxSessionCount\": 20, \"MaxLoginRuntimeSettings.MaxLoginErrors\": 5, \"LanguageAndFonts.en-US.Enable\": true}. A setting can depend on another one (MaxLoginErrors needs EnableLockAfterNumberOfAttempts true): give both in the call. All settings are applied or none; 'unified_get_runtime_settings' shows the names and current values")]
+        public static ResponseMessage SetUnifiedRuntimeSettings(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("settings: names and new values; groups with a dot, a language by its name (e.g. 'en-US')")] Dictionary<string, JsonElement> settings)
+        {
+            return Guarded(nameof(SetUnifiedRuntimeSettings), () =>
+            {
+                var applied = Portal.SetUnifiedRuntimeSettings(softwarePath, settings);
+
+                return new ResponseMessage
+                {
+                    Message = $"{applied.Count} runtime setting(s) applied: {string.Join(", ", applied)}. {SaveHint}",
+                    Meta = OkMeta()
+                };
+            });
+        }
+
         [McpServerTool(Name = "unified_get_alarms", Title = "Get WinCC Unified alarms", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("List the discrete and analog alarms of a WinCC Unified HMI: alarm class, the tag and bit or limit that raise the alarm, and the alarm text per language. An HMI can have hundreds of alarms: narrow the list with type or nameFilter")]
         public static ResponseUnifiedAlarms GetUnifiedAlarms(
