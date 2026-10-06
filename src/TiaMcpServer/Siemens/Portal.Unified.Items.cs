@@ -35,6 +35,8 @@ namespace TiaMcpServer.Siemens
 
         private const string ScriptDynamizationType = "ScriptDynamization";
 
+        private const string ResourceListDynamizationType = "ResourceListDynamization";
+
         public List<HmiItemResult> ManageUnifiedItems(string softwarePath, IList<HmiItemAction> actions)
         {
             return Operation.Run(_logger, nameof(ManageUnifiedItems), PortalErrorCode.InvalidState,
@@ -336,10 +338,15 @@ namespace TiaMcpServer.Siemens
 
             var keys = value.EnumerateObject().Select(p => p.Name).ToList();
 
+            if (keys.Any(k => k.Equals("resourceList", StringComparison.OrdinalIgnoreCase)))
+            {
+                return SetResourceListDynamization(software, target, propertyName, value);
+            }
+
             if (keys.Count != 1)
             {
                 throw new PortalException(PortalErrorCode.InvalidParams,
-                    "A property object needs exactly one of 'value', 'tag', 'script', 'texts' or 'dynamization'; got: " +
+                    "A property object needs exactly one of 'value', 'tag', 'script', 'texts' or 'dynamization', or 'resourceList' with 'tag'; got: " +
                     (keys.Count == 0 ? "none" : string.Join(", ", keys)) + ".");
             }
 
@@ -384,8 +391,59 @@ namespace TiaMcpServer.Siemens
 
                 default:
                     throw new PortalException(PortalErrorCode.InvalidParams,
-                        $"Unknown key '{keys[0]}'. Use 'value', 'tag', 'script', 'texts' or 'dynamization'.");
+                        $"Unknown key '{keys[0]}'. Use 'value', 'tag', 'script', 'texts', 'resourceList' with 'tag', or 'dynamization'.");
             }
+        }
+
+        /// <summary>
+        /// { "resourceList": "list", "tag": "tag" }: the property shows the entry of a text or
+        /// graphic list that matches the value of the tag.
+        /// </summary>
+        private string? SetResourceListDynamization(HmiSoftware software, object target, string propertyName, JsonElement value)
+        {
+            string? listName = null;
+            string? tagName = null;
+
+            foreach (var part in value.EnumerateObject())
+            {
+                if (part.Name.Equals("resourceList", StringComparison.OrdinalIgnoreCase))
+                {
+                    listName = RequireText(part.Value, "resourceList");
+                }
+                else if (part.Name.Equals("tag", StringComparison.OrdinalIgnoreCase))
+                {
+                    tagName = RequireText(part.Value, "tag");
+                }
+                else
+                {
+                    throw new PortalException(PortalErrorCode.InvalidParams,
+                        $"Unknown key '{part.Name}' beside 'resourceList'. A list binding is {{ \"resourceList\": \"ListName\", \"tag\": \"HmiTag\" }}.");
+                }
+            }
+
+            if (tagName == null)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams,
+                    "'resourceList' needs 'tag', the HMI tag whose value selects the entry: { \"resourceList\": \"ListName\", \"tag\": \"HmiTag\" }.");
+            }
+
+            if (software.Tags.Find(tagName) == null)
+            {
+                throw new PortalException(PortalErrorCode.NotFound,
+                    $"HMI tag '{tagName}' does not exist. Use 'unified_get_tags' to list the tags.");
+            }
+
+            var name = ResolveHmiPropertyName(target, propertyName);
+
+            SetHmiDynamization(target, name, ResourceListDynamizationType, "ResourceList", listName!);
+            SetHmiDynamization(target, name, ResourceListDynamizationType, "Tag", tagName);
+
+            // Openness accepts any list name. One that is not among the lists of the HMI may still
+            // be right - a list that is a library type is named "<type> V <version>" - so it is
+            // pointed out, not refused.
+            return software.HmiTextLists.Find(listName!) != null || software.HmiGraphicLists.Find(listName!) != null
+                ? null
+                : $"'{listName}' is not among the text or graphic lists of this HMI. If it is not a list from the library, {name} will show nothing.";
         }
 
         private static string RequireText(JsonElement element, string key)

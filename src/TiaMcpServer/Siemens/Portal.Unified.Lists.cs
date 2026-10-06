@@ -14,39 +14,50 @@ namespace TiaMcpServer.Siemens
     // WinCC Unified: text lists and graphic lists.
     //
     // Callers: the tools unified_get_text_lists, unified_get_graphic_lists and
-    // unified_manage_text_lists in McpServer.Unified.cs.
+    // unified_manage_lists in McpServer.Unified.cs.
     //
     // Files: Openness has no object model for the entries of a list - a list object has a name
     // and Delete(), nothing else. Entries are reached only through Export and Import of YAML
     // files, so this code writes and reads temporary files:
     //   <temp>\TiaMcpServer\lists-<guid>\<name>.hmi.yml              the lists with their entries
-    //   <temp>\TiaMcpServer\lists-<guid>\<name>.TextLibrary.hmi.yml  the texts, per language
+    //   <temp>\TiaMcpServer\lists-<guid>\<name>.TextLibrary.hmi.yml  text lists only: the texts
     // Each operation creates its own folder and removes it when it is done.
     //
-    // What Import does, as found on TIA Portal V21 (2026-10-06):
+    // The entry forms, as TIA Portal V21 exports them (2026-10-06):
+    //   single value   Value: 5 / FromValue: 5 / ToValue: 5   - all three keys, all equal;
+    //                  for the value 0 the export leaves all three out
+    //   range          Type: Range / Value: 4 / FromValue: 4 / ToValue: 7
+    //   from           Type: From  / Value: 100 / FromValue: 100
+    //   to             Type: To    / Value: 2 / ToValue: 2
+    //   default        IsDefaultEntry: True, no value keys (given ones are discarded)
+    // A text entry points at its text as "Text: <library>.<key>", a graphic entry names a
+    // project graphic as "Graphic: GraphicLibrary.<name>".
+    //
+    // What Import does:
     //   - Lists not named in the file are left alone; a list that exists is replaced as a whole.
     //   - Entry names and text keys are renumbered; the ones in the file do not survive.
-    //   - An entry is kept only as a single value with Value, FromValue and ToValue all equal.
-    //     Anything else - a range, a lone Value - is dropped or loses its value WITHOUT an
-    //     error. That is why every write is checked by exporting again and comparing; a
-    //     difference fails the call and so rolls it back.
-    //   - Export leaves the three value keys out when the value is 0: an entry without them
-    //     is the entry for 0, not a "default" entry. How a default entry is written is unknown.
-    //   - The format of value ranges and of graphic lists is not known: the test project had
-    //     neither, and there is no way to create one through Openness to look at.
+    //   - An entry in a form it does not know is dropped or loses its value WITHOUT an error.
+    //     That is why every write is checked by exporting again and comparing; a difference
+    //     fails the call and so rolls it back.
+    //   - The name of a graphic is not checked: one that does not exist is stored as it is.
+    //
+    // A list that is a library type is not among the lists of the HMI and cannot be read: the
+    // export of a library type version holds no entries.
     public partial class Portal
     {
         private const string TextLibraryName = "MyTextLibrary";
 
+        private const string GraphicLibraryName = "GraphicLibrary";
+
         #region read
 
-        public List<UnifiedTextListInfo> GetUnifiedTextLists(string softwarePath, string listName = "")
+        /// <param name="kind">"text" or "graphic".</param>
+        public List<UnifiedListInfo> GetUnifiedLists(string softwarePath, string kind, string listName = "")
         {
-            return Operation.Run(_logger, nameof(GetUnifiedTextLists), PortalErrorCode.InvalidState,
+            return Operation.Run(_logger, nameof(GetUnifiedLists), PortalErrorCode.InvalidState,
                 () =>
                 {
-                    var software = RequireUnifiedSoftware(softwarePath);
-                    var lists = ExportTextLists(software);
+                    var lists = ExportLists(RequireUnifiedSoftware(softwarePath), kind == "graphic");
 
                     if (string.IsNullOrWhiteSpace(listName))
                     {
@@ -58,68 +69,51 @@ namespace TiaMcpServer.Siemens
                     return match.Count > 0
                         ? match
                         : throw new PortalException(PortalErrorCode.NotFound,
-                            $"Text list '{listName}' not found. Existing: {string.Join(", ", lists.Select(l => l.Name))}.");
+                            $"There is no {kind} list '{listName}'. Existing: {(lists.Count == 0 ? "none" : string.Join(", ", lists.Select(l => l.Name)))}.");
                 },
-                ("softwarePath", softwarePath), ("listName", listName));
+                ("softwarePath", softwarePath), ("kind", kind), ("listName", listName));
         }
 
-        public (List<string> Names, Dictionary<string, string> Export) GetUnifiedGraphicLists(string softwarePath)
+        private static List<UnifiedListInfo> ExportLists(HmiSoftware software, bool graphic)
         {
-            return Operation.Run(_logger, nameof(GetUnifiedGraphicLists), PortalErrorCode.InvalidState,
-                () =>
-                {
-                    var software = RequireUnifiedSoftware(softwarePath);
-                    var names = software.HmiGraphicLists.Select(l => l.Name).ToList();
-                    var export = new Dictionary<string, string>();
+            var result = new List<UnifiedListInfo>();
 
-                    if (names.Count > 0)
-                    {
-                        WithListFolder(folder =>
-                        {
-                            software.HmiGraphicLists.Export(folder, "graphiclists");
-
-                            foreach (var file in folder.GetFiles())
-                            {
-                                export[file.Name] = File.ReadAllText(file.FullName);
-                            }
-                        });
-                    }
-
-                    return (names, export);
-                },
-                ("softwarePath", softwarePath));
-        }
-
-        private static List<UnifiedTextListInfo> ExportTextLists(HmiSoftware software)
-        {
-            var result = new List<UnifiedTextListInfo>();
-
-            if (software.HmiTextLists.Count == 0)
+            if ((graphic ? software.HmiGraphicLists.Count : software.HmiTextLists.Count) == 0)
             {
                 return result;
             }
 
             WithListFolder(folder =>
             {
-                software.HmiTextLists.Export(folder, "textlists");
+                if (graphic)
+                {
+                    software.HmiGraphicLists.Export(folder, "lists");
+                }
+                else
+                {
+                    software.HmiTextLists.Export(folder, "lists");
+                }
 
-                var listsFile = Path.Combine(folder.FullName, "textlists.hmi.yml");
-                var textsFile = Path.Combine(folder.FullName, "textlists.TextLibrary.hmi.yml");
+                var listsFile = Path.Combine(folder.FullName, "lists.hmi.yml");
+                var textsFile = Path.Combine(folder.FullName, "lists.TextLibrary.hmi.yml");
 
                 if (!File.Exists(listsFile))
                 {
                     throw new PortalException(PortalErrorCode.ExportFailed,
-                        $"TIA Portal exported the text lists without the expected file 'textlists.hmi.yml'. It wrote: {string.Join(", ", folder.GetFiles().Select(f => f.Name))}.");
+                        $"TIA Portal exported the lists without the expected file 'lists.hmi.yml'. It wrote: {string.Join(", ", folder.GetFiles().Select(f => f.Name))}.");
                 }
 
-                result.AddRange(ParseTextLists(File.ReadAllText(listsFile), File.Exists(textsFile) ? File.ReadAllText(textsFile) : string.Empty));
+                result.AddRange(ParseLists(File.ReadAllText(listsFile), File.Exists(textsFile) ? File.ReadAllText(textsFile) : string.Empty));
             });
 
             return result;
         }
 
-        /// <summary>Joins the two exported files: the lists with their entries, and the texts the entries point at.</summary>
-        internal static List<UnifiedTextListInfo> ParseTextLists(string listsYaml, string textsYaml)
+        /// <summary>
+        /// Reads an exported lists file, text or graphic. For text lists the second file holds
+        /// the texts the entries point at.
+        /// </summary>
+        internal static List<UnifiedListInfo> ParseLists(string listsYaml, string textsYaml)
         {
             // library -> (languages, key -> texts in the order of the languages)
             var libraries = new Dictionary<string, (List<string> Languages, Dictionary<string, List<string>> Entries)>();
@@ -136,39 +130,41 @@ namespace TiaMcpServer.Siemens
                 libraries[library.Key] = (library.Value["Languages"]?.Sequence ?? new List<string>(), entries);
             }
 
-            var result = new List<UnifiedTextListInfo>();
+            var document = SimpleYaml.Parse(listsYaml);
+            var graphic = document["GraphicListContainers"] != null;
+            var result = new List<UnifiedListInfo>();
 
-            foreach (var container in SimpleYaml.Parse(listsYaml)["TextListContainers"]?.Children ?? Enumerable.Empty<KeyValuePair<string, YamlNode>>())
+            foreach (var container in (document["TextListContainers"] ?? document["GraphicListContainers"])?.Children ?? Enumerable.Empty<KeyValuePair<string, YamlNode>>())
             {
                 foreach (var list in container.Value["ResourceLists"]?.Children ?? Enumerable.Empty<KeyValuePair<string, YamlNode>>())
                 {
-                    var info = new UnifiedTextListInfo { Name = list.Key };
+                    var info = new UnifiedListInfo { Name = list.Key, Kind = graphic ? "graphic" : "text" };
 
                     foreach (var entry in list.Value["Entries"]?.Children ?? Enumerable.Empty<KeyValuePair<string, YamlNode>>())
                     {
-                        var value = entry.Value["Value"]?.Scalar;
-                        var from = entry.Value["FromValue"]?.Scalar;
-                        var to = entry.Value["ToValue"]?.Scalar;
+                        var item = ReadListEntry(entry.Value);
 
-                        var item = new UnifiedTextListEntryInfo
-                        {
-                            // No value keys at all means 0: Export omits them for that value.
-                            Value = long.TryParse(value ?? from, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) ? number : 0,
-                            Range = from != null && to != null && from != to ? $"{from}..{to}" : null
-                        };
-
-                        // "Library.Key"
-                        var reference = entry.Value["Text"]?.Scalar ?? string.Empty;
+                        // "<library>.<key>" for a text, "GraphicLibrary.<name>" for a graphic.
+                        var reference = entry.Value[graphic ? "Graphic" : "Text"]?.Scalar ?? string.Empty;
                         var dot = reference.IndexOf('.');
 
-                        if (dot > 0 && libraries.TryGetValue(reference.Substring(0, dot), out var library)
-                            && library.Entries.TryGetValue(reference.Substring(dot + 1), out var texts))
+                        if (graphic)
                         {
-                            for (var i = 0; i < texts.Count && i < library.Languages.Count; i++)
+                            item.Graphic = dot >= 0 ? reference.Substring(dot + 1) : reference;
+                        }
+                        else
+                        {
+                            item.Texts = new Dictionary<string, string>();
+
+                            if (dot > 0 && libraries.TryGetValue(reference.Substring(0, dot), out var library)
+                                && library.Entries.TryGetValue(reference.Substring(dot + 1), out var texts))
                             {
-                                if (texts[i].Length > 0)
+                                for (var i = 0; i < texts.Count && i < library.Languages.Count; i++)
                                 {
-                                    item.Texts[library.Languages[i]] = texts[i];
+                                    if (texts[i].Length > 0)
+                                    {
+                                        item.Texts[library.Languages[i]] = texts[i];
+                                    }
                                 }
                             }
                         }
@@ -183,14 +179,48 @@ namespace TiaMcpServer.Siemens
             return result;
         }
 
+        private static UnifiedListEntryInfo ReadListEntry(YamlNode entry)
+        {
+            long? Number(string key) =>
+                long.TryParse(entry[key]?.Scalar, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) ? number : (long?)null;
+
+            if (string.Equals(entry["IsDefaultEntry"]?.Scalar, "True", StringComparison.OrdinalIgnoreCase))
+            {
+                return new UnifiedListEntryInfo { Type = "default" };
+            }
+
+            var type = entry["Type"]?.Scalar;
+
+            switch (type)
+            {
+                case null:
+                case "":
+                    // No value keys at all means 0: Export omits them for that value.
+                    return new UnifiedListEntryInfo { Type = "value", Value = Number("Value") ?? Number("FromValue") ?? 0 };
+
+                case "Range":
+                    return new UnifiedListEntryInfo { Type = "range", From = Number("FromValue") ?? Number("Value") ?? 0, To = Number("ToValue") ?? 0 };
+
+                case "From":
+                    return new UnifiedListEntryInfo { Type = "from", From = Number("FromValue") ?? Number("Value") ?? 0 };
+
+                case "To":
+                    return new UnifiedListEntryInfo { Type = "to", To = Number("ToValue") ?? Number("Value") ?? 0 };
+
+                default:
+                    // A form not seen yet: passed on rather than guessed at.
+                    return new UnifiedListEntryInfo { Type = type, Value = Number("Value"), From = Number("FromValue"), To = Number("ToValue") };
+            }
+        }
+
         #endregion
 
         #region write
 
-        public List<UnifiedActionResult> ManageUnifiedTextLists(string softwarePath, IList<UnifiedTextListAction>? actions)
+        public List<UnifiedActionResult> ManageUnifiedLists(string softwarePath, IList<UnifiedListAction>? actions)
         {
-            return RunUnifiedBatch(nameof(ManageUnifiedTextLists), softwarePath, actions,
-                "{ \"action\": \"upsert\", \"listName\": \"Modes\", \"entries\": [ { \"value\": 0, \"text\": \"Off\" }, { \"value\": 1, \"text\": \"Auto\" } ] }",
+            return RunUnifiedBatch(nameof(ManageUnifiedLists), softwarePath, actions,
+                "{ \"action\": \"upsert\", \"listName\": \"Modes\", \"entries\": [ { \"value\": 0, \"text\": \"Off\" }, { \"value\": 1, \"text\": \"Auto\" }, { \"default\": true, \"text\": \"?\" } ] }",
                 a => a.ListName,
                 (software, action, verb, result) =>
                 {
@@ -202,42 +232,35 @@ namespace TiaMcpServer.Siemens
                         throw new PortalException(PortalErrorCode.InvalidParams, $"kind takes 'text' or 'graphic'; got '{action.Kind}'.");
                     }
 
-                    if (kind == "graphic")
-                    {
-                        if (verb != "delete")
-                        {
-                            throw new PortalException(PortalErrorCode.NotSupported,
-                                "A graphic list can only be deleted here. Openness reaches its entries through a file format that could not be examined; create it in TIA Portal.");
-                        }
-
-                        var graphicList = software.HmiGraphicLists.Find(name)
-                            ?? throw new PortalException(PortalErrorCode.NotFound, $"Graphic list '{name}' not found.");
-
-                        graphicList.Delete();
-
-                        return;
-                    }
-
-                    var list = software.HmiTextLists.Find(name);
+                    var graphic = kind == "graphic";
+                    var what = graphic ? "Graphic list" : "Text list";
+                    var exists = graphic ? software.HmiGraphicLists.Find(name) != null : software.HmiTextLists.Find(name) != null;
 
                     switch (verb)
                     {
                         case "delete":
-                            if (list == null)
+                            if (!exists)
                             {
-                                throw new PortalException(PortalErrorCode.NotFound, $"Text list '{name}' not found.");
+                                throw new PortalException(PortalErrorCode.NotFound, $"{what} '{name}' not found.");
                             }
 
-                            list.Delete();
+                            if (graphic)
+                            {
+                                software.HmiGraphicLists.Find(name).Delete();
+                            }
+                            else
+                            {
+                                software.HmiTextLists.Find(name).Delete();
+                            }
 
                             return;
 
-                        case "create" when list != null:
-                            throw new PortalException(PortalErrorCode.InvalidParams, $"Text list '{name}' already exists. Use 'update' or 'upsert'.");
+                        case "create" when exists:
+                            throw new PortalException(PortalErrorCode.InvalidParams, $"{what} '{name}' already exists. Use 'update' or 'upsert'.");
 
-                        case "update" when list == null:
+                        case "update" when !exists:
                             throw new PortalException(PortalErrorCode.NotFound,
-                                $"Text list '{name}' not found. Use 'unified_get_text_lists' to list them, or 'upsert' to create it.");
+                                $"{what} '{name}' not found. Use '{(graphic ? "unified_get_graphic_lists" : "unified_get_text_lists")}' to list them, or 'upsert' to create it.");
 
                         case "create":
                         case "update":
@@ -250,142 +273,278 @@ namespace TiaMcpServer.Siemens
                     }
 
                     var languages = _project!.LanguageSettings.ActiveLanguages.Select(l => l.Culture.Name).ToList();
-                    var wanted = BuildTextListEntries(action.Entries, languages);
+                    var wanted = BuildListEntries(action.Entries, languages, graphic);
 
                     WithListFolder(folder =>
                     {
-                        var (listsYaml, textsYaml) = WriteTextList(name, wanted, languages);
+                        var (listsYaml, textsYaml) = WriteList(name, wanted, languages, graphic);
 
                         File.WriteAllText(Path.Combine(folder.FullName, "import.hmi.yml"), listsYaml, new UTF8Encoding(false));
-                        File.WriteAllText(Path.Combine(folder.FullName, "import.TextLibrary.hmi.yml"), textsYaml, new UTF8Encoding(false));
 
-                        if (!software.HmiTextLists.Import(folder, "import"))
+                        if (textsYaml != null)
                         {
-                            throw new PortalException(PortalErrorCode.ImportFailed, $"TIA Portal did not import text list '{name}' and gave no reason.");
+                            File.WriteAllText(Path.Combine(folder.FullName, "import.TextLibrary.hmi.yml"), textsYaml, new UTF8Encoding(false));
+                        }
+
+                        if (!(graphic ? software.HmiGraphicLists.Import(folder, "import") : software.HmiTextLists.Import(folder, "import")))
+                        {
+                            throw new PortalException(PortalErrorCode.ImportFailed, $"TIA Portal did not import {what.ToLowerInvariant()} '{name}' and gave no reason.");
                         }
                     });
 
                     // Import drops what it does not understand without saying so.
-                    var written = ExportTextLists(software).FirstOrDefault(l => string.Equals(l.Name, name, StringComparison.OrdinalIgnoreCase))
-                        ?? throw new PortalException(PortalErrorCode.ImportFailed, $"Text list '{name}' is not there after the import.");
+                    var written = ExportLists(software, graphic).FirstOrDefault(l => string.Equals(l.Name, name, StringComparison.OrdinalIgnoreCase))
+                        ?? throw new PortalException(PortalErrorCode.ImportFailed, $"{what} '{name}' is not there after the import.");
 
-                    var difference = DescribeTextListDifference(wanted, written.Entries);
+                    var difference = DescribeListDifference(wanted, written.Entries);
 
                     if (difference != null)
                     {
                         throw new PortalException(PortalErrorCode.ImportFailed,
-                            $"TIA Portal imported text list '{name}' differently from what was asked: {difference}.");
+                            $"TIA Portal imported {what.ToLowerInvariant()} '{name}' differently from what was asked: {difference}.");
                     }
 
                     result.Applied.Add($"{wanted.Count} entr{(wanted.Count == 1 ? "y" : "ies")}");
-                    result.Notes.Add(list == null ? "Created." : "Replaced: the entries it had before are gone.");
+                    result.Notes.Add(exists ? "Replaced: the entries it had before are gone." : "Created.");
+
+                    if (graphic)
+                    {
+                        result.Notes.Add("TIA Portal does not check the graphic names: one that is not among the project graphics is stored and shows nothing.");
+                    }
                 });
         }
 
-        /// <summary>Checks the entries of a request and spreads each text over the languages.</summary>
-        internal static List<UnifiedTextListEntryInfo> BuildTextListEntries(List<UnifiedTextListEntry>? entries, List<string> languages)
+        /// <summary>Checks the entries of a request and brings them into the form the lists are read in.</summary>
+        internal static List<UnifiedListEntryInfo> BuildListEntries(List<UnifiedListEntry>? entries, List<string> languages, bool graphic)
         {
             if (entries == null || entries.Count == 0)
             {
                 throw new PortalException(PortalErrorCode.InvalidParams,
-                    "entries is required: a text list is written as a whole, e.g. [ { \"value\": 0, \"text\": \"Off\" }, { \"value\": 1, \"text\": \"On\" } ].");
+                    "entries is required: a list is written as a whole, e.g. [ { \"value\": 0, \"text\": \"Off\" }, { \"value\": 1, \"text\": \"On\" } ].");
             }
 
-            if (entries.Any(e => e.Value == null))
-            {
-                throw new PortalException(PortalErrorCode.InvalidParams, "Every entry needs 'value', the number it stands for.");
-            }
-
-            var duplicate = entries.GroupBy(e => e.Value).FirstOrDefault(g => g.Count() > 1);
-
-            if (duplicate != null)
-            {
-                throw new PortalException(PortalErrorCode.InvalidParams, $"Value {duplicate.Key} is given more than once.");
-            }
-
-            var result = new List<UnifiedTextListEntryInfo>();
+            var result = new List<UnifiedListEntryInfo>();
 
             foreach (var entry in entries)
             {
-                var item = new UnifiedTextListEntryInfo { Value = entry.Value!.Value };
+                var item = new UnifiedListEntryInfo();
 
-                switch (entry.Text.ValueKind)
+                if (entry.Default)
                 {
-                    case JsonValueKind.String:
-                        foreach (var language in languages)
-                        {
-                            item.Texts[language] = entry.Text.GetString() ?? string.Empty;
-                        }
-
-                        break;
-
-                    case JsonValueKind.Object:
-                        foreach (var text in entry.Text.EnumerateObject())
-                        {
-                            var language = languages.FirstOrDefault(l => l.Equals(text.Name, StringComparison.OrdinalIgnoreCase))
-                                ?? throw new PortalException(PortalErrorCode.NotFound,
-                                    $"The project has no language '{text.Name}'. Available: {string.Join(", ", languages)}.");
-
-                            item.Texts[language] = text.Value.GetString() ?? string.Empty;
-                        }
-
-                        break;
-
-                    default:
+                    if (entry.Value != null || entry.From != null || entry.To != null)
+                    {
                         throw new PortalException(PortalErrorCode.InvalidParams,
-                            $"The entry for value {entry.Value} needs 'text': a string, or {{ \"en-US\": \"...\" }}.");
+                            "The default entry takes no 'value', 'from' or 'to': it stands for every value no other entry covers.");
+                    }
+
+                    item.Type = "default";
+                }
+                else if (entry.Value != null)
+                {
+                    if (entry.From != null || entry.To != null)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"The entry for value {entry.Value} also has 'from' or 'to'. Give either 'value', or 'from' and/or 'to'.");
+                    }
+
+                    item.Type = "value";
+                    item.Value = entry.Value;
+                }
+                else if (entry.From != null && entry.To != null)
+                {
+                    if (entry.From > entry.To)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, $"The range {entry.From}..{entry.To} is empty: 'from' is above 'to'.");
+                    }
+
+                    item.Type = "range";
+                    item.From = entry.From;
+                    item.To = entry.To;
+                }
+                else if (entry.From != null)
+                {
+                    item.Type = "from";
+                    item.From = entry.From;
+                }
+                else if (entry.To != null)
+                {
+                    item.Type = "to";
+                    item.To = entry.To;
+                }
+                else
+                {
+                    throw new PortalException(PortalErrorCode.InvalidParams,
+                        "Every entry needs 'value', or 'from' and/or 'to', or 'default': true.");
+                }
+
+                if (graphic)
+                {
+                    if (string.IsNullOrWhiteSpace(entry.Graphic))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, $"The {DescribeListEntry(item)} needs 'graphic', the name of a project graphic.");
+                    }
+
+                    item.Graphic = entry.Graphic!.Trim();
+                }
+                else
+                {
+                    item.Texts = new Dictionary<string, string>();
+
+                    switch (entry.Text.ValueKind)
+                    {
+                        case JsonValueKind.String:
+                            foreach (var language in languages)
+                            {
+                                item.Texts[language] = entry.Text.GetString() ?? string.Empty;
+                            }
+
+                            break;
+
+                        case JsonValueKind.Object:
+                            foreach (var text in entry.Text.EnumerateObject())
+                            {
+                                var language = languages.FirstOrDefault(l => l.Equals(text.Name, StringComparison.OrdinalIgnoreCase))
+                                    ?? throw new PortalException(PortalErrorCode.NotFound,
+                                        $"The project has no language '{text.Name}'. Available: {string.Join(", ", languages)}.");
+
+                                item.Texts[language] = text.Value.GetString() ?? string.Empty;
+                            }
+
+                            break;
+
+                        default:
+                            throw new PortalException(PortalErrorCode.InvalidParams,
+                                $"The {DescribeListEntry(item)} needs 'text': a string, or {{ \"en-US\": \"...\" }}.");
+                    }
                 }
 
                 result.Add(item);
             }
 
+            if (result.Count(e => e.Type == "default") > 1)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams, "A list has one default entry at most.");
+            }
+
+            var duplicate = result.GroupBy(ListEntryKey).FirstOrDefault(g => g.Count() > 1);
+
+            if (duplicate != null)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams, $"The {DescribeListEntry(duplicate.First())} is given more than once.");
+            }
+
             return result;
         }
 
-        /// <summary>The two files Import takes for one list, in the form TIA Portal itself exports.</summary>
-        internal static (string Lists, string Texts) WriteTextList(string name, List<UnifiedTextListEntryInfo> entries, List<string> languages)
+        private static string ListEntryKey(UnifiedListEntryInfo entry) => $"{entry.Type}|{entry.Value}|{entry.From}|{entry.To}";
+
+        private static string DescribeListEntry(UnifiedListEntryInfo entry)
+        {
+            switch (entry.Type)
+            {
+                case "default": return "default entry";
+                case "value": return $"entry for value {entry.Value}";
+                case "range": return $"entry for {entry.From}..{entry.To}";
+                case "from": return $"entry for {entry.From} and above";
+                case "to": return $"entry for {entry.To} and below";
+                default: return $"entry of type '{entry.Type}'";
+            }
+        }
+
+        /// <summary>
+        /// The files Import takes for one list, in the form TIA Portal itself exports. The second
+        /// one, the texts, is null for a graphic list.
+        /// </summary>
+        internal static (string Lists, string? Texts) WriteList(string name, List<UnifiedListEntryInfo> entries, List<string> languages, bool graphic)
         {
             var lists = new StringBuilder();
-            var texts = new StringBuilder();
+            var texts = graphic ? null : new StringBuilder();
+            var prefix = graphic ? "Graphic" : "Text";
 
-            lists.Append("#Version: 2.0\n\nTextListContainers:\n  DeviceTextList:\n    ResourceListType: TextList\n    ResourceLists:\n");
+            lists.Append("#Version: 2.0\n\n").Append(prefix).Append("ListContainers:\n  Device").Append(prefix).Append("List:\n");
+            lists.Append("    ResourceListType: ").Append(prefix).Append("List\n    ResourceLists:\n");
             lists.Append("      ").Append(Regex.IsMatch(name, @"^[A-Za-z0-9_][A-Za-z0-9_\-]*$") ? name : SimpleYaml.Quote(name)).Append(":\n        Entries:\n");
 
-            texts.Append("#Version: 2.0\n\nTextLibraries:\n  ").Append(TextLibraryName).Append(":\n    Type: Text\n    Languages:\n");
-
-            foreach (var language in languages)
+            if (texts != null)
             {
-                texts.Append("    - ").Append(language).Append('\n');
-            }
+                texts.Append("#Version: 2.0\n\nTextLibraries:\n  ").Append(TextLibraryName).Append(":\n    Type: Text\n    Languages:\n");
 
-            texts.Append("    DefaultLanguage: ").Append(languages.FirstOrDefault() ?? "en-US").Append("\n    Entries:\n");
+                foreach (var language in languages)
+                {
+                    texts.Append("    - ").Append(language).Append('\n');
+                }
+
+                texts.Append("    DefaultLanguage: ").Append(languages.FirstOrDefault() ?? "en-US").Append("\n    Entries:\n");
+            }
 
             for (var i = 0; i < entries.Count; i++)
             {
-                lists.Append("          Text_list_entry_").Append(i).Append(":\n");
+                var entry = entries[i];
+                string Number(long? value) => (value ?? 0).ToString(CultureInfo.InvariantCulture);
 
-                // All three keys, all equal: the only form of a value Import keeps.
-                var value = entries[i].Value.ToString(CultureInfo.InvariantCulture);
+                void Key(string key, string value) => lists.Append("            ").Append(key).Append(": ").Append(value).Append('\n');
 
-                lists.Append("            Value: ").Append(value).Append('\n');
-                lists.Append("            FromValue: ").Append(value).Append('\n');
-                lists.Append("            ToValue: ").Append(value).Append('\n');
+                lists.Append("          ").Append(prefix).Append("_list_entry_").Append(i).Append(":\n");
 
-                lists.Append("            Text: ").Append(TextLibraryName).Append(".Text_").Append(i).Append('\n');
+                switch (entry.Type)
+                {
+                    case "default":
+                        Key("IsDefaultEntry", "True");
+                        break;
+
+                    case "range":
+                        Key("Type", "Range");
+                        Key("Value", Number(entry.From));
+                        Key("FromValue", Number(entry.From));
+                        Key("ToValue", Number(entry.To));
+                        break;
+
+                    case "from":
+                        Key("Type", "From");
+                        Key("Value", Number(entry.From));
+                        Key("FromValue", Number(entry.From));
+                        break;
+
+                    case "to":
+                        Key("Type", "To");
+                        Key("Value", Number(entry.To));
+                        Key("ToValue", Number(entry.To));
+                        break;
+
+                    default:
+                        // All three keys, all equal: the only form of a single value Import keeps.
+                        Key("Value", Number(entry.Value));
+                        Key("FromValue", Number(entry.Value));
+                        Key("ToValue", Number(entry.Value));
+                        break;
+                }
+
+                if (texts == null)
+                {
+                    Key("Graphic", SimpleYaml.Quote($"{GraphicLibraryName}.{entry.Graphic}"));
+
+                    continue;
+                }
+
+                Key("Text", $"{TextLibraryName}.Text_{i}");
 
                 texts.Append("      Text_").Append(i).Append(":\n        Text:\n");
 
                 foreach (var language in languages)
                 {
-                    texts.Append("        - ").Append(SimpleYaml.Quote(entries[i].Texts.TryGetValue(language, out var text) ? text : string.Empty)).Append('\n');
+                    string? text = null;
+
+                    entry.Texts?.TryGetValue(language, out text);
+
+                    texts.Append("        - ").Append(SimpleYaml.Quote(text)).Append('\n');
                 }
             }
 
-            return (lists.ToString(), texts.ToString());
+            return (lists.ToString(), texts?.ToString());
         }
 
         /// <summary>What differs between the entries asked for and the entries found, or null.</summary>
-        internal static string? DescribeTextListDifference(List<UnifiedTextListEntryInfo> wanted, List<UnifiedTextListEntryInfo> found)
+        internal static string? DescribeListDifference(List<UnifiedListEntryInfo> wanted, List<UnifiedListEntryInfo> found)
         {
             if (wanted.Count != found.Count)
             {
@@ -394,19 +553,26 @@ namespace TiaMcpServer.Siemens
 
             foreach (var entry in wanted)
             {
-                var label = $"the entry for value {entry.Value}";
-                var match = found.FirstOrDefault(f => f.Value == entry.Value && f.Range == null);
+                var label = DescribeListEntry(entry);
+                var match = found.FirstOrDefault(f => ListEntryKey(f) == ListEntryKey(entry));
 
                 if (match == null)
                 {
-                    return $"{label} is missing";
+                    return $"the {label} is missing";
                 }
 
-                foreach (var text in entry.Texts.Where(t => t.Value.Length > 0))
+                if (entry.Graphic != null && match.Graphic != entry.Graphic)
                 {
-                    if (!match.Texts.TryGetValue(text.Key, out var actual) || actual != text.Value)
+                    return $"the {label} has the graphic '{match.Graphic}' instead of '{entry.Graphic}'";
+                }
+
+                foreach (var text in (entry.Texts ?? new Dictionary<string, string>()).Where(t => t.Value.Length > 0))
+                {
+                    string? actual = null;
+
+                    if (match.Texts == null || !match.Texts.TryGetValue(text.Key, out actual) || actual != text.Value)
                     {
-                        return $"{label} has the text '{actual}' for {text.Key} instead of '{text.Value}'";
+                        return $"the {label} has the text '{actual}' for {text.Key} instead of '{text.Value}'";
                     }
                 }
             }

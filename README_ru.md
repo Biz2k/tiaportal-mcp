@@ -160,7 +160,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Внешние исходные файлы           | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Оборудование                     | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_text_lists` |
+| WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists` |
 | Загрузка                         | `download_to_plc` |
 
 `plc_get_software_tree` принимает параметр `sections` — любое подмножество
@@ -248,6 +248,8 @@ Comfort, Advanced и Professional, поэтому все три сообщают
 
 - Простое значение — это статическое значение того типа, который у свойства: число, логическое,
   строка, член перечисления по имени, цвет в виде `#RRGGBB` или по названию.
+- `{ "resourceList": "...", "tag": "..." }` показывает запись текстового или графического списка,
+  соответствующую тегу (см. ниже).
 - `{ "tag": "..." }` привязывает свойство к HMI-тегу, `{ "script": "..." }` задаёт динамизацию
   скриптом, `{ "dynamization": "none" }` убирает динамизацию.
 - Текст задаётся обычной строкой и сохраняется в формате WinCC Unified; строка задаёт текст для
@@ -354,8 +356,8 @@ Comfort, Advanced и Professional, поэтому все три сообщают
 ### Текстовые и графические списки
 
 В Openness нет объектов для записей списка: списки только экспортируются и импортируются в виде
-файлов YAML. `unified_get_text_lists` и `unified_manage_text_lists` делают это сами и показывают
-записи как значения с текстами:
+файлов YAML. `unified_get_text_lists`, `unified_get_graphic_lists` и `unified_manage_lists` делают
+это сами и показывают записи в простом виде:
 
 ```json
 {
@@ -364,21 +366,39 @@ Comfort, Advanced и Professional, поэтому все три сообщают
     { "action": "upsert", "listName": "Modes",
       "entries": [
         { "value": 0, "text": "Off" },
-        { "value": 1, "text": { "en-US": "Auto", "de-DE": "Automatik" } }
+        { "value": 1, "text": { "en-US": "Auto", "de-DE": "Automatik" } },
+        { "from": 10, "to": 20, "text": "Service" },
+        { "from": 100, "text": "Fault" },
+        { "default": true, "text": "?" }
+      ] },
+    { "action": "upsert", "listName": "Pump_Symbols", "kind": "graphic",
+      "entries": [
+        { "value": 1, "graphic": "Pump_On" },
+        { "default": true, "graphic": "Pump_Off" }
       ] }
   ]
 }
 ```
 
+- Запись соответствует одному значению (`value`), диапазону (`from` и `to`), значению и выше
+  (только `from`), значению и ниже (только `to`) либо является записью по умолчанию
+  (`"default": true`) — она показывается для всех значений, не покрытых другими записями.
+- Запись текстового списка несёт `text`, графического — `graphic`: имя рисунка из графики
+  проекта. Это имя TIA Portal не проверяет.
 - Список записывается **целиком**: `entries` заменяет всё, что в нём было.
-- Каждая запись сопоставляет одно значение тексту. Диапазоны значений, записи по умолчанию и
-  списки по номеру бита записать нельзя — как TIA Portal хранит их в файле, пока неизвестно.
 - При импорте TIA Portal молча отбрасывает то, что не понял. Поэтому инструмент после записи
   читает список обратно и при любом расхождении завершает вызов ошибкой, отменяя его.
-- Графические списки: `unified_get_graphic_lists` возвращает их имена и экспортированный YAML
-  как есть; `unified_manage_text_lists` с `"kind": "graphic"` может удалить список. Создание
-  не поддерживается.
+- Список, являющийся типом библиотеки, среди списков HMI не числится: прочитать и записать его
+  нельзя.
 
+К объекту экрана список привязывается через `unified_manage_items`: свойство показывает запись,
+соответствующую значению тега, — текстовый список на текстовом свойстве, графический на
+графическом.
+
+```json
+{ "action": "update", "screenName": "Screen_1", "itemName": "Mode_Text",
+  "properties": { "Text": { "resourceList": "Modes", "tag": "Pump1_Mode" } } }
+```
 ### Фейсплейты
 
 У экземпляра фейсплейта свой инструмент, потому что набор его параметров не фиксирован: это

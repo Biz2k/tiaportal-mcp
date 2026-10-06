@@ -114,6 +114,6 @@ unified_manage_alarms
 unified_manage_connections
 unified_manage_faceplate
 unified_manage_items
+unified_manage_lists
 unified_manage_tag_tables
 unified_manage_tags
-unified_manage_text_lists

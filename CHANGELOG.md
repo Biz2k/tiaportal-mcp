@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Changed (WinCC Unified lists)
+
+- __Breaking: `unified_manage_text_lists` is now `unified_manage_lists`__ and writes graphic lists as
+  well as text lists (`kind`). An entry can be a single value, a range (`from` and `to`), a value
+  and above (`from`), a value and below (`to`) or the default entry (`default`). The file forms were
+  taken from lists made by hand in TIA Portal.
+- `unified_get_text_lists` and `unified_get_graphic_lists` report the type of each entry;
+  `unified_get_graphic_lists` returns entries instead of the raw export.
+- Corrected: an entry without value keys in the export is the entry for the value 0, not a default
+  entry; the default entry is marked `IsDefaultEntry`.
+- __`unified_manage_items` binds lists__: `{"resourceList": "List", "tag": "Tag"}` on a text or
+  graphic property shows the list entry that matches the tag.
 ### Added (WinCC Unified text lists)
 
 - __`unified_get_text_lists`__ and __`unified_manage_text_lists`__. Openness offers no objects for the

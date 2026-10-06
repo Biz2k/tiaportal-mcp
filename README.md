@@ -156,7 +156,7 @@ Left out with `--read-only` (57):
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Hardware                | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_text_lists` |
+| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists` |
 | Download                | `download_to_plc` |
 
 `plc_get_software_tree` accepts a `sections` argument - any comma separated subset of
@@ -242,6 +242,8 @@ property gets either a static value or a dynamization, and `events` attaches scr
 
 - A plain value is a static value of the property's own type: a number, a boolean, a string, an
   enum member by name, a color as `#RRGGBB` or by name.
+- `{ "resourceList": "...", "tag": "..." }` shows the entry of a text or graphic list that matches
+  the tag (see below).
 - `{ "tag": "..." }` binds the property to an HMI tag, `{ "script": "..." }` gives it a script
   dynamization, `{ "dynamization": "none" }` removes the dynamization.
 - A text is given as plain text and stored in the format WinCC Unified uses; a string sets every
@@ -344,8 +346,8 @@ deleted without a warning from TIA Portal.
 ### Text lists and graphic lists
 
 Openness has no objects for the entries of a list: it only exports and imports lists as YAML
-files. `unified_get_text_lists` and `unified_manage_text_lists` do that behind the scenes and
-show the entries as values with their texts:
+files. `unified_get_text_lists`, `unified_get_graphic_lists` and `unified_manage_lists` do that
+behind the scenes and show the entries plainly:
 
 ```json
 {
@@ -354,21 +356,37 @@ show the entries as values with their texts:
     { "action": "upsert", "listName": "Modes",
       "entries": [
         { "value": 0, "text": "Off" },
-        { "value": 1, "text": { "en-US": "Auto", "de-DE": "Automatik" } }
+        { "value": 1, "text": { "en-US": "Auto", "de-DE": "Automatik" } },
+        { "from": 10, "to": 20, "text": "Service" },
+        { "from": 100, "text": "Fault" },
+        { "default": true, "text": "?" }
+      ] },
+    { "action": "upsert", "listName": "Pump_Symbols", "kind": "graphic",
+      "entries": [
+        { "value": 1, "graphic": "Pump_On" },
+        { "default": true, "graphic": "Pump_Off" }
       ] }
   ]
 }
 ```
 
+- An entry stands for one value (`value`), a range (`from` and `to`), a value and above
+  (`from` alone), a value and below (`to` alone), or is the default entry (`"default": true`),
+  shown for every value no other entry covers.
+- A text list entry carries `text`, a graphic list entry `graphic` - the name of a graphic in
+  the project graphics. TIA Portal does not check that name.
 - A list is written **as a whole**: `entries` replaces everything the list had.
-- Every entry maps one value to a text. Value ranges, default entries and bit-number lists
-  cannot be written - how TIA Portal stores them in the file is not known yet.
 - TIA Portal drops what it does not understand in an import without an error. The tool therefore
   reads the list back after writing it and fails the call - undoing it - if anything differs.
-- Graphic lists: `unified_get_graphic_lists` returns their names and the exported YAML as it is;
-  `unified_manage_text_lists` with `"kind": "graphic"` can delete one. Creating them is not
-  supported.
+- A list that is a library type is not among the lists of the HMI and cannot be read or written.
 
+A list is bound to a screen item with `unified_manage_items`: the property shows the entry that
+matches the value of the tag - a text list on a text property, a graphic list on a graphic one.
+
+```json
+{ "action": "update", "screenName": "Screen_1", "itemName": "Mode_Text",
+  "properties": { "Text": { "resourceList": "Modes", "tag": "Pump1_Mode" } } }
+```
 ### Faceplates
 
 A faceplate instance has its own tool, because what can be set on it is not fixed: it is the
