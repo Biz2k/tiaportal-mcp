@@ -459,15 +459,17 @@ List PLC user and/or system constants, either of one tag table or of every tag t
 
 ## plc_get_cross_references
 
-Get cross references for a PLC software or for one block, type, tag table, tag or block group inside it. Watch tables, force tables and external sources have no cross references
+Get cross references for the whole PLC software (empty objectPath; blocks, types and tags, one page at a time) or for one block, type, tag table, tag or block group inside it. Openness answers for blocks, types and tags only, so the software, a group and a tag table are put together from the objects inside, which the message says. Watch tables, force tables and external sources have no cross references
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `objectPath` | string | no (default ``) | objectPath: optional root-relative path of a block, type, tag table, tag or block group; empty targets the whole plc software |
-| `objectKind` | string | no (default `auto`) | objectKind: 'auto' (default), 'block', 'type', 'tagTable', 'tag' or 'blockGroup' |
+| `objectKind` | string | no (default `auto`) | objectKind: 'auto' (default), 'block', 'type', 'tagTable', 'tag' or 'blockGroup'. With an empty objectPath it selects what is listed: 'block' only blocks, 'type' only types, 'tagTable' or 'tag' only tags, 'auto' all |
 | `filter` | string | no (default `AllObjects`) | filter: 'AllObjects' (default), 'ObjectsWithReferences', 'ObjectsWithoutReferences' or 'UnusedObjects' |
 | `maxDepth` | integer | no (default `1`) | maxDepth: 1 = sources and their references (default), 2 = also source children, 3 = also reference locations. Keeps large results manageable |
+| `limit` | integer | no (default `100`) | limit: the most sources to return (default 100); 0 returns all |
+| `offset` | integer | no (default `0`) | offset: sources to skip, to read the next page of a long result (default 0) |
 
 ## plc_get_external_source_info
 

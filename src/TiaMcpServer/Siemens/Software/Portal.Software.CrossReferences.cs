@@ -16,6 +16,7 @@ using System.Net;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
+using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
@@ -27,10 +28,15 @@ namespace TiaMcpServer.Siemens
         // Callers: the GetCrossReferences tool in McpServer.Software.CrossReferences.cs. Affected API: none
         // existing - all members are new. Reads/writes no data files.
         //
-        // CrossReferenceService lives in Siemens.Engineering.Base, not Step7, and is offered by
-        // software, blocks, types, their groups, tags, tag tables and constants - but NOT by watch
-        // tables, force tables or external sources. A null service therefore means "this object
-        // kind has no cross references", which is reported as NotSupported rather than NotFound.
+        // CrossReferenceService lives in Siemens.Engineering.Base, not Step7. Probed on V21 (PLC (A0) of the test project,
+        // 2026-10-06): blocks, types and tags offer it; the PLC software, the root block, type and tag table groups, and
+        // tag tables do NOT (GetService returns null). So the answer for the software, a group or a tag table is put together
+        // from the objects inside it, and says so in a note. Watch tables, force tables and external sources have no
+        // cross references at all, which is reported as NotSupported rather than NotFound.
+        //
+        // With the filter AllObjects every block, type and tag gives exactly one source (checked on 16 blocks and 50 tags),
+        // so the whole-software answer pages over the objects first and asks Openness only for the page: reading the
+        // sources of ~1900 tags takes seconds. Any other filter has to read them all to know how many sources remain.
 
         #region cross references
 
@@ -53,11 +59,150 @@ namespace TiaMcpServer.Siemens
                     var service = provider.GetService<CrossReferenceService>()
                         ?? throw new PortalException(PortalErrorCode.NotSupported,
                             $"'{(string.IsNullOrEmpty(objectPath) ? softwarePath : objectPath)}' does not provide cross references. " +
-                            "Watch tables, force tables and external sources have none; blocks, types, groups, tags and tag tables do.");
+                            "Watch tables, force tables and external sources have none. Blocks, types and tags offer them directly; the PLC software, a group and a tag table are answered through the objects inside (see plc_get_cross_references).");
 
                     return service.GetCrossReferences(filter);
                 },
                 ("softwarePath", softwarePath), ("objectPath", objectPath), ("objectKind", objectKind), ("filter", filter));
+        }
+
+        /// <summary>
+        /// One page of the cross reference sources of an object. An empty <paramref name="objectPath"/> is the whole PLC
+        /// software: blocks and types of all groups and the tags of all tag tables (<paramref name="objectKind"/> narrows it
+        /// to 'block', 'type' or 'tagTable'/'tag'). Any other object goes through <see cref="GetCrossReferenceSources"/>.
+        /// </summary>
+        public (List<SourceObject> Sources, int Total) GetCrossReferencePage(
+            string softwarePath,
+            string objectPath,
+            string objectKind,
+            CrossReferenceFilter filter,
+            int limit,
+            int offset,
+            out string? note)
+        {
+            string? pageNote = null;
+
+            var page = Operation.Run(_logger, nameof(GetCrossReferencePage), PortalErrorCode.NotFound,
+                () =>
+                {
+                    if (NormalizeGroupPath(objectPath).Length > 0)
+                    {
+                        var all = GetCrossReferenceSources(softwarePath, objectPath, objectKind, filter, out pageNote);
+                        var (start, count) = ListPage<SourceObject>.Window(all.Count, limit, offset);
+
+                        return (all.Skip(start).Take(count).ToList(), all.Count);
+                    }
+
+                    var software = GetPlcSoftwareOrThrow(softwarePath);
+                    var kind = (objectKind ?? "auto").Trim().ToLowerInvariant();
+
+                    var withBlocks = kind == "auto" || kind == "block" || kind == "blockgroup";
+                    var withTypes = kind == "auto" || kind == "type";
+                    var withTags = kind == "auto" || kind == "tagtable" || kind == "tag";
+
+                    if (!withBlocks && !withTypes && !withTags)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"Unknown objectKind '{objectKind}'. Allowed values are 'auto', 'block', 'type', 'tagTable', 'tag' and 'blockGroup'.");
+                    }
+
+                    var providers = new List<IEngineeringServiceProvider>();
+                    var counts = new List<string>();
+
+                    if (withBlocks)
+                    {
+                        var blocks = 0;
+
+                        void WalkBlocks(PlcBlockGroup group)
+                        {
+                            providers.AddRange(group.Blocks);
+                            blocks += group.Blocks.Count;
+
+                            foreach (var sub in group.Groups)
+                            {
+                                WalkBlocks(sub);
+                            }
+                        }
+
+                        WalkBlocks(software.BlockGroup);
+                        counts.Add($"{blocks} block(s)");
+                    }
+
+                    if (withTypes)
+                    {
+                        var types = 0;
+
+                        void WalkTypes(global::Siemens.Engineering.SW.Types.PlcTypeUserGroup group)
+                        {
+                            providers.AddRange(group.Types);
+                            types += group.Types.Count;
+
+                            foreach (var sub in group.Groups)
+                            {
+                                WalkTypes(sub);
+                            }
+                        }
+
+                        providers.AddRange(software.TypeGroup.Types);
+                        types += software.TypeGroup.Types.Count;
+
+                        foreach (var sub in software.TypeGroup.Groups)
+                        {
+                            WalkTypes(sub);
+                        }
+                        counts.Add($"{types} type(s)");
+                    }
+
+                    if (withTags)
+                    {
+                        var tags = 0;
+
+                        void WalkTables(PlcTagTableGroup group)
+                        {
+                            foreach (var table in group.TagTables)
+                            {
+                                providers.AddRange(table.Tags);
+                                tags += table.Tags.Count;
+                            }
+
+                            foreach (var sub in group.Groups)
+                            {
+                                WalkTables(sub);
+                            }
+                        }
+
+                        WalkTables(software.TagTableGroup);
+                        counts.Add($"{tags} tag(s)");
+                    }
+
+                    List<SourceObject> Read(IEnumerable<IEngineeringServiceProvider> objects)
+                    {
+                        return objects
+                            .Select(o => o.GetService<CrossReferenceService>())
+                            .Where(s => s != null)
+                            .SelectMany(s => s!.GetCrossReferences(filter).Sources.Cast<SourceObject>())
+                            .ToList();
+                    }
+
+                    pageNote = $"Openness gives the PLC software no cross references of its own; this is the answer for its {string.Join(", ", counts)}, read object by object.";
+
+                    if (filter == CrossReferenceFilter.AllObjects)
+                    {
+                        var (start, count) = ListPage<SourceObject>.Window(providers.Count, limit, offset);
+
+                        return (Read(providers.Skip(start).Take(count)), providers.Count);
+                    }
+
+                    var every = Read(providers);
+                    var (from, take) = ListPage<SourceObject>.Window(every.Count, limit, offset);
+
+                    return (every.Skip(from).Take(take).ToList(), every.Count);
+                },
+                ("softwarePath", softwarePath), ("objectPath", objectPath), ("objectKind", objectKind), ("filter", filter));
+
+            note = pageNote;
+
+            return page;
         }
 
         /// <summary>
@@ -114,9 +259,28 @@ namespace TiaMcpServer.Siemens
                         return collected;
                     }
 
+                    if (provider is PlcTagTable table)
+                    {
+                        var tagSources = new List<SourceObject>();
+
+                        foreach (var tag in table.Tags)
+                        {
+                            var tagService = tag.GetService<CrossReferenceService>();
+
+                            if (tagService != null)
+                            {
+                                tagSources.AddRange(tagService.GetCrossReferences(filter).Sources.Cast<SourceObject>());
+                            }
+                        }
+
+                        groupNote = $"Openness gives a tag table no cross references of its own; this is the answer for its {table.Tags.Count} tag(s).";
+
+                        return tagSources;
+                    }
+
                     throw new PortalException(PortalErrorCode.NotSupported,
                         $"'{(string.IsNullOrEmpty(objectPath) ? softwarePath : objectPath)}' does not provide cross references. " +
-                        "Watch tables, force tables and external sources have none; blocks, types, tags and tag tables do, and a block group is answered through its blocks.");
+                        "Watch tables, force tables and external sources have none. Blocks, types and tags offer them directly; the PLC software, a block group and a tag table are answered through the objects inside.");
                 },
                 ("softwarePath", softwarePath), ("objectPath", objectPath), ("objectKind", objectKind), ("filter", filter));
 

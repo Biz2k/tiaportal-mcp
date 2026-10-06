@@ -36,13 +36,15 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "plc_get_cross_references", Title = "Get cross references", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Get cross references for a PLC software or for one block, type, tag table, tag or block group inside it. Watch tables, force tables and external sources have no cross references")]
+         Description("Get cross references for the whole PLC software (empty objectPath; blocks, types and tags, one page at a time) or for one block, type, tag table, tag or block group inside it. Openness answers for blocks, types and tags only, so the software, a group and a tag table are put together from the objects inside, which the message says. Watch tables, force tables and external sources have no cross references")]
         public static ResponseCrossReferences GetCrossReferences(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("objectPath: optional root-relative path of a block, type, tag table, tag or block group; empty targets the whole plc software")] string objectPath = "",
-            [Description("objectKind: 'auto' (default), 'block', 'type', 'tagTable', 'tag' or 'blockGroup'")] string objectKind = "auto",
+            [Description("objectKind: 'auto' (default), 'block', 'type', 'tagTable', 'tag' or 'blockGroup'. With an empty objectPath it selects what is listed: 'block' only blocks, 'type' only types, 'tagTable' or 'tag' only tags, 'auto' all")] string objectKind = "auto",
             [Description("filter: 'AllObjects' (default), 'ObjectsWithReferences', 'ObjectsWithoutReferences' or 'UnusedObjects'")] string filter = "AllObjects",
-            [Description("maxDepth: 1 = sources and their references (default), 2 = also source children, 3 = also reference locations. Keeps large results manageable")] int maxDepth = 1)
+            [Description("maxDepth: 1 = sources and their references (default), 2 = also source children, 3 = also reference locations. Keeps large results manageable")] int maxDepth = 1,
+            [Description("limit: the most sources to return (default 100); 0 returns all")] int limit = 100,
+            [Description("offset: sources to skip, to read the next page of a long result (default 0)")] int offset = 0)
         {
             try
             {
@@ -55,9 +57,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 var depth = Math.Max(1, Math.Min(3, maxDepth));
                 var tally = new CrossRefTally();
 
-                var found = Portal.GetCrossReferenceSources(softwarePath, objectPath, objectKind, parsedFilter, out var groupNote);
+                var (found, total) = Portal.GetCrossReferencePage(softwarePath, objectPath, objectKind, parsedFilter, limit, offset, out var groupNote);
 
                 var sources = found.Select(s => ToSource(s, depth, tally)).ToList();
+                var page = ListPage<CrossRefSource>.Ready(sources, total, offset);
 
                 var target = string.IsNullOrEmpty(objectPath) ? softwarePath : objectPath;
 
@@ -65,18 +68,19 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = $"{sources.Count} cross reference source(s) with {tally.ReferenceCount} reference(s) retrieved for '{target}'"
                               + (tally.Truncated ? $" (truncated at maxDepth {depth})" : string.Empty)
-                              + (groupNote == null ? string.Empty : " " + groupNote),
+                              + (groupNote == null ? string.Empty : " " + groupNote)
+                              + page.Note("objectKind or objectPath"),
                     Sources = sources,
                     SourceCount = sources.Count,
                     ReferenceCount = tally.ReferenceCount,
                     Truncated = tally.Truncated,
-                    Meta = Ok(new JsonObject
+                    Meta = page.Meta(Ok(new JsonObject
                     {
                         ["filter"] = parsedFilter.ToString(),
                         ["maxDepth"] = depth,
                         ["sourceCount"] = sources.Count,
                         ["referenceCount"] = tally.ReferenceCount
-                    })
+                    }))
                 };
             }
             catch (TiaMcpServer.Siemens.PortalException pex)
@@ -189,9 +193,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
 
                 var target = matches[0];
-                var result = Portal.GetCrossReferences(softwarePath, target.Path, target.Kind, CrossReferenceFilter.AllObjects);
+                var result = Portal.GetCrossReferenceSources(softwarePath, target.Path, target.Kind, CrossReferenceFilter.AllObjects, out _);
 
-                var users = result.Sources
+                var users = result
                     .SelectMany(source => source.References.Select(reference => new ResponseUsage
                     {
                         UsedBy = reference.Name,

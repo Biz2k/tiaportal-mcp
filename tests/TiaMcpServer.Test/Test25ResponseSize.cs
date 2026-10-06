@@ -96,5 +96,36 @@ namespace TiaMcpServer.Test
 
             CollectionAssert.AreEqual(new[] { "S2", "HMI_1" }, kept.Select(n => n.Name).ToList());
         }
+
+        [TestMethod]
+        public void Test_2506_Window_PagesAddUpToTheTotal()
+        {
+            var total = 235;
+            var seen = 0;
+
+            for (var offset = 0; offset < total; offset += 100)
+            {
+                var (start, count) = ListPage<int>.Window(total, 100, offset);
+
+                Assert.AreEqual(offset, start);
+                seen += count;
+            }
+
+            Assert.AreEqual(total, seen);
+            Assert.AreEqual((235, 0), ListPage<int>.Window(total, 100, 400), "an offset past the end is an empty page");
+            Assert.AreEqual((0, 235), ListPage<int>.Window(total, 0, 0), "limit 0 returns all");
+            Assert.AreEqual((200, 35), ListPage<int>.Window(total, 100, 200));
+            Assert.ThrowsException<PortalException>(() => ListPage<int>.Window(total, 100, -1));
+        }
+
+        [TestMethod]
+        public void Test_2507_Ready_ReportsTheTotalOfAListThatWasNotBuiltWhole()
+        {
+            var page = ListPage<int>.Ready(new List<int> { 1, 2, 3 }, 1900, 600);
+
+            Assert.IsTrue(page.Truncated);
+            StringAssert.Contains(page.Note("objectKind"), "Pass offset=603");
+            Assert.AreEqual(1900, page.Total);
+        }
     }
 }

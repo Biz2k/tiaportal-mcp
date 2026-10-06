@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `plc_get_cross_references` with an empty `objectPath` answered `NotSupported` although the description promised the whole PLC.
+  Openness gives the PLC software, the root groups and tag tables no cross references (blocks, types and tags do), so the answer is
+  put together from the blocks and types of all groups and the tags of all tag tables, and the message says so. `objectKind`
+  (`block`, `type`, `tagTable`/`tag`, `auto`) selects what is listed. The result is paged: new `limit` (default 100; 0 = all)
+  and `offset`, with `total`, `offset` and `truncated` in `meta` and a sentence in the message. A tag table by path is answered
+  through its tags, and `plc_where_used` works on a tag table now. The answer for one block, type or group is unchanged.
+
 ### Added
 
 - `plc_replace_source`: replaces the code of an existing SCL block (FB, FC, OB), data block or PLC data type by a

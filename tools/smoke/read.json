@@ -11,6 +11,8 @@
   { "name": "get_libraries" },
   { "name": "get_library_types" },
   { "name": "plc_get_summary", "args": { "softwarePath": "PLC (A0)" } },
+  { "name": "plc_get_cross_references", "args": { "softwarePath": "PLC (A0)", "limit": 5 } },
+  { "name": "plc_get_cross_references", "args": { "softwarePath": "PLC (A0)", "objectKind": "block", "limit": 3, "offset": 100 } },
   { "name": "get_download_targets", "args": { "softwarePath": "PLC (A0)" } },
   { "name": "plc_get_software_info", "args": { "softwarePath": "PLC (A0)" } },
   { "name": "plc_get_software_tree", "args": { "softwarePath": "PLC (A0)" } },
