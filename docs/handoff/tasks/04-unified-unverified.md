@@ -66,3 +66,11 @@
 
 Каждый пункт либо проверен и вычеркнут, либо помечен «невозможно через Openness» с причиной в
 описании инструмента и в комментарии файла.
+
+## Типы фейсплейтов Comfort / Advanced / Professional (`get_library_types`)
+
+Проверено 06.10.2026 на `Faceplate_Panels_WinCC_Advanced`, `Faceplate_WinCC_Professional`, `Faceplate_Unified`
+(Biz создал для проверки): `Faceplate_Unified` отдаётся как `unified` с `containedType`, два других как `classic`.
+Различить Advanced и Professional нельзя: у `FaceplateLibraryType` нет `MinimumTargetDeviceVersion` и `Namespace`
+(пустые), у версии нет зависимостей, а экспорт версии (`Export`, `WithDefaults`) у двух типов совпадает байт в байт, кроме
+времени создания. Описание инструмента уже говорит, что Openness систему из трёх не называет; код не менялся.
