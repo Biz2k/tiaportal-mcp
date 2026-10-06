@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+### Changed
+
+- `connect` without `processId` / `projectPath` attaches to the only TIA Portal instance that has a project open, instead of the first
+  one in the list (which could be a new empty window). With no project open anywhere it takes the first instance as before; with
+  several projects open it refuses and lists the instances (`processId` or `projectPath` then picks one).
+- `get_state` says in `note`, when the server is not connected, to call `connect` and names the TIA Portal instances that run.
+- The server runs one tool call at a time (`get_state`, `get_tia_instances` and `doctor` excepted): a `close_project`,
+  `open_project` or `save_as_project` no longer disposes the objects of a read that began before it. A call that starts after a close
+  answers "No project is open" (`hw_get_devices` and `get_project_tree` included).
+
+### Fixed
+
+- `save_as_project`: the path is the FOLDER of the new project, without an extension. A path ending in `.apXX` / `.alsXX`
+  (which made a folder `X.ap21` holding `X.ap21.ap21`, or failed with "storage medium is no longer available") is refused with the
+  corrected path in the message; a relative path, a missing parent folder and a folder that is not empty are refused before anything is
+  written. The answer carries the full path of the project file (`path`).
+- `open_project`, `save_project`, `save_as_project`, `close_project` and the session operations went around the shared lock and
+  turned every failure into "Failed to ...". They run through `Operation.Run` now and the reason (a missing file, a locked project,
+  nothing open) reaches the caller. The reads that had no lock (`get_project_tree`, `hw_get_devices`, the software tree and others)
+  take it too, and a write transaction holds it from start to end.
+
 ### Fixed
 
 - `plc_get_cross_references` with an empty `objectPath` answered `NotSupported` although the description promised the whole PLC.

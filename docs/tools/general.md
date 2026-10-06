@@ -91,11 +91,11 @@ Connect to the running TIA Portal if not already connected, open the given proje
 
 ## save_as_project
 
-Save current TIA-Portal project/session with a new name
+Save the open local project under a new folder and switch TIA Portal to it. The path is the FOLDER of the new project, without an extension: TIA Portal makes <name>.apXX inside it, and the answer gives the full path of that file. A path with a project extension, a relative path, a missing parent folder and a folder that is not empty are refused before anything is written
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `newProjectPath` | string | yes | newProjectPath: defines the new path where to save the project |
+| `newProjectPath` | string | yes | newProjectPath: absolute path of the new project's folder, without an extension, e.g. 'C:\Projects\NewPlant'. The parent folder must exist; the folder itself must not exist or must be empty |
 
 ## save_project
 

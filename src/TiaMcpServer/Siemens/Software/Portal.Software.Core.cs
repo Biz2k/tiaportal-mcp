@@ -21,7 +21,7 @@ namespace TiaMcpServer.Siemens
     {
         #region software
 
-        public PlcSoftware? GetPlcSoftware(string softwarePath)
+        private PlcSoftware? GetPlcSoftwareUnlocked(string softwarePath)
         {
             _logger?.LogInformation($"Getting software by path: {softwarePath}");
 
@@ -40,7 +40,7 @@ namespace TiaMcpServer.Siemens
             return null;
         }
 
-        public CompilerResult? CompileSoftware(string softwarePath, string password = "")
+        private CompilerResult? CompileSoftwareUnlocked(string softwarePath, string password = "")
         {
             _logger?.LogInformation($"Compiling software by path: {softwarePath}");
 
@@ -96,7 +96,7 @@ namespace TiaMcpServer.Siemens
 
         #region get software container ...
 
-        public SoftwareContainer? GetSoftwareContainer(string softwarePath)
+        private SoftwareContainer? GetSoftwareContainerUnlocked(string softwarePath)
         {
             if (_project == null)
             {

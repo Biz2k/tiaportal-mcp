@@ -22,7 +22,8 @@ namespace TiaMcpServer.Siemens
     public static class TiaInstanceSelection
     {
         /// <summary>
-        /// No criteria: the first instance (the behaviour before the selection existed). With
+        /// No criteria: the only instance that has a project open; when none has one, the first instance; when several have,
+        /// an error that lists them. With
         /// <paramref name="processId"/> the process with that id; with <paramref name="projectPath"/>
         /// the one whose open project has that path or file name.
         /// </summary>
@@ -38,7 +39,18 @@ namespace TiaMcpServer.Siemens
 
             if (!processId.HasValue && !hasPath)
             {
-                return instances[0];
+                // No criteria: the instance that has a project open is the one meant. A new, empty instance (a second
+                // window, or one the server started) must not win just by being first in the list.
+                var withProject = instances.Where(i => !string.IsNullOrEmpty(i.ProjectPath)).ToList();
+
+                if (withProject.Count > 1)
+                {
+                    throw new PortalException(PortalErrorCode.InvalidParams,
+                        $"{withProject.Count} TIA Portal instances have a project open, so 'connect' cannot tell which one is meant. " +
+                        $"Pass processId or projectPath. Running: {string.Join("; ", instances.Select(Describe))}.");
+                }
+
+                return withProject.Count == 1 ? withProject[0] : instances[0];
             }
 
             var matches = processId.HasValue

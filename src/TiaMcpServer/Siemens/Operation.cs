@@ -99,6 +99,26 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>
+        /// Takes the shared lock without decorating exceptions: for reads and helpers whose callers decorate
+        /// (or want the raw exception). Reentrant, so it may wrap code that calls <see cref="Run{T}"/>.
+        /// </summary>
+        internal static T Locked<T>(Func<T> body)
+        {
+            lock (Gate)
+            {
+                return body();
+            }
+        }
+
+        internal static void Locked(Action body)
+        {
+            lock (Gate)
+            {
+                body();
+            }
+        }
+
+        /// <summary>
         /// Bridge for the legacy bool-returning Portal methods that swallow their exceptions.
         /// Prefer <see cref="Run{T}"/> for new code; this exists so those methods can adopt the
         /// shared lock and logging without changing their signature.

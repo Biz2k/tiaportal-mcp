@@ -95,7 +95,7 @@ namespace TiaMcpServer.Siemens
             return result;
         }
 
-        public List<Device> GetDevices(string regexName = "")
+        private List<Device> GetDevicesUnlocked(string regexName = "")
         {
             _logger?.LogInformation("Getting devices...");
 
@@ -164,7 +164,7 @@ namespace TiaMcpServer.Siemens
         /// of its head module as the project tree shows it. Returns null when nothing matches.
         /// </summary>
         /// <exception cref="PortalException">InvalidParams when the name fits several devices.</exception>
-        public Device? GetDevice(string devicePath)
+        private Device? GetDeviceUnlocked(string devicePath)
         {
             _logger?.LogInformation($"Getting device by path: {devicePath}");
 
@@ -229,7 +229,7 @@ namespace TiaMcpServer.Siemens
         /// without the device name ("Group1/PLC_1", "PLC_1" - a hardware PLC is known by its CPU,
         /// not by its station), and a device path alone when the device has an item of its name.
         /// </summary>
-        public DeviceItem? GetDeviceItem(string deviceItemPath)
+        private DeviceItem? GetDeviceItemUnlocked(string deviceItemPath)
         {
             _logger?.LogInformation($"Getting device item by path: {deviceItemPath}");
 

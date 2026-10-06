@@ -15,9 +15,45 @@ namespace TiaMcpServer.Test
         };
 
         [TestMethod]
-        public void NoCriteria_FirstInstance()
+        public void NoCriteria_PrefersTheInstanceThatHasAProject()
         {
-            Assert.AreEqual(100, TiaInstanceSelection.Pick(Two, null, null).Id);
+            var emptyFirst = new List<TiaInstanceInfo>
+            {
+                new TiaInstanceInfo { Id = 200, ProjectPath = string.Empty },
+                new TiaInstanceInfo { Id = 100, ProjectPath = @"C:\Projects\Plant\Plant.ap21" }
+            };
+
+            Assert.AreEqual(100, TiaInstanceSelection.Pick(emptyFirst, null, null).Id);
+        }
+
+        [TestMethod]
+        public void NoCriteria_NoProjectAnywhere_FirstInstance()
+        {
+            var empty = new List<TiaInstanceInfo> { new TiaInstanceInfo { Id = 7 }, new TiaInstanceInfo { Id = 8 } };
+
+            Assert.AreEqual(7, TiaInstanceSelection.Pick(empty, null, null).Id);
+        }
+
+        [TestMethod]
+        public void NoCriteria_SeveralProjects_InvalidParamsWithTheList()
+        {
+            var two = new List<TiaInstanceInfo>
+            {
+                new TiaInstanceInfo { Id = 1, ProjectPath = @"C:\a\A.ap21" },
+                new TiaInstanceInfo { Id = 2, ProjectPath = @"C:\b\B.ap21" }
+            };
+
+            var ex = Assert.ThrowsException<PortalException>(() => TiaInstanceSelection.Pick(two, null, null));
+
+            Assert.AreEqual(PortalErrorCode.InvalidParams, ex.Code);
+            StringAssert.Contains(ex.Message, "process 1");
+            StringAssert.Contains(ex.Message, "process 2");
+        }
+
+        [TestMethod]
+        public void NoCriteria_OneInstance_ThatInstance()
+        {
+            Assert.AreEqual(5, TiaInstanceSelection.Pick(new List<TiaInstanceInfo> { new TiaInstanceInfo { Id = 5 } }, null, null).Id);
         }
 
         [TestMethod]

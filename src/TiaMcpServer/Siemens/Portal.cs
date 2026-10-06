@@ -140,7 +140,7 @@ namespace TiaMcpServer.Siemens
         /// silently opened an empty instance (2026-10-05).
         /// </param>
         /// <exception cref="PortalException">InvalidState when no TIA Portal is running and none may be started.</exception>
-        public bool ConnectPortal(bool startIfNotRunning = false, int? processId = null, string? projectPath = null)
+        private bool ConnectPortalUnlocked(bool startIfNotRunning = false, int? processId = null, string? projectPath = null)
         {
             _logger?.LogInformation("Connecting to TIA Portal...");
 
@@ -157,13 +157,8 @@ namespace TiaMcpServer.Siemens
 
                 if (running)
                 {
-                    var process = processes.First();
-
-                    if (processId.HasValue || !string.IsNullOrWhiteSpace(projectPath))
-                    {
-                        var picked = TiaInstanceSelection.Pick(processes.Select(ToInstanceInfo).ToList(), processId, projectPath);
-                        process = processes.First(p => p.Id == picked.Id);
-                    }
+                    var picked = TiaInstanceSelection.Pick(processes.Select(ToInstanceInfo).ToList(), processId, projectPath);
+                    var process = processes.First(p => p.Id == picked.Id);
 
                     _portal = process.Attach();
                     _portalProcessId = process.Id;
@@ -306,7 +301,7 @@ namespace TiaMcpServer.Siemens
             return TiaLoss.ClosedProjectMessage();
         }
 
-        public bool DisconnectPortal()
+        private bool DisconnectPortalUnlocked()
         {
             _logger?.LogInformation("Disconnecting from TIA Portal...");
 
@@ -332,7 +327,7 @@ namespace TiaMcpServer.Siemens
 
         #region status
 
-        public State GetState()
+        private State GetStateUnlocked()
         {
             _logger?.LogInformation("Getting TIA Portal state...");
 
@@ -384,7 +379,7 @@ namespace TiaMcpServer.Siemens
 
         #region project
 
-        public List<ProjectBase> GetProjects()
+        private List<ProjectBase> GetProjectsUnlocked()
         {
             _logger?.LogInformation("Getting open projects...");
 
@@ -408,52 +403,54 @@ namespace TiaMcpServer.Siemens
             return projects;
         }
 
+        /// <summary>Opens a project (or switches to it when it is already open). Throws when it cannot; the reason is in the message.</summary>
         public bool OpenProject(string projectPath)
         {
             _logger?.LogInformation($"Opening project: {projectPath}");
 
-            if (IsPortalNull())
-            {
-                return false;
-            }
-
-            try
-            {
-                var projects = GetProjects();
-                var projectName = Path.GetFileNameWithoutExtension(projectPath);
-
-                if (!string.IsNullOrEmpty(projectName) && projects.Any(p => p.Name.Equals(projectName)))
+            return Operation.Run(_logger, nameof(OpenProject), PortalErrorCode.InvalidState,
+                () =>
                 {
-                    // Project is already open
-                    _project = _portal?.Projects.FirstOrDefault(p => p.Name == projectName);
+                    RequirePortal();
+
+                    var projects = GetProjects();
+                    var projectName = Path.GetFileNameWithoutExtension(projectPath);
+
+                    if (!string.IsNullOrEmpty(projectName) && projects.Any(p => p.Name.Equals(projectName)))
+                    {
+                        // Project is already open
+                        _project = _portal?.Projects.FirstOrDefault(p => p.Name == projectName);
+
+                        return _project != null;
+                    }
+
+                    if (!File.Exists(projectPath))
+                    {
+                        throw new PortalException(PortalErrorCode.NotFound,
+                            $"Project file '{projectPath}' does not exist. Pass the full path of the .apXX file.");
+                    }
+
+                    if (_project != null)
+                    {
+                        (_project as Project)?.Close();
+                        _project = null;
+                    }
+
+                    if (_session != null)
+                    {
+                        _session.Close();
+                        _session = null;
+                    }
+
+                    // see [5.3.1 Projekt öffnen, S.113]
+                    _project = _portal?.Projects.OpenWithUpgrade(new FileInfo(projectPath));
 
                     return _project != null;
-                }
-
-                if (_project != null)
-                {
-                    (_project as Project)?.Close();
-                    _project = null;
-                }
-
-                if (_session != null)
-                {
-                    _session.Close();
-                    _session = null;
-                }
-
-                // see [5.3.1 Projekt öffnen, S.113]
-                _project = _portal?.Projects.OpenWithUpgrade(new FileInfo(projectPath));
-
-                return _project != null;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+                },
+                ("projectPath", projectPath));
         }
 
-        public object? GetProjectInfo()
+        private object? GetProjectInfoUnlocked()
         {
             _logger?.LogInformation("Getting project info...");
 
@@ -486,52 +483,55 @@ namespace TiaMcpServer.Siemens
         {
             _logger?.LogInformation("Saving project...");
 
-            if (IsProjectNull())
-            {
-                return false;
-            }
+            return Operation.Run(_logger, nameof(SaveProject), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    RequireProject().Save();
 
-            (_project as Project)?.Save();
-
-            return true;
+                    return true;
+                });
         }
 
-        public bool SaveAsProject(string path)
+        /// <summary>
+        /// Saves the open project under a new folder and returns the path of the project file TIA Portal made there. The path
+        /// is the folder of the new project, without an extension (see <see cref="ProjectPathRules"/>).
+        /// </summary>
+        public string SaveAsProject(string path)
         {
             _logger?.LogInformation($"Saving project as: {path}");
 
-            if (IsProjectNull())
-            {
-                return false;
-            }
+            return Operation.Run(_logger, nameof(SaveAsProject), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    var project = RequireProject();
+                    var folder = ProjectPathRules.CheckNewProjectFolder(path, Directory.Exists, d => !Directory.EnumerateFileSystemEntries(d).Any());
 
-            var di = new DirectoryInfo(path);
+                    project.SaveAs(new DirectoryInfo(folder));
 
-            (_project as Project)?.SaveAs(di);
-
-            return true;
+                    return project.Path.FullName;
+                },
+                ("path", path));
         }
 
         public bool CloseProject()
         {
             _logger?.LogInformation("Closing project...");
 
-            if (IsProjectNull())
-            {
-                return false;
-            }
+            return Operation.Run(_logger, nameof(CloseProject), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    RequireProject().Close();
+                    _project = null;
 
-            (_project as Project)?.Close();
-            _project = null;
-
-            return true;
+                    return true;
+                });
         }
 
         #endregion
 
         #region session
 
-        public List<ProjectBase> GetSessions()
+        private List<ProjectBase> GetSessionsUnlocked()
         {
             _logger?.LogInformation("Getting open local sessions...");
 
@@ -557,100 +557,104 @@ namespace TiaMcpServer.Siemens
         {
             _logger?.LogInformation($"Opening session: {localSessionPath}");
 
-            if (IsPortalNull())
-            {
-                return false;
-            }
-
-            try
-            {
-                var sessions = GetSessions();
-                var projectName = Path.GetFileNameWithoutExtension(localSessionPath);
-                var sessionName = Regex.Replace(projectName, @"_(LS|ES)_\d$", string.Empty, RegexOptions.IgnoreCase);
-
-                if (!string.IsNullOrEmpty(sessionName) && sessions.Any(s => s.Name.Equals(sessionName)))
+            return Operation.Run(_logger, nameof(OpenSession), PortalErrorCode.InvalidState,
+                () =>
                 {
-                    // Session is already open  
-                    _session = _portal?.LocalSessions.FirstOrDefault(s => s.Project.Name == sessionName);
+                    RequirePortal();
+
+                    var sessions = GetSessions();
+                    var projectName = Path.GetFileNameWithoutExtension(localSessionPath);
+                    var sessionName = Regex.Replace(projectName, @"_(LS|ES)_\d$", string.Empty, RegexOptions.IgnoreCase);
+
+                    if (!string.IsNullOrEmpty(sessionName) && sessions.Any(s => s.Name.Equals(sessionName)))
+                    {
+                        // Session is already open
+                        _session = _portal?.LocalSessions.FirstOrDefault(s => s.Project.Name == sessionName);
+
+                        if (_session != null)
+                        {
+                            // Correctly cast MultiuserProject to Project
+                            _project = _session.Project;
+
+                            return _project != null;
+                        }
+                    }
+
+                    if (!File.Exists(localSessionPath))
+                    {
+                        throw new PortalException(PortalErrorCode.NotFound,
+                            $"Session file '{localSessionPath}' does not exist. Pass the full path of the .alsXX file.");
+                    }
+
                     if (_session != null)
                     {
-                        // Correctly cast MultiuserProject to Project  
+                        _project = null;
+                        _session.Close();
+                        _session = null;
+                    }
+
+                    if (_project != null)
+                    {
+                        (_project as Project)?.Close();
+                        _project = null;
+                    }
+
+                    _session = _portal?.LocalSessions.Open(new FileInfo(localSessionPath));
+
+                    if (_session != null)
+                    {
+                        // Correctly cast MultiuserProject to Project
                         _project = _session.Project;
+
                         return _project != null;
                     }
-                }
 
-                if (_session != null)
-                {
-                    _project = null;
-                    _session?.Close();
-                    _session = null;
-                }
-
-                if (_project != null)
-                {
-                    (_project as Project)?.Close();
-                    _project = null;
-                }
-
-                _session = _portal?.LocalSessions.Open(new FileInfo(localSessionPath));
-                if (_session != null)
-                {
-                    // Correctly cast MultiuserProject to Project  
-                    _project = _session.Project;
-                    return _project != null;
-                }
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return false;
+                    return false;
+                },
+                ("sessionPath", localSessionPath));
         }
 
         public bool SaveSession()
         {
             _logger?.LogInformation("Saving session...");
 
-            if (IsSessionNull())
-            {
-                return false;
-            }
+            return Operation.Run(_logger, nameof(SaveSession), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    RequireSession().Save();
 
-            // Save session
-            _session?.Save();
-
-            return true;
+                    return true;
+                });
         }
 
         public bool CloseSession()
         {
             _logger?.LogInformation("Closing session...");
 
-            if (IsSessionNull())
-            {
-                return false;
-            }
+            return Operation.Run(_logger, nameof(CloseSession), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    var session = RequireSession();
 
-            _project = null;
-            _session?.Close();
-            _session = null;
+                    _project = null;
+                    session.Close();
+                    _session = null;
 
-            return true;
+                    return true;
+                });
         }
 
         #endregion
 
         #region project tree
 
-        public string GetProjectTree()
+        private string GetProjectTreeUnlocked()
         {
             _logger?.LogInformation("Getting project tree...");
 
-            if (IsProjectNull())
+            if (_project == null)
             {
-                return string.Empty;
+                throw new PortalException(PortalErrorCode.InvalidState, NoProjectMessage);
             }
 
             StringBuilder sb = new();
@@ -694,6 +698,36 @@ namespace TiaMcpServer.Siemens
         #endregion
 
         #region private helper
+
+        private void RequirePortal()
+        {
+            if (_portal == null)
+            {
+                throw new PortalException(PortalErrorCode.InvalidState,
+                    "Not connected to TIA Portal. Start it if it is not running and call 'connect'.");
+            }
+        }
+
+        /// <summary>The open local project, or InvalidState with the reason there is none (not connected, nothing open, or a multiuser project).</summary>
+        private Project RequireProject()
+        {
+            if (_project == null)
+            {
+                throw new PortalException(PortalErrorCode.InvalidState, NoProjectMessage);
+            }
+
+            return _project as Project
+                   ?? throw new PortalException(PortalErrorCode.NotSupported,
+                       $"'{_project.Name}' is a multiuser project; this operation works on local projects only.");
+        }
+
+        private LocalSession RequireSession()
+        {
+            return _session ?? throw new PortalException(PortalErrorCode.InvalidState,
+                _portal == null
+                    ? "Not connected to TIA Portal. Start it if it is not running and call 'connect'."
+                    : "No local session is open in TIA Portal. Open one with 'open_project' and an .alsXX path.");
+        }
 
         private bool IsPortalNull()
         {
@@ -997,7 +1031,11 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         private bool _inTransaction;
 
-        public T InTransaction<T>(string description, Func<T> body)
+        // The whole transaction runs under the shared lock: the nested Operation.Run calls of the body would take it one
+        // by one, and another tool could slip a call between two of them into the open transaction.
+        public T InTransaction<T>(string description, Func<T> body) => Operation.Locked(() => InTransactionUnlocked(description, body));
+
+        private T InTransactionUnlocked<T>(string description, Func<T> body)
         {
             if (_portal == null || _project is not ITransactionSupport persistence)
             {

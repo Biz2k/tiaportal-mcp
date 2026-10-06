@@ -144,6 +144,24 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region state
 
+        /// <summary>What to do when the server is not connected, naming the TIA Portal instances that run.</summary>
+        private static string NotConnectedNote()
+        {
+            try
+            {
+                var running = Portal.GetTiaInstances();
+
+                return running.Count == 0
+                    ? "Not connected, and no TIA Portal is running. Start it and call 'connect'."
+                    : "Not connected: call 'connect' (or 'open_tia_project'). Running: "
+                      + string.Join("; ", running.Select(TiaInstanceSelection.Describe)) + ".";
+            }
+            catch (Exception)
+            {
+                return "Not connected: call 'connect'.";
+            }
+        }
+
         [McpServerTool(Name = "get_state", Title = "Get server state", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get the state of the TIA-Portal MCP server")]
         public static ResponseState GetState()
         {
@@ -160,6 +178,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Project = state.Project,
                         Session = state.Session,
                         AllowWrite = WritePolicy.AllowWrite,
+                        Note = state.IsConnected == true ? null : NotConnectedNote(),
                         Meta = new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
@@ -314,7 +333,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw Failure($"opening project '{path}'", ex);
+                throw ToolError(ex, ex is PortalException ? null : $"Unexpected error opening project '{path}'");
             }
         }
 
@@ -366,13 +385,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw Failure($"saving local project/session", ex);
+                throw ToolError(ex, ex is PortalException ? null : "Unexpected error saving the local project/session");
             }
         }
 
-        [McpServerTool(Name = "save_as_project", Title = "Save project as", Destructive = true, Idempotent = true, OpenWorld = false), Description("Save current TIA-Portal project/session with a new name")]
+        [McpServerTool(Name = "save_as_project", Title = "Save project as", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true), Description("Save the open local project under a new folder and switch TIA Portal to it. The path is the FOLDER of the new project, without an extension: TIA Portal makes <name>.apXX inside it, and the answer gives the full path of that file. A path with a project extension, a relative path, a missing parent folder and a folder that is not empty are refused before anything is written")]
         public static ResponseSaveAsProject SaveAsProject(
-            [Description("newProjectPath: defines the new path where to save the project")] string newProjectPath)
+            [Description("newProjectPath: absolute path of the new project's folder, without an extension, e.g. 'C:\\Projects\\NewPlant'. The parent folder must exist; the folder itself must not exist or must be empty")] string newProjectPath)
         {
             try
             {
@@ -380,30 +399,23 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     throw new McpException($"Cannot save local session as '{newProjectPath}'");
                 }
-                else
-                {
-                    if (Portal.SaveAsProject(newProjectPath))
-                    {
-                        return new ResponseSaveAsProject
-                        {
-                            Message = $"Local project saved as '{newProjectPath}'",
-                            Meta = new JsonObject
-                            {
-                                ["timestamp"] = DateTime.Now,
-                                ["success"] = true
-                            }
-                        };
-                    }
-                    else
-                    {
-                        throw new McpException($"Failed saving local project as '{newProjectPath}'");
-                    }
-                }
 
+                var projectFile = Portal.SaveAsProject(newProjectPath);
+
+                return new ResponseSaveAsProject
+                {
+                    Message = $"Local project saved as '{projectFile}'; TIA Portal now works on that copy",
+                    Path = projectFile,
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = true
+                    }
+                };
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw Failure($"saving local project/session as '{newProjectPath}'", ex);
+                throw ToolError(ex, ex is PortalException ? null : $"Unexpected error saving the local project as '{newProjectPath}'");
             }
         }
 
@@ -458,7 +470,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw Failure($"closing local project/session", ex);
+                throw ToolError(ex, ex is PortalException ? null : "Unexpected error closing the local project/session");
             }
         }
 

@@ -93,6 +93,8 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
+                Portal.EnsureProjectOpen();
+
                 var list = Portal.GetDevices();
                 var responseList = new List<ResponseDeviceInfo>();
 

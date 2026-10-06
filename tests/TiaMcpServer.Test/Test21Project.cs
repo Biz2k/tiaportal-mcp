@@ -153,7 +153,7 @@ namespace TiaMcpServer.Test
             }
 
             var result = _portal.OpenProject(path);
-            result &= _portal.SaveAsProject(newPath);
+            result &= !string.IsNullOrEmpty(_portal.SaveAsProject(newPath));
 
             Assert.IsTrue(result, "Failed to save project as new project");
         }

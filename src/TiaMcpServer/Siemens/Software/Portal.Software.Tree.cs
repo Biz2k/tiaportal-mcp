@@ -27,7 +27,7 @@ namespace TiaMcpServer.Siemens
         /// Comma separated subset of "blocks,types,tags,watch,sources", or "all" (the default).
         /// Lets a client keep the output small on a large PLC.
         /// </param>
-        public string GetSoftwareTree(string softwarePath, string sections = "all")
+        private string GetSoftwareTreeUnlocked(string softwarePath, string sections = "all")
         {
             _logger?.LogInformation("Getting software tree for path: {SoftwarePath}", softwarePath);
 

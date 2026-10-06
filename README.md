@@ -504,6 +504,15 @@ A PLC data type name is unique across the whole PLC, not just within its group. 
 that already exists into a *different* group therefore fails even when overwriting; target the
 group the type already lives in.
 
+## Projects and instances
+
+- `connect` attaches to the only TIA Portal that has a project open; with several, pass `processId` or `projectPath`
+  (`get_tia_instances` lists them). `get_state` says what to do when the server is not connected.
+- `save_as_project` takes the **folder** of the new project, without an extension (`C:\Projects\NewPlant`); TIA Portal makes
+  `NewPlant.apXX` in it and the answer gives that path. TIA Portal then works on the copy. The parent folder must exist and the folder
+  itself must not exist or must be empty.
+- The server handles one tool call at a time, so a `close_project` never disposes what a running read still uses.
+
 ## Documentation
 
 - [`docs/tools/`](docs/tools/README.md) - every tool with its parameters, one page per area (generated from the descriptions in the code by `tools/make-tool-docs.ps1`).

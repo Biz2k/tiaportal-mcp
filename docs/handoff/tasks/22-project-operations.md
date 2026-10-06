@@ -76,3 +76,43 @@
 - `Project.SaveAs` меняет путь открытого проекта. Не выполнять на проверочном проекте без
   копии.
 - Открыт может быть `TestProject` (проект тестировщика) — перед записью проверить `get_project`.
+
+## Результат (06.10.2026)
+
+**А. `save_as_project`.** Правила в чистом классе `ProjectPathRules` (абсолютный путь; расширение `.apXX`/`.alsXX` отклоняется с готовым
+исправленным путём и путём будущего файла; родительская папка существует; целевая не существует или пуста). Ответ несёт `path` —
+полный путь файла проекта. Проверено вживую на 473 МБ копии проверочного проекта: `...\Copy1.ap21` — `InvalidParams` с исправлением;
+относительный путь, несуществующий родитель, непустая папка (сама папка проверочного проекта) — отказ без записи; `...\MCPT_SaveAs\Copy1` —
+готово за 4 с, TIA Portal переключился на копию, файл `Copy1\Copy1.ap21`; повторный вызов в ту же папку — «не пуста». Затем
+`open_project` вернул проверочный проект, временная папка `C:\Users\Biz\Desktop\MCPT_SaveAs` удалена. Тесты `Test27ProjectPath` (6).
+
+**Б. Каркас и блокировка.**
+- `OpenProject`, `SaveProject`, `SaveAsProject`, `CloseProject` и методы сессий — через `Operation.Run`, бросают `PortalException`
+  (`InvalidState`, у `open_project` с несуществующим файлом — `NotFound`); `RequireProject` / `RequirePortal` / `RequireSession`.
+  Многопользовательский проект — `NotSupported` с пояснением. Раньше `OpenProject` при неверном пути молча отвечал `false`.
+- Чтение кода: блокировка в `Operation.cs` одна (`Monitor`, реентерабельная). Её **не брали** `GetState`, `GetProjects`,
+  `GetProjectInfo`, `GetSessions`, `GetProjectTree`, `GetDevices`/`GetDevice`/`GetDeviceItem`, `GetPlcSoftware`,
+  `GetSoftwareContainer`, `CompileSoftware`, `GetSoftwareTree`, `ConnectPortal`, `DisconnectPortal`, а `InTransaction` брала её только
+  вложенными вызовами. Все они теперь под `Operation.Locked` (`Portal.Locking.cs`: старые тела стали приватными `...Unlocked`),
+  транзакция держит блокировку целиком.
+- **Пункт 4 одной блокировкой не решался:** инструмент продолжает пользоваться объектами Openness (устройства, блоки) после выхода из
+  метода `Portal`, и параллельный `close_project` освобождал их под ним. Живьём получилось: `hw_get_devices` → «Access to a disposed
+  object of type DeviceImpl». Поэтому добавлен `ToolCallGate` (`ModelContextProtocol/ToolCallGate.cs`, фильтр `AddCallToolFilter` SDK):
+  вызовы инструментов идут по одному, кроме `get_state`, `get_tia_instances`, `doctor`. Цена: долгий вызов (загрузка, компиляция)
+  задерживает остальные — до этого они упирались в ту же блокировку внутри `Operation.Run`.
+- Живая проверка параллельных вызовов (`par.py` — клиент, который шлёт вызовы одновременно, в каталоге временных файлов):
+  `save_project` + `get_project_tree` + `plc_get_cross_references` + `hw_get_devices` — все успешны, идут по очереди (+1,7…2,1 с);
+  `get_project_tree` + `plc_get_cross_references` + `close_project` + `hw_get_devices` + `get_project_tree` — начавшиеся раньше закрытия
+  отвечают данными, начавшиеся позже — `InvalidState` «No project is open», ни одного «disposed object» (два прогона, порядок разный).
+  `get_project_tree` без проекта раньше отвечал «Failed retrieving project tree», `hw_get_devices` — пустым списком; теперь оба
+  `InvalidState` с причиной.
+
+**В. `connect`.**
+1. Без параметров при одном экземпляре — подключается (проверено вживую).
+2. `TiaInstanceSelection.Pick` без критериев: единственный экземпляр с проектом; нигде нет проекта — первый; проектов несколько —
+   `InvalidParams` со списком. `ConnectPortal` теперь всегда идёт через `Pick`. Тесты в `Test26InstanceSelection` (+4). При двух
+   экземплярах вживую это не повторялось (второй TIA не открывался) — проверено тестами и тем, что с одним экземпляром путь тот же.
+3. `get_state` без подключения: `note` с «вызовите `connect`» и перечнем запущенных экземпляров (проверено вживую).
+
+В `get_state` в начале вызова `Project` может показать ещё открытый проект, если параллельный `close_project` стоит в очереди позже: `get_state`
+идёт мимо очереди намеренно.

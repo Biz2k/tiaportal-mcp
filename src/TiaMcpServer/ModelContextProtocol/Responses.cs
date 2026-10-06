@@ -246,6 +246,10 @@ namespace TiaMcpServer.ModelContextProtocol
         /// tools are not registered at all, so a client can tell why they are missing.
         /// </summary>
         public bool? AllowWrite { get; set; }
+
+        /// <summary>Set when the server is not connected: what to call, and which TIA Portal instances run.</summary>
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public string? Note { get; set; }
     }
 
     public class ResponseTiaInstallation
@@ -283,6 +287,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseSaveAsProject : ResponseMessage
     {
+        /// <summary>Full path of the project file TIA Portal made in the new folder.</summary>
+        public string? Path { get; set; }
     }
 
     public class ResponseCloseProject : ResponseMessage

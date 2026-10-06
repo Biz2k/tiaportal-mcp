@@ -153,7 +153,8 @@ namespace TiaMcpServer
                                 : " The server runs read-only: tools that change the project are not available.");
                     })
                     .WithStdioServerTransport()
-                    .WithTools(BuildTools(WritePolicy.AllowWrite, options?.DebugTools ?? false));
+                    .WithTools(BuildTools(WritePolicy.AllowWrite, options?.DebugTools ?? false))
+                    .WithRequestFilters(filters => filters.AddCallToolFilter(ToolCallGate.Filter));
 
                 // Register the Portal service for dependency injection
                 builder.Services.AddSingleton<Portal>();
