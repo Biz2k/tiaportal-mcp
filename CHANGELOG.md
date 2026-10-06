@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- A batch tool whose actions failed no longer writes the error code twice (`... [code: NotFound] [code: InvalidParams; softwarePath: ...]`): the batch carries the code its failed actions share, or names each action's own when they differ.
 - `save_as_project`: the path is the FOLDER of the new project, without an extension. A path ending in `.apXX` / `.alsXX`
   (which made a folder `X.ap21` holding `X.ap21.ap21`, or failed with "storage medium is no longer available") is refused with the
   corrected path in the message; a relative path, a missing parent folder and a folder that is not empty are refused before anything is

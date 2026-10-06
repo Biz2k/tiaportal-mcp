@@ -81,6 +81,15 @@ namespace TiaMcpServer.Siemens
             return details.Count == 0 ? text : Truncate($"{text} [{string.Join("; ", details)}]");
         }
 
+        /// <summary>
+        /// The reason of one failed action of a batch: the description alone, without the "[code; context]" bracket that
+        /// <see cref="ForClient"/> adds - the batch error carries one bracket at its end (see <see cref="BatchErrorText"/>).
+        /// </summary>
+        internal static string ForAction(Exception ex)
+        {
+            return ex is PortalException ? ex.Message : Describe(ex);
+        }
+
         private static void Collect(Exception? ex, List<string> parts, int depth)
         {
             // Depth guard: an exception chain is caller-controlled data.

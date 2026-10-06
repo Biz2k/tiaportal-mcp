@@ -117,5 +117,49 @@ namespace TiaMcpServer.Test
             Assert.IsNull(safe[7]);
             StringAssert.Contains(json, "two");
         }
+
+        [TestMethod]
+        public void Test_805_BatchError_SharedCode_OneBracketAtTheEnd()
+        {
+            var failed = new List<BatchFailure>
+            {
+                new BatchFailure("update 'Tag_1'", "Tag 'Tag_1' does not exist.", PortalErrorCode.NotFound),
+                new BatchFailure("delete 'Tag_2'", "Tag 'Tag_2' does not exist.", PortalErrorCode.NotFound)
+            };
+
+            var (message, code) = BatchErrorText.Compose(failed, 3, "Nothing was changed.");
+
+            Assert.AreEqual(PortalErrorCode.NotFound, code);
+            StringAssert.StartsWith(message, "2 of 3 action(s) failed. Nothing was changed. update 'Tag_1': Tag 'Tag_1' does not exist. | delete 'Tag_2'");
+            Assert.IsFalse(message.Contains("[") || message.Contains("code:"), "the code is the one the batch exception carries, not repeated per action");
+        }
+
+        [TestMethod]
+        public void Test_806_BatchError_MixedCodes_EachActionNamesItsOwn()
+        {
+            var failed = new List<BatchFailure>
+            {
+                new BatchFailure("create 'A'", "Name is empty.", PortalErrorCode.InvalidParams),
+                new BatchFailure("update 'B'", "No such tag.", PortalErrorCode.NotFound),
+                new BatchFailure("delete 'C'", "Openness refused.", null)
+            };
+
+            var (message, code) = BatchErrorText.Compose(failed, 3, "Rolled back.");
+
+            Assert.AreEqual(PortalErrorCode.InvalidParams, code);
+            StringAssert.Contains(message, "update 'B' [NotFound]: No such tag.");
+            StringAssert.Contains(message, "create 'A' [InvalidParams]: Name is empty.");
+            StringAssert.Contains(message, "delete 'C' [InvalidParams]: Openness refused.");
+        }
+
+        [TestMethod]
+        public void Test_807_ErrorText_ForAction_HasNoBracket()
+        {
+            var ex = new PortalException(PortalErrorCode.NotFound, "Tag 'X' not found.");
+            ex.Data["softwarePath"] = "HMI_1/HMI_RT_1";
+
+            Assert.AreEqual("Tag 'X' not found.", ErrorText.ForAction(ex));
+            StringAssert.Contains(ErrorText.ForClient(ex), "[code: NotFound");
+        }
     }
 }

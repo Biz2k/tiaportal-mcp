@@ -587,6 +587,7 @@ namespace TiaMcpServer.Siemens
 
                     var software = RequireUnifiedSoftware(softwarePath);
                     var results = new List<UnifiedActionResult>();
+                    var codes = new Dictionary<UnifiedActionResult, PortalErrorCode?>();
 
                     foreach (var action in actions)
                     {
@@ -601,7 +602,8 @@ namespace TiaMcpServer.Siemens
                         catch (Exception ex)
                         {
                             result.Status = "error";
-                            result.Error = ErrorText.ForClient(ex);
+                            result.Error = ErrorText.ForAction(ex);
+                            codes[result] = (ex as PortalException)?.Code;
                         }
 
                         results.Add(result);
@@ -616,9 +618,12 @@ namespace TiaMcpServer.Siemens
                             : "TIA Portal granted no transaction for this call, so the actions that succeeded remain applied: " +
                               (results.Count == failed.Count ? "none" : string.Join(", ", results.Where(r => r.Status == "success").Select(r => $"{r.Action} '{r.Name}'"))) + ".";
 
-                        throw new PortalException(PortalErrorCode.InvalidParams,
-                            $"{failed.Count} of {results.Count} action(s) failed. {outcome} " +
-                            string.Join(" | ", failed.Select(r => $"{r.Action} '{r.Name}': {r.Error}")));
+                        var (message, code) = BatchErrorText.Compose(
+                            failed.Select(r => new BatchFailure($"{r.Action} '{r.Name}'", r.Error ?? string.Empty, codes.TryGetValue(r, out var c) ? c : null)).ToList(),
+                            results.Count,
+                            outcome);
+
+                        throw new PortalException(code, message);
                     }
 
                     return results;
