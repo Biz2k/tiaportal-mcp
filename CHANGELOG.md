@@ -12,6 +12,13 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Fixed (master copies of global libraries)
+
+- `instantiate_master_copy` never found a master copy of a global library: it built the path without the library name, while
+  `get_master_copies` returns it with the name. The group `Program blocks` / `PLC data types` (or an empty one) now means the
+  root, as the tool description said. A master copy that does not fit the target kind is refused with the way out, and a
+  missing one with the list of what the library holds.
+
 ### Fixed (import_objects)
 
 - `import_objects` reported every file as imported even when TIA Portal refused it: the block, type and document imports

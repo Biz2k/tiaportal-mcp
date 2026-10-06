@@ -253,6 +253,7 @@ namespace TiaMcpServer.Siemens
                     if (gl.Name.Equals(libraryName, StringComparison.OrdinalIgnoreCase))
                     {
                         targetLib = gl;
+                        targetLibName = gl.Name; // master copy paths start with the library name, as 'get_master_copies' shows them
                         break;
                     }
                 }
@@ -264,23 +265,53 @@ namespace TiaMcpServer.Siemens
             // Find MasterCopy
             var masterCopy = FindMasterCopy(targetLib.MasterCopyFolder, masterCopyPath, targetLibName);
             if (masterCopy == null)
-                throw new InvalidOperationException($"Master copy '{masterCopyPath}' not found in library '{libraryName}'");
+            {
+                var available = new List<ResponseMasterCopyInfo>();
+                ProcessMasterCopyFolder(targetLib.MasterCopyFolder, targetLibName, available);
+
+                throw new PortalException(PortalErrorCode.NotFound,
+                    $"Master copy '{masterCopyPath}' not found in library '{libraryName}'. " +
+                    (available.Count == 0
+                        ? "The library has no master copies."
+                        : $"Available: {string.Join(", ", available.Select(m => $"'{m.Path}'"))}. Use the path 'get_master_copies' returns."));
+            }
 
             _logger?.LogInformation($"Instantiating MasterCopy '{masterCopy.Name}' into '{targetDeviceName}/{targetGroupName}' as {targetType}");
 
             if (targetType.Equals("block", StringComparison.OrdinalIgnoreCase))
             {
                 // We need the PlcBlockGroup
-                var group = GetPlcBlockGroupByPath(targetDeviceName, targetGroupName);
-                if (group == null) throw new InvalidOperationException($"Block group '{targetGroupName}' not found");
-                group.Blocks.CreateFrom(masterCopy);
+                // The system root ('Program blocks') is the empty path; a leading root segment is accepted.
+                var blockPath = StripSystemRootSegment(GetPlcSoftwareOrThrow(targetDeviceName).BlockGroup.Name, targetGroupName ?? string.Empty);
+                var group = GetPlcBlockGroupByPath(targetDeviceName, blockPath);
+                if (group == null) throw new PortalException(PortalErrorCode.NotFound, $"Block group '{targetGroupName}' not found. Use 'plc_get_software_tree' to discover valid group paths.");
+                try
+                {
+                    group.Blocks.CreateFrom(masterCopy);
+                }
+                catch (EngineeringException ex)
+                {
+                    throw new PortalException(PortalErrorCode.CreateFailed,
+                        $"TIA Portal cannot create '{masterCopy.Name}' as a block here: {ErrorText.Describe(ex)} " +
+                        "A master copy of another kind is refused like this; try targetType 'type'. A master copy of a screen or another HMI object does not belong in a PLC.", null, ex);
+                }
             }
             else if (targetType.Equals("type", StringComparison.OrdinalIgnoreCase))
             {
                 // We need the PlcTypeGroup
-                var group = GetPlcTypeGroupByPath(targetDeviceName, targetGroupName);
-                if (group == null) throw new InvalidOperationException($"Type group '{targetGroupName}' not found");
-                group.Types.CreateFrom(masterCopy);
+                var typePath = StripSystemRootSegment(GetPlcSoftwareOrThrow(targetDeviceName).TypeGroup.Name, targetGroupName ?? string.Empty);
+                var group = GetPlcTypeGroupByPath(targetDeviceName, typePath);
+                if (group == null) throw new PortalException(PortalErrorCode.NotFound, $"Type group '{targetGroupName}' not found. Use 'plc_get_software_tree' to discover valid group paths.");
+                try
+                {
+                    group.Types.CreateFrom(masterCopy);
+                }
+                catch (EngineeringException ex)
+                {
+                    throw new PortalException(PortalErrorCode.CreateFailed,
+                        $"TIA Portal cannot create '{masterCopy.Name}' as a type here: {ErrorText.Describe(ex)} " +
+                        "A master copy of another kind is refused like this; try targetType 'block'. A master copy of a screen or another HMI object does not belong in a PLC.", null, ex);
+                }
             }
             else
             {

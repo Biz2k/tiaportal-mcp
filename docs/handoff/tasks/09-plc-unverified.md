@@ -36,14 +36,14 @@
 - [x] `hw_create_device` с идентификатором `GSD:`.
 - [x] Устройства внутри пользовательских групп (в тестовом проекте групп нет — создать).
 - [x] Изменяющие `hw_*` и `net_*` для устройств с `/` в имени (в путях пишется `%2F`).
-- [ ] `connect` при незапущенном TIA Portal и с `startIfNotRunning=true`. Второе запускает
+- [x] `connect` при незапущенном TIA Portal и с `startIfNotRunning=true`. Второе запускает
       новый экземпляр TIA — предупредить Biz.
 
 ## Импорт и библиотеки — `McpServer.ExportImport.cs`, `Portal.Libraries.cs`
 
 - [x] `import_objects` и `preview_import` во всех трёх форматах (`xml`, `document`, `source`),
       с конфликтами имён.
-- [ ] `open_global_library`, `get_master_copies`, `instantiate_master_copy`,
+- [x] `open_global_library`, `get_master_copies`, `instantiate_master_copy`,
       `get_library_types` на глобальной библиотеке (нужна `.al21` — попросить у Biz или создать
       в TIA вручную).
 
@@ -71,9 +71,17 @@
 - `plc_compile_software` нужен до `plc_copy_block`/`plc_move_block` у только что созданных блоков: «inconsistent» — сервер
   говорит об этом сам.
 
+- `connect` без запущенной TIA: понятная ошибка с подсказкой про `startIfNotRunning`; с `startIfNotRunning=true` сервер запускает
+  новый экземпляр, подключается (проекта в нём нет; `open_tia_project` открывает проект).
+- Глобальная библиотека (`Test_mcp_Library.al21` от Biz): `open_global_library`, `get_libraries`, `get_library_types` (в т. ч. `system`),
+  `get_master_copies` работают. **Дефект исправлен: `instantiate_master_copy` не находил мастер-копию глобальной библиотеки**
+  (путь собирался без имени библиотеки, тогда как `get_master_copies` отдаёт его с именем). Группа `Program blocks` /
+  `PLC data types` и пустая строка теперь принимаются как корень (описание обещало это, код нет). Мастер-копия другого вида
+  (тип как `block`, экран HMI) отказывает с подсказкой выбрать `targetType`; несуществующая — со списком доступных.
+  Проверено: блок `AI_Handler` в группу, типы `HMI_AI_Control`, `Conrtol_Valve_A` в корень типов.
+
 Не проверено: `RestoreAfterFailedMove` (не удалось придумать импорт, который падает после удаления; внутри транзакции
-откат всё равно вернёт объект); CPU с парольной защитой и реальный ПЛК (нечем); `connect` без запущенной TIA и с
-`startIfNotRunning` (закрытие TIA ради проверки не оправдано); глобальная библиотека (нужна `.al21` от Biz).
+откат всё равно вернёт объект); CPU с парольной защитой и реальный ПЛК (нечем).
 
 ## Готово, когда
 

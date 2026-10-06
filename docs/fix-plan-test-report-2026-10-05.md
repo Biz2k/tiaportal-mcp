@@ -66,13 +66,13 @@
 - [x] Устройства внутри пользовательских групп: общий поиск устройства покрыт только
       модульными тестами, в проверочном проекте групп нет.
 - [x] Изменяющие `hw_*` и `net_*` для устройств с `/` в имени.
-- [ ] `connect` при незапущенном TIA Portal и `connect` с `startIfNotRunning=true`.
+- [x] `connect` при незапущенном TIA Portal и `connect` с `startIfNotRunning=true`.
 
 ### 1.4. Импорт и библиотеки — осталось
 
 - [x] `import_objects` и `preview_import` во всех трёх форматах (`xml`, `document`, `source`),
       с конфликтами имён.
-- [ ] `open_global_library`, `get_master_copies`, `instantiate_master_copy` на подготовленной
+- [x] `open_global_library`, `get_master_copies`, `instantiate_master_copy` на подготовленной
       глобальной библиотеке.
 
 ## 2. Тестовая база
