@@ -181,6 +181,28 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
+        public void Test_810_MoveRecovery_ObjectBack_ReturnsSoTheImportErrorIsRethrown()
+        {
+            var restored = false;
+
+            MoveRecovery.Restore(null, () => restored = true, "Block", "FB_1", new InvalidOperationException("import failed"));
+
+            Assert.IsTrue(restored);
+        }
+
+        [TestMethod]
+        public void Test_811_MoveRecovery_ObjectLost_SaysSoAndKeepsBothReasons()
+        {
+            var ex = Assert.ThrowsException<PortalException>(() =>
+                MoveRecovery.Restore(null, () => throw new InvalidOperationException("no room"), "Type", "UDT_1", new InvalidOperationException("import failed")));
+
+            Assert.AreEqual(PortalErrorCode.ImportFailed, ex.Code);
+            StringAssert.Contains(ex.Message, "Type 'UDT_1' was removed from its group");
+            StringAssert.Contains(ex.Message, "import failed");
+            StringAssert.Contains(ex.Message, "no room");
+        }
+
+        [TestMethod]
         public void Test_807_ErrorText_ForAction_HasNoBracket()
         {
             var ex = new PortalException(PortalErrorCode.NotFound, "Tag 'X' not found.");

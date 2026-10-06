@@ -1064,7 +1064,7 @@ namespace TiaMcpServer.Siemens
                         }
                         catch (Exception importError)
                         {
-                            RestoreAfterFailedMove(() => sourceGroup.Blocks.Import(file, ImportOptions.None), "Block", name, importError);
+                            MoveRecovery.Restore(_logger, () => sourceGroup.Blocks.Import(file, ImportOptions.None), "Block", name, importError);
 
                             throw;
                         }
@@ -1084,29 +1084,6 @@ namespace TiaMcpServer.Siemens
         #endregion
 
         #region copy and move plumbing
-
-        /// <summary>
-        /// Puts a moved object back into its original group after the import into the target
-        /// failed. Inside a transaction the rollback would undo the delete anyway; this covers
-        /// the case where TIA Portal granted none. If even the restore fails, the caller must
-        /// learn that the object is gone - that outranks the original error.
-        /// </summary>
-        private void RestoreAfterFailedMove(Action restore, string kind, string name, Exception importError)
-        {
-            try
-            {
-                restore();
-            }
-            catch (Exception restoreError)
-            {
-                _logger?.LogError(restoreError, "{Kind} {Name} could not be restored after a failed move", kind, name);
-
-                throw new PortalException(PortalErrorCode.ImportFailed,
-                    $"{kind} '{name}' was removed from its group, the import into the target failed ({ErrorText.Describe(importError)}), " +
-                    $"and restoring it failed as well ({ErrorText.Describe(restoreError)}). Undo the change in TIA Portal or close the project without saving.",
-                    null, restoreError);
-            }
-        }
 
         private bool IsSameSoftware(string softwarePath, string otherSoftwarePath)
         {

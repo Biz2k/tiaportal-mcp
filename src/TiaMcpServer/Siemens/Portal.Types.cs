@@ -534,7 +534,7 @@ namespace TiaMcpServer.Siemens
                         }
                         catch (Exception importError)
                         {
-                            RestoreAfterFailedMove(() => sourceGroup.Types.Import(file, ImportOptions.None), "Type", name, importError);
+                            MoveRecovery.Restore(_logger, () => sourceGroup.Types.Import(file, ImportOptions.None), "Type", name, importError);
 
                             throw;
                         }
