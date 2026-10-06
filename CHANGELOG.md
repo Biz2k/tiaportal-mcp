@@ -14,6 +14,8 @@
 
 ### Added
 
+- `net_get_connections`, `net_create_connection`, `net_delete_connection`: communication connections between PLCs (S7, TCP, ISO-on-TCP,
+  ISO, UDP); reading also shows the HMI connections and the type-specific settings.
 - `net_delete_subnet`: deletes a subnet; one with connected interfaces or IO systems is refused with the list of them unless `force=true`.
 - `get_tia_instances` lists the running TIA Portal instances (process id, open project, mode) without connecting; `connect` takes
   `processId` or `projectPath` to attach to a chosen instance. Without them it still attaches to the first one.

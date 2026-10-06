@@ -211,6 +211,66 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
+        [McpServerTool(Name = "net_get_connections", Title = "Get communication connections", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the communication connections (S7, TCP, ISO-on-TCP, ISO, UDP, HMI) of the project or of one device: owner, name, type, partner, subnet, addresses and the type-specific settings. A connection is listed by both of its ends")]
+        public static ResponseNetConnections GetNetConnections(
+            [Description("deviceName: path or name of one device, as 'get_devices' returns it; empty lists the whole project")] string deviceName = "")
+        {
+            try
+            {
+                var items = Portal.GetCommunicationConnections(deviceName);
+
+                return new ResponseNetConnections
+                {
+                    Message = $"{items.Count} connection(s) retrieved",
+                    Items = items,
+                    Meta = OkMeta()
+                };
+            }
+            catch (TiaMcpServer.Siemens.PortalException pex)
+            {
+                throw ToolError(pex);
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw Failure("retrieving connections", ex);
+            }
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "net_create_connection", Title = "Create communication connection", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create a connection between two PLCs of the project. Both need an interface on a common subnet ('net_connect_subnet'). Connections to an HMI are made with 'unified_manage_connections'")]
+        public static ResponseMessage CreateNetConnection(
+            [Description("localPlc: path of the PLC that owns the connection, as the plc_* tools take it (e.g. 'PLC_1' or 'Station_1/PLC_1')")] string localPlc,
+            [Description("partnerPlc: path of the partner PLC")] string partnerPlc,
+            [Description("connectionType: 's7' (default), 'tcp', 'isoOnTcp', 'iso' or 'udp'")] string connectionType = "s7",
+            [Description("localInterface: interface item name of the local PLC; empty picks one that shares a subnet with the partner")] string localInterface = "",
+            [Description("partnerInterface: interface item name of the partner PLC; empty picks one that shares a subnet")] string partnerInterface = "",
+            [Description("name: connection name; empty keeps the name TIA Portal gives")] string name = "")
+        {
+            return Guarded(nameof(CreateNetConnection), () =>
+            {
+                var what = Portal.CreateCommunicationConnection(localPlc, partnerPlc, connectionType, localInterface, partnerInterface, name);
+
+                return new ResponseMessage { Message = $"Created {what}. {SaveHint}", Meta = OkMeta() };
+            });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "net_delete_connection", Title = "Delete communication connection", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Delete a communication connection of a PLC by its name ('net_get_connections' lists them). The partner's end goes with it")]
+        public static ResponseMessage DeleteNetConnection(
+            [Description("localPlc: path of the PLC that owns the connection")] string localPlc,
+            [Description("connectionName: name of the connection")] string connectionName)
+        {
+            return Guarded(nameof(DeleteNetConnection), () =>
+            {
+                Portal.DeleteCommunicationConnection(localPlc, connectionName);
+
+                return new ResponseMessage { Message = $"Connection '{connectionName}' of '{localPlc}' deleted. {SaveHint}", Meta = OkMeta() };
+            });
+        }
+
         #endregion
 
         #region IO systems

@@ -54,4 +54,9 @@
   (6 модульных тестов). Живьём проверено на одном экземпляре: список, подключение по имени проекта и по `processId`, отказ при
   несовпадении (в тексте перечень запущенных), отказ при обоих критериях. Выбор из двух экземпляров проверен живьём (второй, пустой экземпляр открыт с согласия Biz и закрыт после): список,
   `processId` и `projectPath` попадают в нужный экземпляр, а `connect` без параметров берёт первый в списке — им оказался новый пустой.
-- **11.3** перенесено в 05. **11.4** только по запросу Biz.
+- **11.3** перенесено в 05.
+- **11.4 готово** (по слову Biz «заканчивай 11»): `net_get_connections(deviceName)`, `net_create_connection(localPlc, partnerPlc,
+  connectionType = s7|tcp|isoOnTcp|iso|udp, localInterface, partnerInterface, name)`, `net_delete_connection(localPlc, connectionName)`,
+  `Portal.Connections.cs`. Живьём на `PLC (A0)` / `PLC (A5)` (подсеть `ASU_NET`): чтение показало `S7_Connection_1` с обоих концов,
+  TCP-соединение `MCPT_Tcp` создано, видно в списке с портами и адресами, удалено; `S7_Connection_1` не тронуто. Только CPU-элемент
+  устройства даёт `CommunicationManagement`. Соединение с HMI по-прежнему делает `unified_manage_connections`.

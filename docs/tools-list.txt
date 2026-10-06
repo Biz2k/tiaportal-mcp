@@ -26,9 +26,12 @@ import_objects
 instantiate_master_copy
 net_connect_subnet
 net_connect_to_io_system
+net_create_connection
 net_create_io_system
+net_delete_connection
 net_delete_subnet
 net_disconnect_subnet
+net_get_connections
 open_global_library
 open_project
 open_tia_project
