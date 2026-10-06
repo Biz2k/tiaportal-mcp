@@ -107,6 +107,7 @@ namespace TiaMcpServer.Siemens
 
                     var applied = new List<string>();
                     var failed = new List<string>();
+                    var findingsBefore = ReadUnifiedFindings(item);
 
                     // The type comes first: the interface does not exist before it is set.
                     if (!string.IsNullOrWhiteSpace(faceplateType))
@@ -147,6 +148,13 @@ namespace TiaMcpServer.Siemens
                                 failed.Add($"interface {value.Key}: {ErrorText.Describe(ex)}");
                             }
                         }
+                    }
+
+                    if (failed.Count == 0)
+                    {
+                        // A faceplate type that does not exist is stored without an error; the validation names it.
+                        failed.AddRange(UnifiedValidation.Judge(findingsBefore, ReadUnifiedFindings(item)).Errors
+                            .Select(e => "TIA Portal's validation rejects the result: " + e));
                     }
 
                     if (failed.Count > 0)

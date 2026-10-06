@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Changed
+
+- The writing WinCC Unified tools now let TIA Portal validate what they wrote. Unified objects have a `Validate()`
+  of their own, and it names what Openness stores without a word: a screen (`Screen` of a screen window, the start
+  screen of the runtime settings), a graphic, a connection, a text or graphic list and a cycle that do not exist, an
+  initial value of a tag that is not of its data type or outside its range, a trigger tag of an alarm whose data
+  type the alarm cannot use, a script dynamization that no tag triggers. The findings are read before the writes and
+  after them: an error that is new fails the action (and with it the batch), what was there before and warnings go
+  into `notes`. An object just created is read right after its creation, so an alarm created without a trigger tag
+  is still created, with a note. Tools: `unified_manage_items`, `unified_manage_faceplate`, `unified_manage_tags`,
+  `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_logs`, `unified_manage_logging_tags`,
+  `unified_set_runtime_settings`. **Behaviour change:** calls that used to answer "applied" for such values now
+  fail; `{"script": "return 1;"}` without a trigger is one of them (give it a `trigger`).
+  The notes "the cycle is not checked" and "the list is not among the lists of this HMI" are gone: both are checked.
+  Not covered by the validation, as probed: the syntax of a script and of a formula, a tag named in a formula (the
+  server checks that one itself), the output format of an I/O field.
+
 ### Fixed
 
 - `unified_manage_items`: a formula of a tag or expression dynamization is now checked. Openness stores a formula as

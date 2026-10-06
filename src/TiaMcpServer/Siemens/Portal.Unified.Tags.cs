@@ -258,8 +258,11 @@ namespace TiaMcpServer.Siemens
 
                     var (plain, nested) = SplitNestedTagProperties(action.Properties);
 
-                    SetUnifiedAttributes(tag, "An HMI tag", plain, TagPropertyOrder, result);
-                    SetNestedTagProperties(software, tag, nested, result);
+                    WithUnifiedValidation(tag, result.Notes, () =>
+                    {
+                        SetUnifiedAttributes(tag, "An HMI tag", plain, TagPropertyOrder, result);
+                        SetNestedTagProperties(software, tag, nested, result);
+                    });
                 });
         }
 

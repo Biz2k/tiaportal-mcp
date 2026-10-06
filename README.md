@@ -256,6 +256,11 @@ property gets either a static value or a dynamization, and `events` attaches scr
   `{"type": "CustomCycle", "cycle": "Cycle name"}`.
 - `{ "expression": "formula" }` gives the property an expression, `{ "flashing": { "condition": "Always", "rate": "Fast",
   "color": "#FF0000", "alternateColor": "#0000FF" } }` makes a color property flash.
+- After the writes TIA Portal validates the object (`Validate()`): a screen, graphic, tag, connection, list or cycle
+  that does not exist, an initial value that does not fit the data type, and a script dynamization that no tag
+  triggers fail the action, although Openness stored them without an error. Findings that were there before the
+  write come back as `notes`. In a formula the tags are checked (`'Tag_1'` in single quotes); the syntax of a formula
+  or a script is not - that shows when the HMI is compiled.
 - `events` also takes `{ "script": "...", "async": true, "globalDefinitions": "..." }` per event; `propertyEvents` sets the
   script that runs when a property changes (`{ "ProcessValue": "..." }`, `"ProcessValue.QualityCodeChange"` for the
   quality code, which needs a tag binding).

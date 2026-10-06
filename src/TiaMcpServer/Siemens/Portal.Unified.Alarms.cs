@@ -315,7 +315,8 @@ namespace TiaMcpServer.Siemens
                             $"Alarm '{name}' is {(alarm is HmiAnalogAlarm ? "an analog" : "a discrete")} alarm. The kind of an alarm cannot be changed; delete it and create it again.");
                     }
 
-                    SetAlarmProperties(software, alarm, alarm is HmiAnalogAlarm ? "An analog alarm" : "A discrete alarm", action.Properties, result);
+                    WithUnifiedValidation(alarm, result.Notes,
+                        () => SetAlarmProperties(software, alarm, alarm is HmiAnalogAlarm ? "An analog alarm" : "A discrete alarm", action.Properties, result));
                 });
         }
 
@@ -520,6 +521,7 @@ namespace TiaMcpServer.Siemens
                     }
 
                     var available = alarmClass.GetType().GetProperties().Where(p => p.CanWrite).ToList();
+                    var classFindings = ReadUnifiedFindings(alarmClass);
 
                     foreach (var entry in action.Properties.OrderBy(p => p.Key.Equals("Name", StringComparison.OrdinalIgnoreCase) ? 1 : 0))
                     {
@@ -560,6 +562,8 @@ namespace TiaMcpServer.Siemens
                         SetTypedProperty(alarmClass, property, classValue);
                         result.Applied.Add(property.Name);
                     }
+
+                    WithUnifiedValidation(alarmClass, result.Notes, () => { }, classFindings);
                 });
         }
 

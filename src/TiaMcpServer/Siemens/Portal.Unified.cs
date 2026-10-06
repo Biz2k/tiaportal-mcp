@@ -4,6 +4,7 @@ using Siemens.Engineering.Hmi;
 using Siemens.Engineering.HmiUnified;
 using Siemens.Engineering.HmiUnified.HmiTags;
 using System;
+using TiaMcpServer.ModelContextProtocol;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -137,6 +138,68 @@ namespace TiaMcpServer.Siemens
 
             throw new PortalException(PortalErrorCode.NotSupported,
                 $"'{softwarePath}' is not WinCC Unified HMI software ({software.GetType().Name}).");
+        }
+
+        /// <summary>
+        /// What TIA Portal's validation says about a Unified object: Validate() returns a list of results, each with
+        /// PropertyName, Errors and Warnings. Checked on V21 (2026-10-06) on tags, alarms, alarm classes, connections,
+        /// logs, logging tags, screens, the runtime settings and every item type a screen can create: it does not
+        /// throw and does not change the object. An object without the method has no findings.
+        /// </summary>
+        private static List<UnifiedFinding> ReadUnifiedFindings(object target)
+        {
+            var findings = new List<UnifiedFinding>();
+            var validate = target.GetType().GetMethod("Validate", Type.EmptyTypes);
+
+            if (validate == null || !(validate.Invoke(target, null) is System.Collections.IEnumerable results))
+            {
+                return findings;
+            }
+
+            foreach (var result in results)
+            {
+                if (result == null)
+                {
+                    continue;
+                }
+
+                var type = result.GetType();
+                var property = type.GetProperty("PropertyName")?.GetValue(result) as string ?? string.Empty;
+
+                foreach (var (name, isError) in new[] { ("Errors", true), ("Warnings", false) })
+                {
+                    if (type.GetProperty(name)?.GetValue(result) is System.Collections.IEnumerable texts)
+                    {
+                        foreach (var text in texts)
+                        {
+                            // Some texts come as "-No tag configured." or "Name-Cycle is invalid.".
+                            findings.Add(new UnifiedFinding(property, (text?.ToString() ?? string.Empty).TrimStart('-'), isError));
+                        }
+                    }
+                }
+            }
+
+            return findings;
+        }
+
+        /// <summary>
+        /// Runs the writes on a Unified object and lets TIA Portal judge the result (see UnifiedValidation): errors the
+        /// writes brought refuse the action, the rest goes into the notes.
+        /// </summary>
+        private static void WithUnifiedValidation(object target, List<string> notes, Action write, List<UnifiedFinding>? baseline = null)
+        {
+            var before = baseline ?? ReadUnifiedFindings(target);
+
+            write();
+
+            var verdict = UnifiedValidation.Judge(before, ReadUnifiedFindings(target));
+
+            notes.AddRange(verdict.Notes);
+
+            if (verdict.Errors.Count > 0)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams, UnifiedValidation.Refusal(verdict.Errors));
+            }
         }
 
         private static object? FindUnifiedScreen(HmiSoftware software, string screenName)

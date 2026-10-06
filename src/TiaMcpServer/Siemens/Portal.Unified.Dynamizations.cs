@@ -181,9 +181,8 @@ namespace TiaMcpServer.Siemens
 
             if (trigger.Type == "CustomCycle")
             {
+                // Openness stores any name; the validation of the item, run after the writes, refuses a cycle that does not exist.
                 SetObjectProperty(triggerObject, "CustomDuration", trigger.Cycle);
-
-                notes.Add($"The cycle '{trigger.Cycle}' is not checked: Openness does not list the cycles of the HMI. The defaults are {UnifiedLogCycle.KnownCycles}; the script never runs if the cycle does not exist.");
             }
 
             return notes.Count == 0 ? null : string.Join(" ", notes);

@@ -204,5 +204,37 @@ namespace TiaMcpServer.Test
             Assert.IsFalse(UnifiedDynamizationSpec.SameFormula("$value * 2", "'InvalidTag'"));
             Assert.IsFalse(UnifiedDynamizationSpec.SameFormula("'Tag_1'+1", null));
         }
+
+        [TestMethod]
+        public void Test_2316_Validation_RefusesOnlyTheErrorsTheWriteBrought()
+        {
+            var before = new[] { new UnifiedFinding("RaisedStateTag", "No trigger tag is configured.", true) };
+
+            var after = new[]
+            {
+                new UnifiedFinding("RaisedStateTag", "No trigger tag is configured.", true),
+                new UnifiedFinding("AlarmClass", "The object \"X\" does not exist.", true),
+                new UnifiedFinding("AlarmClass", "The object \"X\" does not exist.", true),
+                new UnifiedFinding("Priority", "Unusual value.", false)
+            };
+
+            var verdict = UnifiedValidation.Judge(before, after);
+
+            CollectionAssert.AreEqual(new[] { "AlarmClass: The object \"X\" does not exist." }, verdict.Errors);
+            Assert.AreEqual(2, verdict.Notes.Count);
+            StringAssert.Contains(verdict.Notes[0], "not caused by this write: RaisedStateTag");
+            StringAssert.Contains(verdict.Notes[1], "warns: Priority");
+        }
+
+        [TestMethod]
+        public void Test_2317_Validation_ANewTextOnTheSamePropertyIsANewError()
+        {
+            var before = new[] { new UnifiedFinding("RaisedStateTag", "No trigger tag is configured.", true) };
+            var after = new[] { new UnifiedFinding("RaisedStateTag", "The object \"T\" does not exist.", true) };
+
+            Assert.AreEqual(1, UnifiedValidation.Judge(before, after).Errors.Count);
+            Assert.AreEqual(0, UnifiedValidation.Judge(after, after).Errors.Count);
+            StringAssert.Contains(UnifiedValidation.Refusal(new[] { "a", "b" }), "a | b");
+        }
     }
 }

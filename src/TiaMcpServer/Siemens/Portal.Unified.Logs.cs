@@ -336,7 +336,7 @@ namespace TiaMcpServer.Siemens
                             : "Created.");
                     }
 
-                    SetLogProperties(log, action.Properties, result);
+                    WithUnifiedValidation(log, result.Notes, () => SetLogProperties(log, action.Properties, result));
                 });
         }
 
@@ -585,7 +585,7 @@ namespace TiaMcpServer.Siemens
                         result.Notes.Add($"Created in data log '{loggingTag.DataLog}' (the first one) unless DataLog says otherwise.");
                     }
 
-                    SetLoggingTagProperties(software, loggingTag, action.Properties, result);
+                    WithUnifiedValidation(loggingTag, result.Notes, () => SetLoggingTagProperties(software, loggingTag, action.Properties, result));
                 });
         }
 

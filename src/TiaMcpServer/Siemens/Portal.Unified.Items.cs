@@ -170,6 +170,8 @@ namespace TiaMcpServer.Siemens
                     target = item;
                 }
 
+                var findingsBefore = ReadUnifiedFindings(target);
+
                 if (action.Properties != null)
                 {
                     foreach (var property in action.Properties)
@@ -240,6 +242,25 @@ namespace TiaMcpServer.Siemens
                         {
                             result.Failed.Add(new HmiPropertyFailure { Property = label, Error = ErrorText.Describe(ex) });
                         }
+                    }
+                }
+
+                // TIA Portal's own validation of the item: what Openness stored without a word (a screen, a graphic, a
+                // list or a cycle that does not exist, a script that no tag triggers) is named there. Not after a
+                // failure: the batch is lost then anyway.
+                if (result.Failed.Count == 0)
+                {
+                    var verdict = UnifiedValidation.Judge(findingsBefore, ReadUnifiedFindings(target));
+
+                    result.Notes.AddRange(verdict.Notes);
+
+                    foreach (var error in verdict.Errors)
+                    {
+                        var hint = error.IndexOf("No tag configured", StringComparison.OrdinalIgnoreCase) >= 0
+                            ? " A script dynamization runs when a tag it reads changes (trigger 'AutomaticTags'); this script reads none. Give it a \"trigger\", e.g. \"T1s\" or {\"type\": \"Tags\", \"tags\": [...]}."
+                            : string.Empty;
+
+                        result.Failed.Add(new HmiPropertyFailure { Property = "validation", Error = "TIA Portal's validation rejects the result (Openness stored the value without an error): " + error + hint });
                     }
                 }
 
@@ -494,12 +515,9 @@ namespace TiaMcpServer.Siemens
             SetHmiDynamization(target, name, ResourceListDynamizationType, "ResourceList", listName!);
             SetHmiDynamization(target, name, ResourceListDynamizationType, "Tag", tagName);
 
-            // Openness accepts any list name. One that is not among the lists of the HMI may still
-            // be right - a list that is a library type is named "<type> V <version>" - so it is
-            // pointed out, not refused.
-            return software.HmiTextLists.Find(listName!) != null || software.HmiGraphicLists.Find(listName!) != null
-                ? null
-                : $"'{listName}' is not among the text or graphic lists of this HMI. If it is not a list from the library, {name} will show nothing.";
+            // Openness accepts any list name. Whether the list exists - among the lists of the HMI or as a library
+            // type, named "<type> V <version>" - is for the validation of the item to say, after the writes.
+            return null;
         }
 
         private static string RequireText(JsonElement element, string key)

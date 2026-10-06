@@ -47,10 +47,14 @@ namespace TiaMcpServer.Siemens
                     var settings = RequireUnifiedSoftware(softwarePath).RuntimeSettings;
                     var applied = new List<string>();
 
-                    foreach (var entry in properties)
+                    // The start screen is stored whether it exists or not; the validation of the settings says so.
+                    WithUnifiedValidation(settings, new List<string>(), () =>
                     {
-                        applied.Add(SetRuntimeSetting(settings, entry.Key, entry.Value));
-                    }
+                        foreach (var entry in properties)
+                        {
+                            applied.Add(SetRuntimeSetting(settings, entry.Key, entry.Value));
+                        }
+                    });
 
                     return applied;
                 },
