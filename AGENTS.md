@@ -54,3 +54,27 @@ Use clear, actionable language. For example:
   2. Create a virtual controller instance with the correct IP address (matching the TIA Portal project).
   3. Power on the instance.
   ...before initiating a download task via Openness.
+
+## Skill For Users Of The Server
+
+[`skills/tia-portal-mcp/SKILL.md`](skills/tia-portal-mcp/SKILL.md) teaches an agent how to work on a TIA Portal project
+with this server: the order of work, the rules that protect the user's project, what to do when a call fails. It is
+kept thin on purpose and grows with the server.
+
+Update it in the same commit as the change when:
+
+- a tool it names is renamed or removed. Check with
+  `grep -oE '`[a-z]+(_[a-z]+)+`' skills/tia-portal-mcp/SKILL.md | tr -d '`' | sort -u | grep -vxFf docs/tools-list.txt` -
+  it prints the names the server no longer has, and nothing when all is well;
+- the way to connect, save or download changes, or the write policy does;
+- a call turns out to close TIA Portal or lose work, and a user of the server can reach it through a tool;
+- a limitation that makes a common request impossible appears or is lifted.
+
+Do not put into it:
+
+- parameters or lists of tools - `docs/tools/` is generated from the code;
+- step-by-step scenarios - they go to `docs/recipes/`, the skill links there;
+- notes for developing the server - they go to `docs/handoff/`.
+
+If an agent needs the skill to call a tool correctly, fix the description of the tool, not the skill. Keep the skill
+under about 120 lines. Before a release, read it once against `README.md`.

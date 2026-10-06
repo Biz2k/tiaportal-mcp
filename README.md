@@ -524,6 +524,7 @@ group the type already lives in.
 
 - [`docs/tools/`](docs/tools/README.md) - every tool with its parameters, one page per area (generated from the descriptions in the code by `tools/make-tool-docs.ps1`).
 - [`docs/recipes/`](docs/recipes/README.md) - scenarios of several tools, each run on a real project.
+- [`skills/tia-portal-mcp/`](skills/tia-portal-mcp/SKILL.md) - a skill for the agent that uses the server: the order of work and the rules that protect the project. Copy the folder into the skills folder of the client (`~/.claude/skills/` for Claude Code).
 - [`docs/tools-list.txt`](docs/tools-list.txt) - the names of all tools; [`Implemented_Tools.md`](Implemented_Tools.md) - the same with a line each (Russian).
 - [`docs/error-model.md`](docs/error-model.md) - how errors are raised and reported.
 - [`CHANGELOG.md`](CHANGELOG.md) - what changed, with the list of renamed tools.
