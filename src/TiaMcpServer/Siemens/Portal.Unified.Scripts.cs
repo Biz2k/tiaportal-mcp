@@ -178,6 +178,10 @@ namespace TiaMcpServer.Siemens
                     result.Notes.Add(existing == null
                         ? $"Created with {exported} exported function(s)."
                         : $"Replaced as a whole: what the module held before is gone. {exported} exported function(s) now.");
+
+                    // TIA Portal stores code it cannot run exactly as written (checked 2026-10-06: "return a *;" came back
+                    // unchanged), and a server cannot parse JavaScript. The compile of the HMI is the check.
+                    result.Notes.Add($"The syntax of the code is not checked: it was stored as written. Run 'unified_compile' (pathFilter \"Scripts/{name}\") to have TIA Portal report syntax errors.");
                 });
         }
 

@@ -316,9 +316,10 @@ are unique in the whole HMI, so every other tool finds a screen by its name alon
 
 `unified_get_scripts` reads the global script modules (global definitions, functions, the list of exported
 functions); `unified_manage_scripts` creates or replaces a module **as a whole** and reads it back. TIA Portal
-accepts code it cannot parse and stores it mangled (a default parameter `f(a, b = 5)` becomes `b___5`, a syntax
-error empties the function), so such a write is refused and rolled back. Modules cannot be deleted or renamed
-through Openness.
+stores some code it cannot run mangled (a default parameter `f(a, b = 5)` becomes `b___5`), so such a write is
+refused and rolled back. A plain syntax error (`return a *;`) is stored as written and the server cannot see it:
+`unified_compile` with `pathFilter` `Scripts/<module>` reports it with line and column. Modules cannot be deleted
+or renamed through Openness.
 
 `unified_get_logs` / `unified_manage_logs` read and change data logs and alarm logs (size, duration, storage device,
 segment, backup; settings by name such as `Settings.LogMaxSize`); audit trails are read-only.
