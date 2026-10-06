@@ -32,3 +32,21 @@
 
 Либо есть инструмент `unified_get_cycles` / `unified_manage_cycles` с проверкой вживую, либо здесь записано, что API нет,
 и что именно пробовали.
+
+## Результат (06.10.2026): через Openness невозможно
+
+Biz: «давай 16». Инструмента `unified_get_cycles` / `unified_manage_cycles` нет: API для циклов Unified-HMI не существует.
+
+Что проверено:
+- Отражение `HmiUnified` (все типы): у `HmiSoftware` нет `Cycles`; в `RuntimeSettings` циклов тоже нет. Имя `Cycle` есть только у
+  классического WinCC (`Siemens.Engineering.Hmi.Cycle.Cycle`, `CycleComposition`, `HmiTarget`) и у оборудования (`HW.*Cycle*`, к HMI
+  отношения не имеют). Остальное с `Cycle` в имени — свойства `HmiLoggingTag.Cycle`, `HmiTag.AcquisitionCycle` и тип `Trigger`
+  `CustomCycle` — только строки с именем.
+- Проба на `HMI Unified/HMI_RT_3`, временные `MCPT_CT` (тег) и `MCPT_LT` (архивный тег `Cyclic` в `Data log_1`): имя цикла
+  пользователя `Custom cycle` принято, `custom cycle` (другой регистр) принято, `Bogus` отклонено («Logging Cycle is invalid»;
+  ошибка уже поясняется сервером). Значит Openness проверяет имя против циклов проекта, но перечислить их нельзя.
+- Косвенная проверка имени (временный архивный тег с проверяемым именем) возможна, но хрупка и меняет проект — не добавлялась.
+  Для `Trigger.CustomDuration` скрипта и `HmiTag.AcquisitionCycle` проверки нет и там; предупреждение в `notes` остаётся.
+
+Сделано: сообщение об отклонённом цикле архивного тега теперь говорит, что цикл пользователя принимается по точному имени;
+`unified-defaults.md` обновлён. Временные объекты удалены, проект сохранён.

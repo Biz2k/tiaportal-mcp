@@ -671,7 +671,7 @@ namespace TiaMcpServer.Siemens
                     catch (Exception ex) when (ex is not PortalException)
                     {
                         throw new PortalException(PortalErrorCode.InvalidParams,
-                            $"Cycle '{value}' is not accepted by TIA Portal ({ex.Message.Trim()}). It names a cycle of the project: {UnifiedLogCycle.KnownCycles} were accepted; T30s, T1min and the like were not.");
+                            $"Cycle '{value}' is not accepted by TIA Portal ({ex.Message.Trim()}). It names a cycle of the project: {UnifiedLogCycle.KnownCycles} were accepted; T30s, T1min and the like were not. A cycle you defined in the project (e.g. 'Custom cycle') is accepted by its exact name, case aside; the list of such cycles is not available through Openness.");
                     }
                 }
                 else
