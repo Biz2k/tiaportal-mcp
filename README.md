@@ -499,6 +499,14 @@ A PLC data type name is unique across the whole PLC, not just within its group. 
 that already exists into a *different* group therefore fails even when overwriting; target the
 group the type already lives in.
 
+## Documentation
+
+- [`docs/tools/`](docs/tools/README.md) - every tool with its parameters, one page per area (generated from the descriptions in the code by `tools/make-tool-docs.ps1`).
+- [`docs/recipes/`](docs/recipes/README.md) - scenarios of several tools, each run on a real project.
+- [`docs/tools-list.txt`](docs/tools-list.txt) - the names of all tools; [`Implemented_Tools.md`](Implemented_Tools.md) - the same with a line each (Russian).
+- [`docs/error-model.md`](docs/error-model.md) - how errors are raised and reported.
+- [`CHANGELOG.md`](CHANGELOG.md) - what changed, with the list of renamed tools.
+
 ## Known limitations
 
 - Importing ladder (LAD) blocks from source documents requires the companion `.s7res` file to
