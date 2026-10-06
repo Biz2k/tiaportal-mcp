@@ -12,6 +12,11 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Changed (WinCC Unified system alarm classes)
+
+- `unified_manage_alarm_classes`: a system class refuses `Priority` and `Name` with an explanation, and `Log` has to name an
+  existing alarm log (the names are listed otherwise). Colors and `Log` of a system class can be changed; it cannot be deleted.
+
 ### Added (WinCC Unified alarms: acknowledgement and parameter tags)
 
 - `unified_get_alarms` shows the acknowledgement tags with their bits and the parameter tags; `unified_manage_alarms` sets

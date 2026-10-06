@@ -23,6 +23,10 @@ namespace TiaMcpServer.Siemens
     // here. AlarmParameterTags is a List<string> of ten slots, all empty on the alarms of the test project; a shorter list
     // fills the first slots and no name is checked by Openness.
     //
+    // System alarm classes, V21, 2026-10-06 (PC station): the colors of the states and Log can be changed; Priority and Name
+    // are refused by Openness, and a system class cannot be deleted ("Alarm object cannot be deleted"). Log names an alarm log
+    // and Openness refuses a name that does not exist (an exception, so it is checked here first).
+    //
     // DANGER, found on TIA Portal V21 (2026-10-06): calling GetAttributeInfos() on an alarm ends
     // in a NonRecoverableException ("PropertyDoesNotExists") that closes TIA Portal, because the
     // class declares an attribute, AuditClass, that the object does not have. So everything
@@ -538,7 +542,22 @@ namespace TiaMcpServer.Siemens
 
                         var property = FindTypedProperty(available, entry.Key, "An alarm class");
 
-                        SetTypedProperty(alarmClass, property, ConvertHmiValue(entry.Value, property.PropertyType, property.Name));
+                        // Openness answers these with an exception; the reason is said here before it comes to that.
+                        if (alarmClass.IsSystem && (property.Name == "Priority" || property.Name == "Name"))
+                        {
+                            throw new PortalException(PortalErrorCode.NotSupported,
+                                $"'{alarmClass.Name}' is a system alarm class: its {property.Name} cannot be changed. Its colors, Log and the like can.");
+                        }
+
+                        var classValue = ConvertHmiValue(entry.Value, property.PropertyType, property.Name);
+
+                        if (property.Name == "Log" && !string.IsNullOrEmpty(classValue as string) && software.AlarmLogs.Find((string)classValue!) == null)
+                        {
+                            throw new PortalException(PortalErrorCode.NotFound,
+                                $"Log: alarm log '{classValue}' does not exist. Existing: {string.Join(", ", software.AlarmLogs.Select(l => l.Name))}. 'unified_get_logs' lists them.");
+                        }
+
+                        SetTypedProperty(alarmClass, property, classValue);
                         result.Applied.Add(property.Name);
                     }
                 });
