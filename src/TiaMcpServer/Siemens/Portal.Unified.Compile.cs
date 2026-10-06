@@ -77,7 +77,7 @@ namespace TiaMcpServer.Siemens
         /// The tree of the compiler turned into lines: a node with a path only names the place, a node with a
         /// description is the message for the place its parents name.
         /// </summary>
-        private static void Flatten(CompilerResultMessage message, List<string> path, List<UnifiedCompileMessage> items)
+        private static void Flatten(CompilerResultMessage message, List<string> path, List<CompileMessageLine> items)
         {
             var here = new List<string>(path);
 
@@ -92,7 +92,7 @@ namespace TiaMcpServer.Siemens
             // "Information" lines are the compiler's progress ("Software compilation started."), not findings.
             if (text.Length > 0 && (severity == "Error" || severity == "Warning"))
             {
-                items.Add(new UnifiedCompileMessage { Severity = severity, Path = string.Join("/", here), Text = text });
+                items.Add(new CompileMessageLine { Severity = severity, Path = string.Join("/", here), Text = text });
             }
 
             foreach (var child in message.Messages)

@@ -152,7 +152,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | -------------------------------- | ----------- |
 | Импорт                           | `import_objects`, `instantiate_master_copy` |
 | Группы блоков и типов            | `plc_create_block_group`, `plc_delete_block_group`, `plc_create_type_group`, `plc_delete_type_group` |
-| Блоки                            | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block` |
+| Блоки                            | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_replace_source`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block` |
 | Типы данных                      | `plc_rename_type`, `plc_delete_type`, `plc_copy_type`, `plc_move_type` |
 | Таблицы тегов                    | `plc_create_tag_table`, `plc_rename_tag_table`, `plc_delete_tag_table`, `plc_create_tag_table_group`, `plc_delete_tag_table_group` |
 | Теги и константы                 | `plc_create_tag`, `plc_update_tag`, `plc_delete_tag`, `plc_create_user_constant`, `plc_update_user_constant`, `plc_delete_user_constant`, `plc_manage_tag_table_entries` |

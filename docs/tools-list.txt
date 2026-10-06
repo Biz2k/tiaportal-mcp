@@ -94,6 +94,7 @@ plc_rename_block
 plc_rename_tag_table
 plc_rename_type
 plc_rename_watch_table
+plc_replace_source
 plc_resolve_object_path
 plc_update_tag
 plc_update_user_constant

@@ -60,13 +60,13 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? Script { get; set; }
     }
 
-    /// <summary>One error or warning of the compile of an HMI.</summary>
-    public class UnifiedCompileMessage
+    /// <summary>One error or warning of a compile, with the place the compiler names for it.</summary>
+    public class CompileMessageLine
     {
         /// <summary>"Error" or "Warning".</summary>
         public string? Severity { get; set; }
 
-        /// <summary>Where: the device, then e.g. "Screens", the screen and the item, joined with '/'.</summary>
+        /// <summary>Where, joined with '/': for an HMI the device, "Screens", the screen and the item; for a block the PLC, the groups, the block and the line.</summary>
         public string? Path { get; set; }
 
         public string? Text { get; set; }
@@ -83,7 +83,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public int WarningCount { get; set; }
 
-        public List<UnifiedCompileMessage> Items { get; set; } = new List<UnifiedCompileMessage>();
+        public List<CompileMessageLine> Items { get; set; } = new List<CompileMessageLine>();
     }
 
     public class ResponseUnifiedCompile : ResponseMessage
@@ -95,6 +95,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public int? WarningCount { get; set; }
 
-        public IEnumerable<UnifiedCompileMessage>? Items { get; set; }
+        public IEnumerable<CompileMessageLine>? Items { get; set; }
     }
 }

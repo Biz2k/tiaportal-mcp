@@ -65,6 +65,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 | [`plc_rename_tag_table`](#plc_rename_tag_table) | write |
 | [`plc_rename_type`](#plc_rename_type) | write |
 | [`plc_rename_watch_table`](#plc_rename_watch_table) | write |
+| [`plc_replace_source`](#plc_replace_source) | write |
 | [`plc_resolve_object_path`](#plc_resolve_object_path) | read |
 | [`plc_update_tag`](#plc_update_tag) | write |
 | [`plc_update_user_constant`](#plc_update_user_constant) | write |
@@ -423,7 +424,7 @@ Return the source text of one program block directly, instead of exporting a fil
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `blockPath` | string | yes | blockPath: root-relative path of the block, e.g. '0_OBs/Main'. Use 'ResolveObjectPath' if you only know the name |
-| `format` | string | no (default `document`) | format: 'document' (default) for readable source text, or 'xml' for the SimaticML export |
+| `format` | string | no (default `document`) | format: 'document' (default) for readable source text, 'source' for the external source text (SCL blocks and data blocks) that 'plc_replace_source' takes back, or 'xml' for the SimaticML export |
 | `maxChars` | integer | no (default `40000`) | maxChars: truncate the text at this many characters, on a line boundary (default 40000) |
 
 ## plc_get_blocks
@@ -575,7 +576,7 @@ Return the source text of one PLC data type directly, instead of exporting a fil
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `typePath` | string | yes | typePath: root-relative path of the PLC data type, e.g. 'Common/BtnTyp_X'. Use 'ResolveObjectPath' if you only know the name |
-| `format` | string | no (default `document`) | format: 'document' (default) for readable source text, or 'xml' for the SimaticML export |
+| `format` | string | no (default `document`) | format: 'document' (default) for the readable declaration, 'source' for the external source text 'plc_replace_source' takes back, or 'xml' for the SimaticML export |
 | `maxChars` | integer | no (default `40000`) | maxChars: truncate the text at this many characters, on a line boundary (default 40000) |
 
 ## plc_get_types
@@ -676,6 +677,18 @@ Rename a PLC watch table
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `watchTablePath` | string | yes | watchTablePath: root-relative path of the watch table |
 | `newName` | string | yes | newName: the new watch table name, without a slash |
+
+## plc_replace_source
+
+Replace the code of an EXISTING SCL block (FB, FC, OB), data block or PLC data type by a new source text, then compile it. The cycle is: read the present code with 'plc_get_block_source' / 'plc_get_type_source' and format 'source', change it, pass the WHOLE text here. The object keeps its place in the project, its block number and its instance DBs. The source must declare exactly this object (same kind and name). With compile='object' (default) the object is compiled right away; if the new code does not compile, the previous code is put back and the call fails with the compile errors (onCompileError='restore', default) or the new code stays and the errors are returned (onCompileError='keep'). Changing the interface of a block or the members of a type leaves its callers, instance DBs and users inconsistent: they are listed in nowInconsistent and need 'plc_compile_software', or pass compile='software'. LAD, FBD, STL and GRAPH blocks have no source text and are refused. To create a new block use 'plc_create_scl_block'
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `objectPath` | string | yes | objectPath: root-relative path of the block or PLC data type, e.g. 'Pumps/FB_Pump' or 'Types/UDT_Motor' |
+| `source` | string | yes | source: the whole external source text of the object, e.g. FUNCTION_BLOCK "FB_Pump" ... END_FUNCTION_BLOCK, DATA_BLOCK ... END_DATA_BLOCK or TYPE ... END_TYPE |
+| `compile` | string | no (default `object`) | compile: 'object' (default) compiles the object itself, 'software' then compiles the whole PLC as well, 'none' compiles nothing |
+| `onCompileError` | string | no (default `restore`) | onCompileError: 'restore' (default) puts the previous code back when the new code does not compile, 'keep' leaves the new code in place |
 
 ## plc_resolve_object_path
 

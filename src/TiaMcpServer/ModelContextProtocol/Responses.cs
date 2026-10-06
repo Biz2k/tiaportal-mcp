@@ -827,4 +827,66 @@ namespace TiaMcpServer.ModelContextProtocol
     }
     
     #endregion
+
+    /// <summary>What Portal.ReplaceSource did.</summary>
+    public class SourceEditResult
+    {
+        public string? Name { get; set; }
+
+        public string? Path { get; set; }
+
+        /// <summary>"FB", "FC", "OB", "DB" or "TYPE".</summary>
+        public string? Kind { get; set; }
+
+        public int? Number { get; set; }
+
+        /// <summary>The new code was generated over the object.</summary>
+        public bool Replaced { get; set; }
+
+        /// <summary>The object itself compiled without an error; errors of a compile of the software are then those of its users.</summary>
+        public bool ObjectCompiles { get; set; }
+
+        /// <summary>The new code did not compile and the previous code was put back.</summary>
+        public bool Restored { get; set; }
+
+        /// <summary>"object", "software" or "none".</summary>
+        public string? Compile { get; set; }
+
+        public string? State { get; set; }
+
+        public int? ErrorCount { get; set; }
+
+        public int? WarningCount { get; set; }
+
+        public List<CompileMessageLine> Messages { get; set; } = new List<CompileMessageLine>();
+
+        /// <summary>Objects that were consistent before and now wait for a compile: callers, instance DBs, users of the type.</summary>
+        public List<string> NowInconsistent { get; set; } = new List<string>();
+
+        public List<string> Notes { get; set; } = new List<string>();
+    }
+
+    public class ResponseSourceEdit : ResponseMessage
+    {
+        public string? Name { get; set; }
+
+        public string? Path { get; set; }
+
+        public string? Kind { get; set; }
+
+        public int? Number { get; set; }
+
+        /// <summary>Success, Warning or Error of the compile; absent when nothing was compiled.</summary>
+        public string? State { get; set; }
+
+        public int? ErrorCount { get; set; }
+
+        public int? WarningCount { get; set; }
+
+        public IEnumerable<CompileMessageLine>? Messages { get; set; }
+
+        public IEnumerable<string>? NowInconsistent { get; set; }
+
+        public IEnumerable<string>? Notes { get; set; }
+    }
 }

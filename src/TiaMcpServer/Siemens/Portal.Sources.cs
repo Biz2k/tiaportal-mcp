@@ -50,7 +50,8 @@ namespace TiaMcpServer.Siemens
                         block.Name,
                         maxChars,
                         dir => ExportAsDocuments(softwarePath, blockPath, dir),
-                        dir => ExportXmlBlock(softwarePath, blockPath, dir) != null);
+                        dir => ExportXmlBlock(softwarePath, blockPath, dir) != null,
+                        dir => ExportSourceBlock(softwarePath, blockPath, dir) != null);
                 },
                 ("softwarePath", softwarePath), ("blockPath", blockPath), ("format", format));
         }
@@ -77,7 +78,8 @@ namespace TiaMcpServer.Siemens
                         type.Name,
                         maxChars,
                         dir => ExportTypeAsDocuments(softwarePath, typePath, dir).Files.Count > 0,
-                        dir => ExportXmlType(softwarePath, dir, typePath) != null);
+                        dir => ExportXmlType(softwarePath, dir, typePath) != null,
+                        dir => ExportSourceType(softwarePath, typePath, dir) != null);
                 },
                 ("softwarePath", softwarePath), ("typePath", typePath), ("format", format));
         }
@@ -148,14 +150,16 @@ namespace TiaMcpServer.Siemens
             string name,
             int maxChars,
             Func<string, bool> exportDocuments,
-            Func<string, bool> exportXml)
+            Func<string, bool> exportXml,
+            Func<string, bool> exportSource)
         {
             var wantsDocument = format.Equals("document", StringComparison.OrdinalIgnoreCase);
+            var wantsSource = format.Equals("source", StringComparison.OrdinalIgnoreCase);
 
-            if (!wantsDocument && !format.Equals("xml", StringComparison.OrdinalIgnoreCase))
+            if (!wantsDocument && !wantsSource && !format.Equals("xml", StringComparison.OrdinalIgnoreCase))
             {
                 throw new PortalException(PortalErrorCode.InvalidParams,
-                    $"Unknown format '{format}'. Use 'document' for readable source text or 'xml' for SimaticML.");
+                    $"Unknown format '{format}'. Use 'document' for readable source text, 'source' for the external source 'plc_replace_source' takes back, or 'xml' for SimaticML.");
             }
 
             if (maxChars <= 0)
@@ -165,9 +169,14 @@ namespace TiaMcpServer.Siemens
 
             using (var scope = new SourceScope())
             {
-                var used = wantsDocument ? "document" : "xml";
+                var used = wantsDocument ? "document" : wantsSource ? "source" : "xml";
 
-                if (wantsDocument)
+                if (wantsSource)
+                {
+                    // The external source (.scl, .db, .udt): the form TIA Portal generates a block from again.
+                    exportSource(scope.Directory);
+                }
+                else if (wantsDocument)
                 {
                     try
                     {

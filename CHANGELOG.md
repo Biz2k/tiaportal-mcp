@@ -4,6 +4,21 @@
 
 ### Added
 
+- `plc_replace_source`: replaces the code of an existing SCL block (FB, FC, OB), data block or PLC data type by a
+  new source text and compiles it - the cycle "read, change, compile" that so far needed an export and an import by
+  hand. The object keeps its group, its block number and its instance DBs. The source has to declare exactly that
+  object: a text for another name or kind is refused, because TIA Portal would silently create or replace that other
+  object. If the new code does not compile, the previous code is put back and the call fails with the compile errors
+  and their lines (`onCompileError: "restore"`, default); `"keep"` leaves the new code in place. `compile` is
+  `object` (default), `software` or `none`. The response lists in `nowInconsistent` the callers, instance DBs
+  and users of a type that now wait for a compile.
+  Why the restore is needed: a syntax error in the code does not stop the generation - TIA Portal replaces the block
+  by the broken code and only the compile reports it. A wrong declaration does stop it, and then nothing changes.
+  A compile is not permitted inside a transaction, so the steps are generate, compile, and generate the previous
+  source again if need be.
+- `plc_get_block_source`, `plc_get_type_source`: format `source` returns the external source text (`.scl`,
+  `.db`, `.udt`) - the form `plc_replace_source` takes back. `document` has another syntax and cannot be
+  generated from.
 - `unified_compile`: compiles a WinCC Unified HMI and lists the errors and warnings, each with its place
   (`HMI Unified/Screens/MyScreen/Button_1`). It is the check for what neither Openness nor the validation looks into:
   a syntax error in the script of a dynamization or an event, an invalid formula of a tag dynamization. `pathFilter`

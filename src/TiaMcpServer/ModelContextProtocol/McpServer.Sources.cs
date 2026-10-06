@@ -31,7 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseSourceText GetBlockSource(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: root-relative path of the block, e.g. '0_OBs/Main'. Use 'ResolveObjectPath' if you only know the name")] string blockPath,
-            [Description("format: 'document' (default) for readable source text, or 'xml' for the SimaticML export")] string format = "document",
+            [Description("format: 'document' (default) for readable source text, 'source' for the external source text (SCL blocks and data blocks) that 'plc_replace_source' takes back, or 'xml' for the SimaticML export")] string format = "document",
             [Description("maxChars: truncate the text at this many characters, on a line boundary (default 40000)")] int maxChars = 40000)
         {
             return Sourced(
@@ -84,7 +84,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseSourceText GetTypeSource(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("typePath: root-relative path of the PLC data type, e.g. 'Common/BtnTyp_X'. Use 'ResolveObjectPath' if you only know the name")] string typePath,
-            [Description("format: 'document' (default) for readable source text, or 'xml' for the SimaticML export")] string format = "document",
+            [Description("format: 'document' (default) for the readable declaration, 'source' for the external source text 'plc_replace_source' takes back, or 'xml' for the SimaticML export")] string format = "document",
             [Description("maxChars: truncate the text at this many characters, on a line boundary (default 40000)")] int maxChars = 40000)
         {
             return Sourced(
@@ -530,6 +530,58 @@ namespace TiaMcpServer.ModelContextProtocol
                         ["pendingSave"] = true,
                         ["generatedCount"] = names.Count,
                         ["keepOnError"] = keepOnError
+                    }
+                };
+            });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "plc_replace_source", Title = "Replace the code of a block or PLC data type", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Replace the code of an EXISTING SCL block (FB, FC, OB), data block or PLC data type by a new source text, then compile it. The cycle is: read the present code with 'plc_get_block_source' / 'plc_get_type_source' and format 'source', change it, pass the WHOLE text here. The object keeps its place in the project, its block number and its instance DBs. The source must declare exactly this object (same kind and name). With compile='object' (default) the object is compiled right away; if the new code does not compile, the previous code is put back and the call fails with the compile errors (onCompileError='restore', default) or the new code stays and the errors are returned (onCompileError='keep'). Changing the interface of a block or the members of a type leaves its callers, instance DBs and users inconsistent: they are listed in nowInconsistent and need 'plc_compile_software', or pass compile='software'. LAD, FBD, STL and GRAPH blocks have no source text and are refused. To create a new block use 'plc_create_scl_block'")]
+        public static ResponseSourceEdit ReplaceSource(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("objectPath: root-relative path of the block or PLC data type, e.g. 'Pumps/FB_Pump' or 'Types/UDT_Motor'")] string objectPath,
+            [Description("source: the whole external source text of the object, e.g. FUNCTION_BLOCK \"FB_Pump\" ... END_FUNCTION_BLOCK, DATA_BLOCK ... END_DATA_BLOCK or TYPE ... END_TYPE")] string source,
+            [Description("compile: 'object' (default) compiles the object itself, 'software' then compiles the whole PLC as well, 'none' compiles nothing")] string compile = "object",
+            [Description("onCompileError: 'restore' (default) puts the previous code back when the new code does not compile, 'keep' leaves the new code in place")] string onCompileError = "restore")
+        {
+            return GuardedNoTransaction(nameof(ReplaceSource), () =>
+            {
+                var result = Portal.ReplaceSource(softwarePath, objectPath, source, compile, onCompileError);
+
+                if (result.Restored)
+                {
+                    throw new PortalException(PortalErrorCode.InvalidParams,
+                        $"The new code of {result.Kind} '{result.Name}' does not compile ({result.ErrorCount} error(s)); the previous code was put back and compiled. " +
+                        $"Nothing else changed. Errors: {Portal.DescribeMessages(result.Messages)}");
+                }
+
+                var errors = result.ErrorCount ?? 0;
+                var message = $"The code of {result.Kind} '{result.Name}' was replaced" +
+                              (result.State == null ? "; not compiled." : $"; compile ({result.Compile}): {result.State}, {errors} error(s), {result.WarningCount} warning(s).") +
+                              (errors > 0 && !result.ObjectCompiles ? " The new code is in place with its errors (onCompileError='keep')." : string.Empty) +
+                              (errors > 0 && result.ObjectCompiles ? " The object itself compiles; the errors are in objects that use it and have to follow the change." : string.Empty) +
+                              (result.NowInconsistent.Count > 0 ? $" {result.NowInconsistent.Count} object(s) that use it now wait for a compile." : string.Empty) +
+                              " " + SaveHint;
+
+                return new ResponseSourceEdit
+                {
+                    Name = result.Name,
+                    Path = result.Path,
+                    Kind = result.Kind,
+                    Number = result.Number,
+                    State = result.State,
+                    ErrorCount = result.ErrorCount,
+                    WarningCount = result.WarningCount,
+                    Messages = result.Messages.Where(m => m.Severity == "Error" || m.Severity == "Warning").ToList(),
+                    NowInconsistent = result.NowInconsistent,
+                    Notes = result.Notes,
+                    Message = message,
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = errors == 0,
+                        ["pendingSave"] = true
                     }
                 };
             });
