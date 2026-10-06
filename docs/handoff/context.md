@@ -92,6 +92,7 @@ exception is thrown». Следствия:
 | Исключение, выпущенное из обратного вызова Openness (делегаты `DownloadProvider.Download`) | Внутри обратного вызова всё в `try/catch`, ошибки копить, не бросать |
 | Запись `HmiTag.DisplayName` (Unified) | Отклонять до обращения к Openness; `Comment` пишется нормально |
 | `GetAttributeInfos()` на аларме Unified (`HmiDiscreteAlarm`) | Только типизированные свойства; `AuditClass` не трогать вовсе |
+| `MappingTable.Entries.Create<MappingTableEntrySimple>()` (строка таблицы Expression конвертера тега) | Не создавать; сервер таблицу Expression не предлагает |
 
 Аудит общего доступа к атрибутам (06.10.2026, задача 05): на 34 видах объектов проекта, 39 создаваемых типах элементов
 экрана и 17 видах устройств, блоков, типов и сетей `GetAttributeInfos` и чтение каждого атрибута **безопасны**; других

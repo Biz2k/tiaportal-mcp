@@ -12,6 +12,17 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Added (WinCC Unified dynamization options and property events)
+
+- `unified_manage_items`: a tag binding takes `readOnly`, `indirect` (a String tag naming the tag to read), `formula` or a
+  `mapping` table (`range` rows with flashing, `singlebit`, `none`); a script takes `async`, `globalDefinitions` and a
+  `trigger` (a cycle, `Tags`, `CustomCycle`, `AutomaticTags`, `Disabled`); `{"expression": ...}` and `{"flashing": ...}` are new
+  kinds of dynamization. `events` takes an object with `script`, `async` and `globalDefinitions`; the new `propertyEvents`
+  sets the scripts that run when a property changes. Everything is checked before Openness is called.
+- `unified_get_screen_item_properties` reads the trigger and the value converter of a dynamization, how an event script
+  runs, and `_PropertyEvents`.
+- The defaults the model needs to know (cycles, button events, triggers) are in `docs/handoff/unified-defaults.md`.
+
 ### Changed (WinCC Unified faceplate interface)
 
 - Number and color interface properties of a faceplate are set and read back (checked on a type with Int64, UInt64, Double and Color

@@ -57,3 +57,38 @@
 
 Новые виды объектов (`Trigger`, `ValueConverter`, их вложенные коллекции) — только
 типизированные свойства и пробы перед использованием.
+
+## Что выяснено
+
+Образцы на экране `A7` (Biz, 06.10.2026) прочитаны типизированными свойствами; записи пробованы в откатываемых
+транзакциях. Форма входа `unified_manage_items` расширена **без изменения прежней**: объект свойства с одним ключом
+работает как раньше; рядом с `tag` и `script` появились необязательные ключи, а `expression` и `flashing` — новые виды.
+
+- `{"tag": T, "readOnly", "indirect", "formula" | "mapping"}`; `{"script": S, "async", "globalDefinitions", "trigger"}`;
+  `{"expression": "формула"}` (или `null` с `mapping`); `{"flashing": {condition, rate, color, alternateColor}}`.
+- События: `events` принимает строку (как раньше), `null`, либо объект `{"script", "async", "globalDefinitions"}`.
+  Новое поле `propertyEvents` — `PropertyEventHandlers` (`ProcessValue`, `ProcessValue.QualityCodeChange`).
+- Чтение (`unified_get_screen_item_properties`): `Trigger` (тип, теги, цикл) и `ValueConverter` (формула, тип таблицы,
+  строки выбранного вида) у динамизаций; `Async` и `GlobalDefinitions` у событий; `_PropertyEvents`.
+- `Trigger.CustomDuration` хранит имя цикла (`T2s` для типа T2s, имя своего цикла для `CustomCycle`); имя Openness не
+  проверяет, теги триггера — тоже, сервер проверяет теги сам. Список циклов Unified Openness не отдаёт — задача 16.
+- `Formula` задаётся только после `IsFormulaSelected = true`. Строки таблиц невыбранных видов остаются в
+  `Entries`, скрытыми; поэтому читается только выбранный вид. Строка диапазона создаётся `Create<MappingTableEntryRange>()`
+  (`RangeType` только для чтения: строк «только от» и «только до» не сделать). У таблицы Singlebit две строки уже есть.
+  Строка bitmask: маска (`Relevant`) только для чтения, условие принимает лишь допустимое для маски — не поддержано.
+- **Опасно:** создание `MappingTableEntrySimple` (таблица Expression) — `NonRecoverableException`, TIA закрывается
+  (проба 06.10.2026, проект был сохранён). Таблицу Expression сервер не предлагает. Добавлено в таблицу `context.md`.
+- Косвенная адресация: только тег типа String/WString (Openness: «Property is not allowed to modify»), сервер проверяет сам.
+- Область глобальных определений — одна на все скрипт-динамизации экрана и одна на все события экрана (проверено вживую:
+  запись у одного скрипта меняет её у остальных, и у скрипта на другом элементе); `Async` свой у каждого скрипта.
+  Новая скрипт-динамизация имеет триггер `AutomaticTags`.
+- Событие кнопки «Tapped» есть: в интерфейсе оно называется «Click left mouse button». Соответствие всех имён — в
+  [`unified-defaults.md`](../unified-defaults.md).
+- «Property events» в интерфейсе нет отдельной вкладки: это динамизация Script у подсвойства (`ProcessValue` → `Change`).
+  В Openness — `PropertyEventHandlers`; `Create` требует существующее свойство элемента, а `QualityCodeChange` — привязку к тегу
+  («Dynamize the tag to create the event handler for changing the quality code»); сервер проверяет оба условия.
+- Мигание: только на свойствах-цветах («Dynamization type not supported» иначе); сервер проверяет.
+- Проверено вживую на временном экране (после удалён): диапазоны с миганием и альтернативным цветом, single-bit, формула,
+  выражение, мигание границы, четыре скрипта с триггерами Tags/T5s/CustomCycle/AutomaticTags, события кнопки и поля,
+  косвенная адресация на WString-теге; 10 отрицательных случаев отклонены с понятным сообщением и откатом.
+  Тесты: `Test23UnifiedDynamizations` (13).

@@ -1,0 +1,182 @@
+using System.Text.Json;
+using TiaMcpServer.ModelContextProtocol;
+using TiaMcpServer.Siemens;
+
+namespace TiaMcpServer.Test
+{
+    /// <summary>
+    /// Tests for the options of dynamizations and events that 'unified_manage_items' takes: what is
+    /// read, and what is refused before Openness is called. These tests do not connect to TIA Portal.
+    /// </summary>
+    [TestClass]
+    public class Test23UnifiedDynamizations
+    {
+        private static JsonElement Json(string text)
+        {
+            using var document = JsonDocument.Parse(text);
+
+            return document.RootElement.Clone();
+        }
+
+        [TestMethod]
+        public void Test_2300_FindMainKey_PicksTheKindThatCarriesOptions()
+        {
+            Assert.AreEqual("tag", UnifiedDynamizationSpec.FindMainKey(new[] { "readOnly", "tag" }));
+            Assert.AreEqual("Script", UnifiedDynamizationSpec.FindMainKey(new[] { "Script", "async" }));
+            Assert.AreEqual("flashing", UnifiedDynamizationSpec.FindMainKey(new[] { "flashing" }));
+            Assert.IsNull(UnifiedDynamizationSpec.FindMainKey(new[] { "value" }));
+        }
+
+        [TestMethod]
+        public void Test_2301_Options_RefusesAKeyThatBelongsToAnotherKind()
+        {
+            var value = Json("{\"script\": \"x\", \"readOnly\": true}");
+
+            var error = Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.Options(value, "script", "async", "trigger"));
+
+            StringAssert.Contains(error.Message, "'readOnly' is not an option of 'script'");
+            StringAssert.Contains(error.Message, "async, trigger");
+        }
+
+        [TestMethod]
+        public void Test_2302_ParseTrigger_TakesATypeNameOrAnObject()
+        {
+            Assert.AreEqual("T5s", UnifiedDynamizationSpec.ParseTrigger(Json("\"t5s\"")).Type);
+
+            var tags = UnifiedDynamizationSpec.ParseTrigger(Json("{\"type\": \"tags\", \"tags\": [\"A\", \"B\"]}"));
+
+            Assert.AreEqual("Tags", tags.Type);
+            CollectionAssert.AreEqual(new[] { "A", "B" }, tags.Tags);
+
+            var cycle = UnifiedDynamizationSpec.ParseTrigger(Json("{\"type\": \"CustomCycle\", \"cycle\": \"Custom cycle\"}"));
+
+            Assert.AreEqual("Custom cycle", cycle.Cycle);
+        }
+
+        [TestMethod]
+        public void Test_2303_ParseTrigger_RefusesWhatTheTypeCannotUse()
+        {
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.ParseTrigger(Json("\"T3s\""))).Message, "Types:");
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.ParseTrigger(Json("{\"type\": \"Tags\"}"))).Message, "needs 'tags'");
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.ParseTrigger(Json("{\"type\": \"CustomCycle\"}"))).Message, "needs 'cycle'");
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.ParseTrigger(Json("{\"type\": \"T1s\", \"tags\": [\"A\"]}"))).Message, "belongs to the type 'Tags'");
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.ParseTrigger(Json("{\"type\": \"T1s\", \"cycle\": \"C\"}"))).Message, "belongs to the type 'CustomCycle'");
+        }
+
+        [TestMethod]
+        public void Test_2304_ParseMapping_ReadsRangeRows()
+        {
+            var mapping = UnifiedDynamizationSpec.ParseMapping(Json(
+                "{\"type\": \"Range\", \"entries\": [{\"from\": 0, \"to\": 30, \"value\": \"#00FF00\"}, " +
+                "{\"from\": 31, \"to\": 70.5, \"value\": \"Red\", \"flashing\": true, \"rate\": \"fast\", \"alternate\": \"Blue\"}]}"));
+
+            Assert.AreEqual("range", mapping.Type);
+            Assert.AreEqual(2, mapping.Entries.Count);
+            Assert.AreEqual(0, mapping.Entries[0].From);
+            Assert.AreEqual(70.5, mapping.Entries[1].To);
+            Assert.AreEqual(true, mapping.Entries[1].Flashing);
+            Assert.AreEqual("Fast", mapping.Entries[1].Rate);
+            Assert.IsTrue(mapping.Entries[1].HasAlternate);
+            Assert.IsFalse(mapping.Entries[0].HasAlternate);
+        }
+
+        [TestMethod]
+        public void Test_2305_ParseMapping_ReadsSingleBitRowsAndRefusesDuplicates()
+        {
+            var mapping = UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"singlebit\", \"entries\": [{\"bit\": 0, \"value\": \"Red\"}, {\"bit\": 1, \"value\": \"Green\"}]}"));
+
+            Assert.AreEqual(0, mapping.Entries[0].Bit);
+            Assert.AreEqual(1, mapping.Entries[1].Bit);
+
+            var error = Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"singlebit\", \"entries\": [{\"bit\": 1, \"value\": \"Red\"}, {\"bit\": 1, \"value\": \"Green\"}]}")));
+
+            StringAssert.Contains(error.Message, "named twice");
+        }
+
+        [TestMethod]
+        public void Test_2306_ParseMapping_RefusesTheTablesThatAreNotOffered()
+        {
+            var expression = Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"expression\", \"entries\": []}")));
+
+            StringAssert.Contains(expression.Message, "closes TIA Portal");
+
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"bitmask\"}"))).Message, "not supported");
+        }
+
+        [TestMethod]
+        public void Test_2307_ParseMapping_RefusesBadRows()
+        {
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"range\", \"entries\": [{\"from\": 5, \"to\": 1, \"value\": \"Red\"}]}"))).Message, "'from' above 'to'");
+
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"range\", \"entries\": [{\"from\": 1, \"to\": 5}]}"))).Message, "needs 'value'");
+
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"range\", \"entries\": [{\"bit\": 1, \"value\": \"Red\"}]}"))).Message, "'bit' belongs to");
+
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"range\", \"entries\": [{\"from\": 1, \"to\": 5, \"value\": \"Red\", \"rate\": \"Quick\"}]}"))).Message, "Rates:");
+
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"range\", \"entries\": []}"))).Message, "needs 'entries'");
+
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"singlebit\", \"entries\": [{\"bit\": 2, \"value\": \"Red\"}]}"))).Message, "0 or 1");
+        }
+
+        [TestMethod]
+        public void Test_2308_ParseMapping_NoneTakesNoRows()
+        {
+            Assert.AreEqual("none", UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"none\"}")).Type);
+
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"none\", \"entries\": [{}]}"))).Message, "takes no entries");
+        }
+
+        [TestMethod]
+        public void Test_2309_ParseEvent_TakesAStringAnObjectOrNull()
+        {
+            Assert.AreEqual("code", UnifiedDynamizationSpec.ParseEvent(Json("\"code\""), "Tapped").Script);
+            Assert.IsNull(UnifiedDynamizationSpec.ParseEvent(Json("null"), "Tapped").Script);
+            Assert.IsNull(UnifiedDynamizationSpec.ParseEvent(Json("\"  \""), "Tapped").Script);
+
+            var full = UnifiedDynamizationSpec.ParseEvent(Json("{\"script\": \"code\", \"async\": true, \"globalDefinitions\": \"const k = 5;\"}"), "Tapped");
+
+            Assert.AreEqual("code", full.Script);
+            Assert.AreEqual(true, full.Async);
+            Assert.AreEqual("const k = 5;", full.GlobalDefinitions);
+        }
+
+        [TestMethod]
+        public void Test_2310_ParseEvent_RefusesOptionsWithoutAScriptAndUnknownParts()
+        {
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseEvent(Json("{\"async\": true}"), "Tapped")).Message, "without a 'script'");
+
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseEvent(Json("{\"script\": \"x\", \"sync\": true}"), "Tapped")).Message, "no part 'sync'");
+
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseEvent(Json("5"), "Tapped")).Message, "takes the script as a string");
+        }
+
+        [TestMethod]
+        public void Test_2311_SplitPropertyEvent_DefaultsToAChangeOfTheValue()
+        {
+            Assert.AreEqual(("ProcessValue", "Change"), UnifiedDynamizationSpec.SplitPropertyEvent("ProcessValue"));
+            Assert.AreEqual(("ProcessValue", "QualityCodeChange"), UnifiedDynamizationSpec.SplitPropertyEvent("ProcessValue.qualitycodechange"));
+            Assert.AreEqual(("Left", "Change"), UnifiedDynamizationSpec.SplitPropertyEvent("Left.Change"));
+            Assert.AreEqual(("Font.Size", "Change"), UnifiedDynamizationSpec.SplitPropertyEvent("Font.Size"));
+        }
+
+        [TestMethod]
+        public void Test_2312_Canonical_NamesTheValidOnes()
+        {
+            Assert.AreEqual("RangeViolation", UnifiedDynamizationSpec.CanonicalCondition("rangeviolation"));
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.CanonicalCondition("Sometimes")).Message, "Never, Always, RangeViolation");
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.CanonicalRate("Quick")).Message, "Slow, Medium, Fast");
+        }
+    }
+}

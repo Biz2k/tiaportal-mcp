@@ -252,6 +252,18 @@ Comfort, Advanced и Professional, поэтому все три сообщают
   соответствующую тегу (см. ниже).
 - `{ "tag": "..." }` привязывает свойство к HMI-тегу, `{ "script": "..." }` задаёт динамизацию
   скриптом, `{ "dynamization": "none" }` убирает динамизацию.
+- Привязка к тегу принимает рядом с `tag` параметры: `"readOnly"`, `"indirect"` (тег типа String с именем читаемого
+  тега) и либо `"formula"` (`"'Tag_1'*2+1"`), либо `"mapping"`: `{"type": "range", "entries": [{"from": 0, "to": 30,
+  "value": "#00FF00"}, {"from": 31, "to": 70, "value": "Yellow", "flashing": true, "rate": "Fast", "alternate": "#808080"}]}`,
+  `{"type": "singlebit", "entries": [{"bit": 0, "value": "Red"}, {"bit": 1, "value": "Green"}]}` или `{"type": "none"}`.
+- Скрипт принимает `"async"`, `"globalDefinitions"` (область одна на все скрипт-динамизации экрана) и `"trigger"`:
+  `"T1s"` (от `T100ms` до `T10s`), `"AutomaticTags"`, `"Disabled"`, `{"type": "Tags", "tags": ["Tag_1"]}` или
+  `{"type": "CustomCycle", "cycle": "Имя цикла"}`.
+- `{ "expression": "формула" }` задаёт свойству выражение, `{ "flashing": { "condition": "Always", "rate": "Fast",
+  "color": "#FF0000", "alternateColor": "#0000FF" } }` включает мигание у свойства-цвета.
+- `events` принимает и `{ "script": "...", "async": true, "globalDefinitions": "..." }` на каждое событие; `propertyEvents`
+  задаёт скрипт на изменение свойства (`{ "ProcessValue": "..." }`, `"ProcessValue.QualityCodeChange"` для кода качества,
+  нужна привязка к тегу).
 - Текст задаётся обычной строкой и сохраняется в формате WinCC Unified; строка задаёт текст для
   всех языков проекта, `{ "texts": { "en-US": "..." } }` — для отдельных.
 - `events` сопоставляет имени события его скрипт; пустой скрипт удаляет обработчик. На

@@ -477,6 +477,7 @@ namespace TiaMcpServer.Siemens
                                 catch { }
                             }
 
+                            DescribeDynamizationDetails((object)dynamization, entry);
                             dynamizations.Add(entry);
                         }
                     }
@@ -493,7 +494,7 @@ namespace TiaMcpServer.Siemens
                             var entry = new Dictionary<string, object?>();
 
                             try { entry["EventType"] = handler.EventType.ToString(); } catch { }
-                            try { entry["ScriptCode"] = handler.Script.ScriptCode; } catch { }
+                            try { DescribeEventScript((object)handler.Script, entry); } catch { }
 
                             events.Add(entry);
                         }
@@ -501,6 +502,7 @@ namespace TiaMcpServer.Siemens
                     catch { }
 
                     properties["_Events"] = events;
+                    properties["_PropertyEvents"] = DescribePropertyEvents((object)target);
 
                     return properties;
                 },

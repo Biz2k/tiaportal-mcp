@@ -246,6 +246,19 @@ property gets either a static value or a dynamization, and `events` attaches scr
   the tag (see below).
 - `{ "tag": "..." }` binds the property to an HMI tag, `{ "script": "..." }` gives it a script
   dynamization, `{ "dynamization": "none" }` removes the dynamization.
+- A tag binding takes options beside `tag`: `"readOnly"`, `"indirect"` (the tag is a String tag that holds the name of
+  the tag to read), and either `"formula"` (`"'Tag_1'*2+1"`) or `"mapping"`: `{"type": "range", "entries": [{"from": 0,
+  "to": 30, "value": "#00FF00"}, {"from": 31, "to": 70, "value": "Yellow", "flashing": true, "rate": "Fast",
+  "alternate": "#808080"}]}`, `{"type": "singlebit", "entries": [{"bit": 0, "value": "Red"}, {"bit": 1, "value": "Green"}]}`
+  or `{"type": "none"}`.
+- A script takes `"async"`, `"globalDefinitions"` (one area for all script dynamizations of the screen) and
+  `"trigger"`: `"T1s"` (`T100ms` to `T10s`), `"AutomaticTags"`, `"Disabled"`, `{"type": "Tags", "tags": ["Tag_1"]}` or
+  `{"type": "CustomCycle", "cycle": "Cycle name"}`.
+- `{ "expression": "formula" }` gives the property an expression, `{ "flashing": { "condition": "Always", "rate": "Fast",
+  "color": "#FF0000", "alternateColor": "#0000FF" } }` makes a color property flash.
+- `events` also takes `{ "script": "...", "async": true, "globalDefinitions": "..." }` per event; `propertyEvents` sets the
+  script that runs when a property changes (`{ "ProcessValue": "..." }`, `"ProcessValue.QualityCodeChange"` for the
+  quality code, which needs a tag binding).
 - A text is given as plain text and stored in the format WinCC Unified uses; a string sets every
   project language, `{ "texts": { "en-US": "..." } }` sets single ones.
 - `events` maps an event name to its script; an empty script removes the handler. An unknown event

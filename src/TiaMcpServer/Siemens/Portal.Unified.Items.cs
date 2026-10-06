@@ -201,8 +201,40 @@ namespace TiaMcpServer.Siemens
 
                         try
                         {
-                            SetUnifiedEventHandler(target, handler.Key, handler.Value);
+                            var spec = UnifiedDynamizationSpec.ParseEvent(handler.Value, handler.Key);
+
+                            SetUnifiedEventHandler(target, handler.Key, spec);
                             result.Applied.Add(label);
+
+                            if (spec.GlobalDefinitions != null)
+                            {
+                                result.Notes.Add("The global definitions area is one for all events of the screen (the script dynamizations have another one): it now holds this code for every event.");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            result.Failed.Add(new HmiPropertyFailure { Property = label, Error = ErrorText.Describe(ex) });
+                        }
+                    }
+                }
+
+                if (action.PropertyEvents != null)
+                {
+                    foreach (var handler in action.PropertyEvents)
+                    {
+                        var label = "propertyEvent " + handler.Key;
+
+                        try
+                        {
+                            var spec = UnifiedDynamizationSpec.ParseEvent(handler.Value, handler.Key);
+
+                            SetPropertyEventHandler(target, handler.Key, spec);
+                            result.Applied.Add(label);
+
+                            if (spec.GlobalDefinitions != null)
+                            {
+                                result.Notes.Add("The global definitions area is one for all events of the screen (the script dynamizations have another one): it now holds this code for every event.");
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -215,7 +247,7 @@ namespace TiaMcpServer.Siemens
 
                 if (result.Failed.Count > 0)
                 {
-                    var asked = (action.Properties?.Count ?? 0) + (action.Events?.Count ?? 0);
+                    var asked = (action.Properties?.Count ?? 0) + (action.Events?.Count ?? 0) + (action.PropertyEvents?.Count ?? 0);
 
                     result.Error = $"{result.Failed.Count} of {asked} settings were not applied: " +
                                    string.Join("; ", result.Failed.Select(f => $"{f.Property}: {f.Error}"));
@@ -236,7 +268,7 @@ namespace TiaMcpServer.Siemens
         /// empty script removes the handler. Which events exist depends on the item type; the
         /// error lists them.
         /// </summary>
-        private static void SetUnifiedEventHandler(object target, string eventName, string? scriptCode)
+        private static void SetUnifiedEventHandler(object target, string eventName, UnifiedEventSpec spec)
         {
             object handlers;
 
@@ -265,7 +297,7 @@ namespace TiaMcpServer.Siemens
             var value = Enum.Parse(eventType, match);
             var handler = handlersType.GetMethod("Find")?.Invoke(handlers, new[] { value });
 
-            if (string.IsNullOrWhiteSpace(scriptCode))
+            if (spec.Script == null)
             {
                 if (handler != null)
                 {
@@ -278,7 +310,23 @@ namespace TiaMcpServer.Siemens
             handler ??= create.Invoke(handlers, new[] { value })
                 ?? throw new PortalException(PortalErrorCode.CreateFailed, $"Creating the '{match}' event handler returned nothing.");
 
-            ((dynamic)handler).Script.ScriptCode = scriptCode;
+            ApplyEventScript(((dynamic)handler).Script, spec);
+        }
+
+        /// <summary>The script of an event or of a change of a property; Async and the global definitions only when given.</summary>
+        private static void ApplyEventScript(dynamic script, UnifiedEventSpec spec)
+        {
+            script.ScriptCode = spec.Script;
+
+            if (spec.Async != null)
+            {
+                script.Async = spec.Async.Value;
+            }
+
+            if (spec.GlobalDefinitions != null)
+            {
+                script.GlobalDefinitionAreaScriptCode = spec.GlobalDefinitions;
+            }
         }
 
         private static object CreateUnifiedScreenItem(dynamic screen, string? itemType, string itemName)
@@ -343,10 +391,18 @@ namespace TiaMcpServer.Siemens
                 return SetResourceListDynamization(software, target, propertyName, value);
             }
 
+            // 'tag' and 'script' with options beside them, 'expression' and 'flashing': Portal.Unified.Dynamizations.cs.
+            var mainKey = UnifiedDynamizationSpec.FindMainKey(keys);
+
+            if (mainKey != null && (keys.Count > 1 || mainKey.Equals("expression", StringComparison.OrdinalIgnoreCase) || mainKey.Equals("flashing", StringComparison.OrdinalIgnoreCase)))
+            {
+                return SetHmiDynamizationWithOptions(software, target, propertyName, value, mainKey);
+            }
+
             if (keys.Count != 1)
             {
                 throw new PortalException(PortalErrorCode.InvalidParams,
-                    "A property object needs exactly one of 'value', 'tag', 'script', 'texts' or 'dynamization', or 'resourceList' with 'tag'; got: " +
+                    "A property object needs exactly one of 'value', 'tag', 'script', 'texts', 'expression', 'flashing' or 'dynamization' (a tag or script may have options beside it), or 'resourceList' with 'tag'; got: " +
                     (keys.Count == 0 ? "none" : string.Join(", ", keys)) + ".");
             }
 
@@ -391,7 +447,7 @@ namespace TiaMcpServer.Siemens
 
                 default:
                     throw new PortalException(PortalErrorCode.InvalidParams,
-                        $"Unknown key '{keys[0]}'. Use 'value', 'tag', 'script', 'texts', 'resourceList' with 'tag', or 'dynamization'.");
+                        $"Unknown key '{keys[0]}'. Use 'value', 'tag', 'script', 'texts', 'expression', 'flashing', 'resourceList' with 'tag', or 'dynamization'.");
             }
         }
 
@@ -724,7 +780,20 @@ namespace TiaMcpServer.Siemens
         /// existing dynamization of the same kind is updated; one of another kind is replaced,
         /// because a property holds at most one.
         /// </summary>
-        private static void SetHmiDynamization(object target, string propertyName, string dynamizationType, string valueProperty, string value)
+        private static object SetHmiDynamization(object target, string propertyName, string dynamizationType, string valueProperty, string value)
+        {
+            var dynamization = GetOrCreateHmiDynamization(target, propertyName, dynamizationType);
+
+            var setter = dynamization.GetType().GetProperty(valueProperty)
+                ?? throw new PortalException(PortalErrorCode.NotSupported, $"{dynamizationType} has no '{valueProperty}' to set.");
+
+            setter.SetValue(dynamization, value);
+
+            return dynamization;
+        }
+
+        /// <summary>The dynamization of the given kind on a property: the one it has, or a new one (a dynamization of another kind is deleted first).</summary>
+        private static object GetOrCreateHmiDynamization(object target, string propertyName, string dynamizationType)
         {
             object dynamizations;
 
@@ -761,10 +830,7 @@ namespace TiaMcpServer.Siemens
                     ?? throw new PortalException(PortalErrorCode.CreateFailed, $"Creating the {dynamizationType} for {propertyName} returned nothing.");
             }
 
-            var setter = existing.GetType().GetProperty(valueProperty)
-                ?? throw new PortalException(PortalErrorCode.NotSupported, $"{dynamizationType} has no '{valueProperty}' to set.");
-
-            setter.SetValue(existing, value);
+            return existing;
         }
     }
 }
