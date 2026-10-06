@@ -16,7 +16,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [Description("Kind of a new alarm: 'discrete' (default; raised by a bit of a tag) or 'analog' (raised by a limit of a tag). An existing alarm is found by its name")]
         public string? Type { get; set; }
 
-        [Description("Properties to set, by name. Both kinds: RaisedStateTag (HMI tag), AlarmClass, EventText, InfoText, Priority, Area, Origin, Id, EventText1..EventText9, Name (renames). Discrete: RaisedStateTagBitNumber, TriggerMode ('OnRisingEdge'/'OnFallingEdge'), AcknowledgmentStateTag, AcknowledgmentStateTagBitNumber, AcknowledgmentControlTag, AcknowledgmentControlTagBitNumber. Analog: Condition ('UpperLimit', 'LowerLimit', 'Equal', ...), ConditionValue. A text takes a string (all languages) or {\"en-US\": \"...\"}")]
+        [Description("Properties to set, by name. Both kinds: RaisedStateTag (HMI tag), AlarmClass, EventText, InfoText, Priority, Area, Origin, Id, EventText1..EventText9, Name (renames). Discrete: RaisedStateTagBitNumber, TriggerMode ('OnRisingEdge'/'OnFallingEdge'), AcknowledgmentStateTag, AcknowledgmentStateTagBitNumber, AcknowledgmentControlTag, AcknowledgmentControlTagBitNumber (a bit from 0 to 63). Both kinds: AlarmParameterTags, an array of up to 10 HMI tag names whose values are shown in the alarm text. Analog: Condition ('UpperLimit', 'LowerLimit', 'Equal', ...), ConditionValue. A text takes a string (all languages) or {\"en-US\": \"...\"}")]
         public Dictionary<string, JsonElement>? Properties { get; set; }
     }
 
@@ -75,6 +75,19 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>Info text by language; languages without a text are left out.</summary>
         public Dictionary<string, string>? InfoText { get; set; }
+
+        /// <summary>Tag that reports the acknowledgement; null when none is set.</summary>
+        public string? AcknowledgmentStateTag { get; set; }
+
+        public int? AcknowledgmentStateTagBitNumber { get; set; }
+
+        /// <summary>Tag the operator's acknowledgement is written to; null when none is set.</summary>
+        public string? AcknowledgmentControlTag { get; set; }
+
+        public int? AcknowledgmentControlTagBitNumber { get; set; }
+
+        /// <summary>The parameter tags shown in the alarm text, in order; null when there are none.</summary>
+        public List<string>? AlarmParameterTags { get; set; }
     }
 
     public class ResponseUnifiedAlarmClasses : ResponseMessage

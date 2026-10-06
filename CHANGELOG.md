@@ -12,6 +12,12 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Added (WinCC Unified alarms: acknowledgement and parameter tags)
+
+- `unified_get_alarms` shows the acknowledgement tags with their bits and the parameter tags; `unified_manage_alarms` sets
+  `AlarmParameterTags` as an array of up to 10 HMI tag names (checked) and refuses bit numbers outside 0..63, which Openness
+  would accept. Checked on the PC station.
+
 ### Added (WinCC Unified tag table groups)
 
 - __`unified_get_tag_table_groups`__ and __`unified_manage_tag_table_groups`__: list, create, rename and delete groups of tag

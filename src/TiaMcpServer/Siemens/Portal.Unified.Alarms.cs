@@ -18,6 +18,11 @@ namespace TiaMcpServer.Siemens
     // Callers: the tools unified_get_alarms, unified_get_alarm_classes, unified_manage_alarms
     // and unified_manage_alarm_classes in McpServer.Unified.cs. Reads and writes no data files.
     //
+    // Acknowledgement tags and parameter tags, V21, 2026-10-06 (PC station): AcknowledgmentStateTag / ControlTag and their
+    // bit numbers write normally, but Openness takes any text for a tag and any number (-1, 99) for a bit, so both are checked
+    // here. AlarmParameterTags is a List<string> of ten slots, all empty on the alarms of the test project; a shorter list
+    // fills the first slots and no name is checked by Openness.
+    //
     // DANGER, found on TIA Portal V21 (2026-10-06): calling GetAttributeInfos() on an alarm ends
     // in a NonRecoverableException ("PropertyDoesNotExists") that closes TIA Portal, because the
     // class declares an attribute, AuditClass, that the object does not have. So everything
@@ -131,8 +136,37 @@ namespace TiaMcpServer.Siemens
                 Area = alarm.Area,
                 Origin = string.IsNullOrEmpty(alarm.Origin) ? null : alarm.Origin,
                 EventText = DescribeTexts(alarm.EventText),
-                InfoText = DescribeTexts(alarm.InfoText)
+                InfoText = DescribeTexts(alarm.InfoText),
+                AcknowledgmentStateTag = ReadAlarmTag(alarm, "AcknowledgmentStateTag"),
+                AcknowledgmentStateTagBitNumber = ReadAlarmBit(alarm, "AcknowledgmentStateTag", "AcknowledgmentStateTagBitNumber"),
+                AcknowledgmentControlTag = ReadAlarmTag(alarm, "AcknowledgmentControlTag"),
+                AcknowledgmentControlTagBitNumber = ReadAlarmBit(alarm, "AcknowledgmentControlTag", "AcknowledgmentControlTagBitNumber"),
+                AlarmParameterTags = ReadAlarmParameterTags(alarm)
             };
+        }
+
+        private static string? ReadAlarmTag(AlarmBase alarm, string property)
+        {
+            var value = alarm.GetType().GetProperty(property)?.GetValue(alarm) as string;
+
+            return string.IsNullOrEmpty(value) || value == NoTag ? null : value;
+        }
+
+        /// <summary>The bit number of a tag property, only when that tag is set.</summary>
+        private static int? ReadAlarmBit(AlarmBase alarm, string tagProperty, string bitProperty)
+        {
+            return ReadAlarmTag(alarm, tagProperty) == null ? null : alarm.GetType().GetProperty(bitProperty)?.GetValue(alarm) as int?;
+        }
+
+        private static List<string>? ReadAlarmParameterTags(AlarmBase alarm)
+        {
+            var tags = (alarm.GetType().GetProperty("AlarmParameterTags")?.GetValue(alarm) as System.Collections.IEnumerable)?
+                .Cast<object?>().Select(o => o?.ToString() ?? string.Empty).ToList();
+
+            // Openness holds ten slots, mostly empty: only the ones in use are worth reporting.
+            var used = tags?.Where(s => s.Length > 0 && s != NoTag).ToList();
+
+            return used == null || used.Count == 0 ? null : used;
         }
 
         private static Dictionary<string, string>? DescribeTexts(MultilingualText text)
@@ -302,10 +336,22 @@ namespace TiaMcpServer.Siemens
                     // EventText and EventText1..9 are documents, InfoText is plain text.
                     SetAlarmText((MultilingualText)property.GetValue(alarm)!, entry.Value, property.Name, property.Name.StartsWith("EventText", StringComparison.Ordinal));
                 }
+                else if (property.Name == "AlarmParameterTags")
+                {
+                    SetTypedProperty(alarm, property, ReadAlarmParameterTagList(software, entry.Value));
+                }
                 else
                 {
                     var type = property.PropertyType == typeof(object) ? null : property.PropertyType;
                     var value = ConvertHmiValue(entry.Value, type, property.Name);
+
+                    // Openness takes any number, even -1 or 99, for the bit of a tag (checked 2026-10-06).
+                    if (property.Name.EndsWith("TagBitNumber", StringComparison.Ordinal) && value != null
+                        && (Convert.ToInt64(value) < 0 || Convert.ToInt64(value) > MaxAlarmBitNumber))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"{property.Name} is a bit number from 0 to {MaxAlarmBitNumber} (0-15 for a Word tag, 0-31 for a DWord); got {value}.");
+                    }
 
                     if (AlarmTagProperties.Contains(property.Name))
                     {
@@ -332,6 +378,45 @@ namespace TiaMcpServer.Siemens
 
                 result.Applied.Add(property.Name);
             }
+        }
+
+        /// <summary>The highest bit of a 64-bit tag.</summary>
+        private const int MaxAlarmBitNumber = 63;
+
+        /// <summary>Openness holds the parameter tags of an alarm in ten slots; a shorter list fills the first ones.</summary>
+        private const int AlarmParameterSlots = 10;
+
+        private static List<string> ReadAlarmParameterTagList(HmiSoftware software, JsonElement value)
+        {
+            if (value.ValueKind != JsonValueKind.Array)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams,
+                    $"AlarmParameterTags takes an array of up to {AlarmParameterSlots} HMI tag names, e.g. [\"Pressure\", \"Temperature\"]; got {value.GetRawText()}.");
+            }
+
+            var tags = value.EnumerateArray().Select(e => e.ValueKind == JsonValueKind.String ? e.GetString() ?? string.Empty : e.GetRawText()).ToList();
+
+            if (tags.Count > AlarmParameterSlots)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams, $"An alarm has {AlarmParameterSlots} parameter tag slots; got {tags.Count}.");
+            }
+
+            // Checked first: Openness stores a name that does not exist.
+            foreach (var name in tags.Where(n => n.Length > 0 && n != NoTag))
+            {
+                if (software.Tags.Find(name) == null)
+                {
+                    throw new PortalException(PortalErrorCode.NotFound,
+                        $"AlarmParameterTags: HMI tag '{name}' does not exist. Use 'unified_get_tags' to list the tags.");
+                }
+            }
+
+            while (tags.Count < AlarmParameterSlots)
+            {
+                tags.Add(string.Empty);
+            }
+
+            return tags;
         }
 
         private static void SetAlarmText(MultilingualText text, JsonElement value, string propertyName, bool document)
