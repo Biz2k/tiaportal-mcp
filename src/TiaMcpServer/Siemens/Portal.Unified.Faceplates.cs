@@ -22,6 +22,13 @@ namespace TiaMcpServer.Siemens
     // list that differs from type to type and from version to version. So the caller cannot
     // know the names up front; this operation takes them as given, reports the interface back,
     // and names the available properties when one is not found.
+    //
+    // Found on TIA Portal V21 (2026-10-06): an interface member has only PropertyName, Value and
+    // Dynamizations, so a tag interface cannot be told from a property interface up front: the tag
+    // kind takes a TagParameterDynamization and refuses a TagDynamization, the property kind the
+    // other way round, and the refusal ("Dynamization type not supported") is what tells them apart.
+    // Boolean properties take true/false, a static value, a tag or a script (AI_setting, Visible_Trand);
+    // numbers and colors are not seen in the project yet.
 
     public partial class Portal
     {
