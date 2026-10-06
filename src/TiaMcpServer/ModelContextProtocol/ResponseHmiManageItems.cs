@@ -20,6 +20,10 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? Status { get; set; }
         public string? Error { get; set; }
 
+        /// <summary>The code of the first failure that had one; the batch error reports it (not part of the answer).</summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public TiaMcpServer.Siemens.PortalErrorCode? Code { get; set; }
+
         /// <summary>Properties that were set.</summary>
         public List<string>? Applied { get; set; }
 
@@ -34,5 +38,9 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         public string? Property { get; set; }
         public string? Error { get; set; }
+
+        /// <summary>The code of the failure when it was a PortalException; the batch error reports it (not part of the answer).</summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public TiaMcpServer.Siemens.PortalErrorCode? Code { get; set; }
     }
 }

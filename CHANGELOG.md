@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- A range row with only `from` or only `to` is refused as `NotSupported` with the reason (Openness gives the range type of a row as read-only; use a large `to`), and the batch error of `unified_manage_items` carries the code of its failed actions instead of always `InvalidParams`.
 - `unified_manage_scripts` says that the syntax of the code is not checked (a syntax error is stored as written) and points to `unified_compile` with `pathFilter` `Scripts/<module>`, which reports it with line and column (checked live). The README no longer claims that a syntax error empties the function.
 - `unified_set_runtime_settings` addresses a language by its culture code (`LanguageAndFonts.en-US.Enable`) as well as by the name TIA Portal gives it (`English (United States)`); an unknown language is refused with the languages and their codes.
 - A script trigger without a type takes it from its parts: `{"tags": [...]}` is `Tags`, `{"cycle": "..."}` is `CustomCycle`. A trigger with nothing in it is refused with the list of types instead of a type with an empty name.

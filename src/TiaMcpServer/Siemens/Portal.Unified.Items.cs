@@ -70,9 +70,12 @@ namespace TiaMcpServer.Siemens
                             : "TIA Portal granted no transaction for this call, so the actions that succeeded remain applied: " +
                               (results.Count == failed.Count ? "none" : string.Join(", ", results.Where(r => r.Status == "success").Select(DescribeHmiAction))) + ".";
 
-                        throw new PortalException(PortalErrorCode.InvalidParams,
-                            $"{failed.Count} of {results.Count} action(s) failed. {outcome} " +
-                            string.Join(" | ", failed.Select(r => $"{DescribeHmiAction(r)}: {r.Error}")));
+                        var (message, code) = BatchErrorText.Compose(
+                            failed.Select(r => new BatchFailure(DescribeHmiAction(r), r.Error ?? string.Empty, r.Code)).ToList(),
+                            results.Count,
+                            outcome);
+
+                        throw new PortalException(code, message);
                     }
 
                     return results;
@@ -190,7 +193,7 @@ namespace TiaMcpServer.Siemens
                         catch (Exception ex)
                         {
                             // One property that does not take must not hide the ones that did.
-                            result.Failed.Add(new HmiPropertyFailure { Property = property.Key, Error = ErrorText.Describe(ex) });
+                            result.Failed.Add(new HmiPropertyFailure { Property = property.Key, Error = ErrorText.Describe(ex), Code = (ex as PortalException)?.Code });
                         }
                     }
                 }
@@ -215,7 +218,7 @@ namespace TiaMcpServer.Siemens
                         }
                         catch (Exception ex)
                         {
-                            result.Failed.Add(new HmiPropertyFailure { Property = label, Error = ErrorText.Describe(ex) });
+                            result.Failed.Add(new HmiPropertyFailure { Property = label, Error = ErrorText.Describe(ex), Code = (ex as PortalException)?.Code });
                         }
                     }
                 }
@@ -240,7 +243,7 @@ namespace TiaMcpServer.Siemens
                         }
                         catch (Exception ex)
                         {
-                            result.Failed.Add(new HmiPropertyFailure { Property = label, Error = ErrorText.Describe(ex) });
+                            result.Failed.Add(new HmiPropertyFailure { Property = label, Error = ErrorText.Describe(ex), Code = (ex as PortalException)?.Code });
                         }
                     }
                 }
@@ -265,6 +268,7 @@ namespace TiaMcpServer.Siemens
                 }
 
                 result.Status = result.Failed.Count == 0 ? "success" : "error";
+                result.Code = result.Failed.Select(f => f.Code).FirstOrDefault(code => code != null);
 
                 if (result.Failed.Count > 0)
                 {
@@ -278,6 +282,7 @@ namespace TiaMcpServer.Siemens
             {
                 result.Status = "error";
                 result.Error = ErrorText.Describe(ex);
+                result.Code = (ex as PortalException)?.Code;
                 _logger?.LogWarning(ex, "HMI item action {Action} on {Screen}/{Item} failed", action.Action, action.ScreenName, action.ItemName);
             }
 

@@ -250,7 +250,8 @@ property gets either a static value or a dynamization, and `events` attaches scr
   the tag to read), and either `"formula"` (`"'Tag_1'*2+1"`) or `"mapping"`: `{"type": "range", "entries": [{"from": 0,
   "to": 30, "value": "#00FF00"}, {"from": 31, "to": 70, "value": "Yellow", "flashing": true, "rate": "Fast",
   "alternate": "#808080"}]}`, `{"type": "singlebit", "entries": [{"bit": 0, "value": "Red"}, {"bit": 1, "value": "Green"}]}`
-  or `{"type": "none"}`.
+  or `{"type": "none"}`. Every range row needs both `from` and `to`: the rows "up to" and "from" a value cannot be
+  created (Openness gives the range type of a row as read-only) - use a very large `to` for an open end.
 - A script takes `"async"`, `"globalDefinitions"` (one area for all script dynamizations of the screen) and
   `"trigger"`: `"T1s"` (`T100ms` to `T10s`), `"AutomaticTags"`, `"Disabled"`, `{"type": "Tags", "tags": ["Tag_1"]}` or
   `{"type": "CustomCycle", "cycle": "Cycle name"}`. The type may be left out: `{"tags": [...]}` is the trigger `Tags`, `{"cycle": "..."}` is `CustomCycle`.

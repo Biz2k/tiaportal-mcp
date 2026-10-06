@@ -106,6 +106,24 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
+        public void Test_2304a_ParseMapping_RowWithOnlyFromOrOnlyTo_IsNotSupportedWithTheReason()
+        {
+            var onlyFrom = Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"range\", \"entries\": [{\"from\": 70, \"value\": \"Red\"}]}")));
+            var onlyTo = Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"range\", \"entries\": [{\"to\": 30, \"value\": \"Green\"}]}")));
+            var neither = Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"range\", \"entries\": [{\"value\": \"Green\"}]}")));
+
+            Assert.AreEqual(PortalErrorCode.NotSupported, onlyFrom.Code);
+            StringAssert.Contains(onlyFrom.Message, "read-only");
+            StringAssert.Contains(onlyFrom.Message, "only 'from'");
+            Assert.AreEqual(PortalErrorCode.NotSupported, onlyTo.Code);
+            StringAssert.Contains(onlyTo.Message, "only 'to'");
+            Assert.AreEqual(PortalErrorCode.InvalidParams, neither.Code);
+        }
+
+        [TestMethod]
         public void Test_2305_ParseMapping_ReadsSingleBitRowsAndRefusesDuplicates()
         {
             var mapping = UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"singlebit\", \"entries\": [{\"bit\": 0, \"value\": \"Red\"}, {\"bit\": 1, \"value\": \"Green\"}]}"));

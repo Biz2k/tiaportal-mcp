@@ -394,7 +394,16 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (type == "range")
             {
-                if (entry.From == null || entry.To == null)
+                if (entry.From == null != (entry.To == null))
+                {
+                    // The rows "up to" and "from" of the TIA Portal table have a range type of their own, and Openness
+                    // gives the type of a row as read-only (checked 2026-10-06), so such a row cannot be made.
+                    throw new PortalException(PortalErrorCode.NotSupported,
+                        $"A 'range' row with only '{(entry.From == null ? "to" : "from")}' (\"up to\" / \"from\" a value) cannot be created: Openness gives the range type of a row as read-only. " +
+                        $"Give both 'from' and 'to', e.g. a very large 'to' for an open end. Row: {row.GetRawText()}.");
+                }
+
+                if (entry.From == null)
                 {
                     throw Invalid($"A 'range' row needs 'from' and 'to'. Row: {row.GetRawText()}.");
                 }
