@@ -338,9 +338,10 @@ namespace TiaMcpServer.ModelContextProtocol
          Description("List the text lists of a WinCC Unified HMI with their entries. An entry is of type 'value' (one value), 'range' (from..to), 'from' (a value and above), 'to' (a value and below) or 'default', and carries its text per language. A list that is a library type is not listed")]
         public static ResponseUnifiedLists GetUnifiedTextLists(
             [Description(UnifiedPath)] string softwarePath,
-            [Description("listName: return only this list; empty (default) returns all")] string listName = "")
+            [Description("listName: return only this list; empty (default) returns all")] string listName = "",
+            [Description("system: true returns the system text lists of the HMI instead (alarm texts, error reasons); they can only be read")] bool system = false)
         {
-            return ReadUnifiedLists(softwarePath, "text", listName);
+            return ReadUnifiedLists(softwarePath, system ? "system" : "text", listName);
         }
 
         [McpServerTool(Name = "unified_get_graphic_lists", Title = "Get WinCC Unified graphic lists", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
@@ -648,14 +649,16 @@ namespace TiaMcpServer.ModelContextProtocol
         [DebugTool]
         [McpServerTool(Name = "unified_debug_screen_item", Title = "Debug: reflect a screen item", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("Development aid: the .NET type of a WinCC Unified screen item (or screen) and its public properties")]
-        public static object DebugUnifiedScreenItem(
+        public static ResponseUnifiedProperties DebugUnifiedScreenItem(
             [Description(UnifiedPath)] string softwarePath,
             [Description("screenName: name of the screen")] string screenName,
             [Description("itemName: name of the item; empty for the screen itself")] string itemName = "")
         {
             try
             {
-                return Portal.DebugUnifiedScreenItem(softwarePath, screenName, itemName);
+                var reflected = Portal.DebugUnifiedScreenItem(softwarePath, screenName, itemName);
+
+                return new ResponseUnifiedProperties { Message = $"{reflected["Type"]}", Items = reflected, Meta = ReadMeta() };
             }
             catch (Exception ex)
             {

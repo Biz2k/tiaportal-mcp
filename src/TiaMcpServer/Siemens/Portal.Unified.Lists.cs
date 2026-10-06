@@ -40,6 +40,11 @@ namespace TiaMcpServer.Siemens
     //     That is why every write is checked by exporting again and comparing; a difference
     //     fails the call and so rolls it back.
     //   - The name of a graphic is not checked: one that does not exist is stored as it is.
+    //   - HmiSystemTextLists (22 on the test panel: ConfigErrorAlarmTextLibrary_N, RuntimeCollaborationFailureReason_1, ...) has
+    //     Export and Import and no Delete or Create; its export has the same two files as a text list, so the same reader
+    //     serves it (V21, 2026-10-06). It is only read: the lists are system content.
+    //   - Project graphics (Project.Graphics) are not reachable from the Unified software: the collection that HmiGraphicLists
+    //     entries refer to has no object model here, which is why the graphic name stays unchecked.
     //
     // A list that is a library type is not among the lists of the HMI and cannot be read: the
     // export of a library type version holds no entries.
@@ -51,13 +56,13 @@ namespace TiaMcpServer.Siemens
 
         #region read
 
-        /// <param name="kind">"text" or "graphic".</param>
+        /// <param name="kind">"text", "graphic" or "system" (the system text lists, which are only read).</param>
         public List<UnifiedListInfo> GetUnifiedLists(string softwarePath, string kind, string listName = "")
         {
             return Operation.Run(_logger, nameof(GetUnifiedLists), PortalErrorCode.InvalidState,
                 () =>
                 {
-                    var lists = ExportLists(RequireUnifiedSoftware(softwarePath), kind == "graphic");
+                    var lists = ExportLists(RequireUnifiedSoftware(softwarePath), kind == "graphic", kind == "system");
 
                     if (string.IsNullOrWhiteSpace(listName))
                     {
@@ -74,18 +79,22 @@ namespace TiaMcpServer.Siemens
                 ("softwarePath", softwarePath), ("kind", kind), ("listName", listName));
         }
 
-        private static List<UnifiedListInfo> ExportLists(HmiSoftware software, bool graphic)
+        private static List<UnifiedListInfo> ExportLists(HmiSoftware software, bool graphic, bool system = false)
         {
             var result = new List<UnifiedListInfo>();
 
-            if ((graphic ? software.HmiGraphicLists.Count : software.HmiTextLists.Count) == 0)
+            if ((system ? software.HmiSystemTextLists.Count : graphic ? software.HmiGraphicLists.Count : software.HmiTextLists.Count) == 0)
             {
                 return result;
             }
 
             WithListFolder(folder =>
             {
-                if (graphic)
+                if (system)
+                {
+                    software.HmiSystemTextLists.Export(folder, "lists");
+                }
+                else if (graphic)
                 {
                     software.HmiGraphicLists.Export(folder, "lists");
                 }

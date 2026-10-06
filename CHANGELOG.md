@@ -12,6 +12,11 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Added (WinCC Unified system text lists)
+
+- `unified_get_text_lists` with `system: true` reads the system text lists of the HMI (alarm texts, error reasons; 22 on the
+  test panel). They can only be read. The debug tool `unified_debug_screen_item` has an output schema now.
+
 ### Changed (WinCC Unified system alarm classes)
 
 - `unified_manage_alarm_classes`: a system class refuses `Priority` and `Name` with an explanation, and `Log` has to name an

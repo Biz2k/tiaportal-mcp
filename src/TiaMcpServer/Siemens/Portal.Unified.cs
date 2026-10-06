@@ -718,7 +718,7 @@ namespace TiaMcpServer.Siemens
         #region debug
 
         /// <summary>The .NET type of a screen item (or screen) and its public properties - for developing this server.</summary>
-        public object DebugUnifiedScreenItem(string softwarePath, string screenName, string itemName)
+        public Dictionary<string, object?> DebugUnifiedScreenItem(string softwarePath, string screenName, string itemName)
         {
             return Operation.Run(_logger, nameof(DebugUnifiedScreenItem), PortalErrorCode.InvalidState,
                 () =>
@@ -730,7 +730,7 @@ namespace TiaMcpServer.Siemens
                         .Select(p => $"{p.Name} = {p.PropertyType.Name}")
                         .ToList();
 
-                    return (object)new { Type = target.GetType().Name, Props = members };
+                    return new Dictionary<string, object?> { ["Type"] = target.GetType().Name, ["Props"] = members };
                 },
                 ("softwarePath", softwarePath), ("screenName", screenName), ("itemName", itemName));
         }
