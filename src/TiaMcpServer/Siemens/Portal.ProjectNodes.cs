@@ -174,7 +174,7 @@ namespace TiaMcpServer.Siemens
 
         public string Name { get; set; } = string.Empty;
 
-        /// <summary>The path 'get_devices', 'hw_*' and 'net_*' accept for a device, and 'get_device_item_info' for an item.</summary>
+        /// <summary>The path 'hw_get_devices', 'hw_*' and 'net_*' accept for a device, and 'hw_get_device_item_info' for an item.</summary>
         public string Path { get; set; } = string.Empty;
 
         public string? Type { get; set; }

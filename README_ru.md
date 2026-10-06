@@ -87,7 +87,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 1. Запустите TIA Portal. Сервер подключается к работающему экземпляру и сам его не запускает.
 2. Вызовите `open_tia_project` с абсолютным путём к проекту `.apXX` или сессии `.alsXX`.
    Инструмент подключится, откроет проект и вернёт пути к программам ПЛК.
-3. Осмотритесь с помощью `get_project_tree`, `plc_get_software_tree` и `get_devices`.
+3. Осмотритесь с помощью `get_project_tree`, `plc_get_software_tree` и `hw_get_devices`.
 4. Читайте и изменяйте объекты инструментами `plc_*`, `hw_*`, `net_*` и `unified_*`.
 5. Сохраните изменения вызовом `save_project`. До этого они существуют только в памяти.
 
@@ -133,9 +133,9 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | -------------------------------- | ----------- |
 | Подключение и состояние          | `connect`, `disconnect`, `get_state`, `doctor` |
 | Проект и сессия                  | `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
-| Структура проекта                | `get_project_tree`, `get_devices`, `hw_get_device_info`, `get_device_item_info`, `get_hardware_topology`, `hw_search_catalog` |
-| Программа ПЛК                    | `get_plc_summary`, `plc_get_software_info`, `plc_get_software_tree`, `plc_compile_software` |
-| Блоки                            | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `get_block_interface`, `plc_get_block_source` |
+| Структура проекта                | `get_project_tree`, `hw_get_devices`, `hw_get_device_info`, `hw_get_device_item_info`, `hw_get_topology`, `hw_search_catalog` |
+| Программа ПЛК                    | `plc_get_summary`, `plc_get_software_info`, `plc_get_software_tree`, `plc_compile_software` |
+| Блоки                            | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source` |
 | Типы данных                      | `plc_get_types`, `plc_get_type_info`, `plc_get_type_source` |
 | Теги и константы                 | `plc_get_tag_tables`, `plc_get_tag_table_info`, `plc_get_tags`, `plc_get_tag_info`, `plc_get_constants` |
 | Таблицы наблюдения               | `plc_get_watch_tables`, `plc_get_watch_table_info`, `plc_get_force_tables` |
@@ -180,7 +180,7 @@ TIA Portal допускает `/` внутри имени (группа блок
 `Inputs/Outputs/AI_Handler` тоже принимается; если существуют и группа `Inputs/Outputs`, и группа
 `Inputs` с подгруппой `Outputs`, неэкранированная форма означает вложенную.
 
-Устройство находится по пути из `get_devices`, по имени в Openness или по имени его CPU, как оно
+Устройство находится по пути из `hw_get_devices`, по имени в Openness или по имени его CPU, как оно
 показано в дереве проекта (`PLC_1`). Если имя подходит нескольким устройствам, вызов отклоняется
 со списком подходящих путей.
 
@@ -567,7 +567,7 @@ CPU не останавливается и не запускается, пока
 - У каждого инструмента есть читаемый `title` и аннотации поведения (`readOnlyHint`,
   `destructiveHint`, `idempotentHint`, `openWorldHint`). Большинство инструментов публикуют
   `outputSchema` и возвращают `structuredContent`.
-- Вместе с инструментами зарегистрировано 78 подсказок (prompts).
+- Подсказки (prompts) не регистрируются; то же самое сказано в описаниях инструментов.
 - Транспорт — только **stdio**. Журнал при этом пишется в stderr, чтобы не повредить JSON-RPC.
 - Streamable HTTP из этого процесса недоступен: SDK поставляет его для .NET 8+, а сервер собран
   под `net48`, как того требует TIA Openness. Понадобился бы отдельный процесс-посредник.

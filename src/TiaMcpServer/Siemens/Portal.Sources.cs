@@ -41,7 +41,7 @@ namespace TiaMcpServer.Siemens
                     {
                         throw new PortalException(PortalErrorCode.InvalidState,
                             $"Block '{block.Name}' is inconsistent; TIA Portal cannot export it. Compile the software first, " +
-                            "or use 'get_block_interface', which works without an export.");
+                            "or use 'plc_get_block_interface', which works without an export.");
                     }
 
                     return ReadSource(

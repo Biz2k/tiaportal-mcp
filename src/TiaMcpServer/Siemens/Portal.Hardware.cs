@@ -479,7 +479,7 @@ namespace TiaMcpServer.Siemens
                 ?? throw new PortalException(PortalErrorCode.NotFound,
                     $"Item '{itemName}' not found in device '{device.Name}'. Its top-level items are: " +
                     string.Join(", ", device.DeviceItems.Select(i => $"'{i.Name}'")) +
-                    ". 'get_hardware_topology' shows the full item tree.");
+                    ". 'hw_get_topology' shows the full item tree.");
         }
 
         private NetworkInterface RequireNetworkInterface(string deviceName, string interfaceName)

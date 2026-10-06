@@ -4,15 +4,10 @@ disconnect
 doctor
 download_to_plc
 export_objects
-get_block_interface
-get_device_item_info
-get_devices
 get_download_targets
-get_hardware_topology
 get_libraries
 get_library_types
 get_master_copies
-get_plc_summary
 get_project
 get_project_tree
 get_state
@@ -20,6 +15,9 @@ get_tia_instances
 hw_create_device
 hw_delete_device
 hw_get_device_info
+hw_get_device_item_info
+hw_get_devices
+hw_get_topology
 hw_plug_module
 hw_search_catalog
 import_objects
@@ -68,6 +66,7 @@ plc_find_in_code
 plc_generate_sources
 plc_get_block_data
 plc_get_block_info
+plc_get_block_interface
 plc_get_block_source
 plc_get_blocks
 plc_get_blocks_hierarchy
@@ -78,6 +77,7 @@ plc_get_external_sources
 plc_get_force_tables
 plc_get_software_info
 plc_get_software_tree
+plc_get_summary
 plc_get_tag_info
 plc_get_tag_table_info
 plc_get_tag_tables

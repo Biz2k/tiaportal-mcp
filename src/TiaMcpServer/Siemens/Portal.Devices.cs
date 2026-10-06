@@ -221,7 +221,7 @@ namespace TiaMcpServer.Siemens
 
             return GetDevice(devicePath)
                 ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"Device not found at '{devicePath}'. Use 'get_devices' to list the device paths.");
+                    $"Device not found at '{devicePath}'. Use 'hw_get_devices' to list the device paths.");
         }
 
         /// <summary>

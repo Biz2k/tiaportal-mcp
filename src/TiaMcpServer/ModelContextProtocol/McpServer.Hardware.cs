@@ -11,7 +11,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         #region hardware topology
 
-        [McpServerTool(Name = "get_hardware_topology", Title = "Get hardware topology", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get the hardware topology of the TIA-Portal project (devices, modules, MLFB/Article numbers, firmwares)")]
+        [McpServerTool(Name = "hw_get_topology", Title = "Get hardware topology", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get the hardware topology of the TIA-Portal project (devices, modules, MLFB/Article numbers, firmwares)")]
         public static ResponseHardwareTopology GetHardwareTopology()
         {
             try
@@ -101,9 +101,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "hw_plug_module", Title = "Plug hardware module", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Plug a new module into a rack or module of an existing device at a position. 'get_hardware_topology' shows the racks and what is already plugged")]
+         Description("Plug a new module into a rack or module of an existing device at a position. 'hw_get_topology' shows the racks and what is already plugged")]
         public static ResponseMessage PlugHardwareModule(
-            [Description("deviceName: path or name of the device, as 'get_devices' returns it")] string deviceName,
+            [Description("deviceName: path or name of the device, as 'hw_get_devices' returns it")] string deviceName,
             [Description("parentItemName: name of the item to plug into, usually the rack (e.g. 'Rack_0' or 'Rail_0'). Empty plugs into the station itself, which is how a rack is added to an empty station (typeIdentifier e.g. 'System:Rack.ET200SP', position 0)")] string parentItemName,
             [Description("positionNumber: the slot to plug into (e.g. 1)")] int positionNumber,
             [Description("typeIdentifier: Openness type identifier of the module (e.g. 'OrderNumber:6ES7 131-6BH01-0BA0/V0.0'); 'hw_search_catalog' finds it")] string typeIdentifier,
@@ -125,7 +125,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "hw_delete_device", Title = "Delete hardware device", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Delete a hardware device (PLC, HMI, IO station) and everything in it from the project")]
         public static ResponseMessage DeleteHardwareDevice(
-            [Description("deviceName: path or name of the device, as 'get_devices' returns it")] string deviceName)
+            [Description("deviceName: path or name of the device, as 'hw_get_devices' returns it")] string deviceName)
         {
             return Guarded(nameof(DeleteHardwareDevice), () =>
             {
@@ -155,7 +155,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "net_connect_subnet", Title = "Connect interface to subnet", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Connect a network interface to a subnet; a PN/IE subnet of that name is created if it does not exist. Steps 1 and 3 of building a PROFINET IO system: connect the PLC interface, create the IO system ('net_create_io_system'), connect the IO device interface to the same subnet, then 'net_connect_to_io_system'")]
         public static ResponseMessage ConnectSubnet(
-            [Description("deviceName: path or name of the device, as 'get_devices' returns it")] string deviceName,
+            [Description("deviceName: path or name of the device, as 'hw_get_devices' returns it")] string deviceName,
             [Description("interfaceName: name of the PROFINET/Ethernet interface item (e.g. 'PROFINET interface_1')")] string interfaceName,
             [Description("subnetName: name of the subnet to connect to (e.g. 'PN/IE_1')")] string subnetName)
         {
@@ -175,7 +175,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "net_disconnect_subnet", Title = "Disconnect interface from subnet", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Disconnect a network interface from its subnet. An IO device leaves its IO system with it")]
         public static ResponseMessage DisconnectSubnet(
-            [Description("deviceName: path or name of the device, as 'get_devices' returns it")] string deviceName,
+            [Description("deviceName: path or name of the device, as 'hw_get_devices' returns it")] string deviceName,
             [Description("interfaceName: name of the PROFINET/Ethernet interface item")] string interfaceName)
         {
             return Guarded(nameof(DisconnectSubnet), () =>
@@ -192,7 +192,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "net_delete_subnet", Title = "Delete subnet", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Delete a subnet of the project. A subnet that still has connected interfaces or IO systems is refused with the list of them; 'force' deletes it together with them. Subnets are listed by 'get_hardware_topology'")]
+         Description("Delete a subnet of the project. A subnet that still has connected interfaces or IO systems is refused with the list of them; 'force' deletes it together with them. Subnets are listed by 'hw_get_topology'")]
         public static ResponseMessage DeleteSubnet(
             [Description("subnetName: name of the subnet (e.g. 'PN/IE_1')")] string subnetName,
             [Description("force: delete the subnet although interfaces or IO systems are on it (default false)")] bool force = false)
@@ -214,7 +214,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "net_get_connections", Title = "Get communication connections", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("List the communication connections (S7, TCP, ISO-on-TCP, ISO, UDP, HMI) of the project or of one device: owner, name, type, partner, subnet, addresses and the type-specific settings. A connection is listed by both of its ends")]
         public static ResponseNetConnections GetNetConnections(
-            [Description("deviceName: path or name of one device, as 'get_devices' returns it; empty lists the whole project")] string deviceName = "")
+            [Description("deviceName: path or name of one device, as 'hw_get_devices' returns it; empty lists the whole project")] string deviceName = "")
         {
             try
             {
@@ -279,7 +279,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "net_create_io_system", Title = "Create IO system on controller", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Create a PROFINET IO system on a PLC network interface. Step 2 of building an IO system: the interface must already be connected to a subnet with 'net_connect_subnet'")]
         public static ResponseMessage CreateIoSystem(
-            [Description("deviceName: path or name of the PLC device, as 'get_devices' returns it")] string deviceName,
+            [Description("deviceName: path or name of the PLC device, as 'hw_get_devices' returns it")] string deviceName,
             [Description("interfaceName: name of the PROFINET interface item of the PLC (e.g. 'PROFINET interface_1')")] string interfaceName,
             [Description("ioSystemName: name of the IO system to create (e.g. 'PROFINET IO-System (100)')")] string ioSystemName)
         {
@@ -299,7 +299,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "net_connect_to_io_system", Title = "Connect IO device to IO system", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Connect the network interface of an IO device to an existing IO system. Step 4 of building an IO system: the IO device interface must already be on the IO system's subnet ('net_connect_subnet')")]
         public static ResponseMessage ConnectToIoSystem(
-            [Description("deviceName: path or name of the IO device, as 'get_devices' returns it")] string deviceName,
+            [Description("deviceName: path or name of the IO device, as 'hw_get_devices' returns it")] string deviceName,
             [Description("interfaceName: name of the PROFINET interface item of the IO device")] string interfaceName,
             [Description("ioSystemName: name of the IO system to join")] string ioSystemName)
         {

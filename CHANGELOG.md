@@ -12,6 +12,20 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Breaking (tool names and prompts)
+
+Five tools got an area prefix, and the prompts are gone. Update prompts, scripts and permission allow-lists that name the old tools.
+
+| was | now |
+|---|---|
+| `get_devices` | `hw_get_devices` |
+| `get_device_item_info` | `hw_get_device_item_info` |
+| `get_hardware_topology` | `hw_get_topology` |
+| `get_block_interface` | `plc_get_block_interface` |
+| `get_plc_summary` | `plc_get_summary` |
+
+- The 78 prompts (`McpPrompts.cs`) are no longer registered: the tool descriptions say the same and the prompts drifted from the code.
+
 ### Added
 
 - `net_get_connections`, `net_create_connection`, `net_delete_connection`: communication connections between PLCs (S7, TCP, ISO-on-TCP,

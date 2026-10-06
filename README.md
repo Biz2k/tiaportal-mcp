@@ -82,7 +82,7 @@ access. Confirm it in the TIA Portal window.
 1. Start TIA Portal. The server attaches to a running instance and does not start one on its own.
 2. Call `open_tia_project` with the absolute path of a `.apXX` project or `.alsXX` session. It
    connects, opens the project and returns the PLC software paths.
-3. Explore with `get_project_tree`, `plc_get_software_tree` and `get_devices`.
+3. Explore with `get_project_tree`, `plc_get_software_tree` and `hw_get_devices`.
 4. Read or change objects with the `plc_*`, `hw_*`, `net_*` and `unified_*` tools.
 5. Call `save_project` to keep the changes. Until then they exist only in memory.
 
@@ -129,9 +129,9 @@ Always available (57):
 | ----------------------- | ----- |
 | Portal and state        | `connect`, `disconnect`, `get_state`, `doctor` |
 | Project and session     | `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
-| Project structure       | `get_project_tree`, `get_devices`, `hw_get_device_info`, `get_device_item_info`, `get_hardware_topology`, `hw_search_catalog` |
-| PLC software            | `get_plc_summary`, `plc_get_software_info`, `plc_get_software_tree`, `plc_compile_software` |
-| Blocks                  | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `get_block_interface`, `plc_get_block_source` |
+| Project structure       | `get_project_tree`, `hw_get_devices`, `hw_get_device_info`, `hw_get_device_item_info`, `hw_get_topology`, `hw_search_catalog` |
+| PLC software            | `plc_get_summary`, `plc_get_software_info`, `plc_get_software_tree`, `plc_compile_software` |
+| Blocks                  | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source` |
 | Types                   | `plc_get_types`, `plc_get_type_info`, `plc_get_type_source` |
 | Tags and constants      | `plc_get_tag_tables`, `plc_get_tag_table_info`, `plc_get_tags`, `plc_get_tag_info`, `plc_get_constants` |
 | Watch and force tables  | `plc_get_watch_tables`, `plc_get_watch_table_info`, `plc_get_force_tables` |
@@ -175,7 +175,7 @@ TIA Portal allows `/` inside a name (a block group `Inputs/Outputs`, a station
 `Inputs/Outputs/AI_Handler` is accepted as well; if both a group `Inputs/Outputs` and a group
 `Inputs` with a subgroup `Outputs` exist, the unescaped form means the nested one.
 
-A device is found by its path from `get_devices`, by its Openness name, or by the name of its CPU
+A device is found by its path from `hw_get_devices`, by its Openness name, or by the name of its CPU
 as the project tree shows it (`PLC_1`). A name that fits several devices is rejected with the
 candidate paths.
 
@@ -549,7 +549,7 @@ The design is described in [`docs/error-model.md`](docs/error-model.md).
 - Every tool advertises a human-readable `title` and behaviour annotations (`readOnlyHint`,
   `destructiveHint`, `idempotentHint`, `openWorldHint`). Most tools publish an `outputSchema` and
   return `structuredContent`.
-- 78 prompts are registered alongside the tools.
+- No prompts are registered; the tool descriptions carry the same guidance.
 - Transport: **stdio** only. For stdio, logs go to stderr so they do not corrupt JSON-RPC.
 - Streamable HTTP is not available from this process: the SDK ships it for .NET 8+, while this
   server targets `net48`, which TIA Openness requires. A separate proxy process would be needed.

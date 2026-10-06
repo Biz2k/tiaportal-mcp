@@ -467,7 +467,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region devices
 
         [McpServerTool(Name = "get_project_tree", Title = "Get project tree", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Get the project structure: devices, device groups and device items. By default a text tree (about 25 000 characters on a large project: narrow it with 'depth' and 'filter'). With structured = true a flat list of nodes instead, each with the 'path' that 'get_devices', 'hw_*', 'net_*' and 'get_device_item_info' accept and, for an item that carries software, the 'softwarePath' the plc_* and unified_* tools take")]
+         Description("Get the project structure: devices, device groups and device items. By default a text tree (about 25 000 characters on a large project: narrow it with 'depth' and 'filter'). With structured = true a flat list of nodes instead, each with the 'path' that 'hw_get_devices', 'hw_*', 'net_*' and 'hw_get_device_item_info' accept and, for an item that carries software, the 'softwarePath' the plc_* and unified_* tools take")]
         public static ResponseProjectTree GetProjectTree(
             [Description("depth: levels shown below the project, 0 = all (default). 1 = devices and groups only, 2 = their top-level items")] int depth = 0,
             [Description("filter: regular expression on names; keeps the matching nodes and the nodes above them. Empty = no filter (default)")] string filter = "",

@@ -105,7 +105,7 @@ namespace TiaMcpServer.Test
             }
 
             Assert.IsTrue(readOnly.Contains("hw_search_catalog"), "The catalog search only reads");
-            Assert.IsTrue(readOnly.Contains("get_hardware_topology"), "The topology listing only reads");
+            Assert.IsTrue(readOnly.Contains("hw_get_topology"), "The topology listing only reads");
         }
 
         [TestMethod]
