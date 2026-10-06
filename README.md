@@ -511,6 +511,17 @@ A PLC data type name is unique across the whole PLC, not just within its group. 
 that already exists into a *different* group therefore fails even when overwriting; target the
 group the type already lives in.
 
+## Long lists
+
+A tool that can return hundreds of records takes `limit` (the most records in one page; 0 returns all) and `offset`,
+and says in `meta` how long the list is: `total`, `offset`, `truncated` and, when there is more, `nextOffset` - the
+`offset` of the next page. The message of the answer says the same in words. The tools: `plc_get_blocks`,
+`plc_get_types`, `plc_get_tags`, `plc_get_cross_references`, `hw_get_devices`, `get_master_copies`,
+`get_library_types`, `unified_get_screens`, `unified_get_screen_items`, `unified_get_tags`,
+`unified_get_system_tags`, `unified_get_alarms`, `unified_get_logging_tags`, `unified_get_text_lists` and
+`unified_get_graphic_lists`. `plc_find_in_code` and `plc_get_block_source` cut by the amount of text and report it as
+`truncated` in `meta` too.
+
 ## Projects and instances
 
 - `connect` attaches to the only TIA Portal that has a project open; with several, pass `processId` or `projectPath`

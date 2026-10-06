@@ -4,6 +4,7 @@ using Siemens.Engineering.SW.Blocks;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using TiaMcpServer.Siemens;
@@ -89,7 +90,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "hw_get_devices", Title = "Get devices", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get a list of all devices in the project/session: path, name, type and the names of the top-level items. 'includeAttributes' adds every attribute of each device (long); 'hw_get_device_info' gives them for one device")]
         public static ResponseDevices GetDevices(
-            [Description("includeAttributes: true adds the full attribute list of every device (default false)")] bool includeAttributes = false)
+            [Description("includeAttributes: true adds the full attribute list of every device (default false)")] bool includeAttributes = false,
+            [Description(Paging.LimitText)] int limit = 500,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {
@@ -100,7 +103,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 if (list != null)
                 {
-                    foreach (var device in list)
+                    var page = Paging.Page(list.Where(d => d != null).ToList(), limit, offset);
+
+                    foreach (var device in page.Items)
                     {
                         if (device != null)
                         {
@@ -118,13 +123,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
                     return new ResponseDevices
                     {
-                        Message = "Devices retrieved",
+                        Message = "Devices retrieved" + page.Note("includeAttributes=false"),
                         Items = responseList,
-                        Meta = new JsonObject
+                        Meta = page.Meta(new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
                             ["success"] = true
-                        }
+                        })
                     };
                 }
                 else

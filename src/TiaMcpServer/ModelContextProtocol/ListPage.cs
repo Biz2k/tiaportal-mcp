@@ -23,6 +23,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         internal bool Truncated => Offset + Items.Count < Total;
 
+        /// <summary>The 'offset' that reads the next page; meaningful when <see cref="Truncated"/>.</summary>
+        internal int NextOffset => Offset + Items.Count;
+
         private ListPage(List<T> items, int total, int offset)
         {
             Items = items;
@@ -77,7 +80,22 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["offset"] = Offset;
             meta["truncated"] = Truncated;
 
+            if (Truncated)
+            {
+                meta["nextOffset"] = NextOffset;
+            }
+
             return meta;
         }
+    }
+
+    /// <summary>The same words for the paging parameters of every list tool, and the page of a list in one call.</summary>
+    internal static class Paging
+    {
+        internal const string LimitText = "limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so";
+
+        internal const string OffsetText = "offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0)";
+
+        internal static ListPage<T> Page<T>(IReadOnlyList<T> all, int limit, int offset) => ListPage<T>.Of(all, limit, offset);
     }
 }

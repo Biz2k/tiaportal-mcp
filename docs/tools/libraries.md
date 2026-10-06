@@ -24,6 +24,8 @@ List the types of a library with their versions, and say which system each type 
 |---|---|---|---|
 | `libraryName` | string | no (default `ProjectLibrary`) | libraryName: 'ProjectLibrary' (default) or the name of an opened global library; 'get_libraries' lists them |
 | `system` | string | no (default ``) | system: return only the types of one system - 'unified', 'classic', 'plc' or 'universal'; empty for all |
+| `limit` | integer | no (default `500`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## get_master_copies
 
@@ -32,6 +34,8 @@ Lists all Master Copies inside a specified library recursively
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `libraryName` | string | yes | libraryName: name of the library (use 'ProjectLibrary' for the project's library) |
+| `limit` | integer | no (default `500`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## instantiate_master_copy
 

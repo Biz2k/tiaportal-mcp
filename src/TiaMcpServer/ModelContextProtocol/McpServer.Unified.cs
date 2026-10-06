@@ -31,19 +31,21 @@ namespace TiaMcpServer.ModelContextProtocol
          Description("List the screens of a WinCC Unified HMI with their group and size. Screens in screen groups are included; screen names are unique in the whole HMI, so every other tool finds a screen by its name alone")]
         public static ResponseHmiScreens GetUnifiedScreens(
             [Description(UnifiedPath)] string softwarePath,
-            [Description("group: return only the screens of this screen group and the groups in it, e.g. 'Pumps' or 'Pumps/Big'; empty (default) returns every screen. 'unified_get_screen_groups' lists the groups")] string group = "")
+            [Description("group: return only the screens of this screen group and the groups in it, e.g. 'Pumps' or 'Pumps/Big'; empty (default) returns every screen. 'unified_get_screen_groups' lists the groups")] string group = "",
+            [Description(Paging.LimitText)] int limit = 500,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {
-                var screens = Portal.GetUnifiedScreens(softwarePath, group);
+                var page = Paging.Page(Portal.GetUnifiedScreens(softwarePath, group), limit, offset);
 
                 return new ResponseHmiScreens
                 {
-                    Message = string.IsNullOrWhiteSpace(group)
-                        ? $"{screens.Count} screen(s) in '{softwarePath}'"
-                        : $"{screens.Count} screen(s) in group '{group}' of '{softwarePath}'",
-                    Items = screens,
-                    Meta = ReadMeta()
+                    Message = (string.IsNullOrWhiteSpace(group)
+                        ? $"{page.Total} screen(s) in '{softwarePath}'"
+                        : $"{page.Total} screen(s) in group '{group}' of '{softwarePath}'") + page.Note("group"),
+                    Items = page.Items,
+                    Meta = page.Meta(ReadMeta())
                 };
             }
             catch (Exception ex)
@@ -56,17 +58,19 @@ namespace TiaMcpServer.ModelContextProtocol
          Description("List the items of a WinCC Unified screen: name, type, position, size, text, process value and the events that have a handler")]
         public static ResponseHmiScreenItems GetUnifiedScreenItems(
             [Description(UnifiedPath)] string softwarePath,
-            [Description("screenName: name of the screen")] string screenName)
+            [Description("screenName: name of the screen")] string screenName,
+            [Description(Paging.LimitText)] int limit = 500,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {
-                var items = Portal.GetUnifiedScreenItems(softwarePath, screenName);
+                var page = Paging.Page(Portal.GetUnifiedScreenItems(softwarePath, screenName), limit, offset);
 
                 return new ResponseHmiScreenItems
                 {
-                    Message = $"{items.Count} item(s) on screen '{screenName}'",
-                    Items = items,
-                    Meta = ReadMeta()
+                    Message = $"{page.Total} item(s) on screen '{screenName}'" + page.Note("a smaller screen"),
+                    Items = page.Items,
+                    Meta = page.Meta(ReadMeta())
                 };
             }
             catch (Exception ex)
@@ -105,8 +109,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description(UnifiedPath)] string softwarePath,
             [Description("nameFilter: regular expression on the tag name, case-insensitive; empty (default) returns every tag")] string nameFilter = "",
             [Description("tagTable: return only the tags of this tag table; 'unified_get_tag_tables' lists the tables")] string tagTable = "",
-            [Description("limit: the most items to return (default 200); 0 returns all")] int limit = 200,
-            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
+            [Description(Paging.LimitText)] int limit = 200,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {
@@ -246,20 +250,19 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description(UnifiedPath)] string softwarePath,
             [Description("tagName: regular expression on the path of the process tag, case-insensitive (a member of a structured tag is 'Tag.Member'); empty (default) for all")] string tagName = "",
             [Description("logName: only the logging tags that archive into this data log")] string logName = "",
-            [Description("limit: the most logging tags to return (default 500)")] int limit = 500)
+            [Description(Paging.LimitText)] int limit = 500,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {
-                var items = Portal.GetUnifiedLoggingTags(softwarePath, tagName, logName, limit, out var truncated);
+                var page = Paging.Page(Portal.GetUnifiedLoggingTags(softwarePath, tagName, logName, int.MaxValue, out _), limit, offset);
 
                 return new ResponseUnifiedLoggingTags
                 {
-                    Message = truncated
-                        ? $"{items.Count} logging tag(s) returned, there are more: narrow the list with tagName or logName"
-                        : $"{items.Count} logging tag(s) in '{softwarePath}'",
-                    Items = items,
-                    Truncated = truncated,
-                    Meta = ReadMeta()
+                    Message = $"{page.Total} logging tag(s) in '{softwarePath}'" + page.Note("tagName or logName"),
+                    Items = page.Items,
+                    Truncated = page.Truncated,
+                    Meta = page.Meta(ReadMeta())
                 };
             }
             catch (Exception ex)
@@ -317,8 +320,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseUnifiedList GetUnifiedSystemTags(
             [Description(UnifiedPath)] string softwarePath,
             [Description("nameFilter: regular expression on the tag name, case-insensitive; empty returns every tag")] string nameFilter = "",
-            [Description("limit: the most items to return (default 200); 0 returns all")] int limit = 200,
-            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
+            [Description(Paging.LimitText)] int limit = 200,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {
@@ -393,8 +396,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description(UnifiedPath)] string softwarePath,
             [Description("type: 'discrete' or 'analog'; empty (default) returns both")] string type = "",
             [Description("nameFilter: regular expression on the alarm name, case-insensitive; empty (default) returns every alarm")] string nameFilter = "",
-            [Description("limit: the most items to return (default 500); 0 returns all")] int limit = 500,
-            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
+            [Description(Paging.LimitText)] int limit = 500,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {
@@ -440,31 +443,35 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseUnifiedLists GetUnifiedTextLists(
             [Description(UnifiedPath)] string softwarePath,
             [Description("listName: return only this list; empty (default) returns all")] string listName = "",
-            [Description("system: true returns the system text lists of the HMI instead (alarm texts, error reasons); they can only be read")] bool system = false)
+            [Description("system: true returns the system text lists of the HMI instead (alarm texts, error reasons); they can only be read")] bool system = false,
+            [Description(Paging.LimitText)] int limit = 500,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
-            return ReadUnifiedLists(softwarePath, system ? "system" : "text", listName);
+            return ReadUnifiedLists(softwarePath, system ? "system" : "text", listName, limit, offset);
         }
 
         [McpServerTool(Name = "unified_get_graphic_lists", Title = "Get WinCC Unified graphic lists", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("List the graphic lists of a WinCC Unified HMI with their entries. An entry is of type 'value', 'range', 'from', 'to' or 'default' and names a project graphic")]
         public static ResponseUnifiedLists GetUnifiedGraphicLists(
             [Description(UnifiedPath)] string softwarePath,
-            [Description("listName: return only this list; empty (default) returns all")] string listName = "")
+            [Description("listName: return only this list; empty (default) returns all")] string listName = "",
+            [Description(Paging.LimitText)] int limit = 500,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
-            return ReadUnifiedLists(softwarePath, "graphic", listName);
+            return ReadUnifiedLists(softwarePath, "graphic", listName, limit, offset);
         }
 
-        private static ResponseUnifiedLists ReadUnifiedLists(string softwarePath, string kind, string listName)
+        private static ResponseUnifiedLists ReadUnifiedLists(string softwarePath, string kind, string listName, int limit, int offset)
         {
             try
             {
-                var lists = Portal.GetUnifiedLists(softwarePath, kind, listName);
+                var page = Paging.Page(Portal.GetUnifiedLists(softwarePath, kind, listName), limit, offset);
 
                 return new ResponseUnifiedLists
                 {
-                    Message = $"{lists.Count} {kind} list(s) in '{softwarePath}'",
-                    Items = lists,
-                    Meta = ReadMeta()
+                    Message = $"{page.Total} {kind} list(s) in '{softwarePath}'" + page.Note("listName"),
+                    Items = page.Items,
+                    Meta = page.Meta(ReadMeta())
                 };
             }
             catch (Exception ex)

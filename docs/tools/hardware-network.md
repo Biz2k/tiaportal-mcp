@@ -62,6 +62,8 @@ Get a list of all devices in the project/session: path, name, type and the names
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `includeAttributes` | boolean | no (default `False`) | includeAttributes: true adds the full attribute list of every device (default false) |
+| `limit` | integer | no (default `500`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## hw_get_topology
 

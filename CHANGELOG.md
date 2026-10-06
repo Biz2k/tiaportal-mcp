@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed (long lists)
+
+- Every list tool that can return hundreds of records pages the same way: `limit` and `offset` with one wording, and `total`,
+  `offset`, `truncated` and `nextOffset` (the offset of the next page) in `meta`. New on `unified_get_screens`,
+  `unified_get_screen_items`, `unified_get_text_lists`, `unified_get_graphic_lists`, `get_library_types`, `get_master_copies`
+  and `hw_get_devices` (default 500, so answers shorter than that are unchanged); `unified_get_logging_tags` gets `offset`
+  beside its `limit`. `plc_get_types` now reports the paging facts in `meta` like `plc_get_blocks` (it had only the message).
+
 ### Changed
 
 - `connect` without `processId` / `projectPath` attaches to the only TIA Portal instance that has a project open, instead of the first

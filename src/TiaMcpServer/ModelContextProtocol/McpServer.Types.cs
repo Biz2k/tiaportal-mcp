@@ -61,8 +61,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseTypes GetTypes(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("regexName: defines the name or regular expression to find the type. Use empty string (default) to find all")] string regexName = "",
-            [Description("limit: the most items to return (default 500); 0 returns all")] int limit = 500,
-            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
+            [Description(Paging.LimitText)] int limit = 500,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {
@@ -97,11 +97,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"Types with regex '{regexName}' retrieved from '{softwarePath}': {page.Total}." + page.Note("regexName"),
                         Items = responseList,
-                        Meta = new JsonObject
+                        Meta = page.Meta(new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
                             ["success"] = true
-                        }
+                        })
                     };
                 }
                 else

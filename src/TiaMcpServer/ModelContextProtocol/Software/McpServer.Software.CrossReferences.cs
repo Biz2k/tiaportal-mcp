@@ -43,8 +43,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("objectKind: 'auto' (default), 'block', 'type', 'tagTable', 'tag' or 'blockGroup'. With an empty objectPath it selects what is listed: 'block' only blocks, 'type' only types, 'tagTable' or 'tag' only tags, 'auto' all")] string objectKind = "auto",
             [Description("filter: 'AllObjects' (default), 'ObjectsWithReferences', 'ObjectsWithoutReferences' or 'UnusedObjects'")] string filter = "AllObjects",
             [Description("maxDepth: 1 = sources and their references (default), 2 = also source children, 3 = also reference locations. Keeps large results manageable")] int maxDepth = 1,
-            [Description("limit: the most sources to return (default 100); 0 returns all")] int limit = 100,
-            [Description("offset: sources to skip, to read the next page of a long result (default 0)")] int offset = 0)
+            [Description(Paging.LimitText)] int limit = 100,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {

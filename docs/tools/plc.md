@@ -435,8 +435,8 @@ Get a list of blocks, which are located in plc software. A large PLC has thousan
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `regexName` | string | no (default ``) | regexName: defines the name or regular expression to find the block. Use empty string (default) to find all |
-| `limit` | integer | no (default `500`) | limit: the most items to return (default 500); 0 returns all |
-| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list (default 0) |
+| `limit` | integer | no (default `500`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## plc_get_blocks_hierarchy
 
@@ -468,8 +468,8 @@ Get cross references for the whole PLC software (empty objectPath; blocks, types
 | `objectKind` | string | no (default `auto`) | objectKind: 'auto' (default), 'block', 'type', 'tagTable', 'tag' or 'blockGroup'. With an empty objectPath it selects what is listed: 'block' only blocks, 'type' only types, 'tagTable' or 'tag' only tags, 'auto' all |
 | `filter` | string | no (default `AllObjects`) | filter: 'AllObjects' (default), 'ObjectsWithReferences', 'ObjectsWithoutReferences' or 'UnusedObjects' |
 | `maxDepth` | integer | no (default `1`) | maxDepth: 1 = sources and their references (default), 2 = also source children, 3 = also reference locations. Keeps large results manageable |
-| `limit` | integer | no (default `100`) | limit: the most sources to return (default 100); 0 returns all |
-| `offset` | integer | no (default `0`) | offset: sources to skip, to read the next page of a long result (default 0) |
+| `limit` | integer | no (default `100`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## plc_get_external_source_info
 
@@ -558,8 +558,8 @@ List PLC tags, either of one tag table or of every tag table of the plc software
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `tagTablePath` | string | no (default ``) | tagTablePath: optional root-relative tag table path; empty searches every tag table |
 | `regexName` | string | no (default ``) | regexName: optional regular expression to filter the tag names |
-| `limit` | integer | no (default `200`) | limit: the most items to return (default 200); 0 returns all |
-| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list (default 0) |
+| `limit` | integer | no (default `200`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## plc_get_type_info
 
@@ -589,8 +589,8 @@ Get a list of types from the plc software
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `regexName` | string | no (default ``) | regexName: defines the name or regular expression to find the type. Use empty string (default) to find all |
-| `limit` | integer | no (default `500`) | limit: the most items to return (default 500); 0 returns all |
-| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list (default 0) |
+| `limit` | integer | no (default `500`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## plc_get_watch_table_info
 

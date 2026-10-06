@@ -78,8 +78,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("tagTablePath: optional root-relative tag table path; empty searches every tag table")] string tagTablePath = "",
             [Description("regexName: optional regular expression to filter the tag names")] string regexName = "",
-            [Description("limit: the most items to return (default 200); 0 returns all")] int limit = 200,
-            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
+            [Description(Paging.LimitText)] int limit = 200,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {

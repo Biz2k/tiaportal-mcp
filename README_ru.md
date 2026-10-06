@@ -507,6 +507,17 @@ CPU не останавливается и не запускается, пока
 существующего имени в *другую* группу завершается ошибкой даже с перезаписью; указывайте группу,
 в которой тип уже находится.
 
+## Длинные списки
+
+Инструмент, который может вернуть сотни записей, принимает `limit` (наибольшее число записей на странице; 0 возвращает
+все) и `offset` и сообщает в `meta`, какой длины список: `total`, `offset`, `truncated` и, если есть продолжение,
+`nextOffset` — `offset` следующей страницы. Сообщение ответа говорит то же словами. Это инструменты: `plc_get_blocks`,
+`plc_get_types`, `plc_get_tags`, `plc_get_cross_references`, `hw_get_devices`, `get_master_copies`,
+`get_library_types`, `unified_get_screens`, `unified_get_screen_items`, `unified_get_tags`,
+`unified_get_system_tags`, `unified_get_alarms`, `unified_get_logging_tags`, `unified_get_text_lists` и
+`unified_get_graphic_lists`. `plc_find_in_code` и `plc_get_block_source` режут по объёму текста и тоже сообщают
+`truncated` в `meta`.
+
 ## Проекты и экземпляры
 
 - `connect` подключается к единственному экземпляру TIA Portal, у которого открыт проект; при нескольких задайте `processId` или

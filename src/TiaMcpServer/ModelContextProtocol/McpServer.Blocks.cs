@@ -67,8 +67,8 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseBlocks GetBlocks(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("regexName: defines the name or regular expression to find the block. Use empty string (default) to find all")] string regexName = "",
-            [Description("limit: the most items to return (default 500); 0 returns all")] int limit = 500,
-            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
+            [Description(Paging.LimitText)] int limit = 500,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {

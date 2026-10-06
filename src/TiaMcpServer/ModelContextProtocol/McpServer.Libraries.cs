@@ -50,16 +50,18 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "get_master_copies", Title = "Get Master Copies in library", Destructive = false, OpenWorld = false, UseStructuredContent = true), Description("Lists all Master Copies inside a specified library recursively")]
         public static ResponseMasterCopies GetMasterCopies(
-            [Description("libraryName: name of the library (use 'ProjectLibrary' for the project's library)")] string libraryName)
+            [Description("libraryName: name of the library (use 'ProjectLibrary' for the project's library)")] string libraryName,
+            [Description(Paging.LimitText)] int limit = 500,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {
-                var copies = Portal.GetMasterCopies(libraryName);
+                var page = Paging.Page(Portal.GetMasterCopies(libraryName), limit, offset);
                 return new ResponseMasterCopies
                 {
-                    Items = copies,
-                    Message = $"Found {copies.Count} Master Copies in library '{libraryName}'",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Items = page.Items,
+                    Message = $"Found {page.Total} Master Copies in library '{libraryName}'" + page.Note("a smaller library"),
+                    Meta = page.Meta(new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true })
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -72,7 +74,9 @@ namespace TiaMcpServer.ModelContextProtocol
          Description("List the types of a library with their versions, and say which system each type belongs to: 'unified' (WinCC Unified), 'classic' (WinCC Comfort / Advanced / Professional), 'plc', or 'universal' (not tied to a system, e.g. icons and graphics). For a WinCC Unified type each version carries the 'ContainedType' value that 'unified_manage_faceplate' takes as faceplateType")]
         public static ResponseLibraryTypes GetLibraryTypes(
             [Description("libraryName: 'ProjectLibrary' (default) or the name of an opened global library; 'get_libraries' lists them")] string libraryName = "ProjectLibrary",
-            [Description("system: return only the types of one system - 'unified', 'classic', 'plc' or 'universal'; empty for all")] string system = "")
+            [Description("system: return only the types of one system - 'unified', 'classic', 'plc' or 'universal'; empty for all")] string system = "",
+            [Description(Paging.LimitText)] int limit = 500,
+            [Description(Paging.OffsetText)] int offset = 0)
         {
             try
             {
@@ -91,13 +95,15 @@ namespace TiaMcpServer.ModelContextProtocol
                     types = types.Where(t => string.Equals(t.System, system.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
                 }
 
+                var page = Paging.Page(types, limit, offset);
+
                 return new ResponseLibraryTypes
                 {
-                    Message = $"{types.Count} type(s) in library '{libraryName}'" +
-                        (string.IsNullOrWhiteSpace(system) ? string.Empty : $" for system '{system.Trim().ToLowerInvariant()}'"),
-                    Items = types,
+                    Message = $"{page.Total} type(s) in library '{libraryName}'" +
+                        (string.IsNullOrWhiteSpace(system) ? string.Empty : $" for system '{system.Trim().ToLowerInvariant()}'") + page.Note("system"),
+                    Items = page.Items,
                     Systems = systems,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = page.Meta(new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true })
                 };
             }
             catch (Exception ex)

@@ -101,8 +101,8 @@ List the discrete and analog alarms of a WinCC Unified HMI: alarm class, the tag
 | `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
 | `type` | string | no (default ``) | type: 'discrete' or 'analog'; empty (default) returns both |
 | `nameFilter` | string | no (default ``) | nameFilter: regular expression on the alarm name, case-insensitive; empty (default) returns every alarm |
-| `limit` | integer | no (default `500`) | limit: the most items to return (default 500); 0 returns all |
-| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list (default 0) |
+| `limit` | integer | no (default `500`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## unified_get_connections
 
@@ -120,6 +120,8 @@ List the graphic lists of a WinCC Unified HMI with their entries. An entry is of
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
 | `listName` | string | no (default ``) | listName: return only this list; empty (default) returns all |
+| `limit` | integer | no (default `500`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## unified_get_logging_tags
 
@@ -130,7 +132,8 @@ List the logging tags of a WinCC Unified HMI: which HMI tag is archived into whi
 | `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
 | `tagName` | string | no (default ``) | tagName: regular expression on the path of the process tag, case-insensitive (a member of a structured tag is 'Tag.Member'); empty (default) for all |
 | `logName` | string | no (default ``) | logName: only the logging tags that archive into this data log |
-| `limit` | integer | no (default `500`) | limit: the most logging tags to return (default 500) |
+| `limit` | integer | no (default `500`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## unified_get_logs
 
@@ -176,6 +179,8 @@ List the items of a WinCC Unified screen: name, type, position, size, text, proc
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
 | `screenName` | string | yes | screenName: name of the screen |
+| `limit` | integer | no (default `500`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## unified_get_screens
 
@@ -185,6 +190,8 @@ List the screens of a WinCC Unified HMI with their group and size. Screens in sc
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
 | `group` | string | no (default ``) | group: return only the screens of this screen group and the groups in it, e.g. 'Pumps' or 'Pumps/Big'; empty (default) returns every screen. 'unified_get_screen_groups' lists the groups |
+| `limit` | integer | no (default `500`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## unified_get_scripts
 
@@ -203,8 +210,8 @@ List the system tags of a WinCC Unified HMI (name and data type; read only). A l
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
 | `nameFilter` | string | no (default ``) | nameFilter: regular expression on the tag name, case-insensitive; empty returns every tag |
-| `limit` | integer | no (default `200`) | limit: the most items to return (default 200); 0 returns all |
-| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list (default 0) |
+| `limit` | integer | no (default `200`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## unified_get_tag_table_groups
 
@@ -231,8 +238,8 @@ List the HMI tags of a WinCC Unified HMI with tag table, data type, connection a
 | `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
 | `nameFilter` | string | no (default ``) | nameFilter: regular expression on the tag name, case-insensitive; empty (default) returns every tag |
 | `tagTable` | string | no (default ``) | tagTable: return only the tags of this tag table; 'unified_get_tag_tables' lists the tables |
-| `limit` | integer | no (default `200`) | limit: the most items to return (default 200); 0 returns all |
-| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list (default 0) |
+| `limit` | integer | no (default `200`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## unified_get_text_lists
 
@@ -243,6 +250,8 @@ List the text lists of a WinCC Unified HMI with their entries. An entry is of ty
 | `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
 | `listName` | string | no (default ``) | listName: return only this list; empty (default) returns all |
 | `system` | boolean | no (default `False`) | system: true returns the system text lists of the HMI instead (alarm texts, error reasons); they can only be read |
+| `limit` | integer | no (default `500`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
+| `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
 ## unified_manage_alarm_classes
 

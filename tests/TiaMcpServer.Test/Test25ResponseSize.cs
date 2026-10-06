@@ -119,6 +119,35 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
+        public void Test_2508_Meta_CarriesNextOffsetOnlyWhenCut()
+        {
+            var all = Enumerable.Range(0, 30).ToList();
+
+            var cut = ListPage<int>.Of(all, 10, 10).Meta(new System.Text.Json.Nodes.JsonObject());
+            var last = ListPage<int>.Of(all, 10, 20).Meta(new System.Text.Json.Nodes.JsonObject());
+
+            Assert.AreEqual(30, (int)cut["total"]!);
+            Assert.AreEqual(10, (int)cut["offset"]!);
+            Assert.IsTrue((bool)cut["truncated"]!);
+            Assert.AreEqual(20, (int)cut["nextOffset"]!);
+            Assert.IsFalse((bool)last["truncated"]!);
+            Assert.IsNull(last["nextOffset"], "no next page, no key");
+        }
+
+        [TestMethod]
+        public void Test_2509_Paging_TwoPagesGiveTheWholeList()
+        {
+            var all = Enumerable.Range(0, 7).ToList();
+            var first = Paging.Page(all, 4, 0);
+            var second = Paging.Page(all, 4, first.NextOffset);
+
+            CollectionAssert.AreEqual(all, first.Items.Concat(second.Items).ToList());
+            Assert.IsTrue(first.Truncated);
+            Assert.IsFalse(second.Truncated);
+            StringAssert.Contains(first.Note("x"), "offset=4");
+        }
+
+        [TestMethod]
         public void Test_2507_Ready_ReportsTheTotalOfAListThatWasNotBuiltWhole()
         {
             var page = ListPage<int>.Ready(new List<int> { 1, 2, 3 }, 1900, 600);
