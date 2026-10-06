@@ -80,7 +80,7 @@ Portal, «дымовой» прогон чтения (`tools/smoke.ps1`) про�
   - [x] Загрузка: параметр для шага `UserManagementDownload`, отдельные итоги по аппаратной и
         программной части.
   - [x] `RestoreAfterFailedMove` в `plc_move_block`, `plc_move_type`: проверить или убрать.
-  - [ ] Старые методы экспорта и импорта (`Portal.Documents.cs`, `Portal.Sources.cs`) — на
+  - [x] Старые методы экспорта и импорта (`Portal.Documents.cs`, `Portal.Sources.cs`) — на
         `Operation.Run`.
 - [ ] **Задача 24. Единый вид постраничных ответов** — предложение, тестирование. `limit`,
       `offset`, `total`, `truncated`, `nextOffset` у всех больших списков.

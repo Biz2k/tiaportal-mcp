@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- The last legacy document export and import methods (`ExportAsDocuments`, `ExportBlocksAsDocuments`, `ImportBlocksFromDocuments`) run through the shared lock and error decoration like the rest; `export_objects` and `import_objects` answered the same in every format before and after (checked live).
 - `download_to_plc` takes `downloadUserManagement` (`keep` default, `update`, `overwrite`) for the step `UserManagementDownload`, and the response lists the top-level result messages as `parts` with their own error and warning counts. Not checked against a real download.
 - A range row with only `from` or only `to` is refused as `NotSupported` with the reason (Openness gives the range type of a row as read-only; use a large `to`), and the batch error of `unified_manage_items` carries the code of its failed actions instead of always `InvalidParams`.
 - `unified_manage_scripts` says that the syntax of the code is not checked (a syntax error is stored as written) and points to `unified_compile` with `pathFilter` `Scripts/<module>`, which reports it with line and column (checked live). The README no longer claims that a syntax error empties the function.

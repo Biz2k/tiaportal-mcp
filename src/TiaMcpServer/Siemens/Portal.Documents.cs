@@ -576,9 +576,12 @@ namespace TiaMcpServer.Siemens
         public bool ExportAsDocuments(string softwarePath, string blockPath, string exportPath, bool preservePath = false)
         {
             _logger?.LogInformation($"Exporting block as documents by path: {blockPath}");
-            var success = false;
-            try
+
+            return Operation.Run(_logger, nameof(ExportAsDocuments), PortalErrorCode.ExportFailed,
+                () =>
             {
+                var success = false;
+
                 if (IsProjectNull())
                 {
                     throw new PortalException(PortalErrorCode.InvalidState, NoProjectMessage);
@@ -656,19 +659,9 @@ namespace TiaMcpServer.Siemens
                 }
 
 
-            }
-            catch (Exception ex)
-            {
-                var pex = ex as PortalException ?? new PortalException(PortalErrorCode.ExportFailed, "Export failed", null, ex);
-
-                pex.Data["softwarePath"] = softwarePath;
-                pex.Data["blockPath"] = blockPath;
-                pex.Data["exportPath"] = exportPath;
-
-                _logger?.LogError(pex, "ExportAsDocuments failed for {SoftwarePath} {BlockPath} -> {ExportPath}", softwarePath, blockPath, exportPath);
-                throw pex;
-            }
-            return success;
+                return success;
+            },
+            ("softwarePath", softwarePath), ("blockPath", blockPath), ("exportPath", exportPath));
         }
 
         // TIA portal crashes when exporting blocks as documents, :-(
@@ -676,6 +669,9 @@ namespace TiaMcpServer.Siemens
         {
             _logger?.LogInformation("Exporting blocks as documents...");
 
+            return Operation.Run<IEnumerable<PlcBlock>?>(_logger, nameof(ExportBlocksAsDocuments), PortalErrorCode.ExportFailed,
+                () =>
+            {
             if (IsProjectNull())
             {
                 return null;
@@ -820,6 +816,8 @@ namespace TiaMcpServer.Siemens
             }
 
             return exportList;
+            },
+            ("softwarePath", softwarePath), ("exportPath", exportPath));
         }
 
         /// <summary>Imports one block from a source document; a failure reaches the caller with the messages TIA Portal gave.</summary>
@@ -875,6 +873,9 @@ namespace TiaMcpServer.Siemens
         {
             _logger?.LogInformation($"Importing blocks from documents in {importPath} with regex '{regexName}'");
 
+            return Operation.Run<IEnumerable<PlcBlock>?>(_logger, nameof(ImportBlocksFromDocuments), PortalErrorCode.ImportFailed,
+                () =>
+            {
             if (IsProjectNull())
             {
                 return null;
@@ -949,6 +950,8 @@ namespace TiaMcpServer.Siemens
             }
 
             return imported;
+            },
+            ("softwarePath", softwarePath), ("groupPath", groupPath), ("importPath", importPath));
         }
 
         #endregion
