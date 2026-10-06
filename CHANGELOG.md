@@ -9,7 +9,7 @@
   that half-served the classic systems. They are now one set for WinCC Unified, verified on a
   Unified panel and a Unified PC station:
   `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`,
-  `unified_get_tags`, `unified_get_connections`, `unified_get_library_types`,
+  `unified_get_tags`, `unified_get_connections`,
   `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`,
   `unified_manage_faceplate`, `unified_configure_trend_control`. 108 tools are registered by default.
 - __`unified_manage_items` covers events.__ An action takes `events`: event name to script; an empty
@@ -24,8 +24,12 @@
   `{"script": ...}`. The old tool created the tag dynamization under a wrong name and could not bind
   a property interface at all.
 - `unified_get_tags` takes `nameFilter`; a Unified PC station easily has hundreds of tags.
-- `unified_get_screen_item_properties` lists the interface of a faceplate instance, and
-  `unified_get_library_types` gives each version its `ContainedType` value.
+- `unified_get_screen_item_properties` lists the interface of a faceplate instance.
+- __`get_library_types`__ (was `hmi_get_library_types`) is a library tool, not an HMI one. It lists
+  the types of the project library or of an opened global library and says which system each type
+  belongs to: `unified`, `classic` (WinCC Comfort / Advanced / Professional - Openness does not
+  separate the three), `plc` or `universal` (not tied to a system, e.g. icons and graphics).
+  `system` filters by it. A WinCC Unified type gets a `ContainedType` value per version.
 - The Unified layer follows the rest of the server: `PortalException` with an error code, the common
   lock, a transaction around every write, typed responses with an output schema.
 
@@ -33,7 +37,7 @@
 
 - `hmi_configure_unified_trend_companion`: a trend companion is an ordinary item, its
   `SourceTrendControl` property is set through `unified_manage_items`.
-- `hmi_get_library_faceplates` (covered by `unified_get_library_types`) and the debug tool
+- `hmi_get_library_faceplates` (covered by `get_library_types`) and the debug tool
   `hmi_test_faceplate`.
 - The code paths for WinCC Comfort / Advanced / Professional. Openness has no object model for
   their screens, so those paths could list screens and tags and nothing more. What works is parked

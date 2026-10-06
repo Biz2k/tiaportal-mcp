@@ -4,7 +4,7 @@ using TiaMcpServer.Siemens;
 namespace TiaMcpServer.Test
 {
     /// <summary>
-    /// Tests for the value handling of hmi_manage_items: turning a JSON value into what an HMI
+    /// Tests for the value handling of unified_manage_items: turning a JSON value into what an HMI
     /// property holds, and wrapping text the way WinCC Unified stores it. These tests do not
     /// connect to TIA Portal and do not open a project.
     /// </summary>

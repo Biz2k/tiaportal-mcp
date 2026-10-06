@@ -1,8 +1,10 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Text.Json.Nodes;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
+using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -63,6 +65,44 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) when (ex is not McpException)
             {
                 throw new McpException($"Unexpected error getting Master Copies: {Why(ex)}", ex);
+            }
+        }
+
+        [McpServerTool(Name = "get_library_types", Title = "Get library types", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the types of a library with their versions, and say which system each type belongs to: 'unified' (WinCC Unified), 'classic' (WinCC Comfort / Advanced / Professional), 'plc', or 'universal' (not tied to a system, e.g. icons and graphics). For a WinCC Unified type each version carries the 'ContainedType' value that 'unified_manage_faceplate' takes as faceplateType")]
+        public static ResponseLibraryTypes GetLibraryTypes(
+            [Description("libraryName: 'ProjectLibrary' (default) or the name of an opened global library; 'get_libraries' lists them")] string libraryName = "ProjectLibrary",
+            [Description("system: return only the types of one system - 'unified', 'classic', 'plc' or 'universal'; empty for all")] string system = "")
+        {
+            try
+            {
+                var types = Portal.GetLibraryTypes(libraryName);
+
+                var systems = types.GroupBy(t => t.System ?? string.Empty).ToDictionary(g => g.Key, g => g.Count());
+
+                if (!string.IsNullOrWhiteSpace(system))
+                {
+                    if (!LibraryTypeInfo.Systems.Contains(system.Trim(), StringComparer.OrdinalIgnoreCase))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"system takes one of {string.Join(", ", LibraryTypeInfo.Systems)}; got '{system}'.");
+                    }
+
+                    types = types.Where(t => string.Equals(t.System, system.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+
+                return new ResponseLibraryTypes
+                {
+                    Message = $"{types.Count} type(s) in library '{libraryName}'" +
+                        (string.IsNullOrWhiteSpace(system) ? string.Empty : $" for system '{system.Trim().ToLowerInvariant()}'"),
+                    Items = types,
+                    Systems = systems,
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
             }
         }
 

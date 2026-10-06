@@ -138,8 +138,8 @@ Always available (57):
 | External sources        | `plc_get_external_sources`, `plc_get_external_source_info`, `plc_generate_sources` |
 | Search and references   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Export and preview      | `export_objects`, `preview_import` |
-| Libraries               | `get_libraries`, `open_global_library`, `get_master_copies` |
-| WinCC Unified           | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_connections`, `unified_get_library_types` |
+| Libraries               | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
+| WinCC Unified           | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_connections` |
 | Download                | `get_download_targets` |
 
 Left out with `--read-only` (57):
@@ -189,6 +189,23 @@ candidate paths.
 - A PROFINET IO system is built in a fixed order, and each step refuses to run before the previous
   one: `net_connect_subnet` (PLC interface) → `net_create_io_system` → `net_connect_subnet` (IO
   device interface, same subnet) → `net_connect_to_io_system`.
+
+## Library types
+
+`get_library_types` lists the types of the project library (or of an opened global library) with
+their versions and says which system each one belongs to:
+
+| `system`    | Meaning                                                                          |
+|-------------|----------------------------------------------------------------------------------|
+| `unified`   | WinCC Unified type: faceplate, script and the like                               |
+| `classic`   | WinCC Comfort / Advanced / Professional type, e.g. a faceplate                   |
+| `plc`       | PLC type: block or data type                                                     |
+| `universal` | Not tied to a system, e.g. icons and graphics                                    |
+
+Pass `system` to get the types of one system only. Openness has no attribute that separates
+Comfort, Advanced and Professional, so the three are reported together as `classic`. A type that
+arrives as the generic library type counts as `unified` when it has a minimum device version and
+as `universal` when it has none.
 
 ## WinCC Unified
 
@@ -243,7 +260,7 @@ trend control.
 ### Faceplates
 
 A faceplate instance has its own tool, because what can be set on it is not fixed: it is the
-interface of the faceplate type. `unified_get_library_types` lists the types with the
+interface of the faceplate type. `get_library_types` lists the types with the
 `ContainedType` value of each version; `unified_manage_faceplate` creates or updates one instance
 and returns its interface:
 

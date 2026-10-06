@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
 using Siemens.Engineering.Library;
 using Siemens.Engineering.Library.MasterCopies;
+using Siemens.Engineering.Library.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -109,6 +110,128 @@ namespace TiaMcpServer.Siemens
             {
                 ProcessMasterCopyUserFolder(subFolder, $"{parentPath}/{subFolder.Name}", items);
             }
+        }
+
+        /// <summary>
+        /// The types of a library with their versions and the system each belongs to.
+        /// </summary>
+        public List<LibraryTypeInfo> GetLibraryTypes(string libraryName)
+        {
+            return Operation.Run(_logger, nameof(GetLibraryTypes), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    ILibrary? library = null;
+
+                    if (string.IsNullOrWhiteSpace(libraryName) || libraryName.Equals("ProjectLibrary", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (IsProjectNull())
+                        {
+                            throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
+                        }
+
+                        library = _project!.ProjectLibrary;
+                    }
+                    else if (_portal != null)
+                    {
+                        library = _portal.GlobalLibraries.FirstOrDefault(l => l.Name.Equals(libraryName, StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    if (library == null)
+                    {
+                        throw new PortalException(PortalErrorCode.NotFound,
+                            $"Library '{libraryName}' is not open. Use 'get_libraries' to list the libraries, 'open_global_library' to open one.");
+                    }
+
+                    var types = new List<LibraryTypeInfo>();
+
+                    CollectLibraryTypes(library.TypeFolder, string.Empty, types);
+
+                    return types;
+                },
+                ("libraryName", libraryName));
+        }
+
+        private static void CollectLibraryTypes(LibraryTypeFolder folder, string path, List<LibraryTypeInfo> types)
+        {
+            foreach (var type in folder.Types)
+            {
+                var minimumDeviceVersion = LibraryAttribute(type, "MinimumTargetDeviceVersion");
+                var (system, note) = ClassifyLibraryType(type.GetType().Namespace, minimumDeviceVersion);
+
+                var info = new LibraryTypeInfo
+                {
+                    Name = type.Name,
+                    Path = path,
+                    Kind = type.GetType().Name,
+                    System = system,
+                    SystemNote = note,
+                    MinimumTargetDeviceVersion = string.IsNullOrEmpty(minimumDeviceVersion) ? null : minimumDeviceVersion,
+                    Author = LibraryAttribute(type, "Author"),
+                    Status = LibraryAttribute(type, "Status")
+                };
+
+                foreach (var version in type.Versions)
+                {
+                    info.Versions.Add(new LibraryTypeVersionInfo
+                    {
+                        Version = version.VersionNumber.ToString(),
+                        State = version.State.ToString(),
+                        IsDefault = version.IsDefault,
+                        ContainedType = system == "unified" ? $"V{version.VersionNumber}\\{type.Name}" : null
+                    });
+                }
+
+                types.Add(info);
+            }
+
+            foreach (var subFolder in folder.Folders)
+            {
+                CollectLibraryTypes(subFolder, path.Length == 0 ? subFolder.Name : $"{path}/{subFolder.Name}", types);
+            }
+        }
+
+        private static string? LibraryAttribute(IEngineeringObject target, string name)
+        {
+            try
+            {
+                return target.GetAttribute(name)?.ToString();
+            }
+            catch (EngineeringException)
+            {
+                // Not every kind of type has every attribute.
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Which system a library type belongs to. Openness has dedicated classes for PLC types and
+        /// for the classic WinCC faceplates. Everything of WinCC Unified, and everything that is
+        /// not tied to a system, arrives as the generic LibraryType; of those, the Unified types
+        /// carry a minimum device version and the others (icons, graphics) do not. Verified on
+        /// TIA Portal V21 on 2026-10-06.
+        /// </summary>
+        internal static (string System, string Note) ClassifyLibraryType(string? classNamespace, string? minimumDeviceVersion)
+        {
+            var typeNamespace = classNamespace ?? string.Empty;
+
+            if (typeNamespace.StartsWith("Siemens.Engineering.SW", StringComparison.Ordinal))
+            {
+                return ("plc", "PLC type (block or data type).");
+            }
+
+            if (typeNamespace.StartsWith("Siemens.Engineering.HmiUnified", StringComparison.Ordinal))
+            {
+                return ("unified", "WinCC Unified type.");
+            }
+
+            if (typeNamespace.StartsWith("Siemens.Engineering.Hmi", StringComparison.Ordinal))
+            {
+                return ("classic", "WinCC Comfort / Advanced / Professional type. Openness does not say which of the three it was made for.");
+            }
+
+            return string.IsNullOrEmpty(minimumDeviceVersion)
+                ? ("universal", "Not tied to a system: it has no minimum device version (icons and graphics are of this kind).")
+                : ("unified", $"WinCC Unified type (faceplate, script or the like), for devices from version {minimumDeviceVersion}.");
         }
 
         public void InstantiateMasterCopy(string libraryName, string masterCopyPath, string targetDeviceName, string targetGroupName, string targetType)

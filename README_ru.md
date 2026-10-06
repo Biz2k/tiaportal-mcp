@@ -142,8 +142,8 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Внешние исходные файлы           | `plc_get_external_sources`, `plc_get_external_source_info`, `plc_generate_sources` |
 | Поиск и ссылки                   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Экспорт и предпросмотр           | `export_objects`, `preview_import` |
-| Библиотеки                       | `get_libraries`, `open_global_library`, `get_master_copies` |
-| WinCC Unified                    | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_connections`, `unified_get_library_types` |
+| Библиотеки                       | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
+| WinCC Unified                    | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_connections` |
 | Загрузка                         | `get_download_targets` |
 
 Не регистрируются с `--read-only` (57):
@@ -194,6 +194,23 @@ TIA Portal допускает `/` внутри имени (группа блок
 - Система PROFINET IO строится в фиксированном порядке, и каждый шаг отказывается выполняться
   раньше предыдущего: `net_connect_subnet` (интерфейс ПЛК) → `net_create_io_system` →
   `net_connect_subnet` (интерфейс IO-устройства, та же подсеть) → `net_connect_to_io_system`.
+
+## Типы библиотеки
+
+`get_library_types` перечисляет типы библиотеки проекта (или открытой глобальной библиотеки) с
+версиями и сообщает, к какой системе относится каждый:
+
+| `system`    | Значение                                                                         |
+|-------------|----------------------------------------------------------------------------------|
+| `unified`   | Тип WinCC Unified: фейсплейт, скрипт и подобное                                  |
+| `classic`   | Тип WinCC Comfort / Advanced / Professional, например фейсплейт                  |
+| `plc`       | Тип ПЛК: блок или тип данных                                                     |
+| `universal` | Не привязан к системе, например иконки и рисунки                                 |
+
+Параметр `system` оставляет типы только одной системы. В Openness нет атрибута, который разделяет
+Comfort, Advanced и Professional, поэтому все три сообщаются вместе как `classic`. Тип, который
+приходит как общий библиотечный тип, считается `unified`, если у него указана минимальная версия
+устройства, и `universal`, если не указана.
 
 ## WinCC Unified
 
@@ -250,7 +267,7 @@ TIA Portal допускает `/` внутри имени (группа блок
 ### Фейсплейты
 
 У экземпляра фейсплейта свой инструмент, потому что набор его параметров не фиксирован: это
-интерфейс типа фейсплейта. `unified_get_library_types` перечисляет типы со значением
+интерфейс типа фейсплейта. `get_library_types` перечисляет типы со значением
 `ContainedType` каждой версии; `unified_manage_faceplate` создаёт или изменяет один экземпляр
 и возвращает его интерфейс:
 

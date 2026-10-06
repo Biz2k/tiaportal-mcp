@@ -143,27 +143,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "unified_get_library_types", Title = "Get project library types", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
-         Description("List the types of the project library with their versions. For a WinCC Unified faceplate each version carries the 'ContainedType' value that 'unified_manage_faceplate' takes as faceplateType")]
-        public static ResponseUnifiedList GetUnifiedLibraryTypes()
-        {
-            try
-            {
-                var types = Portal.GetUnifiedLibraryTypes();
-
-                return new ResponseUnifiedList
-                {
-                    Message = $"{types.Count} type(s) in the project library",
-                    Items = types,
-                    Meta = ReadMeta()
-                };
-            }
-            catch (Exception ex)
-            {
-                throw ToolError(ex);
-            }
-        }
-
         private static System.Text.Json.Nodes.JsonObject ReadMeta() => new System.Text.Json.Nodes.JsonObject
         {
             ["timestamp"] = DateTime.Now,
@@ -239,7 +218,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("screenName: name of the screen")] string screenName,
             [Description("itemName: name of the faceplate instance")] string itemName,
             [Description("action: 'create' (fails if the item exists), 'update' (fails if it does not) or 'upsert'")] string action = "upsert",
-            [Description("faceplateType: faceplate type and version, e.g. 'V0.0.2\\\\MyFaceplate' - the 'ContainedType' value from 'unified_get_library_types'. Required when the instance is created")] string faceplateType = "",
+            [Description("faceplateType: faceplate type and version, e.g. 'V0.0.2\\\\MyFaceplate' - the 'ContainedType' value from 'get_library_types'. Required when the instance is created")] string faceplateType = "",
             [Description("properties: properties of the instance itself, e.g. {\"Left\": 100, \"Top\": 50, \"Width\": 200}; same forms as in 'unified_manage_items'")] Dictionary<string, JsonElement>? properties = null,
             [Description("interfaceValues: interface properties of the faceplate type, by name. A plain value sets a static value - for a tag interface that is the name of the HMI tag. A property interface can also be dynamized: {\"tag\": \"HmiTagName\"} or {\"script\": \"return ...;\"}. A tag interface can take {\"tagParameter\": \"Name\"}. {\"dynamization\": \"none\"} removes the dynamization")] Dictionary<string, JsonElement>? interfaceValues = null)
         {

@@ -101,7 +101,7 @@ namespace TiaMcpServer.Siemens
 
         /// <summary>
         /// Names of the classic faceplate types in the project library (FaceplateLibraryType).
-        /// Unified faceplates are plain LibraryType entries; see GetUnifiedLibraryTypes.
+        /// Unified faceplates are plain LibraryType entries; see GetLibraryTypes.
         /// </summary>
         public List<string> GetClassicFaceplateTypes()
         {

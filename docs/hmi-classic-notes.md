@@ -45,7 +45,7 @@ WinCC Professional: **не проверялся**. В проверочном п�
 - `GetClassicHmiScreens(softwarePath)` — имена экранов, включая вложенные папки.
 - `FindClassicScreen(target, screenName)` — экран по имени.
 - `GetClassicHmiTags(softwarePath)` — теги из всех таблиц и папок.
-- `GetClassicFaceplateTypes()` — типы фейсплейтов классического WinCC в библиотеке проекта.
+- `GetClassicFaceplateTypes()` — типы фейсплейтов классического WinCC в библиотеке проекта (то же даёт `get_library_types` с `system: "classic"`).
 
 Поиск устройства и программы по пути (`RequireHmiContainer`) общий с Unified.
 
@@ -66,12 +66,13 @@ WinCC Professional: **не проверялся**. В проверочном п�
 
 | Было | Стало |
 |---|---|
-| `hmi_get_screens`, `hmi_get_screen_items`, `hmi_get_screen_item_properties`, `hmi_get_tags`, `hmi_get_connections`, `hmi_get_library_types` | то же с префиксом `unified_` |
+| `hmi_get_screens`, `hmi_get_screen_items`, `hmi_get_screen_item_properties`, `hmi_get_tags`, `hmi_get_connections` | то же с префиксом `unified_` |
+| `hmi_get_library_types` | `get_library_types` — общий инструмент библиотеки, сообщает систему каждого типа |
 | `hmi_create_screen`, `hmi_delete_screen`, `hmi_manage_items` | то же с префиксом `unified_` |
 | `hmi_create_screen_item`, `hmi_delete_screen_item` | `unified_manage_items` (`create` / `delete`) |
 | `hmi_set_unified_screen_item_event` | `unified_manage_items`, поле `events` |
 | `hmi_create_faceplate_instance`, `hmi_manage_unified_faceplate` | `unified_manage_faceplate` |
-| `hmi_get_library_faceplates` | `unified_get_library_types` |
+| `hmi_get_library_faceplates` | `get_library_types` |
 | `hmi_configure_unified_trend_control` | `unified_configure_trend_control` |
 | `hmi_configure_unified_trend_companion` | `unified_manage_items`, свойство `SourceTrendControl` |
 | `hmi_debug_reflect`, `hmi_debug_screen_item` | `unified_debug_reflect`, `unified_debug_screen_item` |

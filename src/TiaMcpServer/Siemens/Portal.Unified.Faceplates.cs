@@ -31,7 +31,7 @@ namespace TiaMcpServer.Siemens
 
         /// <param name="action">'create', 'update' or 'upsert'.</param>
         /// <param name="faceplateType">
-        /// The faceplate type and version as "V0.0.2\Name" (see GetUnifiedLibraryTypes). Needed
+        /// The faceplate type and version as "V0.0.2\Name" (see GetLibraryTypes). Needed
         /// when the instance is created; on an update it switches the instance to that type.
         /// </param>
         /// <param name="properties">Properties of the container itself (Left, Top, Width, ...), as in ManageUnifiedItems.</param>
@@ -86,7 +86,7 @@ namespace TiaMcpServer.Siemens
                         if (string.IsNullOrWhiteSpace(faceplateType))
                         {
                             throw new PortalException(PortalErrorCode.InvalidParams,
-                                "faceplateType is required to create a faceplate instance, e.g. 'V0.0.2\\MyFaceplate'. 'unified_get_library_types' lists the types with their 'ContainedType' values.");
+                                "faceplateType is required to create a faceplate instance, e.g. 'V0.0.2\\MyFaceplate'. 'get_library_types' lists the types with their 'ContainedType' values.");
                         }
 
                         item = CreateUnifiedScreenItem(screen, FaceplateContainerType, itemName);

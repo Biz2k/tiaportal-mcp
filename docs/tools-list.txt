@@ -10,6 +10,7 @@ get_devices
 get_download_targets
 get_hardware_topology
 get_libraries
+get_library_types
 get_master_copies
 get_plc_summary
 get_project
@@ -99,7 +100,6 @@ unified_configure_trend_control
 unified_create_screen
 unified_delete_screen
 unified_get_connections
-unified_get_library_types
 unified_get_screen_item_properties
 unified_get_screen_items
 unified_get_screens
