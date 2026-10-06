@@ -11,7 +11,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\<script>.ps1 <argument
 |---|---|---|
 | `openness-reflect.ps1` | Lists the classes, properties, methods and enums Openness has in a namespace | no - reads the assemblies only |
 | `openness-probe.ps1` | Helpers to try Openness calls one at a time, writes rolled back | yes - attaches to the running instance |
-| `make-tool-docs.ps1` | Writes `docs	ools\*.md` from the tool definitions of the built server | no - only `tools/list` |
+| `make-tool-docs.ps1` | Writes `docs/tools/*.md` from the tool definitions of the built server | no - only `tools/list` |
 | `mcp-call.ps1` | Runs tool calls against a built server over stdio, as an MCP client would | yes - through the server |
 | `smoke.ps1` | Calls the read-only tools (`tools\smokeead.json`) on the test project and counts the errors | yes - reads only |
 | `finish.ps1` | Line endings, build, unit tests; with `-Install` updates `Install\TiaMcpServer` | no |
