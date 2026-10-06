@@ -72,5 +72,35 @@ namespace TiaMcpServer.Test
             StringAssert.Contains(span.Message, "SmoothingMinTime");
             StringAssert.Contains(span.Message, "00:00:30");
         }
+
+        [TestMethod]
+        public void Test_1805_Cycle_IsReadAsMilliseconds()
+        {
+            Assert.AreEqual(500, UnifiedLogCycle.Milliseconds("T500ms"));
+            Assert.AreEqual(5000, UnifiedLogCycle.Milliseconds("T5s"));
+            Assert.AreEqual(5000, UnifiedLogCycle.Milliseconds("t5S"));
+            Assert.AreEqual(100, UnifiedLogCycle.Milliseconds(" T100ms "));
+            Assert.AreEqual(10000, UnifiedLogCycle.Milliseconds("T10s"));
+        }
+
+        [TestMethod]
+        public void Test_1806_Cycle_OtherFormsAreNotRead()
+        {
+            Assert.IsNull(UnifiedLogCycle.Milliseconds(null));
+            Assert.IsNull(UnifiedLogCycle.Milliseconds(""));
+            Assert.IsNull(UnifiedLogCycle.Milliseconds("1s"));
+            Assert.IsNull(UnifiedLogCycle.Milliseconds("00:00:01"));
+            Assert.IsNull(UnifiedLogCycle.Milliseconds("T1min"));
+            Assert.IsNull(UnifiedLogCycle.Milliseconds("T 5s"));
+        }
+
+        [TestMethod]
+        public void Test_1807_TagPath_SplitsAtDotsOutsideQuotes()
+        {
+            CollectionAssert.AreEqual(new[] { "xReset" }, UnifiedTagPath.Split("xReset"));
+            CollectionAssert.AreEqual(new[] { "HMI_Pumps_CP_1", "CMD_Start_Anti_Cond" }, UnifiedTagPath.Split("HMI_Pumps_CP_1.CMD_Start_Anti_Cond"));
+            CollectionAssert.AreEqual(new[] { "HMI_Analog_Valves_VM-16", "CMD_Mode" }, UnifiedTagPath.Split("\"HMI_Analog_Valves_VM-16\".CMD_Mode"));
+            CollectionAssert.AreEqual(new[] { "a.b", "c" }, UnifiedTagPath.Split("\"a.b\".c"));
+        }
     }
 }

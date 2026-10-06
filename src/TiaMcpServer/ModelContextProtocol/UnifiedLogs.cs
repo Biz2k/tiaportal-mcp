@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -26,13 +28,13 @@ namespace TiaMcpServer.ModelContextProtocol
         [Description("'create' (fails if the logging tag exists), 'update' (fails if it does not), 'upsert' or 'delete'")]
         public string? Action { get; set; }
 
-        [Description("Name of the HMI tag that is archived")]
+        [Description("Path of the process tag that is archived: an HMI tag, or for a structured tag the member that is archived, e.g. \"AI_DB_CP10-U1.field_input_EUF\"")]
         public string? TagName { get; set; }
 
-        [Description("Name of the logging tag on that HMI tag; empty uses the name of the HMI tag. An HMI tag can have several logging tags, one per data log")]
+        [Description("Name of the logging tag; empty uses the name of the HMI tag (the first part of tagName), as TIA Portal does. A tag can have several logging tags, one per data log")]
         public string? LoggingTagName { get; set; }
 
-        [Description("Properties by name: DataLog (name of an existing data log; a new logging tag starts in the first data log), LoggingMode (Cyclic, OnDemand, OnChange), Cycle (needed with Cyclic; TIA Portal checks its format), CycleFactor, AggregationMode (NoAggregation, Minimum, Maximum, MinimumWithTimeStamp, MaximumWithTimeStamp, Sum, TimeAverageStepped, Average, End), AggregationDelay (\"hh:mm:ss\"), SmoothingMode (NoSmoothing, Value, CompareValues, ValueRelative, SwingingDoor), SmoothingDeltaValue, SmoothingMinTime and SmoothingMaxTime (\"hh:mm:ss\"; the minimum may not exceed the maximum), LimitScope (NoLimitsUsed, Greater, Less, GreaterOrEqual, LessOrEqual, WithinLimits, WithinOrEqualLimits, OutsideLimits, OutsideOrEqualLimits), HighLimit, LowLimit, TriggerMode (None, RisingEdge, FallingEdge, RisingAndFallingEdge), TriggerTag (an existing HMI tag), TriggerTagBitNumber, Source. 'Name' renames the logging tag")]
+        [Description("Properties by name: DataLog (name of an existing data log; a new logging tag starts in the first data log), LoggingMode (Cyclic, OnDemand, OnChange), Cycle (needed with Cyclic: T500ms, T1s, T2s, T5s or T10s; a cyclic logging tag may not be faster than 500 ms; T100ms and T250ms are for other modes), CycleFactor, AggregationMode (NoAggregation, Minimum, Maximum, MinimumWithTimeStamp, MaximumWithTimeStamp, Sum, TimeAverageStepped, Average, End), AggregationDelay (\"hh:mm:ss\"), SmoothingMode (NoSmoothing, Value, CompareValues, ValueRelative, SwingingDoor), SmoothingDeltaValue, SmoothingMinTime and SmoothingMaxTime (\"hh:mm:ss\"; the minimum may not exceed the maximum), LimitScope (NoLimitsUsed, Greater, Less, GreaterOrEqual, LessOrEqual, WithinLimits, WithinOrEqualLimits, OutsideLimits, OutsideOrEqualLimits), HighLimit, LowLimit, TriggerMode (None, RisingEdge, FallingEdge, RisingAndFallingEdge), TriggerTag (an existing tag as TIA Portal writes it: xReset, Tag.Member, or \"Tag-Name\".Member for special characters; used with TriggerMode and the mode OnDemand), TriggerTagBitNumber, Source. 'Name' renames the logging tag")]
         public Dictionary<string, JsonElement>? Properties { get; set; }
     }
 
@@ -163,5 +165,66 @@ namespace TiaMcpServer.ModelContextProtocol
         public uint TriggerTagBitNumber { get; set; }
 
         public string? Source { get; set; }
+    }
+
+    /// <summary>
+    /// The path of an HMI tag as TIA Portal writes it: segments separated by dots, a segment with
+    /// special characters in double quotes, e.g. <c>"HMI_Analog_Valves_VM-16".CMD_Mode</c>. A member
+    /// of a structured tag is the next segment.
+    /// </summary>
+    public static class UnifiedTagPath
+    {
+        public static List<string> Split(string? path)
+        {
+            var segments = new List<string>();
+            var current = new System.Text.StringBuilder();
+            var quoted = false;
+
+            foreach (var c in path ?? string.Empty)
+            {
+                if (c == '"')
+                {
+                    quoted = !quoted;
+                }
+                else if (c == '.' && !quoted)
+                {
+                    segments.Add(current.ToString().Trim());
+                    current.Clear();
+                }
+                else
+                {
+                    current.Append(c);
+                }
+            }
+
+            segments.Add(current.ToString().Trim());
+
+            return segments;
+        }
+    }
+
+    /// <summary>The cycle of a logging tag, named like "T500ms" or "T5s" after the cycles of the project.</summary>
+    public static class UnifiedLogCycle
+    {
+        /// <summary>The cycles TIA Portal V21 was seen to accept (2026-10-06).</summary>
+        public const string KnownCycles = "T100ms, T250ms, T500ms, T1s, T2s, T5s, T10s";
+
+        /// <summary>The shortest cycle a cyclic logging tag may have; shorter ones fail TIA Portal's consistency check.</summary>
+        public const int MinimumCyclicMilliseconds = 500;
+
+        private static readonly Regex Pattern = new Regex(@"^T(\d+)(ms|s)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+        /// <summary>The length of a cycle such as "T500ms", or null when it does not have that form.</summary>
+        public static int? Milliseconds(string? cycle)
+        {
+            var match = Pattern.Match((cycle ?? string.Empty).Trim());
+
+            if (!match.Success || !int.TryParse(match.Groups[1].Value, out var number))
+            {
+                return null;
+            }
+
+            return match.Groups[2].Value.Equals("s", StringComparison.OrdinalIgnoreCase) ? number * 1000 : number;
+        }
     }
 }

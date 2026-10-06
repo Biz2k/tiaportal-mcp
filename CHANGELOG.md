@@ -20,11 +20,18 @@
   the logging tags; deleting one leaves them pointing at it, which is reported.
 - __`unified_get_logging_tags`__ and __`unified_manage_logging_tags`__: the archiving of an HMI tag into a data log.
   Data log and trigger tag are checked, the smoothing times are set in the order Openness needs.
-- `unified_configure_trend_control` checks a data source of the form `<HMI tag>:<logging tag>` - how a trend shows an
-  archived tag (as on the PC station of the test project).
+- `unified_configure_trend_control` checks a data source of the form `<process tag>:<logging tag>` - how a trend shows an
+  archived tag (as on the PC station of the test project); the process tag may be a member path `Tag.Member`.
 - `ConvertHmiValue` reads `DateTime` (ISO) and `TimeSpan` (`hh:mm:ss` or seconds).
 - Found on V21: a new log on a panel starts on a storage device the panel then refuses (only the medium of the
-  existing logs is accepted); the form of `Cycle` for a cyclic logging tag is unknown, no sample exists.
+  existing logs is accepted).
+- Logging tags of a structured tag sit on its __members__ (`HmiTag.Members`, recursive): the first version of the tools
+  looked at top-level tags only and found 0 of the panel's 279 logging tags. `tagName` is now a path `Tag.Member`;
+  `TriggerTag` takes paths too, quoted as TIA Portal writes them (`"Tag-Name".Member`).
+- `Cycle` is a cycle name: `T100ms`, `T250ms`, `T500ms`, `T1s`, `T2s`, `T5s`, `T10s` are accepted (case-insensitive),
+  `T30s`, `T1min` and plain times are not. With the mode `Cyclic` anything below 500 ms fails TIA Portal's consistency check
+  (panel and PC station); the server says so before calling Openness. A cyclic logging tag without a cycle is accepted and
+  reported in `Notes`.
 - 127 tools are registered by default.
 
 ### Added (WinCC Unified script modules)

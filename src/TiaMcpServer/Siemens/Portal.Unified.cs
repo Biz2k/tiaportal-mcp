@@ -539,14 +539,14 @@ namespace TiaMcpServer.Siemens
 
             var tagName = dataSource.Substring(0, colon);
             var loggingName = dataSource.Substring(colon + 1);
-            var tag = software.Tags.Find(tagName)
-                ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"Data source '{dataSource}': HMI tag '{tagName}' does not exist. Use 'unified_get_tags' to list the tags.");
+
+            // The process tag may be the member of a structured tag: 'Tag.Member:LoggingTag'.
+            var tag = ResolveTagPath(software, tagName, $"Data source '{dataSource}'");
 
             if (tag.LoggingTags.Find(loggingName) == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound,
-                    $"Data source '{dataSource}': HMI tag '{tagName}' has no logging tag '{loggingName}'. It has: {DescribeLoggingTagNames(tag)}. 'unified_manage_logging_tags' creates one.");
+                    $"Data source '{dataSource}': '{tagName}' has no logging tag '{loggingName}'. It has: {DescribeLoggingTagNames(tag)}. A structured tag keeps its logging tags on its members: use 'Tag.Member:LoggingTag'. 'unified_manage_logging_tags' creates one.");
             }
         }
 

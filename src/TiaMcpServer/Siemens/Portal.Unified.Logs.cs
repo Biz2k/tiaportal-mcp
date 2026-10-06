@@ -37,9 +37,16 @@ namespace TiaMcpServer.Siemens
     //     Openness against what exists (an exception, which would cost the batch its commit, so
     //     DataLog and TriggerTag are checked here first). SmoothingMinTime may not exceed
     //     SmoothingMaxTime, so the maximum is set first, and is refused with no smoothing mode.
-    //     Cycle is refused for every text tried ("1 s", "1s", "00:00:01", "Cycle_1s", ...): it
-    //     names something the project defines, and no hand-made cyclic logging tag exists in the
-    //     test project to read the form from. All 176 logging tags of the PC station are OnChange.
+    //   - Cycle names a cycle of the project: "T100ms", "T250ms", "T500ms", "T1s", "T2s", "T5s",
+    //     "T10s" were accepted (case does not matter), "T30s", "T1min", "1s", "00:00:01" were not.
+    //     With the mode Cyclic anything below 500 ms fails ("LoggingCycleConsistency check
+    //     failed") on a panel and on a PC station alike; in another mode the short ones are taken.
+    //   - Logging tags of structured tags sit on the MEMBERS of the tag (HmiTag.Members, recursive):
+    //     the tag "AI_DB_CP10-U1" has none itself, its member "field_input_EUF" has one named like
+    //     the tag. The process tag of such a logging tag is the path "AI_DB_CP10-U1.field_input_EUF".
+    //     Looking at the top-level tags only found 0 of 279 on the panel (2026-10-06).
+    //   - TriggerTag is a tag path as TIA Portal writes it, member paths and quotes included:
+    //     xReset, HMI_Pumps_CP_1.CMD_Start_Anti_Cond, "HMI_Analog_Valves_VM-16".CMD_Mode.
     //   - A trend takes an archived tag as the source "<HMI tag>:<logging tag>"; that is how the
     //     trends of the PC station read.
     public partial class Portal
@@ -144,17 +151,65 @@ namespace TiaMcpServer.Siemens
         {
             var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var tag in software.Tags)
+            foreach (var (_, _, loggingTag) in EnumerateLoggingTags(software))
             {
-                foreach (var loggingTag in tag.LoggingTags)
-                {
-                    var log = loggingTag.DataLog ?? string.Empty;
+                var log = loggingTag.DataLog ?? string.Empty;
 
-                    counts[log] = counts.TryGetValue(log, out var n) ? n + 1 : 1;
-                }
+                counts[log] = counts.TryGetValue(log, out var n) ? n + 1 : 1;
             }
 
             return counts;
+        }
+
+        /// <summary>Every logging tag with the path of the process tag it sits on; members of structured tags included.</summary>
+        private static IEnumerable<(HmiTag Tag, string Path, HmiLoggingTag LoggingTag)> EnumerateLoggingTags(HmiSoftware software)
+        {
+            foreach (var tag in software.Tags)
+            {
+                foreach (var entry in EnumerateLoggingTags(tag, tag.Name))
+                {
+                    yield return entry;
+                }
+            }
+        }
+
+        private static IEnumerable<(HmiTag Tag, string Path, HmiLoggingTag LoggingTag)> EnumerateLoggingTags(HmiTag tag, string path)
+        {
+            foreach (var loggingTag in tag.LoggingTags)
+            {
+                yield return (tag, path, loggingTag);
+            }
+
+            foreach (var member in tag.Members)
+            {
+                foreach (var entry in EnumerateLoggingTags(member, $"{path}.{member.Name}"))
+                {
+                    yield return entry;
+                }
+            }
+        }
+
+        /// <summary>Finds a tag by its path: the tag, then the members of structured tags.</summary>
+        private static HmiTag ResolveTagPath(HmiSoftware software, string path, string what)
+        {
+            var segments = UnifiedTagPath.Split(path);
+            var tag = segments[0].Length == 0 ? null : software.Tags.Find(segments[0])
+                ?? throw new PortalException(PortalErrorCode.NotFound,
+                    $"{what}: HMI tag '{segments[0]}' does not exist. Use 'unified_get_tags' to list the tags.");
+
+            if (tag == null)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams, $"{what}: '{path}' is not a tag path.");
+            }
+
+            foreach (var segment in segments.Skip(1))
+            {
+                tag = tag.Members.Find(segment)
+                    ?? throw new PortalException(PortalErrorCode.NotFound,
+                        $"{what}: '{tag.Name}' has no member '{segment}'. Members: {string.Join(", ", tag.Members.Select(m => m.Name).Take(40))}.");
+            }
+
+            return tag;
         }
 
         private static UnifiedLogInfo DescribeLog(string kind, LoggingBase log)
@@ -378,7 +433,7 @@ namespace TiaMcpServer.Siemens
 
         #region logging tags
 
-        /// <param name="tagName">Regular expression on the HMI tag name; empty for all tags.</param>
+        /// <param name="tagName">Regular expression on the path of the process tag (member paths included); empty for all.</param>
         /// <param name="logName">Only the logging tags that archive into this data log.</param>
         public List<UnifiedLoggingTagInfo> GetUnifiedLoggingTags(string softwarePath, string tagName, string logName, int limit, out bool truncated)
         {
@@ -410,29 +465,26 @@ namespace TiaMcpServer.Siemens
 
                     var items = new List<UnifiedLoggingTagInfo>();
 
-                    foreach (var tag in software.Tags)
+                    foreach (var (_, path, loggingTag) in EnumerateLoggingTags(software))
                     {
-                        if (filter != null && !filter.IsMatch(tag.Name))
+                        if (filter != null && !filter.IsMatch(path))
                         {
                             continue;
                         }
 
-                        foreach (var loggingTag in tag.LoggingTags)
+                        if (!string.IsNullOrWhiteSpace(logName) && !string.Equals(loggingTag.DataLog, logName.Trim(), StringComparison.OrdinalIgnoreCase))
                         {
-                            if (!string.IsNullOrWhiteSpace(logName) && !string.Equals(loggingTag.DataLog, logName.Trim(), StringComparison.OrdinalIgnoreCase))
-                            {
-                                continue;
-                            }
-
-                            if (items.Count >= limit)
-                            {
-                                wasTruncated = true;
-
-                                return items;
-                            }
-
-                            items.Add(DescribeLoggingTag(tag.Name, loggingTag));
+                            continue;
                         }
+
+                        if (items.Count >= limit)
+                        {
+                            wasTruncated = true;
+
+                            return items;
+                        }
+
+                        items.Add(DescribeLoggingTag(path, loggingTag));
                     }
 
                     return items;
@@ -478,10 +530,10 @@ namespace TiaMcpServer.Siemens
                 (software, action, verb, result) =>
                 {
                     var tagName = RequireName(action.TagName, "tagName");
-                    var tag = software.Tags.Find(tagName)
-                        ?? throw new PortalException(PortalErrorCode.NotFound, $"HMI tag '{tagName}' not found. Use 'unified_get_tags' to list the tags.");
+                    var tag = ResolveTagPath(software, tagName, "tagName");
 
-                    var name = string.IsNullOrWhiteSpace(action.LoggingTagName) ? tag.Name : action.LoggingTagName!.Trim();
+                    // TIA Portal names the logging tag of a member after the tag it belongs to.
+                    var name = string.IsNullOrWhiteSpace(action.LoggingTagName) ? UnifiedTagPath.Split(tagName)[0] : action.LoggingTagName!.Trim();
                     var loggingTag = tag.LoggingTags.Find(name);
 
                     switch (verb)
@@ -579,10 +631,9 @@ namespace TiaMcpServer.Siemens
                         $"DataLog: data log '{value}' does not exist. Existing: {string.Join(", ", software.DataLogs.Select(l => l.Name))}.");
                 }
 
-                if (property.Name == "TriggerTag" && !string.IsNullOrEmpty(value as string) && software.Tags.Find((string)value!) == null)
+                if (property.Name == "TriggerTag" && !string.IsNullOrEmpty(value as string))
                 {
-                    throw new PortalException(PortalErrorCode.NotFound,
-                        $"TriggerTag: HMI tag '{value}' does not exist. Use 'unified_get_tags' to list the tags.");
+                    ResolveTagPath(software, (string)value!, "TriggerTag");
                 }
 
                 if (property.Name == "SmoothingMinTime" && value is TimeSpan min)
@@ -600,6 +651,19 @@ namespace TiaMcpServer.Siemens
 
                 if (property.Name == "Cycle")
                 {
+                    var modeEntry = properties.FirstOrDefault(p => p.Key.Equals("LoggingMode", StringComparison.OrdinalIgnoreCase));
+                    var mode = modeEntry.Key == null
+                        ? loggingTag.LoggingMode
+                        : (HmiLoggingMode)ConvertHmiValue(modeEntry.Value, typeof(HmiLoggingMode), "LoggingMode")!;
+                    var milliseconds = UnifiedLogCycle.Milliseconds(value as string);
+
+                    // Checked first: TIA Portal answers with "LoggingCycleConsistency check failed", which says nothing.
+                    if (mode == HmiLoggingMode.Cyclic && milliseconds != null && milliseconds < UnifiedLogCycle.MinimumCyclicMilliseconds)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"Cycle '{value}' is too short for a cyclic logging tag: TIA Portal refuses cycles below {UnifiedLogCycle.MinimumCyclicMilliseconds} ms (WinCC Unified panels and PC stations alike). Use T500ms or longer ({UnifiedLogCycle.KnownCycles}), or another LoggingMode.");
+                    }
+
                     try
                     {
                         SetTypedProperty(loggingTag, property, value);
@@ -607,7 +671,7 @@ namespace TiaMcpServer.Siemens
                     catch (Exception ex) when (ex is not PortalException)
                     {
                         throw new PortalException(PortalErrorCode.InvalidParams,
-                            $"Cycle '{value}' is not accepted by TIA Portal ({ex.Message.Trim()}). The form it expects is not known to this server: no logging tag with a cycle exists in the project to read it from. Set LoggingMode to OnChange or OnDemand, or give a Cycle copied from a logging tag made in TIA Portal.");
+                            $"Cycle '{value}' is not accepted by TIA Portal ({ex.Message.Trim()}). It names a cycle of the project: {UnifiedLogCycle.KnownCycles} were accepted; T30s, T1min and the like were not.");
                     }
                 }
                 else
@@ -616,6 +680,11 @@ namespace TiaMcpServer.Siemens
                 }
 
                 result.Applied.Add(property.Name);
+            }
+
+            if (loggingTag.LoggingMode == HmiLoggingMode.Cyclic && string.IsNullOrEmpty(loggingTag.Cycle))
+            {
+                result.Notes.Add($"The logging tag is Cyclic but has no Cycle; set one of {UnifiedLogCycle.KnownCycles} (from T500ms up).");
             }
         }
 

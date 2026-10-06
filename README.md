@@ -305,9 +305,10 @@ through Openness.
 `unified_get_logs` / `unified_manage_logs` read and change data logs and alarm logs (size, duration, storage device,
 segment, backup; settings by name such as `Settings.LogMaxSize`); audit trails are read-only.
 `unified_get_logging_tags` / `unified_manage_logging_tags` archive HMI tags into data logs. A trend shows an
-archived tag with the data source `<HMI tag>:<logging tag>` in `unified_configure_trend_control`. Deleting a log
-leaves its logging tags pointing at it (Openness does not touch them); renaming a log renames it in them. The
-form of `Cycle` for the mode `Cyclic` is not known: no such logging tag exists in the test project.
+archived tag with the data source `<process tag>:<logging tag>` in `unified_configure_trend_control`. A structured
+tag keeps its logging tags on its members, so the process tag is a path such as `AI_DB_CP10-U1.field_input_EUF`.
+Deleting a log leaves its logging tags pointing at it (Openness does not touch them); renaming a log renames it in
+them. `Cycle` is named `T500ms`, `T1s`, `T2s`, `T5s`, `T10s`; a cyclic logging tag may not be faster than 500 ms.
 
 `unified_manage_connections` creates, updates and deletes connections. With `partner` - the
 path of a PLC of the project - a new connection is an **integrated** one, on which HMI tags can

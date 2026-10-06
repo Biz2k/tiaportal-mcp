@@ -220,7 +220,7 @@ namespace TiaMcpServer.ModelContextProtocol
          Description("List the logging tags of a WinCC Unified HMI: which HMI tag is archived into which data log, and how (mode, cycle, aggregation, smoothing, limits, trigger). A large HMI has hundreds: narrow the list with tagName or logName")]
         public static ResponseUnifiedLoggingTags GetUnifiedLoggingTags(
             [Description(UnifiedPath)] string softwarePath,
-            [Description("tagName: regular expression on the name of the HMI tag, case-insensitive; empty (default) for all tags")] string tagName = "",
+            [Description("tagName: regular expression on the path of the process tag, case-insensitive (a member of a structured tag is 'Tag.Member'); empty (default) for all")] string tagName = "",
             [Description("logName: only the logging tags that archive into this data log")] string logName = "",
             [Description("limit: the most logging tags to return (default 500)")] int limit = 500)
         {
@@ -435,7 +435,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "unified_manage_logging_tags", Title = "Manage WinCC Unified logging tags", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Create, update, upsert or delete logging tags of a WinCC Unified HMI, several at once: the archiving of an HMI tag into a data log. A new logging tag starts in the first data log with the mode OnChange. The data log and the trigger tag are checked. A trend shows an archived tag when its data source is '<HMI tag>:<logging tag>' (see 'unified_configure_trend_control'). A call applies all of its actions or none")]
+         Description("Create, update, upsert or delete logging tags of a WinCC Unified HMI, several at once: the archiving of an HMI tag into a data log. A structured tag keeps its logging tags on its members: tagName is then 'Tag.Member'. A new logging tag starts in the first data log with the mode OnChange. Mode Cyclic needs a Cycle of at least T500ms; mode OnDemand needs TriggerMode and TriggerTag. The data log and the trigger tag are checked. A trend shows an archived tag when its data source is '<process tag>:<logging tag>', e.g. 'AI_DB_CP10-U1.field_input_EUF:AI_DB_CP10-U1' (see 'unified_configure_trend_control'). A call applies all of its actions or none")]
         public static ResponseUnifiedActions ManageUnifiedLoggingTags(
             [Description(UnifiedPath)] string softwarePath,
             [Description("actions: the changes to make, applied in order")] List<UnifiedLoggingTagAction> actions)
