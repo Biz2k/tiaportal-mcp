@@ -110,6 +110,7 @@ unified_get_screen_item_properties
 unified_get_screen_items
 unified_get_screens
 unified_get_scripts
+unified_get_tag_table_groups
 unified_get_tag_tables
 unified_get_tags
 unified_get_text_lists
@@ -123,5 +124,6 @@ unified_manage_logging_tags
 unified_manage_logs
 unified_manage_screen_groups
 unified_manage_scripts
+unified_manage_tag_table_groups
 unified_manage_tag_tables
 unified_manage_tags

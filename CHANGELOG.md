@@ -12,6 +12,13 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Added (WinCC Unified tag table groups)
+
+- __`unified_get_tag_table_groups`__ and __`unified_manage_tag_table_groups`__: list, create, rename and delete groups of tag
+  tables (nested ones as `Parent/Child`); `unified_manage_tag_tables` takes a `group` for a new table. Names of tables and of
+  groups are unique in the whole HMI; deleting a group deletes its tables and their tags (reported); a table cannot be moved.
+- 129 tools are registered by default.
+
 ### Added (WinCC Unified tags: scaling, substitute value, limits)
 
 - `unified_manage_tags` sets linear scaling (`LinearScaling`, `HmiStartValue`, `HmiEndValue`, `PlcStartValue`, `PlcEndValue`),

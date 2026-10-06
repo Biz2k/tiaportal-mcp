@@ -119,6 +119,12 @@ namespace TiaMcpServer.Siemens
                 {
                     var name = RequireName(action.TableName, "tableName");
 
+                    if (!string.IsNullOrWhiteSpace(action.Group) && verb != "create")
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            "group is for 'create' only: a tag table cannot be moved to another group, delete it and create it there.");
+                    }
+
                     switch (verb)
                     {
                         case "create":
@@ -127,7 +133,14 @@ namespace TiaMcpServer.Siemens
                                 throw new PortalException(PortalErrorCode.InvalidParams, $"Tag table '{name}' already exists.");
                             }
 
-                            software.TagTables.Create(name);
+                            if (string.IsNullOrWhiteSpace(action.Group))
+                            {
+                                software.TagTables.Create(name);
+                            }
+                            else
+                            {
+                                RequireTagTableGroup(software, action.Group!).TagTables.Create(name);
+                            }
 
                             break;
 

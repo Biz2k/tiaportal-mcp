@@ -125,6 +125,28 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "unified_get_tag_table_groups", Title = "Get WinCC Unified tag table groups", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the tag table groups of a WinCC Unified HMI, nested ones included, with the number of tag tables and groups directly in each. A nested group is written 'Parent/Child'")]
+        public static ResponseUnifiedTagTableGroups GetUnifiedTagTableGroups(
+            [Description(UnifiedPath)] string softwarePath)
+        {
+            try
+            {
+                var groups = Portal.GetUnifiedTagTableGroups(softwarePath);
+
+                return new ResponseUnifiedTagTableGroups
+                {
+                    Message = $"{groups.Count} tag table group(s) in '{softwarePath}'",
+                    Items = groups,
+                    Meta = ReadMeta()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
         [McpServerTool(Name = "unified_get_tag_tables", Title = "Get WinCC Unified tag tables", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("List the tag tables of a WinCC Unified HMI with the number of tags in each")]
         public static ResponseUnifiedTagTables GetUnifiedTagTables(
@@ -441,6 +463,16 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("actions: the changes to make, applied in order")] List<UnifiedLoggingTagAction> actions)
         {
             return Guarded(nameof(ManageUnifiedLoggingTags), () => UnifiedActions(Portal.ManageUnifiedLoggingTags(softwarePath, actions)));
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "unified_manage_tag_table_groups", Title = "Manage WinCC Unified tag table groups", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, rename or delete tag table groups of a WinCC Unified HMI, several at once. A group in a group is written 'Parent/Child'; the parent has to exist. Deleting a group deletes the tag tables in it and their tags. A call applies all of its actions or none")]
+        public static ResponseUnifiedActions ManageUnifiedTagTableGroups(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("actions: the changes to make, applied in order")] List<UnifiedTagTableGroupAction> actions)
+        {
+            return Guarded(nameof(ManageUnifiedTagTableGroups), () => UnifiedActions(Portal.ManageUnifiedTagTableGroups(softwarePath, actions)));
         }
 
         [WriteTool]

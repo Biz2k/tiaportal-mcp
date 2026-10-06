@@ -31,6 +31,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [Description("New name, for 'rename'")]
         public string? NewName { get; set; }
+
+        [Description("Tag table group a new table is created in, e.g. 'Pumps' or 'Pumps/Big'; empty for the top level. For 'create' only; the group has to exist ('unified_manage_tag_table_groups' makes one). A table cannot be moved between groups afterwards")]
+        public string? Group { get; set; }
     }
 
     /// <summary>One change to a screen group of a WinCC Unified HMI.</summary>
@@ -44,6 +47,38 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [Description("New name of the group (the name only, not a path), for 'rename'")]
         public string? NewName { get; set; }
+    }
+
+    /// <summary>One change to a tag table group of a WinCC Unified HMI.</summary>
+    public class UnifiedTagTableGroupAction
+    {
+        [Description("'create', 'rename' or 'delete'. Deleting a group deletes the tag tables in it and their tags")]
+        public string? Action { get; set; }
+
+        [Description("Path of the group: 'Pumps', or 'Pumps/Big' for a group in a group. For 'create' the parent has to exist. Group names are unique in the whole HMI")]
+        public string? GroupName { get; set; }
+
+        [Description("New name of the group (the name only, not a path), for 'rename'")]
+        public string? NewName { get; set; }
+    }
+
+    public class ResponseUnifiedTagTableGroups : ResponseMessage
+    {
+        public List<UnifiedTagTableGroupInfo>? Items { get; set; }
+    }
+
+    public class UnifiedTagTableGroupInfo
+    {
+        /// <summary>'/'-separated path, the group name for one at the top.</summary>
+        public string? Path { get; set; }
+
+        public string? Name { get; set; }
+
+        /// <summary>Tag tables directly in the group.</summary>
+        public int TableCount { get; set; }
+
+        /// <summary>Groups directly in the group.</summary>
+        public int GroupCount { get; set; }
     }
 
     public class ResponseUnifiedScreenGroups : ResponseMessage
