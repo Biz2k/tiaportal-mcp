@@ -190,6 +190,27 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
+        [WriteTool]
+        [McpServerTool(Name = "net_delete_subnet", Title = "Delete subnet", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Delete a subnet of the project. A subnet that still has connected interfaces or IO systems is refused with the list of them; 'force' deletes it together with them. Subnets are listed by 'get_hardware_topology'")]
+        public static ResponseMessage DeleteSubnet(
+            [Description("subnetName: name of the subnet (e.g. 'PN/IE_1')")] string subnetName,
+            [Description("force: delete the subnet although interfaces or IO systems are on it (default false)")] bool force = false)
+        {
+            return Guarded(nameof(DeleteSubnet), () =>
+            {
+                var attached = Portal.DeleteSubnet(subnetName, force);
+
+                return new ResponseMessage
+                {
+                    Message = $"Subnet '{subnetName}' deleted" +
+                              (attached.Count > 0 ? $"; it released {attached.Count} interface(s): {string.Join(", ", attached)}" : string.Empty) +
+                              $". {SaveHint}",
+                    Meta = OkMeta()
+                };
+            });
+        }
+
         #endregion
 
         #region IO systems

@@ -346,6 +346,57 @@ namespace TiaMcpServer.Siemens
                 ("deviceName", deviceName), ("interfaceName", interfaceName));
         }
 
+        /// <summary>
+        /// Deletes a subnet. A subnet with nodes or IO systems is refused with the list of what sits
+        /// on it, unless <paramref name="force"/> is set: nothing is disconnected silently.
+        /// Returns the nodes that were attached ("device/interface").
+        /// </summary>
+        public List<string> DeleteSubnet(string subnetName, bool force)
+        {
+            var attached = new List<string>();
+
+            Operation.Run(_logger, nameof(DeleteSubnet), PortalErrorCode.DeleteFailed,
+                () =>
+                {
+                    var subnets = _project!.Subnets;
+                    var subnet = subnets.Find(subnetName)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Subnet '{subnetName}' not found. " +
+                            (subnets.Count == 0 ? "The project has no subnets." : $"Available: {string.Join(", ", subnets.Select(s => $"'{s.Name}'"))}."));
+
+                    attached.AddRange(subnet.Nodes.Select(DescribeNode));
+                    var ioSystems = subnet.IoSystems.Select(s => s.Name).ToList();
+
+                    if (!force && (attached.Count > 0 || ioSystems.Count > 0))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidState,
+                            $"Subnet '{subnetName}' is in use. " +
+                            (attached.Count > 0 ? $"Connected interfaces: {string.Join(", ", attached.Select(a => $"'{a}'"))}. " : string.Empty) +
+                            (ioSystems.Count > 0 ? $"IO systems: {string.Join(", ", ioSystems.Select(a => $"'{a}'"))}. " : string.Empty) +
+                            "Disconnect them with 'net_disconnect_subnet', or pass force=true to delete the subnet together with them.");
+                    }
+
+                    _logger?.LogInformation("Deleting subnet {Subnet} ({Nodes} node(s), {IoSystems} IO system(s))", subnet.Name, attached.Count, ioSystems.Count);
+                    subnet.Delete();
+                },
+                ("subnetName", subnetName), ("force", force.ToString()));
+
+            return attached;
+        }
+
+        private string DescribeNode(Node node)
+        {
+            IEngineeringObject? owner = node.Parent;
+            var itemName = (owner as DeviceItem)?.Name ?? node.Name;
+
+            while (owner != null && owner is not Device)
+            {
+                owner = (owner as IEngineeringObject)?.Parent;
+            }
+
+            return $"{(owner as Device)?.Name ?? "?"}/{itemName}";
+        }
+
         public void CreateIoSystem(string deviceName, string interfaceName, string ioSystemName)
         {
             Operation.Run(_logger, nameof(CreateIoSystem), PortalErrorCode.CreateFailed,

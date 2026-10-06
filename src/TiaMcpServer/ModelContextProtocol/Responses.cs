@@ -221,6 +221,11 @@ namespace TiaMcpServer.ModelContextProtocol
     {
     }
 
+    public class ResponseTiaInstances : ResponseMessage
+    {
+        public IEnumerable<TiaMcpServer.Siemens.TiaInstanceInfo>? Items { get; set; }
+    }
+
     public class ResponseDisconnect : ResponseMessage
     {
     }

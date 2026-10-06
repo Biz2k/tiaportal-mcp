@@ -12,6 +12,12 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Added
+
+- `net_delete_subnet`: deletes a subnet; one with connected interfaces or IO systems is refused with the list of them unless `force=true`.
+- `get_tia_instances` lists the running TIA Portal instances (process id, open project, mode) without connecting; `connect` takes
+  `processId` or `projectPath` to attach to a chosen instance. Without them it still attaches to the first one.
+
 ### Changed (shorter answers; breaking for 'get_devices')
 
 - `get_devices` returns path, name, type and the names of the top-level items; the attribute list of every device (long) now needs

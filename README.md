@@ -155,7 +155,7 @@ Left out with `--read-only` (57):
 | Watch tables            | `plc_create_watch_table`, `plc_rename_watch_table`, `plc_delete_watch_table`, `plc_create_watch_table_group`, `plc_delete_watch_table_group` |
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Hardware                | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
-| Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
+| Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_delete_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
 | WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_tag_table_groups`, `unified_manage_logs`, `unified_manage_logging_tags`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists` |
 | Download                | `download_to_plc` |
 

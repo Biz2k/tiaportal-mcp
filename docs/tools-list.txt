@@ -16,6 +16,7 @@ get_plc_summary
 get_project
 get_project_tree
 get_state
+get_tia_instances
 hw_create_device
 hw_delete_device
 hw_get_device_info
@@ -26,6 +27,7 @@ instantiate_master_copy
 net_connect_subnet
 net_connect_to_io_system
 net_create_io_system
+net_delete_subnet
 net_disconnect_subnet
 open_global_library
 open_project

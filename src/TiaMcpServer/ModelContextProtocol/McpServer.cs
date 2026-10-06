@@ -53,15 +53,43 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region portal
 
-        [McpServerTool(Name = "connect", Title = "Connect to TIA Portal", Destructive = false, Idempotent = true, OpenWorld = false), Description("Connect to a running TIA Portal. Fails when none is running, unless startIfNotRunning is set")]
+        [McpServerTool(Name = "get_tia_instances", Title = "Get TIA Portal instances", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("List the running TIA Portal instances (process id, open project, mode) without connecting. Use it to pick the instance for 'connect' when several are open")]
+        public static ResponseTiaInstances GetTiaInstances()
+        {
+            try
+            {
+                var instances = Portal.GetTiaInstances();
+
+                return new ResponseTiaInstances
+                {
+                    Message = instances.Count == 0
+                        ? "No TIA Portal is running"
+                        : $"{instances.Count} TIA Portal instance(s) running",
+                    Items = instances,
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = true
+                    }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw Failure("listing TIA Portal instances", ex);
+            }
+        }
+
+        [McpServerTool(Name = "connect", Title = "Connect to TIA Portal", Destructive = false, Idempotent = true, OpenWorld = false), Description("Connect to a running TIA Portal; the first one unless processId or projectPath picks another ('get_tia_instances' lists them). Fails when none is running, unless startIfNotRunning is set")]
         public static ResponseConnect Connect(
-            [Description("startIfNotRunning: start a new TIA Portal window when none is running (default false)")] bool startIfNotRunning = false)
+            [Description("startIfNotRunning: start a new TIA Portal window when none is running (default false)")] bool startIfNotRunning = false,
+            [Description("processId: attach to the instance with this process id (see 'get_tia_instances'); 0 means not set")] int processId = 0,
+            [Description("projectPath: attach to the instance that has this project open, by full path or file name; empty means not set")] string projectPath = "")
         {
             Logger?.LogInformation("Connecting to TIA Portal...");
 
             try
             {
-                if (Portal.ConnectPortal(startIfNotRunning))
+                if (Portal.ConnectPortal(startIfNotRunning, processId > 0 ? processId : (int?)null, projectPath))
                 {
                     return new ResponseConnect
                     {

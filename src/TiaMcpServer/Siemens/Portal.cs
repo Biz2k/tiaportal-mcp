@@ -140,7 +140,7 @@ namespace TiaMcpServer.Siemens
         /// silently opened an empty instance (2026-10-05).
         /// </param>
         /// <exception cref="PortalException">InvalidState when no TIA Portal is running and none may be started.</exception>
-        public bool ConnectPortal(bool startIfNotRunning = false)
+        public bool ConnectPortal(bool startIfNotRunning = false, int? processId = null, string? projectPath = null)
         {
             _logger?.LogInformation("Connecting to TIA Portal...");
 
@@ -158,6 +158,12 @@ namespace TiaMcpServer.Siemens
                 if (running)
                 {
                     var process = processes.First();
+
+                    if (processId.HasValue || !string.IsNullOrWhiteSpace(projectPath))
+                    {
+                        var picked = TiaInstanceSelection.Pick(processes.Select(ToInstanceInfo).ToList(), processId, projectPath);
+                        process = processes.First(p => p.Id == picked.Id);
+                    }
 
                     _portal = process.Attach();
                     _portalProcessId = process.Id;
@@ -177,11 +183,21 @@ namespace TiaMcpServer.Siemens
                     return true;
                 }
             }
+            catch (PortalException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger?.LogWarning(ex, "Attaching to TIA Portal failed");
 
                 return false;
+            }
+
+            if (processId.HasValue || !string.IsNullOrWhiteSpace(projectPath))
+            {
+                throw new PortalException(PortalErrorCode.NotFound,
+                    "No TIA Portal instance is running, so the requested processId/projectPath cannot be matched. Start TIA Portal, or call 'connect' without them.");
             }
 
             if (!startIfNotRunning)
@@ -203,6 +219,28 @@ namespace TiaMcpServer.Siemens
 
                 return false;
             }
+        }
+
+        /// <summary>The running TIA Portal processes, without attaching to any.</summary>
+        public List<TiaInstanceInfo> GetTiaInstances()
+        {
+            return TiaPortal.GetProcesses().Select(ToInstanceInfo).ToList();
+        }
+
+        private static TiaInstanceInfo ToInstanceInfo(TiaPortalProcess process)
+        {
+            string projectPath;
+
+            try
+            {
+                projectPath = process.ProjectPath?.FullName ?? string.Empty;
+            }
+            catch (Exception)
+            {
+                projectPath = string.Empty;
+            }
+
+            return new TiaInstanceInfo { Id = process.Id, ProjectPath = projectPath, Mode = process.Mode.ToString() };
         }
 
         public bool IsConnected()
