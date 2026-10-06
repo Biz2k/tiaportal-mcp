@@ -55,16 +55,17 @@ namespace TiaMcpServer.ModelContextProtocol
                 var depth = Math.Max(1, Math.Min(3, maxDepth));
                 var tally = new CrossRefTally();
 
-                var result = Portal.GetCrossReferences(softwarePath, objectPath, objectKind, parsedFilter);
+                var found = Portal.GetCrossReferenceSources(softwarePath, objectPath, objectKind, parsedFilter, out var groupNote);
 
-                var sources = result.Sources.Select(s => ToSource(s, depth, tally)).ToList();
+                var sources = found.Select(s => ToSource(s, depth, tally)).ToList();
 
                 var target = string.IsNullOrEmpty(objectPath) ? softwarePath : objectPath;
 
                 return new ResponseCrossReferences
                 {
                     Message = $"{sources.Count} cross reference source(s) with {tally.ReferenceCount} reference(s) retrieved for '{target}'"
-                              + (tally.Truncated ? $" (truncated at maxDepth {depth})" : string.Empty),
+                              + (tally.Truncated ? $" (truncated at maxDepth {depth})" : string.Empty)
+                              + (groupNote == null ? string.Empty : " " + groupNote),
                     Sources = sources,
                     SourceCount = sources.Count,
                     ReferenceCount = tally.ReferenceCount,
@@ -84,7 +85,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving cross references from '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving cross references from '{softwarePath}'", ex);
             }
         }
 
@@ -160,7 +161,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region insight
 
         [McpServerTool(Name = "plc_where_used", Title = "Where used", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Answer 'what uses this?' for a tag, block, PLC data type or tag table by name. Resolves the name, picks the right object kind and flattens the cross-reference tree to a plain list of users. Use 'GetCrossReferences' instead when the full nested result or a specific filter is needed")]
+         Description("Answer 'what uses this?' for a tag, block, PLC data type or tag table by name. Resolves the name, picks the right object kind and flattens the cross-reference tree to a plain list of users. Use 'plc_get_cross_references' instead when the full nested result or a specific filter is needed")]
         public static ResponseWhereUsed WhereUsed(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("name: the object to look up, by bare name or by full root-relative path")] string name,
@@ -220,7 +221,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error resolving usages of '{name}': {Why(ex)}", ex);
+                throw Failure($"resolving usages of '{name}'", ex);
             }
         }
 

@@ -76,6 +76,12 @@ namespace TiaMcpServer.Siemens
                 return [];
             }
 
+            // A path that names no PLC software is an error, not an empty list.
+            if (GetSoftwareContainer(softwarePath)?.Software is not PlcSoftware)
+            {
+                throw new PortalException(PortalErrorCode.NotFound, DescribeMissingSoftware(softwarePath, "No PLC software found"));
+            }
+
             var list = new List<PlcType>();
 
             try
@@ -377,7 +383,7 @@ namespace TiaMcpServer.Siemens
                 {
                     var type = GetType(softwarePath, typePath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Type not found at '{typePath}'. Use 'GetTypes' to list the available types.");
+                            $"Type not found at '{typePath}'. Use 'plc_get_types' to list the available types.");
 
                     EnsureNotKnowHowProtected(type);
                     type.Delete();
@@ -396,7 +402,7 @@ namespace TiaMcpServer.Siemens
 
                     var type = GetType(softwarePath, typePath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Type not found at '{typePath}'. Use 'GetTypes' to list the available types.");
+                            $"Type not found at '{typePath}'. Use 'plc_get_types' to list the available types.");
 
                     EnsureNotKnowHowProtected(type);
                     type.Name = newName;

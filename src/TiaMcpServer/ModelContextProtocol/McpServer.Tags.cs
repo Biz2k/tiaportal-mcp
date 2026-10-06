@@ -44,7 +44,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving tag tables from '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving tag tables from '{softwarePath}'", ex);
             }
         }
 
@@ -57,7 +57,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var table = Portal.GetTagTable(softwarePath, tagTablePath)
-                    ?? throw new McpException($"Tag table not found at '{tagTablePath}' in '{softwarePath}'. Use 'GetTagTables' to list the available tables.");
+                    ?? throw ObjectNotFound("Tag table", tagTablePath, softwarePath, "tagTablePath", "plc_get_tag_tables");
 
                 var info = ToTagTableInfo(table);
                 info.Message = $"Tag table info retrieved from '{tagTablePath}' in '{softwarePath}'";
@@ -68,7 +68,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving tag table info from '{tagTablePath}' in '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving tag table info from '{tagTablePath}' in '{softwarePath}'", ex);
             }
         }
 
@@ -77,22 +77,24 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseTags GetTags(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("tagTablePath: optional root-relative tag table path; empty searches every tag table")] string tagTablePath = "",
-            [Description("regexName: optional regular expression to filter the tag names")] string regexName = "")
+            [Description("regexName: optional regular expression to filter the tag names")] string regexName = "",
+            [Description("limit: the most items to return (default 200); 0 returns all")] int limit = 200,
+            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
         {
             try
             {
-                var tags = Portal.GetTags(softwarePath, tagTablePath, regexName);
+                var page = ListPage<PlcTag>.Of(Portal.GetTags(softwarePath, tagTablePath, regexName), limit, offset);
 
                 return new ResponseTags
                 {
-                    Message = $"{tags.Count} tag(s) retrieved from '{softwarePath}'",
-                    Items = tags.Select(ToTagInfo).ToList(),
-                    Meta = Ok(new JsonObject { ["totalTags"] = tags.Count })
+                    Message = $"{page.Total} tag(s) retrieved from '{softwarePath}'." + page.Note("regexName or tagTablePath"),
+                    Items = page.Items.Select(ToTagInfo).ToList(),
+                    Meta = page.Meta(Ok(new JsonObject { ["totalTags"] = page.Total }))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving tags from '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving tags from '{softwarePath}'", ex);
             }
         }
 
@@ -105,7 +107,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var tag = Portal.GetTag(softwarePath, tagPath)
-                    ?? throw new McpException($"Tag not found at '{tagPath}' in '{softwarePath}'. Use 'GetTags' to list the available tags.");
+                    ?? throw ObjectNotFound("Tag", tagPath, softwarePath, "tagPath", "plc_get_tags");
 
                 var info = ToTagInfo(tag);
                 info.Message = $"Tag info retrieved from '{tagPath}' in '{softwarePath}'";
@@ -116,7 +118,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving tag info from '{tagPath}' in '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving tag info from '{tagPath}' in '{softwarePath}'", ex);
             }
         }
 
@@ -173,7 +175,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving constants from '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving constants from '{softwarePath}'", ex);
             }
         }
 
@@ -203,7 +205,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting tag table '{tagTablePath}' from '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"exporting tag table '{tagTablePath}' from '{softwarePath}'", ex);
             }
         }
 
@@ -289,7 +291,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving watch tables from '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving watch tables from '{softwarePath}'", ex);
             }
         }
 
@@ -302,7 +304,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var table = Portal.GetWatchTable(softwarePath, watchTablePath)
-                    ?? throw new McpException($"Watch table not found at '{watchTablePath}' in '{softwarePath}'. Use 'GetWatchTables' to list the available tables.");
+                    ?? throw ObjectNotFound("Watch table", watchTablePath, softwarePath, "watchTablePath", "plc_get_watch_tables");
 
                 var info = ToWatchTableInfo(table, includeEntries: true);
                 info.Message = $"Watch table info retrieved from '{watchTablePath}' in '{softwarePath}'";
@@ -313,7 +315,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving watch table info from '{watchTablePath}' in '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving watch table info from '{watchTablePath}' in '{softwarePath}'", ex);
             }
         }
 
@@ -335,7 +337,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving force tables from '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving force tables from '{softwarePath}'", ex);
             }
         }
 
@@ -365,7 +367,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting watch table '{watchTablePath}' from '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"exporting watch table '{watchTablePath}' from '{softwarePath}'", ex);
             }
         }
 

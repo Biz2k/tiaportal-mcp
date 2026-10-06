@@ -132,7 +132,62 @@ namespace TiaMcpServer.Siemens
                 }
             }
 
-            return null;
+            // What the two searches above do not know: an escaped slash ("S7-1500%2FET200MP station_1/PLC_1"),
+            // the CPU of a device that lives in a group, the ungrouped devices group.
+            return FindSoftwareContainerByDeviceItem(softwarePath);
+        }
+
+        /// <summary>
+        /// The software of the device item a path names, found with the same search the device tools use. A bare
+        /// item name ("PLC_1") also finds a CPU inside a user group, provided no other device has an item of that name.
+        /// </summary>
+        private SoftwareContainer? FindSoftwareContainerByDeviceItem(string softwarePath)
+        {
+            var segments = PathSegments(softwarePath);
+
+            if (segments.Length == 0)
+            {
+                return null;
+            }
+
+            try
+            {
+                var item = GetDeviceItem(softwarePath);
+                var container = item?.GetService<SoftwareContainer>();
+
+                if (container != null)
+                {
+                    return container;
+                }
+
+                // The device by its own name, without its group ("Station_1/PLC_1"), or the item alone ("PLC_1").
+                var found = EnumerateDevices()
+                    .SelectMany(entry =>
+                    {
+                        var consumed = MatchPrefix(segments, new[] { EscapeSegment(entry.Device.Name) });
+
+                        return new[]
+                        {
+                            consumed > 0 && consumed < segments.Length
+                                ? WalkNamed<DeviceItem>(entry.Device.DeviceItems, segments, consumed, i => i.DeviceItems, i => i.Name)
+                                : null,
+                            WalkNamed<DeviceItem>(entry.Device.DeviceItems, segments, 0, i => i.DeviceItems, i => i.Name)
+                        };
+                    })
+                    .Where(i => i != null)
+                    .Select(i => i!.GetService<SoftwareContainer>())
+                    .Where(c => c != null)
+                    .Distinct()
+                    .ToList();
+
+                return found.Count == 1 ? found[0] : null;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogDebug(ex, "No software found at '{SoftwarePath}' by device item", softwarePath);
+
+                return null;
+            }
         }
 
         private SoftwareContainer? GetSoftwareContainerInDevices(DeviceComposition devices, string[] pathSegments, int index)

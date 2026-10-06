@@ -104,19 +104,21 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseHmiTags GetUnifiedTags(
             [Description(UnifiedPath)] string softwarePath,
             [Description("nameFilter: regular expression on the tag name, case-insensitive; empty (default) returns every tag")] string nameFilter = "",
-            [Description("tagTable: return only the tags of this tag table; 'unified_get_tag_tables' lists the tables")] string tagTable = "")
+            [Description("tagTable: return only the tags of this tag table; 'unified_get_tag_tables' lists the tables")] string tagTable = "",
+            [Description("limit: the most items to return (default 200); 0 returns all")] int limit = 200,
+            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
         {
             try
             {
-                var tags = Portal.GetUnifiedTags(softwarePath, nameFilter, tagTable);
+                var page = ListPage<HmiTagInfo>.Of(Portal.GetUnifiedTags(softwarePath, nameFilter, tagTable), limit, offset);
 
                 return new ResponseHmiTags
                 {
-                    Message = string.IsNullOrEmpty(nameFilter)
-                        ? $"{tags.Count} tag(s) in '{softwarePath}'"
-                        : $"{tags.Count} tag(s) in '{softwarePath}' match '{nameFilter}'",
-                    Items = tags,
-                    Meta = ReadMeta()
+                    Message = (string.IsNullOrEmpty(nameFilter)
+                        ? $"{page.Total} tag(s) in '{softwarePath}'"
+                        : $"{page.Total} tag(s) in '{softwarePath}' match '{nameFilter}'") + page.Note("nameFilter or tagTable"),
+                    Items = page.Items,
+                    Meta = page.Meta(ReadMeta())
                 };
             }
             catch (Exception ex)
@@ -293,17 +295,19 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseUnifiedAlarms GetUnifiedAlarms(
             [Description(UnifiedPath)] string softwarePath,
             [Description("type: 'discrete' or 'analog'; empty (default) returns both")] string type = "",
-            [Description("nameFilter: regular expression on the alarm name, case-insensitive; empty (default) returns every alarm")] string nameFilter = "")
+            [Description("nameFilter: regular expression on the alarm name, case-insensitive; empty (default) returns every alarm")] string nameFilter = "",
+            [Description("limit: the most items to return (default 500); 0 returns all")] int limit = 500,
+            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
         {
             try
             {
-                var alarms = Portal.GetUnifiedAlarms(softwarePath, type, nameFilter);
+                var page = ListPage<UnifiedAlarmInfo>.Of(Portal.GetUnifiedAlarms(softwarePath, type, nameFilter), limit, offset);
 
                 return new ResponseUnifiedAlarms
                 {
-                    Message = $"{alarms.Count} alarm(s) in '{softwarePath}'" + (string.IsNullOrEmpty(nameFilter) ? string.Empty : $" match '{nameFilter}'"),
-                    Items = alarms,
-                    Meta = ReadMeta()
+                    Message = $"{page.Total} alarm(s) in '{softwarePath}'" + (string.IsNullOrEmpty(nameFilter) ? string.Empty : $" match '{nameFilter}'") + page.Note("type or nameFilter"),
+                    Items = page.Items,
+                    Meta = page.Meta(ReadMeta())
                 };
             }
             catch (Exception ex)

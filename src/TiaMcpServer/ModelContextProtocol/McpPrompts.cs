@@ -328,7 +328,7 @@ Use the 'plc_get_cross_references' tool with these parameters:
         [McpServerPrompt(Name = "where_used"), Description("Where used")]
         public static string WhereUsed(string softwarePath, string name, string kind = "any")
         {
-            return $@"Answer 'what uses this?' for a tag, block, PLC data type or tag table by name. Resolves the name, picks the right object kind and flattens the cross-reference tree to a plain list of users. Use 'GetCrossReferences' instead when the full nested result or a specific filter is needed.
+            return $@"Answer 'what uses this?' for a tag, block, PLC data type or tag table by name. Resolves the name, picks the right object kind and flattens the cross-reference tree to a plain list of users. Use 'plc_get_cross_references' instead when the full nested result or a specific filter is needed.
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the software
@@ -388,7 +388,7 @@ Use the 'plc_get_blocks_hierarchy' tool with these parameters:
         [McpServerPrompt(Name = "get_block_interface"), Description("Read a data block's members")]
         public static string GetBlockInterface(string softwarePath, string blockPath)
         {
-            return $@"List the members of a data block with their data type and every attribute TIA Portal reports. Needs no export and works on inconsistent blocks. Data blocks only: Openness offers no interface accessor for FB, FC or OB, whose declarations come from 'GetBlockSource' instead.
+            return $@"List the members of a data block with their data type and every attribute TIA Portal reports. Needs no export and works on inconsistent blocks. Data blocks only: Openness offers no interface accessor for FB, FC or OB, whose declarations come from 'plc_get_block_source' instead.
 
 Common parameter values:
 - softwarePath: defines the path in the project structure to the software

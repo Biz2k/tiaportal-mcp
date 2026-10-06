@@ -12,6 +12,22 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Changed (shorter answers; breaking for 'get_devices')
+
+- `get_devices` returns path, name, type and the names of the top-level items; the attribute list of every device (long) now needs
+  `includeAttributes=true`.
+- `plc_get_blocks`, `plc_get_types`, `plc_get_tags`, `unified_get_tags` and `unified_get_alarms` take `limit` (500; 200 for tags)
+  and `offset`; a cut list says how many items were shown and how to read on.
+- `get_project_tree` takes `depth`, `filter` and `structured`; the structured form lists nodes with the paths the other tools accept.
+
+### Fixed (error hints and paths)
+
+- A path that finds nothing in a PLC software now names the objects that look like it; a wrong software path names the software paths
+  of the project. `plc_get_blocks`, `plc_get_types` and `plc_get_software_tree` fail on a wrong software path instead of answering
+  with an empty list. Expected refusals no longer carry the "Unexpected error" prefix, and error texts name the tools that exist.
+- A PLC addressed with an escaped slash, a PLC in a device group by its short name, and a station without its group name now resolve.
+- `plc_get_cross_references` answers for a block group through its blocks (Openness gives a group no cross references of its own).
+
 ### Fixed (master copies of global libraries)
 
 - `instantiate_master_copy` never found a master copy of a global library: it built the path without the library name, while

@@ -75,7 +75,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error reading the source of '{objectPath}': {Why(ex)}", ex);
+                throw Failure($"reading the source of '{objectPath}'", ex);
             }
         }
 
@@ -125,7 +125,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error snapshotting '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"snapshotting '{softwarePath}'", ex);
             }
         }
 
@@ -162,7 +162,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 "block");
         }
 
-        // [McpServerTool(Name = "export_source_type", Title = "Export type as source", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Write one PLC data type as a '*.udt' external source file, in the format the compiler reads back. Unlike 'GetTypeSource' this needs no TIA Portal V21 and produces a file that can be imported again")]
+        // [McpServerTool(Name = "export_source_type", Title = "Export type as source", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Write one PLC data type as a '*.udt' external source file, in the format the compiler reads back. Unlike 'plc_get_type_source' this needs no TIA Portal V21 and produces a file that can be imported again")]
         public static ResponseGeneratedSource ExportSourceType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("typePath: root-relative path of the PLC data type, e.g. 'Common/BtnTyp_X'. Use 'ResolveObjectPath' if you only know the name")] string typePath,
@@ -239,7 +239,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error generating sources for '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"generating sources for '{softwarePath}'", ex);
             }
         }
 
@@ -273,7 +273,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting {what}: {Why(ex)}", ex);
+                throw Failure($"exporting {what}", ex);
             }
         }
 
@@ -306,7 +306,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error generating the source of '{objectPath}': {Why(ex)}", ex);
+                throw Failure($"generating the source of '{objectPath}'", ex);
             }
         }
 
@@ -405,7 +405,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving external sources from '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving external sources from '{softwarePath}'", ex);
             }
         }
 
@@ -418,7 +418,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var source = Portal.GetExternalSource(softwarePath, sourcePath)
-                    ?? throw new McpException($"External source not found at '{sourcePath}' in '{softwarePath}'. Use 'GetExternalSources' to list the available sources.");
+                    ?? throw ObjectNotFound("External source", sourcePath, softwarePath, "sourcePath", "plc_get_external_sources");
 
                 var info = ToExternalSourceInfo(source);
                 info.Message = $"External source info retrieved from '{sourcePath}' in '{softwarePath}'";
@@ -429,7 +429,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving external source info from '{sourcePath}' in '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving external source info from '{sourcePath}' in '{softwarePath}'", ex);
             }
         }
 

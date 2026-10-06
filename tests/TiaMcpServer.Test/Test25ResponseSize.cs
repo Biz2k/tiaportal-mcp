@@ -1,0 +1,100 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using TiaMcpServer.ModelContextProtocol;
+using TiaMcpServer.Siemens;
+
+namespace TiaMcpServer.Test
+{
+    /// <summary>
+    /// What keeps a long answer short: paging of list tools and depth / filter of the project tree. These tests do not
+    /// connect to TIA Portal.
+    /// </summary>
+    [TestClass]
+    [TestCategory("NoTia")]
+    public class Test25ResponseSize
+    {
+        private const string Tree =
+            "Project\n" +
+            "├── Devices [Collection]\n" +
+            "│   ├── Station_1 [Device]\n" +
+            "│   │   ├── PLC_1 [DeviceItem]\n" +
+            "│   │   └── Rail_0 [DeviceItem]\n" +
+            "│   └── Station_2 [Device]\n" +
+            "│       └── HMI_1 [DeviceItem]\n" +
+            "└── Groups [Collection]\n" +
+            "    └── G1 [Group]";
+
+        [TestMethod]
+        public void Test_2500_ListPage_CutsAndSaysHowToGetTheRest()
+        {
+            var all = Enumerable.Range(1, 1200).ToList();
+
+            var page = ListPage<int>.Of(all, 500, 0);
+
+            Assert.AreEqual(500, page.Items.Count);
+            Assert.IsTrue(page.Truncated);
+            StringAssert.Contains(page.Note("nameFilter"), "showing items 1 to 500 of 1200");
+            StringAssert.Contains(page.Note("nameFilter"), "offset=500");
+
+            var last = ListPage<int>.Of(all, 500, 1000);
+
+            Assert.AreEqual(200, last.Items.Count);
+            Assert.IsFalse(last.Truncated);
+            StringAssert.Contains(last.Note("x"), "Items 1001 to 1200 of 1200");
+        }
+
+        [TestMethod]
+        public void Test_2501_ListPage_ZeroLimitReturnsAll_NegativeOffsetIsRefused()
+        {
+            var all = Enumerable.Range(1, 30).ToList();
+
+            Assert.AreEqual(30, ListPage<int>.Of(all, 0, 0).Items.Count);
+            Assert.AreEqual(string.Empty, ListPage<int>.Of(all, 0, 0).Note("x"));
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => ListPage<int>.Of(all, 10, -1)).Message, "cannot be negative");
+        }
+
+        [TestMethod]
+        public void Test_2502_TreeText_DepthKeepsTheUpperLevels()
+        {
+            var narrowed = ProjectTreeText.Narrow(Tree, 2, null);
+
+            Assert.AreEqual(9, narrowed.Total);
+            Assert.AreEqual(6, narrowed.Kept);
+            StringAssert.Contains(narrowed.Text, "Station_2 [Device]");
+            Assert.IsFalse(narrowed.Text.Contains("PLC_1"));
+        }
+
+        [TestMethod]
+        public void Test_2503_TreeText_FilterKeepsTheMatchAndTheLinesAboveIt()
+        {
+            var narrowed = ProjectTreeText.Narrow(Tree, 0, "HMI_1");
+            var lines = narrowed.Text.Split('\n');
+
+            CollectionAssert.AreEqual(new[] { "Project", "├── Devices [Collection]", "│   └── Station_2 [Device]", "│       └── HMI_1 [DeviceItem]" }, lines);
+        }
+
+        [TestMethod]
+        public void Test_2504_TreeText_BadFilterIsRefused()
+        {
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => ProjectTreeText.Narrow(Tree, 0, "((")).Message, "not a regular expression");
+        }
+
+        [TestMethod]
+        public void Test_2505_Nodes_FilterKeepsAncestors()
+        {
+            var nodes = new List<ProjectNode>
+            {
+                new() { Level = 1, Kind = "device", Name = "S1", Path = "S1" },
+                new() { Level = 2, Kind = "deviceItem", Name = "PLC_1", Path = "S1/PLC_1" },
+                new() { Level = 2, Kind = "deviceItem", Name = "Rail_0", Path = "S1/Rail_0" },
+                new() { Level = 1, Kind = "device", Name = "S2", Path = "S2" },
+                new() { Level = 2, Kind = "deviceItem", Name = "HMI_1", Path = "S2/HMI_1" }
+            };
+
+            var kept = Portal.KeepMatching(nodes, new Regex("HMI", RegexOptions.IgnoreCase));
+
+            CollectionAssert.AreEqual(new[] { "S2", "HMI_1" }, kept.Select(n => n.Name).ToList());
+        }
+    }
+}

@@ -57,7 +57,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error resolving '{name}' in '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"resolving '{name}' in '{softwarePath}'", ex);
             }
         }
 

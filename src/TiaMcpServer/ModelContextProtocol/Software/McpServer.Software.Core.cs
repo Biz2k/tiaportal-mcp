@@ -42,12 +42,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
-                    throw new McpException($"Software not found at '{softwarePath}'");
+                    throw new McpException(Portal.DescribeMissingSoftware(softwarePath));
                 }
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving software info from '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving software info from '{softwarePath}'", ex);
             }
         }
 
@@ -63,9 +63,14 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 if (result == null)
                 {
+                    if (Portal.GetPlcSoftware(softwarePath) == null)
+                    {
+                        throw new McpException(Portal.DescribeMissingSoftware(softwarePath, "No PLC software found"));
+                    }
+
                     throw new McpException(
                         $"Failed compiling software '{softwarePath}'. Check that the path names a PLC software " +
-                        "('GetProjectTree' lists them) and, for a safety program, that 'password' is correct.");
+                        "('get_project_tree' lists them) and, for a safety program, that 'password' is correct.");
                 }
 
                 var messages = FlattenCompilerMessages(result.Messages, 0).ToList();
@@ -109,7 +114,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error compiling software '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"compiling software '{softwarePath}'", ex);
             }
         }
 

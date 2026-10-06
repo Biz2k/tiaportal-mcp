@@ -47,7 +47,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving device info from '{devicePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving device info from '{devicePath}'", ex);
             }
         }
 
@@ -83,12 +83,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving device item info from '{deviceItemPath}': {Why(ex)}", ex);
+                throw Failure($"retrieving device item info from '{deviceItemPath}'", ex);
             }
         }
 
-        [McpServerTool(Name = "get_devices", Title = "Get devices", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get a list of all devices in the project/session")]
-        public static ResponseDevices GetDevices()
+        [McpServerTool(Name = "get_devices", Title = "Get devices", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get a list of all devices in the project/session: path, name, type and the names of the top-level items. 'includeAttributes' adds every attribute of each device (long); 'hw_get_device_info' gives them for one device")]
+        public static ResponseDevices GetDevices(
+            [Description("includeAttributes: true adds the full attribute list of every device (default false)")] bool includeAttributes = false)
         {
             try
             {
@@ -101,13 +102,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         if (device != null)
                         {
-                            var attributes = Helper.GetAttributeList(device);
                             responseList.Add(new ResponseDeviceInfo
                             {
                                 Path = Portal.GetDevicePath(device),
                                 Name = device.Name,
-                                Attributes = attributes,
-                                Description = device.ToString()
+                                Type = device.TypeIdentifier,
+                                Items = System.Linq.Enumerable.ToList(System.Linq.Enumerable.Select(device.DeviceItems, i => i.Name)),
+                                Attributes = includeAttributes ? Helper.GetAttributeList(device) : null,
+                                Description = includeAttributes ? device.ToString() : null
                             });
                         }
                     }
@@ -130,7 +132,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving devices: {Why(ex)}", ex);
+                throw Failure($"retrieving devices", ex);
             }
         }
 

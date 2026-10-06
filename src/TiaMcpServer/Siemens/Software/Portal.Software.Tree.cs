@@ -36,6 +36,11 @@ namespace TiaMcpServer.Siemens
                 return string.Empty;
             }
 
+            if (GetSoftwareContainer(softwarePath)?.Software is not PlcSoftware)
+            {
+                throw new PortalException(PortalErrorCode.NotFound, DescribeMissingSoftware(softwarePath, "No PLC software found"));
+            }
+
             try
             {
                 var softwareContainer = GetSoftwareContainer(softwarePath);

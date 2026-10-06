@@ -53,7 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error searching '{softwarePath}' for '{pattern}': {Why(ex)}", ex);
+                throw Failure($"searching '{softwarePath}' for '{pattern}'", ex);
             }
         }
 

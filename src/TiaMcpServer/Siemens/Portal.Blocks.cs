@@ -80,6 +80,12 @@ namespace TiaMcpServer.Siemens
                 return [];
             }
 
+            // A path that names no PLC software is an error, not an empty list.
+            if (GetSoftwareContainer(softwarePath)?.Software is not PlcSoftware)
+            {
+                throw new PortalException(PortalErrorCode.NotFound, DescribeMissingSoftware(softwarePath, "No PLC software found"));
+            }
+
             var list = new List<PlcBlock>();
 
             try
@@ -437,7 +443,7 @@ namespace TiaMcpServer.Siemens
             if (group == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound,
-                    $"Block group not found at '{groupPath}'. Use 'GetSoftwareTree' to discover valid group paths.");
+                    $"Block group not found at '{groupPath}'. Use 'plc_get_software_tree' to discover valid group paths.");
             }
 
             return group as PlcBlockUserGroup
@@ -450,7 +456,7 @@ namespace TiaMcpServer.Siemens
             if (group == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound,
-                    $"Type group not found at '{groupPath}'. Use 'GetSoftwareTree' to discover valid group paths.");
+                    $"Type group not found at '{groupPath}'. Use 'plc_get_software_tree' to discover valid group paths.");
             }
 
             return group as PlcTypeUserGroup
@@ -515,7 +521,7 @@ namespace TiaMcpServer.Siemens
                 {
                     var block = GetBlock(softwarePath, blockPath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Block not found at '{blockPath}'. Use 'GetBlocks' to list the available blocks.");
+                            $"Block not found at '{blockPath}'. Use 'plc_get_blocks' to list the available blocks.");
 
                     EnsureNotKnowHowProtected(block);
                     block.Delete();
@@ -534,7 +540,7 @@ namespace TiaMcpServer.Siemens
 
                     var block = GetBlock(softwarePath, blockPath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Block not found at '{blockPath}'. Use 'GetBlocks' to list the available blocks.");
+                            $"Block not found at '{blockPath}'. Use 'plc_get_blocks' to list the available blocks.");
 
                     EnsureNotKnowHowProtected(block);
                     block.Name = newName;
@@ -1174,13 +1180,13 @@ namespace TiaMcpServer.Siemens
                 {
                     var block = GetBlock(softwarePath, blockPath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Block not found at '{blockPath}'. Use 'ResolveObjectPath' or 'GetBlocks' to find its path.");
+                            $"Block not found at '{blockPath}'. Use 'ResolveObjectPath' or 'plc_get_blocks' to find its path.");
 
                     if (block is not DataBlock dataBlock)
                     {
                         throw new PortalException(PortalErrorCode.NotSupported,
                             $"'{block.Name}' is a {block.GetType().Name}, and Openness exposes an interface only for data blocks. " +
-                            "Use 'GetBlockSource' and read its declaration part instead.");
+                            "Use 'plc_get_block_source' and read its declaration part instead.");
                     }
 
                     var members = dataBlock.Interface?.Members
@@ -1227,7 +1233,7 @@ namespace TiaMcpServer.Siemens
                 {
                     var block = GetBlock(softwarePath, blockPath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Block not found at '{blockPath}'. Use 'GetBlocks' to list the available blocks.");
+                            $"Block not found at '{blockPath}'. Use 'plc_get_blocks' to list the available blocks.");
 
                     // A block does not implement ICompilable itself; the compiler is a
                     // service it provides, exactly as PlcSoftware does in CompileSoftware.
@@ -1251,7 +1257,7 @@ namespace TiaMcpServer.Siemens
                 {
                     var softwareContainer = GetSoftwareContainer(softwarePath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Software not found at '{softwarePath}'.");
+                            DescribeMissingSoftware(softwarePath));
 
                     if (softwareContainer.Software is IEngineeringServiceProvider provider && provider.GetService<ICompilable>() is ICompilable compilable)
                     {

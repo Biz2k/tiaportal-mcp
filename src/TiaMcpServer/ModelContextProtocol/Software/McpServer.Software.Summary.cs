@@ -60,7 +60,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error summarising '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"summarising '{softwarePath}'", ex);
             }
         }
 

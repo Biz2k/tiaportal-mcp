@@ -13,6 +13,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseAttributes : ResponseMessage
     {
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
         public IEnumerable<Attribute>? Attributes { get; set; }
     }
 
@@ -27,6 +28,16 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>Path that the device, hardware and network tools accept back, e.g. "Group1/PC-System_1".</summary>
         public string? Path { get; set; }
         public string? Name { get; set; }
+
+        /// <summary>The type identifier of the device, e.g. "System:Device.S71500".</summary>
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public string? Type { get; set; }
+
+        /// <summary>Names of the top-level device items (rack, CPU, interfaces).</summary>
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+        public List<string>? Items { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
         public string? Description { get; set; }
     }
 
@@ -276,6 +287,9 @@ namespace TiaMcpServer.ModelContextProtocol
     public class ResponseProjectTree : ResponseMessage
     {
         public string? Tree { get; set; }
+
+        /// <summary>The structured form: set instead of <see cref="Tree"/> when 'structured' is true.</summary>
+        public List<TiaMcpServer.Siemens.ProjectNode>? Nodes { get; set; }
     }
 
     public class ResponseSoftwareTree : ResponseMessage

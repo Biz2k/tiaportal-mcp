@@ -154,7 +154,7 @@ namespace TiaMcpServer.Siemens
                 {
                     var table = GetTagTable(softwarePath, tagTablePath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Tag table not found at '{tagTablePath}'. Use 'GetTagTables' to list the available tables.");
+                            $"Tag table not found at '{tagTablePath}'. Use 'plc_get_tag_tables' to list the available tables.");
 
                     var target = preservePath
                         ? Path.Combine(exportPath, GetTagTablePath(table, includeSystemRoot: true).Replace('/', '\\') + ".xml")
@@ -206,7 +206,7 @@ namespace TiaMcpServer.Siemens
 
                     var table = GetTagTable(softwarePath, tablePath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Tag table not found at '{tablePath}'. Use 'GetTagTables' to list the available tables.");
+                            $"Tag table not found at '{tablePath}'. Use 'plc_get_tag_tables' to list the available tables.");
 
                     return table.Tags.Find(tagName);
                 },
@@ -244,7 +244,7 @@ namespace TiaMcpServer.Siemens
                   {
                       GetTagTable(softwarePath, tagTablePath)
                           ?? throw new PortalException(PortalErrorCode.NotFound,
-                              $"Tag table not found at '{tagTablePath}'. Use 'GetTagTables' to list the available tables.")
+                              $"Tag table not found at '{tagTablePath}'. Use 'plc_get_tag_tables' to list the available tables.")
                   };
 
             var result = new List<T>();
@@ -414,7 +414,7 @@ namespace TiaMcpServer.Siemens
                 {
                     var table = GetWatchTable(softwarePath, watchTablePath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Watch table not found at '{watchTablePath}'. Use 'GetWatchTables' to list the available tables.");
+                            $"Watch table not found at '{watchTablePath}'. Use 'plc_get_watch_tables' to list the available tables.");
 
                     var target = preservePath
                         ? Path.Combine(exportPath, GetWatchTablePath(table).Replace('/', '\\') + ".xml")
@@ -598,7 +598,7 @@ namespace TiaMcpServer.Siemens
                 {
                     var tag = GetTag(softwarePath, tagPath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Tag not found at '{tagPath}'. Use 'GetTags' to list the available tags.");
+                            $"Tag not found at '{tagPath}'. Use 'plc_get_tags' to list the available tags.");
 
                     // Applied before the rename so a later lookup by the new name is not needed.
                     if (dataTypeName != null) tag.DataTypeName = dataTypeName;
@@ -625,7 +625,7 @@ namespace TiaMcpServer.Siemens
                 {
                     var tag = GetTag(softwarePath, tagPath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Tag not found at '{tagPath}'. Use 'GetTags' to list the available tags.");
+                            $"Tag not found at '{tagPath}'. Use 'plc_get_tags' to list the available tags.");
 
                     tag.Delete();
                     return true;
@@ -798,14 +798,14 @@ namespace TiaMcpServer.Siemens
         {
             return GetTagTable(softwarePath, tagTablePath)
                 ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"Tag table not found at '{tagTablePath}'. Use 'GetTagTables' to list the available tables.");
+                    $"Tag table not found at '{tagTablePath}'. Use 'plc_get_tag_tables' to list the available tables.");
         }
 
         private PlcWatchTable RequireWatchTable(string softwarePath, string watchTablePath)
         {
             return GetWatchTable(softwarePath, watchTablePath)
                 ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"Watch table not found at '{watchTablePath}'. Use 'GetWatchTables' to list the available tables.");
+                    $"Watch table not found at '{watchTablePath}'. Use 'plc_get_watch_tables' to list the available tables.");
         }
 
         private PlcUserConstant RequireUserConstant(string softwarePath, string tagTablePath, string name)

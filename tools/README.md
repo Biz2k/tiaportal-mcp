@@ -75,7 +75,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\mcp-call.ps1 -Calls "$
 
 ## smoke.ps1
 
-Runs 46 read-only calls of the built server on the test project (the project tree, the PLC `PLC (A0)`, the panel
+Runs 48 read-only calls of the built server on the test project (the project tree, the PLC `PLC (A0)`, the panel
 `HMI Unified/HMI_RT_3` and the PC station `АРМ Unified/HMI_RT_1`) and prints `smoke: N of N calls answered, M with an error`.
 Exit code 1 when a call fails or the server stops answering. Run it after every build that changed the `Siemens\` layer,
 before `finish.ps1 -Install`. The calls file is UTF-8 (the station name is Cyrillic); a new read tool gets a line in

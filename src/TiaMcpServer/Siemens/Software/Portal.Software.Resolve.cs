@@ -36,6 +36,41 @@ namespace TiaMcpServer.Siemens
         #region resolve
 
         /// <summary>
+        /// "No PLC software found at 'x'", followed by the software paths of the project that look like what was
+        /// meant (or the first few when none does), so the caller can correct the path without another listing.
+        /// </summary>
+        public string DescribeMissingSoftware(string softwarePath, string what = "Software not found")
+        {
+            var message = $"{what} at '{softwarePath}'.";
+
+            try
+            {
+                var all = GetSoftwarePaths();
+
+                if (all.Count == 0)
+                {
+                    return message + " The project has no software; 'get_project_tree' shows what it holds.";
+                }
+
+                var last = PathSegments(softwarePath).LastOrDefault() is { } leaf ? UnescapeSegment(leaf) : string.Empty;
+                var close = last.Length == 0
+                    ? new List<string>()
+                    : all.Where(p => p.IndexOf(last, StringComparison.OrdinalIgnoreCase) >= 0
+                                  || PathSegments(p).Any(s => last.IndexOf(UnescapeSegment(s), StringComparison.OrdinalIgnoreCase) >= 0 && s.Length > 2)).ToList();
+                var shown = (close.Count > 0 ? close : all).Take(8).ToList();
+
+                return message + (close.Count > 0 ? " Did you mean: " : " PLC software paths of the project: ") +
+                    string.Join(", ", shown.Select(p => $"'{p}'")) +
+                    (shown.Count < (close.Count > 0 ? close.Count : all.Count) ? ", ..." : string.Empty) +
+                    ". 'get_project_tree' lists them all.";
+            }
+            catch (Exception)
+            {
+                return message + " Use 'get_project_tree' to discover valid software paths.";
+            }
+        }
+
+        /// <summary>
         /// Resolves a software path to its PlcSoftware, throwing rather than returning null so
         /// callers wrapped in Operation.Run get a decorated PortalException.
         /// </summary>
@@ -50,9 +85,7 @@ namespace TiaMcpServer.Siemens
 
             if (container?.Software is not PlcSoftware plcSoftware)
             {
-                throw new PortalException(
-                    PortalErrorCode.NotFound,
-                    $"No PLC software found at '{softwarePath}'. Use 'GetProjectTree' to discover valid software paths.");
+                throw new PortalException(PortalErrorCode.NotFound, DescribeMissingSoftware(softwarePath, "No PLC software found"));
             }
 
             return plcSoftware;

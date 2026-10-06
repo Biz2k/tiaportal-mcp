@@ -35,13 +35,13 @@ namespace TiaMcpServer.Siemens
                 {
                     var block = GetBlock(softwarePath, blockPath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Block not found at '{blockPath}'. Use 'ResolveObjectPath' or 'GetBlocks' to find its path.");
+                            $"Block not found at '{blockPath}'. Use 'ResolveObjectPath' or 'plc_get_blocks' to find its path.");
 
                     if (!block.IsConsistent)
                     {
                         throw new PortalException(PortalErrorCode.InvalidState,
                             $"Block '{block.Name}' is inconsistent; TIA Portal cannot export it. Compile the software first, " +
-                            "or use 'GetBlockInterface', which works without an export.");
+                            "or use 'get_block_interface', which works without an export.");
                     }
 
                     return ReadSource(
@@ -63,7 +63,7 @@ namespace TiaMcpServer.Siemens
                 {
                     var type = GetType(softwarePath, typePath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"PLC data type not found at '{typePath}'. Use 'ResolveObjectPath' or 'GetTypes' to find its path.");
+                            $"PLC data type not found at '{typePath}'. Use 'ResolveObjectPath' or 'plc_get_types' to find its path.");
 
                     if (!type.IsConsistent)
                     {
@@ -445,7 +445,7 @@ namespace TiaMcpServer.Siemens
 
                     var block = GetBlock(softwarePath, blockPath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"Block not found at '{blockPath}'. Use 'ResolveObjectPath' or 'GetBlocks' to find its path.");
+                            $"Block not found at '{blockPath}'. Use 'ResolveObjectPath' or 'plc_get_blocks' to find its path.");
 
                     var (extension, reason) = BlockSourceExtension(block);
 
@@ -485,7 +485,7 @@ namespace TiaMcpServer.Siemens
 
                     var type = GetType(softwarePath, typePath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"PLC data type not found at '{typePath}'. Use 'ResolveObjectPath' or 'GetTypes' to find its path.");
+                            $"PLC data type not found at '{typePath}'. Use 'ResolveObjectPath' or 'plc_get_types' to find its path.");
 
                     RequireGeneratable(type.IsConsistent, type.IsKnowHowProtected, "PLC data type", type.Name);
 
@@ -565,7 +565,7 @@ namespace TiaMcpServer.Siemens
                     if (group == null)
                     {
                         throw new PortalException(PortalErrorCode.NotFound,
-                            $"Block group not found at '{groupPath}'. Use 'GetBlocks' or 'ResolveObjectPath' to find the path.");
+                            $"Block group not found at '{groupPath}'. Use 'plc_get_blocks' or 'ResolveObjectPath' to find the path.");
                     }
 
                     var blocks = new List<PlcBlock>();
@@ -603,7 +603,7 @@ namespace TiaMcpServer.Siemens
                     if (group == null)
                     {
                         throw new PortalException(PortalErrorCode.NotFound,
-                            $"PLC data type group not found at '{groupPath}'. Use 'GetTypes' or 'ResolveObjectPath' to find the path.");
+                            $"PLC data type group not found at '{groupPath}'. Use 'plc_get_types' or 'ResolveObjectPath' to find the path.");
                     }
 
                     var types = new List<PlcType>();

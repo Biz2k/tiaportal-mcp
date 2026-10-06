@@ -4,6 +4,8 @@
   { "name": "doctor" },
   { "name": "get_project" },
   { "name": "get_project_tree" },
+  { "name": "get_project_tree", "args": { "structured": true, "depth": 2 } },
+  { "name": "get_project_tree", "args": { "depth": 2, "filter": "PLC" } },
   { "name": "get_devices" },
   { "name": "get_hardware_topology" },
   { "name": "get_libraries" },

@@ -48,23 +48,26 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
-                    throw new McpException($"Type not found at '{typePath}' in '{softwarePath}'");
+                    throw ObjectNotFound("Type", typePath, softwarePath, "typePath", "plc_get_types");
                 }
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving type info from '{typePath}' in '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving type info from '{typePath}' in '{softwarePath}'", ex);
             }
         }
 
         [McpServerTool(Name = "plc_get_types", Title = "Get types", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get a list of types from the plc software")]
         public static ResponseTypes GetTypes(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("regexName: defines the name or regular expression to find the block. Use empty string (default) to find all")] string regexName = "")
+            [Description("regexName: defines the name or regular expression to find the type. Use empty string (default) to find all")] string regexName = "",
+            [Description("limit: the most items to return (default 500); 0 returns all")] int limit = 500,
+            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
         {
             try
             {
-                var list = Portal.GetTypes(softwarePath, regexName);
+                var page = ListPage<global::Siemens.Engineering.SW.Types.PlcType>.Of(Portal.GetTypes(softwarePath, regexName), limit, offset);
+                var list = page.Items;
 
                 var responseList = new List<ResponseTypeInfo>();
                 foreach (var type in list)
@@ -92,7 +95,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     return new ResponseTypes
                     {
-                        Message = $"Types with regex '{regexName}' retrieved from '{softwarePath}'",
+                        Message = $"Types with regex '{regexName}' retrieved from '{softwarePath}': {page.Total}." + page.Note("regexName"),
                         Items = responseList,
                         Meta = new JsonObject
                         {
@@ -108,7 +111,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving user defined types with regex '{regexName}' in '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving user defined types with regex '{regexName}' in '{softwarePath}'", ex);
             }
         }
 
@@ -162,7 +165,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting type from '{typePath}' to '{exportPath}': {Why(ex)}", ex);
+                throw Failure($"exporting type from '{typePath}' to '{exportPath}'", ex);
             }
         }
 
@@ -193,7 +196,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error importing type from '{importPath}' to '{groupPath}': {Why(ex)}", ex);
+                throw Failure($"importing type from '{importPath}' to '{groupPath}'", ex);
             }
         }
 
@@ -332,7 +335,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 progress.Report(new ProgressNotificationValue { Progress = 0, Total = 0, Message = $"Type export failed: {ex.Message}" });
                 
                 Logger?.LogError(ex, $"Failed exporting types '{regexName}' from '{softwarePath}' to {exportPath}");
-                throw new McpException($"Unexpected error exporting types '{regexName}' from '{softwarePath}' to {exportPath}: {Why(ex)}", ex);
+                throw Failure($"exporting types '{regexName}' from '{softwarePath}' to {exportPath}", ex);
             }
         }
 

@@ -53,9 +53,9 @@ namespace TiaMcpServer.Siemens
         /// Message for the client: the description, followed by the error code and the context
         /// Operation.Run recorded (paths, names), so a failure names the object it was about.
         /// </summary>
-        internal static string ForClient(Exception ex)
+        internal static string ForClient(Exception ex, string? hint = null)
         {
-            var text = ex is PortalException ? ex.Message : Describe(ex);
+            var text = (ex is PortalException ? ex.Message : Describe(ex)) + (string.IsNullOrEmpty(hint) ? string.Empty : " " + hint);
             var details = new List<string>();
 
             if (ex is PortalException pex)

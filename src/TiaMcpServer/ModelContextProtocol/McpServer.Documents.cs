@@ -36,7 +36,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // [McpServerTool(Name = "export_type_as_documents", Title = "Export type as documents", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),`n         // Description("Export type as documents (.s7dcl plus an optional .s7res)")]
         public static ResponseExportTypeAsDocuments ExportTypeAsDocuments(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("typePath: root-relative path of the PLC data type, e.g. 'Common/BtnTyp_X'. Use 'GetTypes' to list them")] string typePath,
+            [Description("typePath: root-relative path of the PLC data type, e.g. 'Common/BtnTyp_X'. Use 'plc_get_types' to list them")] string typePath,
             [Description("exportPath: directory on this machine that receives the document files")] string exportPath,
             [Description("preservePath: recreate the group structure below exportPath, inside the 'PLC data types' system folder as TIA Portal names it in the current interface language")] bool preservePath = false)
         {
@@ -59,7 +59,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting '{typePath}' as documents: {Why(ex)}", ex);
+                throw Failure($"exporting '{typePath}' as documents", ex);
             }
         }
 
@@ -138,7 +138,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 progress.Report(new ProgressNotificationValue { Progress = 0, Total = 0, Message = $"Document export failed: {ex.Message}" });
 
-                throw new McpException($"Unexpected error exporting PLC data types as documents to '{exportPath}': {Why(ex)}", ex);
+                throw Failure($"exporting PLC data types as documents to '{exportPath}'", ex);
             }
         }
 
@@ -252,7 +252,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 progress.Report(new ProgressNotificationValue { Progress = 0, Total = 0, Message = $"Import failed: {ex.Message}" });
 
-                throw new McpException($"Unexpected error importing PLC data types from '{importPath}': {Why(ex)}", ex);
+                throw Failure($"importing PLC data types from '{importPath}'", ex);
             }
         }
 
@@ -317,7 +317,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting documents from '{blockPath}' to '{exportPath}': {Why(ex)}", ex);
+                throw Failure($"exporting documents from '{blockPath}' to '{exportPath}'", ex);
             }
         }
 
@@ -436,7 +436,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 progress.Report(new ProgressNotificationValue { Progress = 0, Total = 0, Message = $"Document export failed: {ex.Message}" });
                 
                 Logger?.LogError(ex, $"Failed exporting documents to '{exportPath}'");
-                throw new McpException($"Unexpected error exporting documents to '{exportPath}': {Why(ex)}", ex);
+                throw Failure($"exporting documents to '{exportPath}'", ex);
             }
         }
 
@@ -498,7 +498,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error importing from documents: {Why(ex)}", ex);
+                throw Failure($"importing from documents", ex);
             }
         }
 
@@ -613,7 +613,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 progress.Report(new ProgressNotificationValue { Progress = 0, Total = 0, Message = $"Document import failed: {ex.Message}" });
 
                 Logger?.LogError(ex, $"Failed importing documents from '{importPath}'");
-                throw new McpException($"Unexpected error importing documents from '{importPath}': {Why(ex)}", ex);
+                throw Failure($"importing documents from '{importPath}'", ex);
             }
         }
 

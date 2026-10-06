@@ -54,23 +54,26 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
-                    throw new McpException($"Block not found at '{blockPath}' in '{softwarePath}'");
+                    throw ObjectNotFound("Block", blockPath, softwarePath, "blockPath", "plc_get_blocks");
                 }
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving block info from '{blockPath}' in '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving block info from '{blockPath}' in '{softwarePath}'", ex);
             }
         }
 
-        [McpServerTool(Name = "plc_get_blocks", Title = "Get blocks", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get a list of blocks, which are located in plc software")]
+        [McpServerTool(Name = "plc_get_blocks", Title = "Get blocks", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get a list of blocks, which are located in plc software. A large PLC has thousands: the first 500 are returned, narrow with regexName or page with offset")]
         public static ResponseBlocks GetBlocks(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
-            [Description("regexName: defines the name or regular expression to find the block. Use empty string (default) to find all")] string regexName = "")
+            [Description("regexName: defines the name or regular expression to find the block. Use empty string (default) to find all")] string regexName = "",
+            [Description("limit: the most items to return (default 500); 0 returns all")] int limit = 500,
+            [Description("offset: items to skip, to read the next page of a long list (default 0)")] int offset = 0)
         {
             try
             {
-                var list = Portal.GetBlocks(softwarePath, regexName);
+                var page = ListPage<PlcBlock>.Of(Portal.GetBlocks(softwarePath, regexName), limit, offset);
+                var list = page.Items;
 
                 var responseList = new List<ResponseBlockInfo>();
                 foreach (var block in list)
@@ -101,13 +104,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     return new ResponseBlocks
                     {
-                        Message = $"Blocks with regex '{regexName}' retrieved from '{softwarePath}'",
+                        Message = $"Blocks with regex '{regexName}' retrieved from '{softwarePath}': {page.Total}." + page.Note("regexName"),
                         Items = responseList,
-                        Meta = new JsonObject
+                        Meta = page.Meta(new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
                             ["success"] = true
-                        }
+                        })
                     };
                 }
                 else
@@ -117,7 +120,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving blocks with regex '{regexName}' in '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving blocks with regex '{regexName}' in '{softwarePath}'", ex);
             }
         }
 
@@ -151,7 +154,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) when (ex is not McpException)
             {
                 // Generic unexpected failure wrapper
-                throw new McpException($"Unexpected error retrieving block hierarchy for '{softwarePath}': {Why(ex)}", ex);
+                throw Failure($"retrieving block hierarchy for '{softwarePath}'", ex);
             }
         }
 
@@ -247,7 +250,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error exporting block from '{blockPath}' to '{exportPath}': {Why(ex)}", ex);
+                throw Failure($"exporting block from '{blockPath}' to '{exportPath}'", ex);
             }
         }
 
@@ -321,7 +324,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error importing block from '{importPath}' to '{groupPath}': {Why(ex)}", ex);
+                throw Failure($"importing block from '{importPath}' to '{groupPath}'", ex);
             }
         }
 
@@ -466,7 +469,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 progress.Report(new ProgressNotificationValue { Progress = 0, Total = 0, Message = $"Export failed: {ex.Message}" });
                 
                 Logger?.LogError(ex, $"Failed exporting blocks with '{regexName}' from '{softwarePath}' to {exportPath}");
-                throw new McpException($"Unexpected error exporting blocks with '{regexName}' from '{softwarePath}' to {exportPath}: {Why(ex)}", ex);
+                throw Failure($"exporting blocks with '{regexName}' from '{softwarePath}' to {exportPath}", ex);
             }
         }
 
@@ -475,7 +478,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region source
 
         [McpServerTool(Name = "get_block_interface", Title = "Get block interface", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
-         Description("List the members of a data block with their data type and every attribute TIA Portal reports. Needs no export and works on inconsistent blocks. Data blocks only: Openness offers no interface accessor for FB, FC or OB, whose declarations come from 'GetBlockSource' instead")]
+         Description("List the members of a data block with their data type and every attribute TIA Portal reports. Needs no export and works on inconsistent blocks. Data blocks only: Openness offers no interface accessor for FB, FC or OB, whose declarations come from 'plc_get_block_source' instead")]
         public static ResponseBlockInterface GetBlockInterface(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: root-relative path of the data block, e.g. '1_Tests/DB_Block_1'")] string blockPath)
@@ -503,7 +506,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error reading the interface of '{blockPath}': {Why(ex)}", ex);
+                throw Failure($"reading the interface of '{blockPath}'", ex);
             }
         }
 

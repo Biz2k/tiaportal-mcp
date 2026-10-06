@@ -104,7 +104,7 @@ namespace TiaMcpServer.Siemens
         {
             var softwareContainer = GetSoftwareContainer(softwarePath)
                 ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"Software not found at '{softwarePath}'. Use 'get_project_tree' to discover valid software paths.");
+                    DescribeMissingSoftware(softwarePath));
 
             var deviceItem = softwareContainer.Parent as DeviceItem
                 ?? throw new PortalException(PortalErrorCode.InvalidState, "Parent of software is not a DeviceItem.");

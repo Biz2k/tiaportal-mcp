@@ -61,6 +61,71 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>
+        /// The cross reference sources of an object. A user group of blocks offers no service of its own in Openness, so
+        /// its answer is the sources of its blocks, subgroups included; <paramref name="note"/> says so.
+        /// </summary>
+        public IReadOnlyList<SourceObject> GetCrossReferenceSources(
+            string softwarePath,
+            string objectPath,
+            string objectKind,
+            CrossReferenceFilter filter,
+            out string? note)
+        {
+            string? groupNote = null;
+
+            var sources = Operation.Run(_logger, nameof(GetCrossReferenceSources), PortalErrorCode.NotFound,
+                () =>
+                {
+                    var provider = ResolveCrossReferenceProvider(softwarePath, objectPath, objectKind);
+                    var service = provider.GetService<CrossReferenceService>();
+
+                    if (service != null)
+                    {
+                        return (IReadOnlyList<SourceObject>)service.GetCrossReferences(filter).Sources.Cast<SourceObject>().ToList();
+                    }
+
+                    if (provider is PlcBlockGroup group)
+                    {
+                        var collected = new List<SourceObject>();
+                        var blocks = 0;
+
+                        void Walk(PlcBlockGroup current)
+                        {
+                            foreach (var block in current.Blocks)
+                            {
+                                var blockService = block.GetService<CrossReferenceService>();
+
+                                if (blockService != null)
+                                {
+                                    blocks++;
+                                    collected.AddRange(blockService.GetCrossReferences(filter).Sources.Cast<SourceObject>());
+                                }
+                            }
+
+                            foreach (var sub in current.Groups)
+                            {
+                                Walk(sub);
+                            }
+                        }
+
+                        Walk(group);
+                        groupNote = $"Openness gives a block group no cross references of its own; this is the answer for its {blocks} block(s), subgroups included.";
+
+                        return collected;
+                    }
+
+                    throw new PortalException(PortalErrorCode.NotSupported,
+                        $"'{(string.IsNullOrEmpty(objectPath) ? softwarePath : objectPath)}' does not provide cross references. " +
+                        "Watch tables, force tables and external sources have none; blocks, types, tags and tag tables do, and a block group is answered through its blocks.");
+                },
+                ("softwarePath", softwarePath), ("objectPath", objectPath), ("objectKind", objectKind), ("filter", filter));
+
+            note = groupNote;
+
+            return sources;
+        }
+
+        /// <summary>
         /// Maps a path plus kind onto the Openness object that offers the cross reference
         /// service. Probing order matters: block names and type names can collide.
         /// </summary>
@@ -110,7 +175,7 @@ namespace TiaMcpServer.Siemens
 
             return provider
                 ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"No object found at '{objectPath}' in '{softwarePath}'. Use 'GetSoftwareTree' to discover valid paths.");
+                    $"No object found at '{objectPath}' in '{softwarePath}'. Use 'plc_get_software_tree' to discover valid paths.");
         }
 
         /// <summary>

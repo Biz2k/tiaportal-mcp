@@ -108,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error disconnecting from TIA-Portal: {Why(ex)}", ex);
+                throw Failure($"disconnecting from TIA-Portal", ex);
             }
         }
 
@@ -148,7 +148,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving TIA-Portal MCP server state: {Why(ex)}", ex);
+                throw Failure($"retrieving TIA-Portal MCP server state", ex);
             }
         }
 
@@ -190,7 +190,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error diagnosing the TIA-Portal environment: {Why(ex)}", ex);
+                throw Failure($"diagnosing the TIA-Portal environment", ex);
             }
         }
 
@@ -235,7 +235,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving open projects: {Why(ex)}", ex);
+                throw Failure($"retrieving open projects", ex);
             }
         }
 
@@ -286,7 +286,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error opening project '{path}': {Why(ex)}", ex);
+                throw Failure($"opening project '{path}'", ex);
             }
         }
 
@@ -338,7 +338,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error saving local project/session: {Why(ex)}", ex);
+                throw Failure($"saving local project/session", ex);
             }
         }
 
@@ -375,7 +375,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error saving local project/session as '{newProjectPath}': {Why(ex)}", ex);
+                throw Failure($"saving local project/session as '{newProjectPath}'", ex);
             }
         }
 
@@ -430,7 +430,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error closing local project/session: {Why(ex)}", ex);
+                throw Failure($"closing local project/session", ex);
             }
         }
 
@@ -438,19 +438,23 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region devices
 
-        [McpServerTool(Name = "get_project_tree", Title = "Get project tree", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get project structure as a tree view on current local project/session")]
-        public static ResponseProjectTree GetProjectTree()
+        [McpServerTool(Name = "get_project_tree", Title = "Get project tree", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Get the project structure: devices, device groups and device items. By default a text tree (about 25 000 characters on a large project: narrow it with 'depth' and 'filter'). With structured = true a flat list of nodes instead, each with the 'path' that 'get_devices', 'hw_*', 'net_*' and 'get_device_item_info' accept and, for an item that carries software, the 'softwarePath' the plc_* and unified_* tools take")]
+        public static ResponseProjectTree GetProjectTree(
+            [Description("depth: levels shown below the project, 0 = all (default). 1 = devices and groups only, 2 = their top-level items")] int depth = 0,
+            [Description("filter: regular expression on names; keeps the matching nodes and the nodes above them. Empty = no filter (default)")] string filter = "",
+            [Description("structured: true returns 'nodes' with paths instead of the text tree (default false)")] bool structured = false)
         {
             try
             {
-                var tree = Portal.GetProjectTree();
-
-                if (!string.IsNullOrEmpty(tree))
+                if (structured)
                 {
+                    var nodes = Portal.GetProjectNodes(depth, filter);
+
                     return new ResponseProjectTree
                     {
-                        Message = "Project tree retrieved",
-                        Tree = "```\n" + tree + "\n```",
+                        Message = $"Project tree retrieved: {nodes.Count} node(s)",
+                        Nodes = nodes,
                         Meta = new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
@@ -458,14 +462,33 @@ namespace TiaMcpServer.ModelContextProtocol
                         }
                     };
                 }
-                else
+
+                var tree = Portal.GetProjectTree();
+
+                if (string.IsNullOrEmpty(tree))
                 {
                     throw new McpException("Failed retrieving project tree");
                 }
+
+                var narrowed = ProjectTreeText.Narrow(tree, depth, filter);
+                var cut = narrowed.Total - narrowed.Kept;
+
+                return new ResponseProjectTree
+                {
+                    Message = cut > 0
+                        ? $"Project tree retrieved, narrowed: {narrowed.Kept} of {narrowed.Total} lines shown (depth {depth}, filter '{filter}'). Widen 'depth' or change 'filter' to see more."
+                        : "Project tree retrieved",
+                    Tree = "```\n" + narrowed.Text + "\n```",
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = true
+                    }
+                };
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving project tree: {Why(ex)}", ex);
+                throw Failure($"retrieving project tree", ex);
             }
         }
 
@@ -511,7 +534,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error opening '{path}': {Why(ex)}", ex);
+                throw Failure($"opening '{path}'", ex);
             }
         }
 
@@ -629,7 +652,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error previewing the import of '{importPath}': {Why(ex)}", ex);
+                throw Failure($"previewing the import of '{importPath}'", ex);
             }
         }
 
@@ -689,7 +712,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string SaveHint =>
             Portal.IsLocalSession
                 ? "The change is in memory; call 'SaveSession' to persist it."
-                : "The change is in memory; call 'SaveProject' to persist it.";
+                : "The change is in memory; call 'save_project' to persist it.";
 
         private static T Guarded<T>(string toolName, Func<T> body)
         {
@@ -746,9 +769,52 @@ namespace TiaMcpServer.ModelContextProtocol
                 return mcp;
             }
 
-            var text = ErrorText.ForClient(ex);
+            var text = ErrorText.ForClient(ex, CandidateHint(ex));
 
             return new McpException(string.IsNullOrEmpty(prefix) ? text : $"{prefix}: {text}", ex);
+        }
+
+        /// <summary>Path keys of an error's context that name an object inside a PLC software.</summary>
+        private static readonly string[] ObjectPathKeys =
+            { "blockPath", "typePath", "tagPath", "tagTablePath", "watchTablePath", "sourcePath", "objectPath", "groupPath", "path", "name" };
+
+        /// <summary>
+        /// For a NotFound on an object of a PLC software: the objects of that name or close to it, found with the same
+        /// search as 'plc_resolve_object_path', so the caller can correct the path without another call.
+        /// </summary>
+        private static string? CandidateHint(Exception ex)
+        {
+            if (ex is not PortalException { Code: PortalErrorCode.NotFound } pex
+                || pex.Message.Contains("Did you mean")
+                || pex.Data["softwarePath"] is not string softwarePath
+                || string.IsNullOrEmpty(softwarePath))
+            {
+                return null;
+            }
+
+            var wanted = ObjectPathKeys.Select(k => pex.Data[k] as string).FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+
+            if (wanted == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                var matches = Portal.ResolveObjectPath(softwarePath, wanted);
+
+                if (matches.Count == 0)
+                {
+                    return null;
+                }
+
+                return "Did you mean: " + string.Join(", ", matches.Take(5).Select(m => $"{m.Kind} '{m.Path}'")) +
+                    (matches.Count > 5 ? $" (and {matches.Count - 5} more; 'plc_resolve_object_path' lists them)" : string.Empty) + "?";
+            }
+            catch (Exception)
+            {
+                return null; // a hint must never hide the error itself
+            }
         }
 
         /// <summary>
@@ -756,6 +822,23 @@ namespace TiaMcpServer.ModelContextProtocol
         /// "Unexpected error ...: {reason}" texts, where ex.Message alone is often just a wrapper.
         /// </summary>
         internal static string Why(Exception ex) => ErrorText.Describe(ex);
+
+        /// <summary>
+        /// The error a tool raises when its call failed. A <see cref="PortalException"/> is an expected refusal whose message
+        /// already says what to do, so it goes out as it is; anything else is an unexpected failure of <paramref name="what"/>.
+        /// </summary>
+        internal static PortalException ObjectNotFound(string kind, string path, string softwarePath, string pathKey, string listTool)
+        {
+            var error = new PortalException(PortalErrorCode.NotFound, $"{kind} not found at '{path}' in '{softwarePath}'. Use '{listTool}' to list what exists.");
+
+            error.Data["softwarePath"] = softwarePath;
+            error.Data[pathKey] = path;
+
+            return error;
+        }
+
+        internal static McpException Failure(string what, Exception ex) =>
+            ex is PortalException ? ToolError(ex) : new McpException($"Unexpected error {what}: {Why(ex)}", ex);
 
         private static JsonObject OkMeta() => new JsonObject
         {

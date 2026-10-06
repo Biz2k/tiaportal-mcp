@@ -236,7 +236,7 @@ namespace TiaMcpServer.Siemens
 
                     var type = GetType(softwarePath, typePath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"PLC data type not found at '{typePath}'. Use 'GetTypes' to list the available types.");
+                            $"PLC data type not found at '{typePath}'. Use 'plc_get_types' to list the available types.");
 
                     // TIA Portal never exports inconsistent types
                     if (!type.IsConsistent)
@@ -542,7 +542,7 @@ namespace TiaMcpServer.Siemens
 
             return GetPlcTypeGroupByPath(softwarePath, relative)
                 ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"PLC data type group not found at '{groupPath}'. Use 'GetSoftwareTree' to list the available groups.");
+                    $"PLC data type group not found at '{groupPath}'. Use 'plc_get_software_tree' to list the available groups.");
         }
 
         /// <summary>
