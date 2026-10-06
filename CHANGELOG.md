@@ -12,10 +12,22 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
-### Known issues
+### Fixed (WinCC Unified screens in groups)
 
-- Screens inside screen groups are invisible to the `unified_*` tools: they look in
-  `HmiSoftware.Screens`, which holds only the top-level screens. Task 01 of the handoff package.
+- Screens inside screen groups were invisible to every `unified_*` tool: they looked in
+  `HmiSoftware.Screens`, which holds only the top-level screens (14 of the 74 screens of the test
+  panel). Screens are now found in groups and nested groups; names are unique in the whole HMI
+  (Openness answers "ValueIsNotUnique" otherwise), so a screen is still addressed by its name.
+- `unified_get_screens` returns the `group` of each screen and takes a `group` filter;
+  `unified_create_screen` takes a `group` (it has to exist; an unknown one is an error that lists
+  the groups, not a silent new group).
+- __`unified_get_screen_groups`__ and __`unified_manage_screen_groups`__: list, create, rename and
+  delete screen groups, nested ones as `Parent/Child`. Deleting a group deletes its screens.
+- Screen properties through `unified_manage_items` (empty `itemName`) checked: `Width`, `Height`,
+  `ScreenNumber`, `BackColor`, `BackGraphic` and `DisplayName` (`{"texts": {...}}`) are written.
+  Unlike `HmiTag.DisplayName`, the display name of a screen is harmless.
+- 121 tools are registered by default.
+
 ### Changed (WinCC Unified lists)
 
 - __Breaking: `unified_manage_text_lists` is now `unified_manage_lists`__ and writes graphic lists as

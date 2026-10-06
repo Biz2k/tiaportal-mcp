@@ -33,6 +33,38 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? NewName { get; set; }
     }
 
+    /// <summary>One change to a screen group of a WinCC Unified HMI.</summary>
+    public class UnifiedScreenGroupAction
+    {
+        [Description("'create', 'rename' or 'delete'. Deleting a group deletes the screens in it")]
+        public string? Action { get; set; }
+
+        [Description("Path of the group: 'Pumps', or 'Pumps/Big' for a group in a group. For 'create' the parent has to exist")]
+        public string? GroupName { get; set; }
+
+        [Description("New name of the group (the name only, not a path), for 'rename'")]
+        public string? NewName { get; set; }
+    }
+
+    public class ResponseUnifiedScreenGroups : ResponseMessage
+    {
+        public List<UnifiedScreenGroupInfo>? Items { get; set; }
+    }
+
+    public class UnifiedScreenGroupInfo
+    {
+        /// <summary>'/'-separated path, the group name for one at the top.</summary>
+        public string? Path { get; set; }
+
+        public string? Name { get; set; }
+
+        /// <summary>Screens directly in the group.</summary>
+        public int ScreenCount { get; set; }
+
+        /// <summary>Groups directly in the group.</summary>
+        public int GroupCount { get; set; }
+    }
+
     /// <summary>One change to a connection of a WinCC Unified HMI.</summary>
     public class UnifiedConnectionAction
     {

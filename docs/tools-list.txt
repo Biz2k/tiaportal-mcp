@@ -103,6 +103,7 @@ unified_get_alarm_classes
 unified_get_alarms
 unified_get_connections
 unified_get_graphic_lists
+unified_get_screen_groups
 unified_get_screen_item_properties
 unified_get_screen_items
 unified_get_screens
@@ -115,5 +116,6 @@ unified_manage_connections
 unified_manage_faceplate
 unified_manage_items
 unified_manage_lists
+unified_manage_screen_groups
 unified_manage_tag_tables
 unified_manage_tags

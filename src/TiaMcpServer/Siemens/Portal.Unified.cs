@@ -12,6 +12,9 @@ namespace TiaMcpServer.Siemens
     public class HmiScreenInfo
     {
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>Group the screen is in, '/'-separated; empty at the top level.</summary>
+        public string Group { get; set; } = string.Empty;
         public int? Width { get; set; }
         public int? Height { get; set; }
     }
@@ -110,7 +113,9 @@ namespace TiaMcpServer.Siemens
 
         private static object? FindUnifiedScreen(HmiSoftware software, string screenName)
         {
-            foreach (var screen in software.Screens)
+            // Screens in groups count: names are unique across the whole HMI (see
+            // Portal.Unified.ScreenGroups.cs).
+            foreach (var (screen, _) in EnumerateUnifiedScreens(software))
             {
                 if (string.Equals(screen.Name, screenName, StringComparison.OrdinalIgnoreCase))
                 {
@@ -165,16 +170,33 @@ namespace TiaMcpServer.Siemens
 
         #region read
 
-        public List<HmiScreenInfo> GetUnifiedScreens(string softwarePath)
+        /// <param name="group">Group path ('Pumps' or 'Pumps/Big'); returns the screens of that group and of the groups in it. Empty returns every screen.</param>
+        public List<HmiScreenInfo> GetUnifiedScreens(string softwarePath, string group = "")
         {
             return Operation.Run(_logger, nameof(GetUnifiedScreens), PortalErrorCode.InvalidState,
                 () =>
                 {
                     var screens = new List<HmiScreenInfo>();
+                    var software = RequireUnifiedSoftware(softwarePath);
+                    string? wanted = null;
 
-                    foreach (var screen in RequireUnifiedSoftware(softwarePath).Screens)
+                    if (!string.IsNullOrWhiteSpace(group))
                     {
-                        var info = new HmiScreenInfo { Name = screen.Name };
+                        // Checked first: an unknown group would otherwise read as an empty one.
+                        wanted = string.Join("/", SplitGroupPath(group));
+                        RequireScreenGroup(software, wanted);
+                    }
+
+                    foreach (var (screen, screenGroup) in EnumerateUnifiedScreens(software))
+                    {
+                        if (wanted != null
+                            && !string.Equals(screenGroup, wanted, StringComparison.OrdinalIgnoreCase)
+                            && !screenGroup.StartsWith(wanted + "/", StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+
+                        var info = new HmiScreenInfo { Name = screen.Name, Group = screenGroup };
                         dynamic dynScreen = screen;
 
                         try { info.Width = (int?)dynScreen.Width; } catch { }
@@ -185,7 +207,7 @@ namespace TiaMcpServer.Siemens
 
                     return screens;
                 },
-                ("softwarePath", softwarePath));
+                ("softwarePath", softwarePath), ("group", group));
         }
 
         /// <param name="nameFilter">Regular expression on the tag name; empty returns every tag.</param>
@@ -448,7 +470,8 @@ namespace TiaMcpServer.Siemens
 
         #region screens (write)
 
-        public HmiScreenInfo CreateUnifiedScreen(string softwarePath, string screenName)
+        /// <param name="group">Group path to create the screen in; empty for the top level. The group has to exist.</param>
+        public HmiScreenInfo CreateUnifiedScreen(string softwarePath, string screenName, string group = "")
         {
             return Operation.Run(_logger, nameof(CreateUnifiedScreen), PortalErrorCode.CreateFailed,
                 () =>
@@ -462,18 +485,26 @@ namespace TiaMcpServer.Siemens
 
                     if (FindUnifiedScreen(software, screenName) != null)
                     {
-                        throw new PortalException(PortalErrorCode.InvalidParams, $"Screen '{screenName}' already exists.");
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"Screen '{screenName}' already exists (screen names are unique in the whole HMI, groups included).");
                     }
 
-                    dynamic screen = software.Screens.Create(screenName);
-                    var info = new HmiScreenInfo { Name = screen.Name };
+                    dynamic screen = string.IsNullOrWhiteSpace(group)
+                        ? software.Screens.Create(screenName)
+                        : RequireScreenGroup(software, group).Screens.Create(screenName);
+
+                    var info = new HmiScreenInfo
+                    {
+                        Name = screen.Name,
+                        Group = string.IsNullOrWhiteSpace(group) ? string.Empty : string.Join("/", SplitGroupPath(group))
+                    };
 
                     try { info.Width = (int?)screen.Width; } catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { }
                     try { info.Height = (int?)screen.Height; } catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException) { }
 
                     return info;
                 },
-                ("softwarePath", softwarePath), ("screenName", screenName));
+                ("softwarePath", softwarePath), ("screenName", screenName), ("group", group));
         }
 
         public void DeleteUnifiedScreen(string softwarePath, string screenName)

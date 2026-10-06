@@ -28,17 +28,20 @@ namespace TiaMcpServer.ModelContextProtocol
         #region read
 
         [McpServerTool(Name = "unified_get_screens", Title = "Get WinCC Unified screens", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
-         Description("List the screens of a WinCC Unified HMI with their size")]
+         Description("List the screens of a WinCC Unified HMI with their group and size. Screens in screen groups are included; screen names are unique in the whole HMI, so every other tool finds a screen by its name alone")]
         public static ResponseHmiScreens GetUnifiedScreens(
-            [Description(UnifiedPath)] string softwarePath)
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("group: return only the screens of this screen group and the groups in it, e.g. 'Pumps' or 'Pumps/Big'; empty (default) returns every screen. 'unified_get_screen_groups' lists the groups")] string group = "")
         {
             try
             {
-                var screens = Portal.GetUnifiedScreens(softwarePath);
+                var screens = Portal.GetUnifiedScreens(softwarePath, group);
 
                 return new ResponseHmiScreens
                 {
-                    Message = $"{screens.Count} screen(s) in '{softwarePath}'",
+                    Message = string.IsNullOrWhiteSpace(group)
+                        ? $"{screens.Count} screen(s) in '{softwarePath}'"
+                        : $"{screens.Count} screen(s) in group '{group}' of '{softwarePath}'",
                     Items = screens,
                     Meta = ReadMeta()
                 };
@@ -135,6 +138,28 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = $"{tables.Count} tag table(s) in '{softwarePath}'",
                     Items = tables,
+                    Meta = ReadMeta()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
+        [McpServerTool(Name = "unified_get_screen_groups", Title = "Get WinCC Unified screen groups", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the screen groups of a WinCC Unified HMI, nested ones included, with the number of screens and groups directly in each. A nested group is written 'Parent/Child'")]
+        public static ResponseUnifiedScreenGroups GetUnifiedScreenGroups(
+            [Description(UnifiedPath)] string softwarePath)
+        {
+            try
+            {
+                var groups = Portal.GetUnifiedScreenGroups(softwarePath);
+
+                return new ResponseUnifiedScreenGroups
+                {
+                    Message = $"{groups.Count} screen group(s) in '{softwarePath}'",
+                    Items = groups,
                     Meta = ReadMeta()
                 };
             }
@@ -260,14 +285,15 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "unified_create_screen", Title = "Create WinCC Unified screen", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Create an empty screen in a WinCC Unified HMI. Set its size and other properties with 'unified_manage_items' (empty itemName)")]
+         Description("Create an empty screen in a WinCC Unified HMI, at the top level or in a screen group. Set its size and other properties with 'unified_manage_items' (empty itemName)")]
         public static ResponseCreated CreateUnifiedScreen(
             [Description(UnifiedPath)] string softwarePath,
-            [Description("screenName: name of the new screen")] string screenName)
+            [Description("screenName: name of the new screen; unique in the whole HMI, groups included")] string screenName,
+            [Description("group: screen group to create the screen in, e.g. 'Pumps' or 'Pumps/Big'; empty (default) for the top level. The group has to exist: 'unified_manage_screen_groups' creates one")] string group = "")
         {
             return Guarded(nameof(CreateUnifiedScreen), () =>
             {
-                var screen = Portal.CreateUnifiedScreen(softwarePath, screenName);
+                var screen = Portal.CreateUnifiedScreen(softwarePath, screenName, group);
 
                 return Created("Screen", screen.Name, screen.Name);
             });
@@ -286,6 +312,16 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 return Deleted("Screen", screenName);
             });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "unified_manage_screen_groups", Title = "Manage WinCC Unified screen groups", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, rename or delete screen groups of a WinCC Unified HMI, several at once. A group in a group is written 'Parent/Child'; the parent has to exist. Deleting a group deletes the screens in it. A call applies all of its actions or none")]
+        public static ResponseUnifiedActions ManageUnifiedScreenGroups(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("actions: the changes to make, applied in order")] List<UnifiedScreenGroupAction> actions)
+        {
+            return Guarded(nameof(ManageUnifiedScreenGroups), () => UnifiedActions(Portal.ManageUnifiedScreenGroups(softwarePath, actions)));
         }
 
         #endregion
