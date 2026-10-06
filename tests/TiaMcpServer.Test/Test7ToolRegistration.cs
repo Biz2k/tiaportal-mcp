@@ -86,7 +86,8 @@ namespace TiaMcpServer.Test
             {
                 "hw_create_device", "hw_plug_module", "hw_delete_device",
                 "net_connect_subnet", "net_disconnect_subnet", "net_create_io_system", "net_connect_to_io_system",
-                "instantiate_master_copy", "import_objects", "hmi_create_faceplate_instance", "hmi_manage_unified_faceplate"
+                "instantiate_master_copy", "import_objects", "unified_create_screen", "unified_delete_screen", "unified_manage_items",
+                "unified_manage_faceplate", "unified_configure_trend_control"
             };
 
             // Act
@@ -108,7 +109,7 @@ namespace TiaMcpServer.Test
         public void Test_704_BuildTools_RegistersDebugToolsOnlyOnRequest()
         {
             // Arrange
-            var debugTools = new[] { "hmi_debug_reflect", "hmi_debug_screen_item", "hmi_test_faceplate" };
+            var debugTools = new[] { "unified_debug_reflect", "unified_debug_screen_item" };
 
             // Act
             var normal = Program.BuildTools(allowWrite: true).Select(t => t.ProtocolTool.Name).ToList();
@@ -122,7 +123,7 @@ namespace TiaMcpServer.Test
                 Assert.IsTrue(withDebug.Contains(tool), $"'{tool}' must be registered with --debug-tools");
             }
 
-            Assert.IsFalse(debugWithoutWrite.Contains("hmi_test_faceplate"), "A debug tool that writes still needs --allow-write");
+            Assert.IsTrue(debugWithoutWrite.Contains("unified_debug_screen_item"), "The debug tools only read, so they do not need --allow-write");
         }
 
         [TestMethod]

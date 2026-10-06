@@ -247,6 +247,14 @@ Streamable HTTP **недоступен из этого проекта**: SDK п�
 - [ ] Добавить страницы документации в `docs/tools/` для инструментов импорта из документов; включить правила обнаружения файлов (.s7dcl/.s7res), извлечение имен и маппинг опций.
 
 ## HMI (Human Machine Interface) - Deferred Tasks
+
+> 06.10.2026: HMI-инструменты переименованы в `unified_*` и работают только с WinCC Unified
+> (`unified_manage_items` — элементы и события, `unified_manage_faceplate` — фейсплейты).
+> Имена `hmi_*` ниже — исторические; новые инструменты для Unified называть `unified_*`.
+> Классический WinCC (Comfort / Advanced / Professional) отложен, наработки — в
+> `docs/hmi-classic-notes.md` и `src/TiaMcpServer/Siemens/Classic/`.
+
+- [ ] **Классический WinCC:** отдельный набор инструментов для Comfort / Advanced / Professional (см. `docs/hmi-classic-notes.md`).
 - [x] **Настройка событий (Event Handlers):** Инструменты для привязки системных функций к событиям элементов (например, назначение функции `ChangeScreen` на событие `Click` для кнопки). 
 - [x] **Настройка архивных трендов (Trend Controls):** Специализированные методы для конфигурации `HmiTrendControl`, добавления перьев и привязки их к `DataLog` архивам.
 - [x] **Работа с Faceplates (Фейсплейты):**

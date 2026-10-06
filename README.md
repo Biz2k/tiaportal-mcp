@@ -14,7 +14,7 @@ read a project, edit PLC software, hardware and HMI, and download to a PLC.
   tables, external source files, cross references, and the source text of blocks and types
 - Create, rename, delete, copy, move, import and compile PLC objects
 - Read the hardware topology, create devices, plug modules, build subnets and PROFINET IO systems
-- Read and edit WinCC Unified / WinCC HMI screens, screen items, tags and faceplates
+- Read and edit WinCC Unified: screens, screen items, events, tags, trends and faceplate instances
 - Download hardware and software to a PLC or a simulated PLC
 
 Starting and controlling PLCSIM is deliberately not part of this server; it lives in a separate
@@ -83,7 +83,7 @@ access. Confirm it in the TIA Portal window.
 2. Call `open_tia_project` with the absolute path of a `.apXX` project or `.alsXX` session. It
    connects, opens the project and returns the PLC software paths.
 3. Explore with `get_project_tree`, `plc_get_software_tree` and `get_devices`.
-4. Read or change objects with the `plc_*`, `hw_*`, `net_*` and `hmi_*` tools.
+4. Read or change objects with the `plc_*`, `hw_*`, `net_*` and `unified_*` tools.
 5. Call `save_project` to keep the changes. Until then they exist only in memory.
 
 ## Command line arguments
@@ -94,7 +94,7 @@ access. Confirm it in the TIA Portal window.
 | `--read-only`             | Do not register the tools that change the project. See below.                  |
 | `--logging <1\|2\|3>`     | `1` stderr, `2` debug output, `3` Windows event log. Omit for no logging.      |
 | `--doctor`                | Print the environment report and exit without starting the MCP server.         |
-| `--debug-tools`           | Register the server-development tools (`hmi_debug_*`, `hmi_test_faceplate`).   |
+| `--debug-tools`           | Register the server-development tools (`unified_debug_*`).                      |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
 
 ## Write mode
@@ -139,7 +139,7 @@ Always available (57):
 | Search and references   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Export and preview      | `export_objects`, `preview_import` |
 | Libraries               | `get_libraries`, `open_global_library`, `get_master_copies` |
-| HMI                     | `hmi_get_screens`, `hmi_get_screen_items`, `hmi_get_screen_item_properties`, `hmi_get_tags`, `hmi_get_connections`, `hmi_get_library_types`, `hmi_get_library_faceplates` |
+| WinCC Unified           | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_connections`, `unified_get_library_types` |
 | Download                | `get_download_targets` |
 
 Left out with `--read-only` (57):
@@ -156,7 +156,7 @@ Left out with `--read-only` (57):
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Hardware                | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| HMI                     | `hmi_create_screen`, `hmi_delete_screen`, `hmi_create_screen_item`, `hmi_delete_screen_item`, `hmi_manage_items`, `hmi_set_unified_screen_item_event`, `hmi_configure_unified_trend_control`, `hmi_configure_unified_trend_companion`, `hmi_create_faceplate_instance`, `hmi_manage_unified_faceplate` |
+| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control` |
 | Download                | `download_to_plc` |
 
 `plc_get_software_tree` accepts a `sections` argument - any comma separated subset of
@@ -190,10 +190,15 @@ candidate paths.
   one: `net_connect_subnet` (PLC interface) → `net_create_io_system` → `net_connect_subnet` (IO
   device interface, same subnet) → `net_connect_to_io_system`.
 
-## HMI screen items
+## WinCC Unified
 
-`hmi_manage_items` creates, updates, upserts and deletes items on WinCC Unified screens, several at
-once. Each property gets either a static value or a dynamization:
+The `unified_*` tools work on WinCC Unified, on a Unified panel as well as on a Unified PC station.
+`softwarePath` is the device name followed by the runtime item, e.g. `HMI_1/HMI_RT_1`.
+
+### Screen items
+
+`unified_manage_items` creates, updates, upserts and deletes items on screens, several at once. Each
+property gets either a static value or a dynamization, and `events` attaches scripts:
 
 ```json
 {
@@ -208,7 +213,12 @@ once. Each property gets either a static value or a dynamization:
         "ProcessValue": { "tag": "Pump1_Speed" }
       }
     },
-    { "action": "update", "screenName": "Screen_1", "itemName": "Start", "properties": { "Text": "Start" } }
+    {
+      "action": "upsert", "screenName": "Screen_1", "itemName": "Start", "itemType": "HmiButton",
+      "properties": { "Text": "Start" },
+      "events": { "Tapped": "HMIRuntime.Tags.SysFct.SetTagValue('Pump1_Start', 1);" }
+    },
+    { "action": "delete", "screenName": "Screen_1", "itemName": "Old_Label" }
   ]
 }
 ```
@@ -219,8 +229,42 @@ once. Each property gets either a static value or a dynamization:
   dynamization, `{ "dynamization": "none" }` removes the dynamization.
 - A text is given as plain text and stored in the format WinCC Unified uses; a string sets every
   project language, `{ "texts": { "en-US": "..." } }` sets single ones.
+- `events` maps an event name to its script; an empty script removes the handler. An unknown event
+  name is answered with the events the item has. An empty `itemName` addresses the screen itself.
+- Which item types exist depends on the device: a PC station has no `HmiText`, for instance, and
+  TIA Portal says so.
 - A call applies **all of its actions or none**. If one fails, the error names the action and the
   property, and the project is left as it was.
+
+`unified_configure_trend_control` adds a trend to an `HmiTrendControl` and binds it to its data
+source. An `HmiTrendCompanion` is an ordinary item: its `SourceTrendControl` property names the
+trend control.
+
+### Faceplates
+
+A faceplate instance has its own tool, because what can be set on it is not fixed: it is the
+interface of the faceplate type. `unified_get_library_types` lists the types with the
+`ContainedType` value of each version; `unified_manage_faceplate` creates or updates one instance
+and returns its interface:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1", "screenName": "Screen_1", "itemName": "Valve_1",
+  "action": "upsert", "faceplateType": "V0.0.2\\HMI_Discret_Valve",
+  "properties": { "Left": 50, "Top": 60 },
+  "interfaceValues": {
+    "Interface_Tag_1": "Valve1_Data",
+    "Valve_Name": { "tag": "Valve1_Name" }
+  }
+}
+```
+
+- A **tag interface** takes the name of an HMI tag as a plain value, or `{ "tagParameter": "..." }`.
+- A **property interface** takes a static value, `{ "tag": "..." }` or `{ "script": "..." }`.
+- `{ "dynamization": "none" }` removes a dynamization.
+- Openness does not say which of the two an interface property is. A dynamization of the wrong
+  kind is refused with a hint, and nothing is changed.
+- Call it with `action: "update"` and no values to read the interface of an existing instance.
 
 ## Downloading to a PLC
 
@@ -264,11 +308,11 @@ group the type already lives in.
   Portal Openness (observed 2025-09-02).
 - **Watch table entries** cannot be created or deleted through this server yet.
 - **A subnet cannot be deleted** through this server; `net_connect_subnet` creates one when needed.
-- **HMI editing is WinCC Unified only.** For WinCC Comfort, Advanced and Professional the Openness
+- **HMI tools are WinCC Unified only.** For WinCC Comfort, Advanced and Professional the Openness
   API has no object model for screens: a screen cannot be created and its items cannot be read or
-  changed, only exported and imported as XML. On such an HMI `hmi_get_screens`, `hmi_get_tags`
-  and `hmi_get_connections` work; `hmi_manage_items` and the other editing tools refuse with that
-  explanation.
+  changed, only exported and imported as XML. The `unified_*` tools refuse such an HMI with that
+  explanation. What is known about the classic systems is kept in `docs/hmi-classic-notes.md`
+  for a later set of tools.
 
 Limits imposed by the Openness API itself - no input makes these work:
 

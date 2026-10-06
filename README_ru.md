@@ -17,7 +17,7 @@ MCP-сервер, через который ИИ-ассистент работа
 - Создание, переименование, удаление, копирование, перемещение, импорт и компиляция объектов ПЛК
 - Чтение аппаратной топологии, создание устройств, установка модулей, построение подсетей и
   систем PROFINET IO
-- Чтение и изменение экранов, элементов экранов, тегов и фейсплейтов WinCC Unified / WinCC
+- Чтение и изменение WinCC Unified: экраны, элементы экранов, события, теги, тренды, фейсплейты
 - Загрузка конфигурации оборудования и программы в ПЛК или симулятор
 
 Запуск PLCSIM и управление им намеренно не входят в этот сервер: для этого есть отдельный
@@ -88,7 +88,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 2. Вызовите `open_tia_project` с абсолютным путём к проекту `.apXX` или сессии `.alsXX`.
    Инструмент подключится, откроет проект и вернёт пути к программам ПЛК.
 3. Осмотритесь с помощью `get_project_tree`, `plc_get_software_tree` и `get_devices`.
-4. Читайте и изменяйте объекты инструментами `plc_*`, `hw_*`, `net_*` и `hmi_*`.
+4. Читайте и изменяйте объекты инструментами `plc_*`, `hw_*`, `net_*` и `unified_*`.
 5. Сохраните изменения вызовом `save_project`. До этого они существуют только в памяти.
 
 ## Параметры командной строки
@@ -99,7 +99,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | `--read-only`             | Не регистрировать инструменты, изменяющие проект. См. ниже.                     |
 | `--logging <1\|2\|3>`     | `1` — stderr, `2` — отладочный вывод, `3` — журнал событий Windows. Без параметра журнал не ведётся. |
 | `--doctor`                | Вывести отчёт об окружении и завершиться, не запуская MCP-сервер.               |
-| `--debug-tools`           | Зарегистрировать инструменты разработки сервера (`hmi_debug_*`, `hmi_test_faceplate`). |
+| `--debug-tools`           | Зарегистрировать инструменты разработки сервера (`unified_debug_*`).                    |
 | `--allow-write`           | Принимается для старых конфигураций; запись включена по умолчанию, параметр ничего не меняет. |
 
 ## Режим записи
@@ -143,7 +143,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Поиск и ссылки                   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Экспорт и предпросмотр           | `export_objects`, `preview_import` |
 | Библиотеки                       | `get_libraries`, `open_global_library`, `get_master_copies` |
-| HMI                              | `hmi_get_screens`, `hmi_get_screen_items`, `hmi_get_screen_item_properties`, `hmi_get_tags`, `hmi_get_connections`, `hmi_get_library_types`, `hmi_get_library_faceplates` |
+| WinCC Unified                    | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_connections`, `unified_get_library_types` |
 | Загрузка                         | `get_download_targets` |
 
 Не регистрируются с `--read-only` (57):
@@ -160,7 +160,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Внешние исходные файлы           | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Оборудование                     | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| HMI                              | `hmi_create_screen`, `hmi_delete_screen`, `hmi_create_screen_item`, `hmi_delete_screen_item`, `hmi_manage_items`, `hmi_set_unified_screen_item_event`, `hmi_configure_unified_trend_control`, `hmi_configure_unified_trend_companion`, `hmi_create_faceplate_instance`, `hmi_manage_unified_faceplate` |
+| WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control` |
 | Загрузка                         | `download_to_plc` |
 
 `plc_get_software_tree` принимает параметр `sections` — любое подмножество
@@ -195,11 +195,16 @@ TIA Portal допускает `/` внутри имени (группа блок
   раньше предыдущего: `net_connect_subnet` (интерфейс ПЛК) → `net_create_io_system` →
   `net_connect_subnet` (интерфейс IO-устройства, та же подсеть) → `net_connect_to_io_system`.
 
-## Элементы экранов HMI
+## WinCC Unified
 
-`hmi_manage_items` создаёт, изменяет, создаёт-или-изменяет (`upsert`) и удаляет элементы на
-экранах WinCC Unified, сразу несколько за вызов. Каждому свойству задаётся либо статическое
-значение, либо динамизация:
+Инструменты `unified_*` работают с WinCC Unified — и на панели Unified, и на ПК-станции Unified.
+`softwarePath` — имя устройства и элемент runtime, например `HMI_1/HMI_RT_1`.
+
+### Элементы экранов
+
+`unified_manage_items` создаёт, изменяет, создаёт-или-изменяет (`upsert`) и удаляет элементы на
+экранах, сразу несколько за вызов. Каждому свойству задаётся либо статическое значение, либо
+динамизация, а `events` назначает скрипты событиям:
 
 ```json
 {
@@ -214,7 +219,12 @@ TIA Portal допускает `/` внутри имени (группа блок
         "ProcessValue": { "tag": "Pump1_Speed" }
       }
     },
-    { "action": "update", "screenName": "Screen_1", "itemName": "Start", "properties": { "Text": "Пуск" } }
+    {
+      "action": "upsert", "screenName": "Screen_1", "itemName": "Start", "itemType": "HmiButton",
+      "properties": { "Text": "Start" },
+      "events": { "Tapped": "HMIRuntime.Tags.SysFct.SetTagValue('Pump1_Start', 1);" }
+    },
+    { "action": "delete", "screenName": "Screen_1", "itemName": "Old_Label" }
   ]
 }
 ```
@@ -225,8 +235,44 @@ TIA Portal допускает `/` внутри имени (группа блок
   скриптом, `{ "dynamization": "none" }` убирает динамизацию.
 - Текст задаётся обычной строкой и сохраняется в формате WinCC Unified; строка задаёт текст для
   всех языков проекта, `{ "texts": { "en-US": "..." } }` — для отдельных.
+- `events` сопоставляет имени события его скрипт; пустой скрипт удаляет обработчик. На
+  неизвестное имя события в ответ перечисляются события этого элемента. Пустое `itemName`
+  обращается к самому экрану.
+- Набор типов элементов зависит от устройства: на ПК-станции, например, нет `HmiText`, и
+  TIA Portal об этом сообщает.
 - Вызов применяет **все действия или ни одного**. Если одно не удалось, ошибка называет действие
   и свойство, а проект остаётся прежним.
+
+`unified_configure_trend_control` добавляет тренд в `HmiTrendControl` и привязывает его к
+источнику данных. `HmiTrendCompanion` — обычный элемент: его свойство `SourceTrendControl`
+называет элемент тренда.
+
+### Фейсплейты
+
+У экземпляра фейсплейта свой инструмент, потому что набор его параметров не фиксирован: это
+интерфейс типа фейсплейта. `unified_get_library_types` перечисляет типы со значением
+`ContainedType` каждой версии; `unified_manage_faceplate` создаёт или изменяет один экземпляр
+и возвращает его интерфейс:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1", "screenName": "Screen_1", "itemName": "Valve_1",
+  "action": "upsert", "faceplateType": "V0.0.2\\HMI_Discret_Valve",
+  "properties": { "Left": 50, "Top": 60 },
+  "interfaceValues": {
+    "Interface_Tag_1": "Valve1_Data",
+    "Valve_Name": { "tag": "Valve1_Name" }
+  }
+}
+```
+
+- **Теговый интерфейс** принимает имя HMI-тега простым значением либо `{ "tagParameter": "..." }`.
+- **Интерфейс-свойство** принимает статическое значение, `{ "tag": "..." }` или
+  `{ "script": "..." }`.
+- `{ "dynamization": "none" }` убирает динамизацию.
+- Openness не сообщает, к какому из двух видов относится свойство интерфейса. Динамизация не
+  того вида отклоняется с подсказкой, и ничего не меняется.
+- Вызов с `action: "update"` без значений читает интерфейс существующего экземпляра.
 
 ## Загрузка в ПЛК
 
@@ -273,11 +319,11 @@ CPU не останавливается и не запускается, пока
   02.09.2025).
 - **Записи таблиц наблюдения** пока нельзя создавать и удалять через сервер.
 - **Подсеть нельзя удалить** через сервер; `net_connect_subnet` создаёт её при необходимости.
-- **Редактирование HMI — только для WinCC Unified.** Для WinCC Comfort, Advanced и Professional в
+- **Инструменты HMI — только для WinCC Unified.** Для WinCC Comfort, Advanced и Professional в
   Openness нет объектной модели экранов: экран нельзя создать, а его элементы — прочитать или
-  изменить; возможен только экспорт и импорт в XML. На таком HMI работают `hmi_get_screens`,
-  `hmi_get_tags` и `hmi_get_connections`; `hmi_manage_items` и остальные инструменты
-  редактирования отказывают с этим объяснением.
+  изменить; возможен только экспорт и импорт в XML. Инструменты `unified_*` отказывают на таком
+  HMI с этим объяснением. Что известно о классических системах, записано в
+  `docs/hmi-classic-notes.md` — для отдельного набора инструментов позже.
 
 Ограничения самого интерфейса Openness — их не обойти никакими параметрами:
 

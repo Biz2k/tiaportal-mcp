@@ -13,37 +13,31 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Batch editing of HMI screen items: create, update, upsert, delete, with any number of
-    // properties per item.
+    // WinCC Unified: batch editing of screen items - create, update, upsert, delete - with any
+    // number of properties and event handlers per item.
     //
-    // Callers: the hmi_manage_items tool in McpServer.HmiItems.cs, registered unless the server
-    // runs with '--read-only'. Affected API: ManageHmiItems replaces the unregistered draft of the
-    // same name in Portal.Hmi.cs, and supersedes ConfigureHmiScreenItem and
-    // SetHmiScreenItemProperty, which were two partial answers to the same question. Reads and
-    // writes no data files; changes stay in the open project until it is saved.
+    // Callers: the unified_manage_items tool in McpServer.Unified.cs, registered unless the
+    // server runs with '--read-only'. Affected API: ManageUnifiedItems supersedes the separate
+    // create-item, delete-item, set-property, configure-item, set-event and trend-companion
+    // operations, which were partial answers to the same question. Reads and writes no data
+    // files; changes stay in the open project until it is saved.
     //
     // A property is given either a static value or a dynamization. The old tools mixed the two:
     // 'processValue' was a string that always became a tag binding, so a constant could not be
     // set through it and "42" meant "the tag named 42".
     //
-    // WinCC Unified only. For WinCC Comfort / Advanced / Professional the Openness API has no
-    // object model for screen items at all (ScreenComposition does not even offer Create); those
-    // screens can only be exported and imported as XML. The tool says so instead of failing
-    // somewhere inside a dynamic call.
-    //
-    // The Unified screen item classes are reached through 'dynamic' and reflection, as in the
-    // rest of the HMI layer: they live in an assembly this project does not reference at compile
-    // time for every TIA Portal version it supports.
-
+    // Faceplates are not handled here. The properties of a faceplate instance are defined by
+    // its faceplate type, not by the item class, so they have their own operation in
+    // Portal.Unified.Faceplates.cs.
     public partial class Portal
     {
         private const string TagDynamizationType = "TagDynamization";
 
         private const string ScriptDynamizationType = "ScriptDynamization";
 
-        public List<HmiItemResult> ManageHmiItems(string softwarePath, IList<HmiItemAction> actions)
+        public List<HmiItemResult> ManageUnifiedItems(string softwarePath, IList<HmiItemAction> actions)
         {
-            return Operation.Run(_logger, nameof(ManageHmiItems), PortalErrorCode.InvalidState,
+            return Operation.Run(_logger, nameof(ManageUnifiedItems), PortalErrorCode.InvalidState,
                 () =>
                 {
                     if (actions == null || actions.Count == 0)
@@ -91,26 +85,6 @@ namespace TiaMcpServer.Siemens
                 : $"{result.Action} '{result.ScreenName}/{result.ItemName}'";
         }
 
-        private HmiSoftware RequireUnifiedSoftware(string softwarePath)
-        {
-            var software = RequireHmiContainer(softwarePath).Software;
-
-            if (software is HmiSoftware unified)
-            {
-                return unified;
-            }
-
-            if (software is HmiTarget)
-            {
-                throw new PortalException(PortalErrorCode.NotSupported,
-                    $"'{softwarePath}' is a WinCC Comfort/Advanced/Professional HMI. TIA Portal Openness offers no access to the items of " +
-                    "such screens: they can only be exported and imported as XML. This tool works with WinCC Unified.");
-            }
-
-            throw new PortalException(PortalErrorCode.NotSupported,
-                $"'{softwarePath}' is not WinCC Unified HMI software ({software.GetType().Name}).");
-        }
-
         private HmiItemResult ApplyHmiItemAction(HmiSoftware software, HmiItemAction action)
         {
             var result = new HmiItemResult
@@ -140,7 +114,7 @@ namespace TiaMcpServer.Siemens
 
                 dynamic screen = FindUnifiedScreen(software, action.ScreenName!)
                     ?? throw new PortalException(PortalErrorCode.NotFound,
-                        $"Screen '{action.ScreenName}' not found. Use 'hmi_get_screens' to list the screens.");
+                        $"Screen '{action.ScreenName}' not found. Use 'unified_get_screens' to list the screens.");
 
                 object target;
 
@@ -182,7 +156,7 @@ namespace TiaMcpServer.Siemens
                     if (verb == "update" && item == null)
                     {
                         throw new PortalException(PortalErrorCode.NotFound,
-                            $"Item '{action.ItemName}' not found on screen '{action.ScreenName}'. Use 'hmi_get_screen_items' to list the items, or 'upsert' to create it.");
+                            $"Item '{action.ItemName}' not found on screen '{action.ScreenName}'. Use 'unified_get_screen_items' to list the items, or 'upsert' to create it.");
                     }
 
                     if (item == null)
@@ -217,11 +191,31 @@ namespace TiaMcpServer.Siemens
                     }
                 }
 
+                if (action.Events != null)
+                {
+                    foreach (var handler in action.Events)
+                    {
+                        var label = "event " + handler.Key;
+
+                        try
+                        {
+                            SetUnifiedEventHandler(target, handler.Key, handler.Value);
+                            result.Applied.Add(label);
+                        }
+                        catch (Exception ex)
+                        {
+                            result.Failed.Add(new HmiPropertyFailure { Property = label, Error = ErrorText.Describe(ex) });
+                        }
+                    }
+                }
+
                 result.Status = result.Failed.Count == 0 ? "success" : "error";
 
                 if (result.Failed.Count > 0)
                 {
-                    result.Error = $"{result.Failed.Count} of {action.Properties!.Count} properties were not set: " +
+                    var asked = (action.Properties?.Count ?? 0) + (action.Events?.Count ?? 0);
+
+                    result.Error = $"{result.Failed.Count} of {asked} settings were not applied: " +
                                    string.Join("; ", result.Failed.Select(f => $"{f.Property}: {f.Error}"));
                 }
             }
@@ -235,30 +229,54 @@ namespace TiaMcpServer.Siemens
             return result;
         }
 
-        private static object? FindUnifiedScreen(HmiSoftware software, string screenName)
+        /// <summary>
+        /// Gives an event of an item (or screen) a script, replacing the script it had. An
+        /// empty script removes the handler. Which events exist depends on the item type; the
+        /// error lists them.
+        /// </summary>
+        private static void SetUnifiedEventHandler(object target, string eventName, string? scriptCode)
         {
-            foreach (var screen in software.Screens)
+            object handlers;
+
+            try
             {
-                if (string.Equals(screen.Name, screenName, StringComparison.OrdinalIgnoreCase))
-                {
-                    return screen;
-                }
+                handlers = ((dynamic)target).EventHandlers;
+            }
+            catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException ex)
+            {
+                throw new PortalException(PortalErrorCode.NotSupported, $"{target.GetType().Name} has no events.", null, ex);
             }
 
-            return null;
-        }
+            var handlersType = handlers.GetType();
 
-        private static object? FindUnifiedScreenItem(dynamic screen, string itemName)
-        {
-            foreach (var item in screen.ScreenItems)
+            var create = handlersType.GetMethod("Create")
+                ?? throw new PortalException(PortalErrorCode.NotSupported, $"Events of {target.GetType().Name} cannot be set through Openness.");
+
+            var eventType = create.GetParameters()[0].ParameterType;
+
+            // Checked against the names first: Enum.Parse would throw, and inside a transaction
+            // a thrown-and-caught exception is not free.
+            var match = Enum.GetNames(eventType).FirstOrDefault(n => n.Equals(eventName, StringComparison.OrdinalIgnoreCase))
+                ?? throw new PortalException(PortalErrorCode.InvalidParams,
+                    $"{target.GetType().Name} has no event '{eventName}'. Available: {string.Join(", ", Enum.GetNames(eventType))}.");
+
+            var value = Enum.Parse(eventType, match);
+            var handler = handlersType.GetMethod("Find")?.Invoke(handlers, new[] { value });
+
+            if (string.IsNullOrWhiteSpace(scriptCode))
             {
-                if (string.Equals((string)item.Name, itemName, StringComparison.OrdinalIgnoreCase))
+                if (handler != null)
                 {
-                    return item;
+                    ((dynamic)handler).Delete();
                 }
+
+                return;
             }
 
-            return null;
+            handler ??= create.Invoke(handlers, new[] { value })
+                ?? throw new PortalException(PortalErrorCode.CreateFailed, $"Creating the '{match}' event handler returned nothing.");
+
+            ((dynamic)handler).Script.ScriptCode = scriptCode;
         }
 
         private static object CreateUnifiedScreenItem(dynamic screen, string? itemType, string itemName)
@@ -341,7 +359,7 @@ namespace TiaMcpServer.Siemens
                     if (!software.Tags.Any(t => string.Equals(t.Name, tagName, StringComparison.OrdinalIgnoreCase)))
                     {
                         throw new PortalException(PortalErrorCode.NotFound,
-                            $"HMI tag '{tagName}' does not exist. Use 'hmi_get_tags' to list the tags.");
+                            $"HMI tag '{tagName}' does not exist. Use 'unified_get_tags' to list the tags.");
                     }
 
                     SetHmiDynamization(target, ResolveHmiPropertyName(target, propertyName), TagDynamizationType, "Tag", tagName);
@@ -382,13 +400,6 @@ namespace TiaMcpServer.Siemens
 
         private string? SetStaticHmiProperty(object target, string propertyName, JsonElement value)
         {
-            // A faceplate container exposes the properties of its faceplate type through
-            // 'Interface', not as attributes; they are matched first, as the old tool did.
-            if (TrySetFaceplateInterfaceProperty(target, propertyName, value))
-            {
-                return null;
-            }
-
             var name = ResolveHmiPropertyName(target, propertyName);
             var engineeringObject = (IEngineeringObject)target;
 
@@ -436,35 +447,7 @@ namespace TiaMcpServer.Siemens
             throw new PortalException(PortalErrorCode.NotFound,
                 $"{target.GetType().Name} has no property '{propertyName}'. " +
                 (close.Count > 0 ? $"Similar: {string.Join(", ", close)}. " : string.Empty) +
-                "Use 'hmi_get_screen_item_properties' to list them.");
-        }
-
-        private static bool TrySetFaceplateInterfaceProperty(object target, string propertyName, JsonElement value)
-        {
-            if (target.GetType().GetProperty("Interface")?.GetValue(target) is not IEnumerable properties)
-            {
-                return false;
-            }
-
-            foreach (var property in properties)
-            {
-                var type = property.GetType();
-                var name = type.GetProperty("PropertyName")?.GetValue(property)?.ToString();
-
-                if (!string.Equals(name, propertyName, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                var valueProperty = type.GetProperty("Value")
-                    ?? throw new PortalException(PortalErrorCode.NotSupported, $"Faceplate property '{propertyName}' has no settable value.");
-
-                valueProperty.SetValue(property, ConvertHmiValue(value, valueProperty.GetValue(property)?.GetType(), propertyName));
-
-                return true;
-            }
-
-            return false;
+                "Use 'unified_get_screen_item_properties' to list them.");
         }
 
         /// <summary>

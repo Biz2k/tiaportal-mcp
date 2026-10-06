@@ -2,6 +2,43 @@
 
 ## [Unreleased]
 
+### Changed (WinCC Unified tool set)
+
+- __Breaking: the HMI tools are now `unified_*` and serve WinCC Unified only.__ The `hmi_*` tools
+  had grown one by one, each first meant for one WinCC system, and ended up as overlapping tools
+  that half-served the classic systems. They are now one set for WinCC Unified, verified on a
+  Unified panel and a Unified PC station:
+  `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`,
+  `unified_get_tags`, `unified_get_connections`, `unified_get_library_types`,
+  `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`,
+  `unified_manage_faceplate`, `unified_configure_trend_control`. 108 tools are registered by default.
+- __`unified_manage_items` covers events.__ An action takes `events`: event name to script; an empty
+  script removes the handler, an unknown event name is answered with the events the item has. An
+  empty `itemName` addresses the screen itself. This replaces `hmi_set_unified_screen_item_event`,
+  `hmi_create_screen_item` and `hmi_delete_screen_item`.
+- __`unified_manage_faceplate`__ replaces `hmi_create_faceplate_instance` and
+  `hmi_manage_unified_faceplate`. Faceplates keep a tool of their own because what can be set is the
+  interface of the faceplate type, not a fixed list. It creates or updates one instance, sets
+  container properties and interface values, and returns the interface. A tag interface takes a tag
+  name or `{"tagParameter": ...}`; a property interface a static value, `{"tag": ...}` or
+  `{"script": ...}`. The old tool created the tag dynamization under a wrong name and could not bind
+  a property interface at all.
+- `unified_get_tags` takes `nameFilter`; a Unified PC station easily has hundreds of tags.
+- `unified_get_screen_item_properties` lists the interface of a faceplate instance, and
+  `unified_get_library_types` gives each version its `ContainedType` value.
+- The Unified layer follows the rest of the server: `PortalException` with an error code, the common
+  lock, a transaction around every write, typed responses with an output schema.
+
+### Removed
+
+- `hmi_configure_unified_trend_companion`: a trend companion is an ordinary item, its
+  `SourceTrendControl` property is set through `unified_manage_items`.
+- `hmi_get_library_faceplates` (covered by `unified_get_library_types`) and the debug tool
+  `hmi_test_faceplate`.
+- The code paths for WinCC Comfort / Advanced / Professional. Openness has no object model for
+  their screens, so those paths could list screens and tags and nothing more. What works is parked
+  in `Siemens/Classic/Portal.HmiClassic.cs` without tools; the findings are in
+  `docs/hmi-classic-notes.md`.
 ### Fixed
 
 - __Failures now say why.__ A failed Openness call used to reach the client as `CreateFB failed`,
