@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed (documents)
+
+- The plan is `docs/PLAN.md` (was `docs/fix-plan-test-report-2026-10-05.md`). It now holds only
+  open work: the defects found when the handoff tasks were reviewed, what those tasks left
+  unfinished, what comes next, and a table of what Openness V21 cannot do.
 ### Added (development)
 
 - `tools/`: the scripts this series of work was done with - `mcp-call.ps1` drives a built server

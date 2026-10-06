@@ -610,7 +610,7 @@ anything that touches TIA Portal are run only after explicit confirmation.
 | [`docs/tools-list.txt`](docs/tools-list.txt) | The registered tool names |
 | [`Implemented_Tools.md`](Implemented_Tools.md) | One-line description of each tool (Russian) |
 | [`docs/error-model.md`](docs/error-model.md) | How errors are raised and reported |
-| [`docs/fix-plan-test-report-2026-10-05.md`](docs/fix-plan-test-report-2026-10-05.md) | Open work and proposals (Russian) |
+| [`docs/PLAN.md`](docs/PLAN.md) | Open work and proposals (Russian) |
 | [`TODO.md`](TODO.md) | Longer-term task list (Russian) |
 | [`docs/handoff/README.md`](docs/handoff/README.md) | For developers: project context, open tasks, Openness API references (Russian) |
 | [`tools/README.md`](tools/README.md) | Development scripts: probing Openness, driving the server, finishing a change |

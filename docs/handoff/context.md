@@ -198,7 +198,7 @@ exception is thrown». Следствия:
 | `docs/handoff/recipes.md` | Как добавить инструмент: образцы кода и чек-лист |
 | `docs/handoff/tasks/*.md` | Задачи, по одной на файл |
 | `docs/handoff/api/*.txt` | Справочники по классам Openness, сняты отражением с V21 |
-| `docs/fix-plan-test-report-2026-10-05.md` | Исходный план: правила и полный перечень оставшегося |
+| `docs/PLAN.md` | План: что осталось сделать, и что через Openness невозможно |
 | `docs/error-model.md` | Коды ошибок и как их поднимать |
 | `docs/hmi-classic-notes.md` | Что выяснено про классический WinCC |
 | `docs/tools-list.txt` | Имена зарегистрированных инструментов; сверяется тестом `Test_705` |
