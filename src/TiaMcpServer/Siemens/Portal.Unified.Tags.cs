@@ -39,6 +39,11 @@ namespace TiaMcpServer.Siemens
     //     (Real, Int, DInt, Bool, UInt, Word, String, LReal) and no tag of the test project has one:
     //     thresholds cannot be created through Openness. Members of a structured tag are HmiTag
     //     objects and take Comment; AcquisitionMode takes None, OnDemand, CyclicOnUse, CyclicContinuous.
+    //   - Drivers tried (2026-10-06, panel and PC station): 'SIMATIC S7 1200/1500', 'SIMATIC S7 300/400' (parameters
+    //     Physic.LocAddress, Physic.LocDeviceName, Protocol.RemStAddress, Protocol.Slot, Protocol.Rack, Protocol.Cyclic),
+    //     'OPC UA' (Protocol.DiscoveryUrl, SecurityPolicyUrl, MessageSecurityMode, Anonymous, UserName, Password) and
+    //     'Allen-Bradley EtherNet/IP' are accepted; 'Modbus TCP' is not a driver of these HMIs. A wrong parameter name is
+    //     answered here with the list, a wrong value by Openness with the allowed ones.
     //   - HmiSoftware.Connections.Create makes a non-integrated connection: Partner, Node and
     //     Station are read-only there, its address is set through driver properties.
     //   - An integrated connection to a PLC of the project is made on the hardware side: the
