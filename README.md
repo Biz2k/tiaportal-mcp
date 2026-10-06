@@ -481,7 +481,12 @@ The CPU is neither stopped nor started unless you pass `stopPlc` / `startPlc`; a
 a stop is refused with that explanation. The response lists every configuration step TIA Portal
 raised, the answer given to it, and the messages of the result. A step the server has no answer for
 keeps TIA Portal's own preset and is listed as such; pass `selections` (`StepType=Option`) to decide
-differently. There is no preview: a call loads.
+differently. When the CPU holds user management data that differs from the project, `downloadUserManagement`
+decides: `keep` (default) leaves the CPU's data, `update` takes the project's users but keeps the CPU's passwords,
+`overwrite` replaces everything and resets the passwords. The response lists the top-level result messages as
+`parts`, each with its own state and error and warning counts (the hardware and the software part). The
+user-management answer and `parts` are **not checked against a real download** (no PLC or PLCSIM was at hand).
+There is no preview: a call loads.
 
 ## TIA Portal versions
 

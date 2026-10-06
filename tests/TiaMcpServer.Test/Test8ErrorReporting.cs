@@ -167,6 +167,20 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
+        public void Test_809_DownloadUserManagement_MapsTheWordsToTheOptions()
+        {
+            Assert.AreEqual("KeepOnlineUserManagementData", DownloadUserManagement.OptionFor(null));
+            Assert.AreEqual("KeepOnlineUserManagementData", DownloadUserManagement.OptionFor("Keep"));
+            Assert.AreEqual("UpdateUserManagementDataButKeepOnlinePassword", DownloadUserManagement.OptionFor(" update "));
+            Assert.AreEqual("DownloadAllUserManagementDataResetToProject", DownloadUserManagement.OptionFor("OVERWRITE"));
+
+            var ex = Assert.ThrowsException<PortalException>(() => DownloadUserManagement.OptionFor("reset"));
+
+            Assert.AreEqual(PortalErrorCode.InvalidParams, ex.Code);
+            StringAssert.Contains(ex.Message, "keep, update, overwrite");
+        }
+
+        [TestMethod]
         public void Test_807_ErrorText_ForAction_HasNoBracket()
         {
             var ex = new PortalException(PortalErrorCode.NotFound, "Tag 'X' not found.");

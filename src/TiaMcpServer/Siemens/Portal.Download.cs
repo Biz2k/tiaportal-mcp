@@ -59,6 +59,10 @@ namespace TiaMcpServer.Siemens
         public string State { get; set; } = string.Empty;
 
         public string Text { get; set; } = string.Empty;
+
+        public int ErrorCount { get; set; }
+
+        public int WarningCount { get; set; }
     }
 
     public class DownloadOutcome
@@ -117,6 +121,7 @@ namespace TiaMcpServer.Siemens
 
         /// <param name="stopPlc">Allow TIA Portal to stop the CPU when the download requires it.</param>
         /// <param name="startPlc">Start the CPU again after the download.</param>
+        /// <param name="userManagement">The answer to the step 'UserManagementDownload': keep, update or overwrite (see <see cref="DownloadUserManagement"/>).</param>
         /// <param name="selections">
         /// Answers by step type, overriding the defaults - e.g. { "OverwriteSystemData": "Overwrite" }.
         /// The step types and their options are reported in every outcome.
@@ -130,7 +135,8 @@ namespace TiaMcpServer.Siemens
             bool software,
             bool stopPlc = false,
             bool startPlc = false,
-            IDictionary<string, string>? selections = null)
+            IDictionary<string, string>? selections = null,
+            string userManagement = "keep")
         {
             return Operation.Run(_logger, nameof(DownloadToPlc), PortalErrorCode.InvalidState, () =>
             {
@@ -160,6 +166,9 @@ namespace TiaMcpServer.Siemens
                 if (software) options |= DownloadOptions.Software;
 
                 var answers = DefaultDownloadAnswers(stopPlc, startPlc);
+
+                // Checked before the download starts: a wrong word must not cost a download.
+                answers["UserManagementDownload"] = new[] { DownloadUserManagement.OptionFor(userManagement) };
 
                 if (selections != null)
                 {
@@ -337,7 +346,9 @@ namespace TiaMcpServer.Siemens
                 {
                     Depth = depth,
                     State = message.State.ToString(),
-                    Text = message.Message ?? string.Empty
+                    Text = message.Message ?? string.Empty,
+                    ErrorCount = message.ErrorCount,
+                    WarningCount = message.WarningCount
                 });
 
                 // Depth guard: the tree is produced by TIA Portal, not by this server.

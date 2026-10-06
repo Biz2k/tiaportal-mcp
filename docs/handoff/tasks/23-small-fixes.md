@@ -36,7 +36,7 @@
 - [x] **Строки «только от» и «только до» в таблице диапазонов** динамизации создать нельзя
       (`RangeType` только для чтения). Сказать в описании `unified_manage_items`; при попытке
       (строка с одним из `from` / `to`) — `NotSupported` с этим объяснением, а не общая ошибка.
-- [ ] **Загрузка: шаг `UserManagementDownload`.** Найти в `Siemens/Portal.Download.cs`, как
+- [x] **Загрузка: шаг `UserManagementDownload`.** Найти в `Siemens/Portal.Download.cs`, как
       сервер отвечает на шаги с выбором и что он делает с шагом загрузки пользователей
       (находки — раздел 09 в `../findings.md`). Добавить параметр `downloadUserManagement`
       (`keep` по умолчанию — как сейчас, `overwrite`) и в ответ — отдельные итоги по аппаратной
@@ -69,3 +69,5 @@
 - **Синтаксическая ошибка в скрипте.** Проверено вживую на модуле `MCPT_Mod` (модули не удаляются, он остался пустым, как был): код `return a *;` записан как есть, `unified_compile` ответил `SyntaxError: Unexpected token ';' in line 2, in column 12` с путём `HMI Unified/Scripts/MCPT_Mod/Bad`. Сказано в описании инструмента, в `Notes` каждой записи и в README (там было неверное утверждение, что синтаксическая ошибка опустошает функцию; код проверки — на этой версии не подтвердился).
 
 - **Строки «только от» и «только до»** Проверено вживую (`BackColor` с одной строкой `{"from": 70}`: `NotSupported` с объяснением и откат; обход — большое `to` — записан) и тестом `Test_2304a`. Сказано в описании `unified_manage_items` и в README. Заодно `unified_manage_items` теперь сообщает в отказе код действия (`NotSupported`, `NotFound`...), а не всегда `InvalidParams`.
+
+- **Загрузка: шаг `UserManagementDownload`.** **Только тестами, вживую не проверено** (нужен ПЛК или PLCSIM: попросить Biz запустить, сам не запускаю). Новый параметр `downloadUserManagement` у `download_to_plc`: `keep` (по умолчанию) = `KeepOnlineUserManagementData`, `update` = `UpdateUserManagementDataButKeepOnlinePassword`, `overwrite` = `DownloadAllUserManagementDataResetToProject` (`DownloadUserManagement`, тест `Test_809`); `selections` по-прежнему перекрывает. Раньше у шага не было ответа, и он оставался с предустановкой TIA Portal. Неверное слово отклоняется до загрузки (проверено вживую на реальных значениях цели: `InvalidParams`, загрузка не начиналась). В ответ добавлено `parts` — сообщения верхнего уровня со своими состоянием и счётчиками (`DownloadMessage` получил `ErrorCount`/`WarningCount`); Openness даёт счётчики на каждом сообщении, различает ли верхний уровень аппаратную и программную часть — выяснится на настоящей загрузке.

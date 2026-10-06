@@ -38,13 +38,14 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("stopPlc: allow the CPU to be stopped when the download requires it (default false)")] bool stopPlc = false,
             [Description("startPlc: start the CPU after the download (default false)")] bool startPlc = false,
             [Description("maxMessages: how many informational result messages to return (default 40); errors and warnings are always returned in full")] int maxMessages = 40,
-            [Description("selections: optional answers that override the defaults, as 'StepType=Option' pairs separated by commas, e.g. 'OverwriteSystemData=Overwrite,StopModules=StopAll'. Step types and their options are listed under 'steps' in every response")] string selections = "")
+            [Description("selections: optional answers that override the defaults, as 'StepType=Option' pairs separated by commas, e.g. 'OverwriteSystemData=Overwrite,StopModules=StopAll'. Step types and their options are listed under 'steps' in every response")] string selections = "",
+            [Description("downloadUserManagement: what to do with the user management data (users, roles) when the CPU holds data that differs from the project: 'keep' (default) leaves the CPU's data as it is, 'update' takes the users of the project but keeps the CPU's passwords, 'overwrite' replaces all of it by the project's data and resets the passwords. The same answer can be given as 'UserManagementDownload=<option>' in selections, which wins")] string downloadUserManagement = "keep")
         {
             return GuardedNoTransaction(nameof(DownloadToPlc), () =>
             {
                 var outcome = Portal.DownloadToPlc(
                     softwarePath, modeName, pcInterfaceName, targetInterfaceName,
-                    hardware, software, stopPlc, startPlc, ParseSelections(selections));
+                    hardware, software, stopPlc, startPlc, ParseSelections(selections), downloadUserManagement);
 
                 var unanswered = outcome.Steps.Where(s => !s.Answered).Select(s => s.Type).Distinct().ToList();
 
@@ -65,6 +66,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Hardware = hardware,
                     Software = software,
                     Steps = outcome.Steps,
+                    Parts = outcome.Messages.Where(m => m.Depth == 0).ToList(),
                     Messages = LimitMessages(outcome.Messages, maxMessages)
                 };
             });
@@ -157,6 +159,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>Every configuration step TIA Portal raised, with its options and the answer given.</summary>
         public IEnumerable<DownloadStep>? Steps { get; set; }
+
+        /// <summary>
+        /// The top-level messages of the result with their own state, errors and warnings. TIA Portal reports the parts of a
+        /// download (the hardware configuration, the software) as separate top-level entries; the total above is their sum.
+        /// Not checked against a real download (needs a PLC or PLCSIM).
+        /// </summary>
+        public IEnumerable<DownloadMessage>? Parts { get; set; }
 
         /// <summary>The message tree of the result, flattened; 'depth' gives the nesting.</summary>
         public IEnumerable<DownloadMessage>? Messages { get; set; }
