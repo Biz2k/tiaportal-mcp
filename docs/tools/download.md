@@ -23,6 +23,7 @@ Download hardware configuration and/or software to a PLC or a simulated PLC. The
 | `startPlc` | boolean | no (default `False`) | startPlc: start the CPU after the download (default false) |
 | `maxMessages` | integer | no (default `40`) | maxMessages: how many informational result messages to return (default 40); errors and warnings are always returned in full |
 | `selections` | string | no (default ``) | selections: optional answers that override the defaults, as 'StepType=Option' pairs separated by commas, e.g. 'OverwriteSystemData=Overwrite,StopModules=StopAll'. Step types and their options are listed under 'steps' in every response |
+| `downloadUserManagement` | string | no (default `keep`) | downloadUserManagement: what to do with the user management data (users, roles) when the CPU holds data that differs from the project: 'keep' (default) leaves the CPU's data as it is, 'update' takes the users of the project but keeps the CPU's passwords, 'overwrite' replaces all of it by the project's data and resets the passwords. The same answer can be given as 'UserManagementDownload=<option>' in selections, which wins |
 
 ## get_download_targets
 

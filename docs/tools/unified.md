@@ -332,7 +332,7 @@ Create, rename or delete screen groups of a WinCC Unified HMI, several at once. 
 
 ## unified_manage_scripts
 
-Create or replace global script modules of a WinCC Unified HMI, several at once. A module is written as a whole (globalDefinitions and functions): what it held before is replaced, so read it first with 'unified_get_scripts' to change part of it. Every write is read back and compared; code that TIA Portal cannot parse (syntax errors, default parameter values) is reported and rolled back instead of being stored mangled. Script modules cannot be deleted or renamed through Openness. A call applies all of its actions or none
+Create or replace global script modules of a WinCC Unified HMI, several at once. A module is written as a whole (globalDefinitions and functions): what it held before is replaced, so read it first with 'unified_get_scripts' to change part of it. Every write is read back and compared; code that TIA Portal cannot parse (syntax errors, default parameter values) is reported and rolled back instead of being stored mangled. The syntax of the code is NOT checked here: code with a syntax error is stored as written (every action says so in its notes). Check it with 'unified_compile' and pathFilter 'Scripts/<module>': the compile reports the error with its line and column, e.g. "SyntaxError: Unexpected token ';' in line 2, in column 12" for the function in 'Scripts/<module>/<function>' (checked live). Script modules cannot be deleted or renamed through Openness. A call applies all of its actions or none
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -368,10 +368,10 @@ Create, update, upsert or delete HMI tags of a WinCC Unified HMI, several at onc
 
 ## unified_set_runtime_settings
 
-Set runtime settings of a WinCC Unified HMI by name. A setting of a group is written with a dotted name: {"StartScreen": "Start", "OpcUaServerRuntimeSettings.MaxSessionCount": 20, "MaxLoginRuntimeSettings.MaxLoginErrors": 5, "LanguageAndFonts.en-US.Enable": true}. A setting can depend on another one (MaxLoginErrors needs EnableLockAfterNumberOfAttempts true): give both in the call. All settings are applied or none; 'unified_get_runtime_settings' shows the names and current values
+Set runtime settings of a WinCC Unified HMI by name. A setting of a group is written with a dotted name: {"StartScreen": "Start", "OpcUaServerRuntimeSettings.MaxSessionCount": 20, "MaxLoginRuntimeSettings.MaxLoginErrors": 5, "LanguageAndFonts.English (United States).Enable": true, "LanguageAndFonts.ru-RU.Enable": false}. A setting can depend on another one (MaxLoginErrors needs EnableLockAfterNumberOfAttempts true): give both in the call. All settings are applied or none; 'unified_get_runtime_settings' shows the names and current values
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
-| `settings` | object | yes | settings: names and new values; groups with a dot, a language by its name (e.g. 'en-US') |
+| `settings` | object | yes | settings: names and new values; groups with a dot, a language by the name TIA Portal gives it or by its culture code: 'LanguageAndFonts.English (United States).Enable' or 'LanguageAndFonts.en-US.Enable' |
 
