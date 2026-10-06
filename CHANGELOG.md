@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added (WinCC Unified text lists)
+
+- __`unified_get_text_lists`__ and __`unified_manage_text_lists`__. Openness offers no objects for the
+  entries of a list, only export and import of YAML files; the tools do that in a temporary folder
+  and present entries as values with their texts per language. A list is written as a whole.
+  Because the import drops entries it does not understand without an error, every write is read
+  back and compared, and a difference fails the call. Value ranges, default entries and bit-number
+  lists cannot be written.
+- __`unified_get_graphic_lists`__: names and the exported YAML as it is. A graphic list can be
+  deleted through `unified_manage_text_lists`; creating one is not supported.
+- 119 tools are registered by default.
 ### Added (WinCC Unified alarms, integrated connections)
 
 - __`unified_manage_alarms`__ and __`unified_get_alarms`__: discrete and analog alarms - the tag and

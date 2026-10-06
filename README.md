@@ -139,7 +139,7 @@ Always available (57):
 | Search and references   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Export and preview      | `export_objects`, `preview_import` |
 | Libraries               | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
-| WinCC Unified           | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes` |
+| WinCC Unified           | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists` |
 | Download                | `get_download_targets` |
 
 Left out with `--read-only` (57):
@@ -156,7 +156,7 @@ Left out with `--read-only` (57):
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Hardware                | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes` |
+| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_text_lists` |
 | Download                | `download_to_plc` |
 
 `plc_get_software_tree` accepts a `sections` argument - any comma separated subset of
@@ -340,6 +340,34 @@ deleted without a warning from TIA Portal.
   state as `"RaisedState.BackColor": "#FFA500"` (states: `RaisedState`, `ClearedState`,
   `AcknowledgedState`, `AcknowledgedClearedState`; properties: `BackColor`, `TextColor`,
   `Flashing`). System classes cannot be deleted.
+
+### Text lists and graphic lists
+
+Openness has no objects for the entries of a list: it only exports and imports lists as YAML
+files. `unified_get_text_lists` and `unified_manage_text_lists` do that behind the scenes and
+show the entries as values with their texts:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1",
+  "actions": [
+    { "action": "upsert", "listName": "Modes",
+      "entries": [
+        { "value": 0, "text": "Off" },
+        { "value": 1, "text": { "en-US": "Auto", "de-DE": "Automatik" } }
+      ] }
+  ]
+}
+```
+
+- A list is written **as a whole**: `entries` replaces everything the list had.
+- Every entry maps one value to a text. Value ranges, default entries and bit-number lists
+  cannot be written - how TIA Portal stores them in the file is not known yet.
+- TIA Portal drops what it does not understand in an import without an error. The tool therefore
+  reads the list back after writing it and fails the call - undoing it - if anything differs.
+- Graphic lists: `unified_get_graphic_lists` returns their names and the exported YAML as it is;
+  `unified_manage_text_lists` with `"kind": "graphic"` can delete one. Creating them is not
+  supported.
 
 ### Faceplates
 

@@ -102,11 +102,13 @@ unified_delete_screen
 unified_get_alarm_classes
 unified_get_alarms
 unified_get_connections
+unified_get_graphic_lists
 unified_get_screen_item_properties
 unified_get_screen_items
 unified_get_screens
 unified_get_tag_tables
 unified_get_tags
+unified_get_text_lists
 unified_manage_alarm_classes
 unified_manage_alarms
 unified_manage_connections
@@ -114,3 +116,4 @@ unified_manage_faceplate
 unified_manage_items
 unified_manage_tag_tables
 unified_manage_tags
+unified_manage_text_lists

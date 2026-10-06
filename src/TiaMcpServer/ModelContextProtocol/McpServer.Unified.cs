@@ -212,6 +212,52 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "unified_get_text_lists", Title = "Get WinCC Unified text lists", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the text lists of a WinCC Unified HMI with their entries: the value each entry stands for and its text per language")]
+        public static ResponseUnifiedTextLists GetUnifiedTextLists(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("listName: return only this list; empty (default) returns all")] string listName = "")
+        {
+            try
+            {
+                var lists = Portal.GetUnifiedTextLists(softwarePath, listName);
+
+                return new ResponseUnifiedTextLists
+                {
+                    Message = $"{lists.Count} text list(s) in '{softwarePath}'",
+                    Items = lists,
+                    Meta = ReadMeta()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
+        [McpServerTool(Name = "unified_get_graphic_lists", Title = "Get WinCC Unified graphic lists", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the graphic lists of a WinCC Unified HMI by name, together with the YAML files TIA Portal exports for them. The server does not interpret these files")]
+        public static ResponseUnifiedGraphicLists GetUnifiedGraphicLists(
+            [Description(UnifiedPath)] string softwarePath)
+        {
+            try
+            {
+                var (names, export) = Portal.GetUnifiedGraphicLists(softwarePath);
+
+                return new ResponseUnifiedGraphicLists
+                {
+                    Message = $"{names.Count} graphic list(s) in '{softwarePath}'",
+                    Items = names,
+                    Export = export,
+                    Meta = ReadMeta()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
         private static System.Text.Json.Nodes.JsonObject ReadMeta() => new System.Text.Json.Nodes.JsonObject
         {
             ["timestamp"] = DateTime.Now,
@@ -304,6 +350,16 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("actions: the changes to make, applied in order")] List<UnifiedAlarmClassAction> actions)
         {
             return Guarded(nameof(ManageUnifiedAlarmClasses), () => UnifiedActions(Portal.ManageUnifiedAlarmClasses(softwarePath, actions)));
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "unified_manage_text_lists", Title = "Manage WinCC Unified text lists", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, replace or delete text lists of a WinCC Unified HMI, several at once. A list is written as a whole: 'entries' replaces everything the list had. Each entry maps one value to a text. Value ranges, default entries and bit-number lists cannot be written. Graphic lists can only be deleted (kind 'graphic'). A call applies all of its actions or none")]
+        public static ResponseUnifiedActions ManageUnifiedTextLists(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("actions: the changes to make, applied in order")] List<UnifiedTextListAction> actions)
+        {
+            return Guarded(nameof(ManageUnifiedTextLists), () => UnifiedActions(Portal.ManageUnifiedTextLists(softwarePath, actions)));
         }
 
         // All or nothing: the Portal method throws when any action fails, which rolls the

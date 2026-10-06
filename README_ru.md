@@ -143,7 +143,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Поиск и ссылки                   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Экспорт и предпросмотр           | `export_objects`, `preview_import` |
 | Библиотеки                       | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
-| WinCC Unified                    | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes` |
+| WinCC Unified                    | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists` |
 | Загрузка                         | `get_download_targets` |
 
 Не регистрируются с `--read-only` (57):
@@ -160,7 +160,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Внешние исходные файлы           | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Оборудование                     | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes` |
+| WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_text_lists` |
 | Загрузка                         | `download_to_plc` |
 
 `plc_get_software_tree` принимает параметр `sections` — любое подмножество
@@ -350,6 +350,34 @@ Comfort, Advanced и Professional, поэтому все три сообщают
   состояния в форме `"RaisedState.BackColor": "#FFA500"` (состояния: `RaisedState`,
   `ClearedState`, `AcknowledgedState`, `AcknowledgedClearedState`; свойства: `BackColor`,
   `TextColor`, `Flashing`). Системные классы удалить нельзя.
+
+### Текстовые и графические списки
+
+В Openness нет объектов для записей списка: списки только экспортируются и импортируются в виде
+файлов YAML. `unified_get_text_lists` и `unified_manage_text_lists` делают это сами и показывают
+записи как значения с текстами:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1",
+  "actions": [
+    { "action": "upsert", "listName": "Modes",
+      "entries": [
+        { "value": 0, "text": "Off" },
+        { "value": 1, "text": { "en-US": "Auto", "de-DE": "Automatik" } }
+      ] }
+  ]
+}
+```
+
+- Список записывается **целиком**: `entries` заменяет всё, что в нём было.
+- Каждая запись сопоставляет одно значение тексту. Диапазоны значений, записи по умолчанию и
+  списки по номеру бита записать нельзя — как TIA Portal хранит их в файле, пока неизвестно.
+- При импорте TIA Portal молча отбрасывает то, что не понял. Поэтому инструмент после записи
+  читает список обратно и при любом расхождении завершает вызов ошибкой, отменяя его.
+- Графические списки: `unified_get_graphic_lists` возвращает их имена и экспортированный YAML
+  как есть; `unified_manage_text_lists` с `"kind": "graphic"` может удалить список. Создание
+  не поддерживается.
 
 ### Фейсплейты
 
