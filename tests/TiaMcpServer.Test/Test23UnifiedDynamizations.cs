@@ -9,6 +9,7 @@ namespace TiaMcpServer.Test
     /// read, and what is refused before Openness is called. These tests do not connect to TIA Portal.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test23UnifiedDynamizations
     {
         private static JsonElement Json(string text)

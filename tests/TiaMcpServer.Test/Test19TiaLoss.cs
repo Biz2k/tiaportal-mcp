@@ -10,6 +10,7 @@ namespace TiaMcpServer.Test
     /// assemblies. These tests do not connect to TIA Portal.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test19TiaLoss
     {
         // Same name as Siemens.Engineering.NonRecoverableException.

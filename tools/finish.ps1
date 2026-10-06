@@ -35,10 +35,9 @@ if ($errors) { 'BUILD FAILED'; $errors; exit 1 }
 'build ok'
 
 # --- 3. unit tests ---------------------------------------------------------------------------
-# These classes need TIA Portal and the original author's projects; everything else runs.
-# A new test class is picked up by itself as long as it needs no TIA Portal.
-$needTia = 'Test1Portal', 'Test2ProjectSession', 'Test21Project', 'Test22Session', 'Test3Devices', 'Test4Software', 'Test5McpServer', 'Test6Diagnostics'
-$filter = ($needTia | ForEach-Object { "FullyQualifiedName!~.$_." }) -join '&'
+# Only the classes marked [TestCategory("NoTia")] run: the others need TIA Portal and the original
+# author's projects. A new test class that needs no TIA Portal must carry that category.
+$filter = 'TestCategory=NoTia'
 $test = dotnet test tests\TiaMcpServer.Test\TiaMcpServer.Test.csproj -c Release --nologo --filter $filter 2>&1
 $test | Select-String ' error CS' | Select-Object -First 5 | ForEach-Object { $_.Line }
 $summary = $test | Select-Object -Last 1

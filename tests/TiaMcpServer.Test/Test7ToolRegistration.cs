@@ -13,6 +13,7 @@ namespace TiaMcpServer.Test
     /// TIA Portal and do not open a project.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     [DoNotParallelize]
     public class Test7ToolRegistration
     {

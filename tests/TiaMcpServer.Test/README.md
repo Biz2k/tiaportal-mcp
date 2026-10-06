@@ -15,6 +15,13 @@ MSTest project verifying portal connectivity, project handling, devices, and MCP
 
 See `Settings.cs` for configuration options such as project paths and timeouts.
 
+## Test Categories
+
+- `[TestCategory("NoTia")]` - needs no TIA Portal (the pure logic of the tools): `dotnet test --filter TestCategory=NoTia`.
+  `toolsinish.ps1` runs exactly these. Every new class of this kind must carry the category.
+- No category: `Test1Portal` .. `Test6Diagnostics`, `Test21Project`, `Test22Session` need TIA Portal and projects at the paths
+  in `Settings.cs`.
+
 ## Test Execution Policy
 
 - Offer to run tests, but only execute them after explicit user confirmation. See root `AGENTS.md` for details.

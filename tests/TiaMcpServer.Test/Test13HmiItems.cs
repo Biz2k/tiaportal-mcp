@@ -9,6 +9,7 @@ namespace TiaMcpServer.Test
     /// connect to TIA Portal and do not open a project.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test13HmiItems
     {
         private enum Alignment

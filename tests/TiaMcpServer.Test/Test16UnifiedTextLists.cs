@@ -12,6 +12,7 @@ namespace TiaMcpServer.Test
     /// These tests do not connect to TIA Portal and do not open a project.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test16UnifiedTextLists
     {
         private const string Lists = @"#Version: 2.0

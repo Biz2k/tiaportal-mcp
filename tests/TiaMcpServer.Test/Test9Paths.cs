@@ -10,6 +10,7 @@ namespace TiaMcpServer.Test
     /// a plain in-memory tree: they do not connect to TIA Portal and do not open a project.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test9Paths
     {
         private sealed class Node

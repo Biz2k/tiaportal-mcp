@@ -4,6 +4,7 @@ namespace TiaMcpServer.Test
     /// Tests for the command line options. These tests do not connect to TIA Portal.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test12CliOptions
     {
         [TestMethod]

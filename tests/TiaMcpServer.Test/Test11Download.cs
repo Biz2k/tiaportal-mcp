@@ -11,6 +11,7 @@ namespace TiaMcpServer.Test
     /// connect to TIA Portal, do not open a project and never download anything.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test11Download
     {
         [TestMethod]

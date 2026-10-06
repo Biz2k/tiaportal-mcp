@@ -11,6 +11,7 @@ namespace TiaMcpServer.Test
     /// and do not open a project.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test10BlockTransfer
     {
         private const string ExportedFb =

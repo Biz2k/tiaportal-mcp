@@ -12,6 +12,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\<script>.ps1 <argument
 | `openness-reflect.ps1` | Lists the classes, properties, methods and enums Openness has in a namespace | no - reads the assemblies only |
 | `openness-probe.ps1` | Helpers to try Openness calls one at a time, writes rolled back | yes - attaches to the running instance |
 | `mcp-call.ps1` | Runs tool calls against a built server over stdio, as an MCP client would | yes - through the server |
+| `smoke.ps1` | Calls the read-only tools (`tools\smokeead.json`) on the test project and counts the errors | yes - reads only |
 | `finish.ps1` | Line endings, build, unit tests; with `-Install` updates `Install\TiaMcpServer` | no |
 | `start-tia.ps1` | Starts TIA Portal with the test project and waits for it | starts it |
 
@@ -72,11 +73,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\mcp-call.ps1 -Calls "$
 - `-ExeArgs '--read-only'` or `'--debug-tools'` passes flags to the server.
 - A newly built exe makes TIA Portal ask for Openness access once; the user confirms it.
 
+## smoke.ps1
+
+Runs 46 read-only calls of the built server on the test project (the project tree, the PLC `PLC (A0)`, the panel
+`HMI Unified/HMI_RT_3` and the PC station `АРМ Unified/HMI_RT_1`) and prints `smoke: N of N calls answered, M with an error`.
+Exit code 1 when a call fails or the server stops answering. Run it after every build that changed the `Siemens\` layer,
+before `finish.ps1 -Install`. The calls file is UTF-8 (the station name is Cyrillic); a new read tool gets a line in
+`tools\smokeead.json`. TIA Portal has to be running with the test project (`start-tia.ps1`).
+
 ## finish.ps1
 
-Runs the unit tests that need no TIA Portal: every test class except the ones listed in the
-script (`Test1Portal` .. `Test6Diagnostics`, `Test21Project`, `Test22Session`). A new test class
-is included automatically, so it must not need TIA Portal - or be added to that list.
+Runs the unit tests that need no TIA Portal: the classes marked `[TestCategory("NoTia")]`
+(`dotnet test --filter TestCategory=NoTia`). A new test class that needs no TIA Portal must carry
+that category, or it is not run.
 
 `-Install` stops the installed server (only processes under `Install\TiaMcpServer`) and copies
 the build there. Commit right after it: the MCP client restarts the installed server within

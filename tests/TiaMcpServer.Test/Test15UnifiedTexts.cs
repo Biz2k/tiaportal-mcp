@@ -8,6 +8,7 @@ namespace TiaMcpServer.Test
     /// open a project.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test15UnifiedTexts
     {
         [TestMethod]

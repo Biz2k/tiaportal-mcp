@@ -10,6 +10,7 @@ namespace TiaMcpServer.Test
     /// tests do not connect to TIA Portal.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test18UnifiedLogs
     {
         private static JsonElement Json(string text)

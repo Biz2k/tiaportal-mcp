@@ -12,6 +12,7 @@ namespace TiaMcpServer.Test
     /// source files and do not connect to TIA Portal.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test20GenericAttributeGuard
     {
         private static readonly string[] GuardedFiles =

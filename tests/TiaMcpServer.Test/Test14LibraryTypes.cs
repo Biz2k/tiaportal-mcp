@@ -7,6 +7,7 @@ namespace TiaMcpServer.Test
     /// connect to TIA Portal and do not open a project; they work on the namespaces of the Openness classes.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test14LibraryTypes
     {
         [TestMethod]

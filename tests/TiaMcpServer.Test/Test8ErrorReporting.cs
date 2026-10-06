@@ -14,6 +14,7 @@ namespace TiaMcpServer.Test
     /// serialization. These tests do not connect to TIA Portal and do not open a project.
     /// </summary>
     [TestClass]
+    [TestCategory("NoTia")]
     public class Test8ErrorReporting
     {
         [TestInitialize]
