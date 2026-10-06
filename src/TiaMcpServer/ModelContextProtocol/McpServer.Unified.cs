@@ -169,6 +169,29 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "unified_get_scripts", Title = "Get WinCC Unified script modules", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the global script modules of a WinCC Unified HMI with their source: global definitions (constants, variables, helpers), functions and the list of exported functions with their parameters. Scripts on events and dynamizations of screen items are not modules; see 'unified_get_screen_item_properties'")]
+        public static ResponseUnifiedScripts GetUnifiedScripts(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("moduleName: return only this module; empty (default) returns all")] string moduleName = "")
+        {
+            try
+            {
+                var modules = Portal.GetUnifiedScripts(softwarePath, moduleName);
+
+                return new ResponseUnifiedScripts
+                {
+                    Message = $"{modules.Count} script module(s) in '{softwarePath}'",
+                    Items = modules,
+                    Meta = ReadMeta()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
         [McpServerTool(Name = "unified_get_connections", Title = "Get WinCC Unified connections", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("List the connections of a WinCC Unified HMI with their attributes and driver parameters ('DriverProperties')")]
         public static ResponseUnifiedList GetUnifiedConnections(
@@ -336,6 +359,16 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("actions: the changes to make, applied in order")] List<UnifiedTagAction> actions)
         {
             return Guarded(nameof(ManageUnifiedTags), () => UnifiedActions(Portal.ManageUnifiedTags(softwarePath, actions)));
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "unified_manage_scripts", Title = "Manage WinCC Unified script modules", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create or replace global script modules of a WinCC Unified HMI, several at once. A module is written as a whole (globalDefinitions and functions): what it held before is replaced, so read it first with 'unified_get_scripts' to change part of it. Every write is read back and compared; code that TIA Portal cannot parse (syntax errors, default parameter values) is reported and rolled back instead of being stored mangled. Script modules cannot be deleted or renamed through Openness. A call applies all of its actions or none")]
+        public static ResponseUnifiedActions ManageUnifiedScripts(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("actions: the changes to make, applied in order")] List<UnifiedScriptAction> actions)
+        {
+            return Guarded(nameof(ManageUnifiedScripts), () => UnifiedActions(Portal.ManageUnifiedScripts(softwarePath, actions)));
         }
 
         [WriteTool]

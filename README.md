@@ -139,7 +139,7 @@ Always available (57):
 | Search and references   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Export and preview      | `export_objects`, `preview_import` |
 | Libraries               | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
-| WinCC Unified           | `unified_get_screens`, `unified_get_screen_groups`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists` |
+| WinCC Unified           | `unified_get_screens`, `unified_get_screen_groups`, `unified_get_scripts`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists` |
 | Download                | `get_download_targets` |
 
 Left out with `--read-only` (57):
@@ -156,7 +156,7 @@ Left out with `--read-only` (57):
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Hardware                | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists` |
+| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists` |
 | Download                | `download_to_plc` |
 
 `plc_get_software_tree` accepts a `sections` argument - any comma separated subset of
@@ -295,6 +295,12 @@ tags; the default tag table cannot be deleted.
 written `Parent/Child`); deleting a group deletes its screens. `unified_create_screen` takes a
 `group`, `unified_get_screens` returns the group of every screen and can filter by it. Screen names
 are unique in the whole HMI, so every other tool finds a screen by its name alone.
+
+`unified_get_scripts` reads the global script modules (global definitions, functions, the list of exported
+functions); `unified_manage_scripts` creates or replaces a module **as a whole** and reads it back. TIA Portal
+accepts code it cannot parse and stores it mangled (a default parameter `f(a, b = 5)` becomes `b___5`, a syntax
+error empties the function), so such a write is refused and rolled back. Modules cannot be deleted or renamed
+through Openness.
 
 `unified_manage_connections` creates, updates and deletes connections. With `partner` - the
 path of a PLC of the project - a new connection is an **integrated** one, on which HMI tags can

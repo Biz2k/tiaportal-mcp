@@ -89,7 +89,7 @@ namespace TiaMcpServer.Test
                 "instantiate_master_copy", "import_objects", "unified_create_screen", "unified_delete_screen", "unified_manage_items",
                 "unified_manage_faceplate", "unified_configure_trend_control",
                 "unified_manage_tags", "unified_manage_tag_tables", "unified_manage_connections",
-                "unified_manage_alarms", "unified_manage_alarm_classes", "unified_manage_lists", "unified_manage_screen_groups"
+                "unified_manage_alarms", "unified_manage_alarm_classes", "unified_manage_lists", "unified_manage_screen_groups", "unified_manage_scripts"
             };
 
             // Act

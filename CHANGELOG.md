@@ -12,6 +12,20 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Added (WinCC Unified script modules)
+
+- __`unified_get_scripts`__ and __`unified_manage_scripts`__: read global script modules (global definitions,
+  functions, exported functions with parameters) and create or replace them. Openness has no object model for
+  the content, only export and import of `<name>.hmi.yml` + `<name>.hmi.js`; the tools do that in a temporary
+  folder. `Import` replaces a module of the same name as a whole.
+- TIA Portal accepts code it cannot parse and stores it mangled: a default parameter `f(a, b = 5)` comes back
+  as `f(a, b___5)`, a syntax error returns success with the function body gone, and a comment between
+  functions may move above the global-definitions marker. Every write is therefore read back and compared
+  without comments and whitespace outside strings; a difference fails the call and rolls it back.
+- Script modules cannot be deleted or renamed: `HmiScriptModule` has no `Delete`. `delete` answers with
+  that explanation; a module can be emptied with `update` and empty `functions`.
+- 123 tools are registered by default.
+
 ### Fixed (WinCC Unified screens in groups)
 
 - Screens inside screen groups were invisible to every `unified_*` tool: they looked in
