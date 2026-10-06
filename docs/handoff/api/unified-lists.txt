@@ -1,0 +1,17 @@
+CLASS Siemens.Engineering.HmiUnified.TextGraphicList.HmiGraphicList : Object
+   props: Parent:IEngineeringObject, Name:String
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.TextGraphicList.HmiGraphicListComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiGraphicList
+   methods: Export(DirectoryInfo destinationLocation, String filename); Import(DirectoryInfo sourceLocation, String filename); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.TextGraphicList.HmiSystemTextList : Object
+   props: Parent:IEngineeringObject, Name:String
+CLASS Siemens.Engineering.HmiUnified.TextGraphicList.HmiSystemTextListComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiSystemTextList
+   methods: Export(DirectoryInfo destinationLocation, String filename); Import(DirectoryInfo sourceLocation, String filename); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.TextGraphicList.HmiTextList : Object
+   props: Parent:IEngineeringObject, Name:String
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.TextGraphicList.HmiTextListComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTextList
+   methods: Export(DirectoryInfo destinationLocation, String filename); Import(DirectoryInfo sourceLocation, String filename); Find(String name)

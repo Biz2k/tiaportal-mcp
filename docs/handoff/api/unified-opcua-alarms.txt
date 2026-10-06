@@ -1,0 +1,6 @@
+CLASS Siemens.Engineering.HmiUnified.HmiOpcUaAlarm.HmiOpcUaAlarmType : HmiBase
+   props: Parent:IEngineeringObject, AlarmClass:String*, Area:String*, ConditionTypeId:String*, Connection:String, Name:String*, NodeId:String
+   methods: SetNodeIdAndConnection(String nodeId, String connectionName); Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.HmiOpcUaAlarm.HmiOpcUaAlarmTypeComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiOpcUaAlarmType
+   methods: Create(String nodeId, String connection, String name); Find(String name)

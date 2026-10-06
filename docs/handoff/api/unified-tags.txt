@@ -1,0 +1,46 @@
+ENUM Siemens.Engineering.HmiUnified.HmiTags.HmiAccessMode: None, AbsoluteAccess, SymbolicAccess
+ENUM Siemens.Engineering.HmiUnified.HmiTags.HmiAcquisitionMode: None, OnDemand, CyclicOnUse, CyclicContinuous
+ENUM Siemens.Engineering.HmiUnified.HmiTags.HmiConfirmationType: None, Confirmation, Reason, ConfirmationAndComment, Signature, SignatureAndComment
+ENUM Siemens.Engineering.HmiUnified.HmiTags.HmiLimitValueType: None, Constant, Tag
+CLASS Siemens.Engineering.HmiUnified.HmiTags.HmiSubstituteValue : Object
+   props: Parent:IEngineeringObject, SubstituteValueUsage:HmiSubstituteValueUsage*, Value:Object*
+ENUM Siemens.Engineering.HmiUnified.HmiTags.HmiSubstituteValueUsage: None, InvalidValue, RangeViolation, InvalidValueOrRangeViolation
+CLASS Siemens.Engineering.HmiUnified.HmiTags.HmiSystemTag : Object
+   props: Parent:IEngineeringObject, DataType:String, Name:String
+CLASS Siemens.Engineering.HmiUnified.HmiTags.HmiSystemTagComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiSystemTag
+   methods: Find(String name)
+CLASS Siemens.Engineering.HmiUnified.HmiTags.HmiTag : Object
+   props: Comment:MultilingualText, DisplayName:MultilingualText, LoggingTags:HmiLoggingTagComposition, Members:HmiTagComposition, Parent:IEngineeringObject, Thresholds:HmiThresholdComposition, AccessMode:HmiAccessMode*, AcquisitionCycle:String*, AcquisitionMode:HmiAcquisitionMode*, Address:String*, BufferHandshakeTag:String*, ConfirmationType:HmiConfirmationType*, Connection:String*, DBNameMultiplexing:Boolean*, DataType:String*, GmpRelevant:Boolean*, HmiDataType:String*, HmiEndValue:Object*, HmiStartValue:Object*, InitialMaxValue:UpperRange, InitialMinValue:LowerRange, InitialValue:Object*, LinearScaling:Boolean*, MandatoryCommenting:Boolean*, MaxLength:UInt32*, Name:String*, Persistent:Boolean*, PlcEndValue:Object*, PlcName:String, PlcStartValue:Object*, PlcTag:String*, ReadHandshakeTag:String*, RequiredFunctionRights:String*, Scope:HmiTagScope*, SubstituteValue:HmiSubstituteValue, TagTableName:String, TagType:HmiTagType, Timeout:UInt32*, UpdateId:UInt32*, WriteHandshakeTag:String*
+   methods: GetService<T>(); Validate(); Delete()
+CLASS Siemens.Engineering.HmiUnified.HmiTags.HmiTagComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTag
+   methods: Export(DirectoryInfo destinationLocation); Export(DirectoryInfo destinationLocation, String name); Import(DirectoryInfo sourceLocation); Import(DirectoryInfo sourceLocation, String name); Create(String name); Create(String name, String tagTableName); Find(String name)
+ENUM Siemens.Engineering.HmiUnified.HmiTags.HmiTagScope: System, Session
+CLASS Siemens.Engineering.HmiUnified.HmiTags.HmiTagTable : Object
+   props: Parent:IEngineeringObject, Tags:HmiTagComposition, Name:String*
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.HmiTags.HmiTagTableComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTagTable
+   methods: Create(String name); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.HmiTags.HmiTagTableGroup : HmiGroupBase
+   props: Groups:HmiTagTableGroupComposition, Parent:IEngineeringObject, TagTables:HmiTagTableComposition, Name:String*
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.HmiTags.HmiTagTableGroupComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTagTableGroup
+   methods: Create(String name); Find(String name)
+ENUM Siemens.Engineering.HmiUnified.HmiTags.HmiTagType: Simple, UDT, Array
+CLASS Siemens.Engineering.HmiUnified.HmiTags.HmiThreshold : Object
+   props: Parent:IEngineeringObject, Mode:HmiThresholdMode, Name:String, Value:Object*, ValueType:HmiLimitValueType*
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.HmiTags.HmiThresholdComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiThreshold
+   methods: Create(); Find(String name)
+ENUM Siemens.Engineering.HmiUnified.HmiTags.HmiThresholdMode: None, Upper, Lower
+ENUM Siemens.Engineering.HmiUnified.HmiTags.HmiUpdateScope: None, ClientServerWide, LocalHmiDevice
+CLASS Siemens.Engineering.HmiUnified.HmiTags.LowerRange : Range
+   props: Parent:IEngineeringObject, Value:Object*, ValueType:HmiLimitValueType*
+CLASS Siemens.Engineering.HmiUnified.HmiTags.Range : Object
+   props: Parent:IEngineeringObject, Value:Object*, ValueType:HmiLimitValueType*
+CLASS Siemens.Engineering.HmiUnified.HmiTags.UpperRange : Range
+   props: Parent:IEngineeringObject, Value:Object*, ValueType:HmiLimitValueType*

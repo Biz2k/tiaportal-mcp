@@ -1,0 +1,6 @@
+CLASS Siemens.Engineering.HmiUnified.UI.ScreenGroup.HmiScreenGroup : HmiGroupBase
+   props: Groups:HmiScreenGroupComposition, Parent:IEngineeringObject, Screens:HmiScreenComposition, Name:String*
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.ScreenGroup.HmiScreenGroupComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiScreenGroup
+   methods: Create(String name); Find(String name)

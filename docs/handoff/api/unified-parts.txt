@@ -1,0 +1,266 @@
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiAlarmColumnPart : HmiDataGridColumnPartBase
+   props: Parent:IEngineeringObject, AlarmBlock:HmiAlarmBlock*, UseAlarmColors:Boolean*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiAlarmLineColumnPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, AlarmBlock:HmiAlarmBlock*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Name:String*, OutputFormat:String*, UseAlarmColors:Boolean*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiAlarmLineColumnPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiAlarmLineColumnPart
+   methods: Find(String name)
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiAlarmLineViewPart : HmiScreenPartBase
+   props: AlarmLineColumns:HmiAlarmLineColumnPartComposition, Parent:IEngineeringObject, AllowFilter:Boolean*, AlternateBackColor:Color*, AlternateForeColor:Color*, BackColor:Color*, CellPadding:HmiPaddingPart, ColoringMode:HmiGridColoringMode*, Font:HmiFontPart, ForeColor:Color*, GridLineColor:Color*, GridLineVisibility:HmiSimpleGridLine*, GridLineWidth:Byte*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiAlarmStatePart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, BackColor:Color*, BorderColor:Color*, BorderWidth:Byte*, Content:HmiContentPart, ForeColor:Color*, Graphic:String*, Text:MultilingualText, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiAlarmStatisticColumnPart : HmiDataGridColumnPartBase
+   props: Parent:IEngineeringObject, AlarmStatisticBlock:HmiAlarmStatisticBlock*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiContentPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, ContentMode:HmiContentMode*, GraphicStretchMode:HmiGraphicStretchMode*, HorizontalTextAlignment:HmiHorizontalAlignment*, Spacing:UInt32*, SplitRatio:Double*, TextPosition:HmiTextPosition*, TextTrimming:HmiTextTrimming*, VerticalTextAlignment:HmiVerticalAlignment*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiControlBarButtonPart : HmiControlBarDisplayPart
+   props: Parent:IEngineeringObject, AlternateBackColor:Color*, AlternateBorderColor:Color*, BackColor:Color*, BorderColor:Color*, BorderWidth:Byte*, HotKey:UInt16*, Content:HmiContentPart, Graphic:String*, Text:MultilingualText, Authorization:String*, CustomID:Int32*, Enabled:Boolean*, ForeColor:Color*, Height:UInt32*, MaximumHeight:UInt32*, MaximumWidth:UInt32*, MinimumHeight:UInt32*, MinimumWidth:UInt32*, Padding:HmiPaddingPart, ToolTipText:MultilingualText, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiControlBarDisplayPart : HmiControlBarElementPartBase
+   props: Parent:IEngineeringObject, Content:HmiContentPart, Graphic:String*, Text:MultilingualText, Authorization:String*, CustomID:Int32*, Enabled:Boolean*, ForeColor:Color*, Height:UInt32*, MaximumHeight:UInt32*, MaximumWidth:UInt32*, MinimumHeight:UInt32*, MinimumWidth:UInt32*, Padding:HmiPaddingPart, ToolTipText:MultilingualText, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiControlBarElementPartBase : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Authorization:String*, CustomID:Int32*, Enabled:Boolean*, ForeColor:Color*, Height:UInt32*, MaximumHeight:UInt32*, MaximumWidth:UInt32*, MinimumHeight:UInt32*, MinimumWidth:UInt32*, Padding:HmiPaddingPart, ToolTipText:MultilingualText, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiControlBarElementPartBaseComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiControlBarElementPartBase
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiControlBarLabelPart : HmiControlBarElementPartBase
+   props: Parent:IEngineeringObject, HorizontalTextAlignment:HmiHorizontalAlignment*, Text:MultilingualText, VerticalTextAlignment:HmiVerticalAlignment*, Authorization:String*, CustomID:Int32*, Enabled:Boolean*, ForeColor:Color*, Height:UInt32*, MaximumHeight:UInt32*, MaximumWidth:UInt32*, MinimumHeight:UInt32*, MinimumWidth:UInt32*, Padding:HmiPaddingPart, ToolTipText:MultilingualText, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiControlBarPartBase : HmiScreenPartBase
+   props: Elements:HmiControlBarElementPartBaseComposition, Parent:IEngineeringObject, BackColor:Color*, Enabled:Boolean*, Font:HmiFontPart, Padding:HmiPaddingPart, ShowToolTips:Boolean*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiControlBarSeparatorPart : HmiControlBarElementPartBase
+   props: Parent:IEngineeringObject, Authorization:String*, CustomID:Int32*, Enabled:Boolean*, ForeColor:Color*, Height:UInt32*, MaximumHeight:UInt32*, MaximumWidth:UInt32*, MinimumHeight:UInt32*, MinimumWidth:UInt32*, Padding:HmiPaddingPart, ToolTipText:MultilingualText, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiControlBarTextBoxPart : HmiControlBarLabelPart
+   props: Parent:IEngineeringObject, AlternateBorderColor:Color*, BackColor:Color*, BorderColor:Color*, BorderWidth:Byte*, ReadOnly:Boolean*, HorizontalTextAlignment:HmiHorizontalAlignment*, Text:MultilingualText, VerticalTextAlignment:HmiVerticalAlignment*, Authorization:String*, CustomID:Int32*, Enabled:Boolean*, ForeColor:Color*, Height:UInt32*, MaximumHeight:UInt32*, MaximumWidth:UInt32*, MinimumHeight:UInt32*, MinimumWidth:UInt32*, Padding:HmiPaddingPart, ToolTipText:MultilingualText, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiControlBarToggleSwitchPart : HmiControlBarButtonPart
+   props: Parent:IEngineeringObject, AlternateGraphic:String*, AlternateText:MultilingualText, HotKey:UInt16*, IsAlternateState:Boolean*, AlternateBackColor:Color*, AlternateBorderColor:Color*, BackColor:Color*, BorderColor:Color*, BorderWidth:Byte*, Content:HmiContentPart, Graphic:String*, Text:MultilingualText, Authorization:String*, CustomID:Int32*, Enabled:Boolean*, ForeColor:Color*, Height:UInt32*, MaximumHeight:UInt32*, MaximumWidth:UInt32*, MinimumHeight:UInt32*, MinimumWidth:UInt32*, Padding:HmiPaddingPart, ToolTipText:MultilingualText, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiCornersPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, BottomLeftRadius:UInt32*, BottomRightRadius:UInt32*, TopLeftRadius:UInt32*, TopRightRadius:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiCurvedScalePart : HmiScalePartBase
+   props: Parent:IEngineeringObject, AngleRange:Int32*, StartAngle:Int32*, AutoScaling:Boolean*, BeginValue:Double*, DivisionCount:Int32*, EndValue:Double*, LabelColor:Color*, LabelFont:HmiFontPart, OutputFormat:String*, ScaleMode:HmiScaleMode*, ScalingType:HmiScalingType*, SubDivisionCount:Int32*, TickColor:Color*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiCustomControlInterface : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Properties:HmiCustomControlInterfaceComposition, PropertyName:String, Value:Object*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiCustomControlInterfaceComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiCustomControlInterface
+   methods: CanCreate(); CanDelete(); Create(); Find(String propertyName)
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiDataGridColumnHeaderPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Content:HmiContentPart, Graphic:String*, Text:MultilingualText, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiDataGridColumnPart : HmiDataGridColumnPartBase
+   props: Parent:IEngineeringObject, Key:String*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiDataGridColumnPartBase : HmiScreenPartBase
+   props: Parent:IEngineeringObject, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiDataGridColumnPartBaseComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiDataGridColumnPartBase
+   methods: Find(String name)
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiDataGridHeaderSettingsPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, AllowColumnReorder:Boolean*, AllowColumnResize:Boolean*, ColumnHeaderType:HmiDataGridHeaderType*, Font:HmiFontPart, HeaderBackColor:Color*, HeaderForeColor:Color*, HeaderGridLineColor:Color*, HeaderSelectionBackColor:Color*, HeaderSelectionForeColor:Color*, RowHeaderType:HmiDataGridHeaderType*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiDataGridViewPart : HmiScreenPartBase
+   props: Columns:HmiDataGridColumnPartBaseComposition, Parent:IEngineeringObject, AllowFilter:Boolean*, AllowSort:Boolean*, AlternateBackColor:Color*, AlternateForeColor:Color*, BackColor:Color*, CellPadding:HmiPaddingPart, ColoringMode:HmiGridColoringMode*, Font:HmiFontPart, ForeColor:Color*, GridLineColor:Color*, GridLineVisibility:HmiSimpleGridLine*, GridLineWidth:Byte*, GridSelectionMode:HmiGridSelectionMode*, HeaderSettings:HmiDataGridHeaderSettingsPart, HorizontalScrollBarVisibility:HmiScrollBarVisibility*, RowHeight:Byte*, SelectFullRow:Boolean*, SelectionBackColor:Color*, SelectionBorderColor:Color*, SelectionBorderWidth:Byte*, SelectionForeColor:Color*, VerticalScrollBarVisibility:HmiScrollBarVisibility*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiDataSourcePart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Source:String*, VisualizeQuality:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiDetailedParameterControlColumnPart : HmiDataGridColumnPart
+   props: Parent:IEngineeringObject, DetailedParameterControlBlock:HmiDetailedParameterControlBlock*, Key:String*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiFaceplateInterface : HmiScreenPartBase
+   props: Parent:IEngineeringObject, PropertyName:String, Value:Object*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiFaceplateInterfaceComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiFaceplateInterface
+   methods: Find(String propertyName)
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiFontPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Italic:Boolean*, Name:HmiFontName*, Size:Single*, StrikeOut:Boolean*, Underline:Boolean*, Weight:HmiFontWeight*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiFunctionTrendAreaPart : HmiTrendAreaPartBase
+   props: BottomValueAxes:HmiXValueAxisPartComposition, FunctionTrends:HmiFunctionTrendPartComposition, Parent:IEngineeringObject, TopValueAxes:HmiXValueAxisPartComposition, LeftValueAxes:HmiYValueAxisPartComposition, RightValueAxes:HmiYValueAxisPartComposition, BackColor:Color*, GridLines:HmiGridLine*, MajorGridLinesColor:Color*, MinorGridLinesColor:Color*, Name:String*, Ruler:HmiRulerPart, SizeFactor:UInt16*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiFunctionTrendAreaPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiFunctionTrendAreaPart
+   methods: Create(String name); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiFunctionTrendPart : HmiTrendPartBase
+   props: Parent:IEngineeringObject, BeginTime:DateTime*, DataSourceX:HmiDataSourcePart, EndTime:DateTime*, PointCount:Int32*, RangeType:HmiTimeRangeType*, TimeRangeBase:HmiTimeRangeBase*, TimeRangeFactor:Int32*, TrendMode:HmiTrendMode*, Thresholds:HmiThresholdPartComposition, AlternateBackColor:Color*, BackColor:Color*, BackFillPattern:HmiFillPattern*, DashType:HmiDashType*, DataSourceY:HmiDataSourcePart, DisplayName:MultilingualText, LineColor:Color*, LineWidth:Byte*, MarkerColor:Color*, MarkerDimension:UInt32*, MarkerGraphic:String*, MarkerType:HmiMarkerType*, QualityVisualization:HmiQualityPart, ShowLoggedDataImmediately:Boolean*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiFunctionTrendPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiFunctionTrendPart
+   methods: Create()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiGraphOverviewControlColumnPart : HmiDataGridColumnPartBase
+   props: Parent:IEngineeringObject, GraphOverviewControlBlock:HmiGraphOverviewBlock*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiHelpLinePart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Value:Double*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiHelpLinePartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiHelpLinePart
+   methods: Create()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiInputBehaviorPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, AcceptOnDeactivated:Boolean*, ClearOnActivate:Boolean*, HiddenInput:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiLegendPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Font:HmiFontPart, ForeColor:Color*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiLinearMovementPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Tag:String*, TagRangeEnd:Double*, TagRangeStart:Double*, TargetPositionX:Int32*, TargetPositionY:Int32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiMatrixViewPart : HmiScreenPartBase
+   props: HardwareDetails:HmiSystemDiagnosisHardwareDetailPartComposition, Parent:IEngineeringObject, SystemDiagnosisHardwareDetailView:HmiSystemDiagnosisDetailViewPart, TileBorderWidth:Byte*, TileHeightMax:UInt16*, TileHeightMin:UInt16*, TileWidthMax:UInt16*, TileWidthMin:UInt16*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiOverviewParameterControlColumnPart : HmiDataGridColumnPart
+   props: Parent:IEngineeringObject, OverviewParameterControlBlock:HmiOverviewParameterControlBlock*, Key:String*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiPaddingPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Bottom:Int32*, Left:Int32*, Right:Int32*, Top:Int32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiPlcDataSourcePart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Connection:String, DB_Name:String, Tag:String*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiPressedStateTagPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, BitNumber:Byte*, Tag:String*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiPressedStateTagPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiPressedStateTagPart
+   methods: Create()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiProcessColumnPart : HmiDataGridColumnPartBase
+   props: Parent:IEngineeringObject, DataSource:HmiDataSourcePart, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiProcessDiagnosisCriteriaAnalysisControlColumnPart : HmiDataGridColumnPartBase
+   props: Parent:IEngineeringObject, CriteriaAnalysisBlock:HmiProcessDiagnosisCriteriaAnalysisBlock*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiProcessDiagnosisOperationModePart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, OpModeAutoText:MultilingualText, OpModeManText:MultilingualText, OpModeTapText:MultilingualText, OpModeTopText:MultilingualText, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiProcessDiagnosisOverviewElementPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, AlternateBackColor:Color*, AlternateForeColor:Color*, BackColor:Color*, FlashingRate:HmiFlashingRate*, ForeColor:Color*, Text:MultilingualText, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiProcessDiagnosisOverviewElementPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiProcessDiagnosisOverviewElementPart
+   methods: Create()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiProcessDiagnosisOverviewPart : HmiScreenPartBase
+   props: PDiagElements:HmiProcessDiagnosisOverviewElementPartComposition, Parent:IEngineeringObject, Label:HmiTextPart, SymbolFont:HmiFontPart, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiQualityPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, BadColor:Color*, UncertainColor:Color*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiRulerPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Color:Color*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiScalePartBase : HmiScreenPartBase
+   props: Parent:IEngineeringObject, AutoScaling:Boolean*, BeginValue:Double*, DivisionCount:Int32*, EndValue:Double*, LabelColor:Color*, LabelFont:HmiFontPart, OutputFormat:String*, ScaleMode:HmiScaleMode*, ScalingType:HmiScalingType*, SubDivisionCount:Int32*, TickColor:Color*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiScalingEntryPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, BeginValue:Double*, BeginValueTarget:Double*, DisplayName:MultilingualText, EndValue:Double*, EndValueTarget:Double*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiScalingEntryPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiScalingEntryPart
+   methods: Create()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiScreenElementBase : UIBase
+   props: Parent:IEngineeringObject, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiScreenPartBase : UIBase
+   props: Parent:IEngineeringObject, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiSelectionItemPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Graphic:String*, IsSelected:Boolean*, Text:MultilingualText, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiSelectionItemPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiSelectionItemPart
+   methods: Create()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiStatusBarPart : HmiControlBarPartBase
+   props: Parent:IEngineeringObject, Elements:HmiControlBarElementPartBaseComposition, BackColor:Color*, Enabled:Boolean*, Font:HmiFontPart, Padding:HmiPaddingPart, ShowToolTips:Boolean*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiStraightScalePart : HmiScalePartBase
+   props: Parent:IEngineeringObject, Orientation:HmiOrientation*, AutoScaling:Boolean*, BeginValue:Double*, DivisionCount:Int32*, EndValue:Double*, LabelColor:Color*, LabelFont:HmiFontPart, OutputFormat:String*, ScaleMode:HmiScaleMode*, ScalingType:HmiScalingType*, SubDivisionCount:Int32*, TickColor:Color*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiSystemDiagnosisControlColumnPart : HmiDataGridColumnPartBase
+   props: Parent:IEngineeringObject, SystemDiagnosisControlBlock:HmiSystemDiagnosisControlBlock*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiSystemDiagnosisControlScriptColumnPart : HmiDataGridColumnPartBase
+   props: Parent:IEngineeringObject, SystemDiagnosisControlScriptBlock:HmiSystemDiagnosisControlScriptBlock*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiSystemDiagnosisDetailViewPart : HmiDataGridViewPart
+   props: HardwareDetails:HmiSystemDiagnosisHardwareDetailPartComposition, Parent:IEngineeringObject, Columns:HmiDataGridColumnPartBaseComposition, AllowFilter:Boolean*, AllowSort:Boolean*, AlternateBackColor:Color*, AlternateForeColor:Color*, BackColor:Color*, CellPadding:HmiPaddingPart, ColoringMode:HmiGridColoringMode*, Font:HmiFontPart, ForeColor:Color*, GridLineColor:Color*, GridLineVisibility:HmiSimpleGridLine*, GridLineWidth:Byte*, GridSelectionMode:HmiGridSelectionMode*, HeaderSettings:HmiDataGridHeaderSettingsPart, HorizontalScrollBarVisibility:HmiScrollBarVisibility*, RowHeight:Byte*, SelectFullRow:Boolean*, SelectionBackColor:Color*, SelectionBorderColor:Color*, SelectionBorderWidth:Byte*, SelectionForeColor:Color*, VerticalScrollBarVisibility:HmiScrollBarVisibility*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiSystemDiagnosisHardwareDetailPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, SystemDiagnosisMatrixBlock:HmiSystemDiagnosisMatrixBlock*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiSystemDiagnosisHardwareDetailPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiSystemDiagnosisHardwareDetailPart
+   methods: Create()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiSystemDiagnosisMatrixColumnPart : HmiDataGridColumnPartBase
+   props: Parent:IEngineeringObject, SystemDiagnosisMatrixBlock:HmiSystemDiagnosisMatrixBlock*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiTextPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Font:HmiFontPart, ForeColor:Color*, Text:MultilingualText, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiThresholdPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Color:Color*, DisplayName:MultilingualText, Enable:Boolean*, Name:String*, ThresholdMode:HmiThresholdMode*, Value:Double, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiThresholdPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiThresholdPart
+   methods: Find(String name)
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiTimeAxisPart : HmiScreenPartBase
+   props: Parent:IEngineeringObject, AlwaysShowRecent:Boolean*, AutoScaling:Boolean*, AxisColor:Color*, BeginTime:DateTime*, DisplayName:MultilingualText, EndTime:DateTime*, LabelColor:Color*, LabelFont:HmiFontPart, Name:String*, OutputFormat:String*, PointCount:Int32*, RangeType:HmiTimeRangeType*, ScaleMode:HmiScaleMode*, TickColor:Color*, TimeRangeBase:HmiTimeRangeBase*, TimeRangeFactor:Int32*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiTimeAxisPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTimeAxisPart
+   methods: Create(String name); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiTimeRangeColumnPart : HmiDataGridColumnPartBase
+   props: Parent:IEngineeringObject, BeginTime:DateTime*, EndTime:DateTime*, PointCount:Int32*, RangeType:HmiTimeRangeType*, TimeRangeBase:HmiTimeRangeBase*, TimeRangeFactor:Int32*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiToolBarPart : HmiControlBarPartBase
+   props: Parent:IEngineeringObject, UseHotKeys:Boolean*, Elements:HmiControlBarElementPartBaseComposition, BackColor:Color*, Enabled:Boolean*, Font:HmiFontPart, Padding:HmiPaddingPart, ShowToolTips:Boolean*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiTrendAreaPart : HmiTrendAreaPartBase
+   props: BottomTimeAxes:HmiTimeAxisPartComposition, Parent:IEngineeringObject, TopTimeAxes:HmiTimeAxisPartComposition, Trends:HmiTrendPartComposition, StatisticRulers:HmiRulerPart, LeftValueAxes:HmiYValueAxisPartComposition, RightValueAxes:HmiYValueAxisPartComposition, BackColor:Color*, GridLines:HmiGridLine*, MajorGridLinesColor:Color*, MinorGridLinesColor:Color*, Name:String*, Ruler:HmiRulerPart, SizeFactor:UInt16*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiTrendAreaPartBase : HmiScreenPartBase
+   props: LeftValueAxes:HmiYValueAxisPartComposition, Parent:IEngineeringObject, RightValueAxes:HmiYValueAxisPartComposition, BackColor:Color*, GridLines:HmiGridLine*, MajorGridLinesColor:Color*, MinorGridLinesColor:Color*, Name:String*, Ruler:HmiRulerPart, SizeFactor:UInt16*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiTrendAreaPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTrendAreaPart
+   methods: Create(String name); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiTrendColumnPart : HmiDataGridColumnPartBase
+   props: Parent:IEngineeringObject, TrendInfoBlock:HmiTrendInfoBlock*, AllowSort:Boolean*, BackColor:Color*, Content:HmiContentPart, Enabled:Boolean*, ForeColor:Color*, Header:HmiDataGridColumnHeaderPart, MaximumWidth:UInt32*, MinimumWidth:UInt32*, Name:String*, OutputFormat:String*, SortDirection:HmiSortDirection*, SortOrder:UInt16*, Visible:Boolean*, Width:UInt32*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiTrendPart : HmiTrendPartBase
+   props: Parent:IEngineeringObject, AggregationMode:HmiAggregationMode*, TrendMode:HmiTrendMode*, Thresholds:HmiThresholdPartComposition, AlternateBackColor:Color*, BackColor:Color*, BackFillPattern:HmiFillPattern*, DashType:HmiDashType*, DataSourceY:HmiDataSourcePart, DisplayName:MultilingualText, LineColor:Color*, LineWidth:Byte*, MarkerColor:Color*, MarkerDimension:UInt32*, MarkerGraphic:String*, MarkerType:HmiMarkerType*, QualityVisualization:HmiQualityPart, ShowLoggedDataImmediately:Boolean*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiTrendPartBase : HmiScreenPartBase
+   props: Parent:IEngineeringObject, Thresholds:HmiThresholdPartComposition, AlternateBackColor:Color*, BackColor:Color*, BackFillPattern:HmiFillPattern*, DashType:HmiDashType*, DataSourceY:HmiDataSourcePart, DisplayName:MultilingualText, LineColor:Color*, LineWidth:Byte*, MarkerColor:Color*, MarkerDimension:UInt32*, MarkerGraphic:String*, MarkerType:HmiMarkerType*, QualityVisualization:HmiQualityPart, ShowLoggedDataImmediately:Boolean*, Visible:Boolean*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiTrendPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTrendPart
+   methods: Create()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiValueAxisPartBase : HmiScalePartBase
+   props: HelpLines:HmiHelpLinePartComposition, Parent:IEngineeringObject, ScalingEntries:HmiScalingEntryPartComposition, ApplyScalingEntries:Boolean*, AutoRange:Boolean*, AxisColor:Color*, DisplayName:MultilingualText, Name:String*, ShowScalingDisplayNames:Boolean*, Visible:Boolean*, AutoScaling:Boolean*, BeginValue:Double*, DivisionCount:Int32*, EndValue:Double*, LabelColor:Color*, LabelFont:HmiFontPart, OutputFormat:String*, ScaleMode:HmiScaleMode*, ScalingType:HmiScalingType*, SubDivisionCount:Int32*, TickColor:Color*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiXValueAxisPart : HmiValueAxisPartBase
+   props: Parent:IEngineeringObject, HelpLines:HmiHelpLinePartComposition, ScalingEntries:HmiScalingEntryPartComposition, ApplyScalingEntries:Boolean*, AutoRange:Boolean*, AxisColor:Color*, DisplayName:MultilingualText, Name:String*, ShowScalingDisplayNames:Boolean*, Visible:Boolean*, AutoScaling:Boolean*, BeginValue:Double*, DivisionCount:Int32*, EndValue:Double*, LabelColor:Color*, LabelFont:HmiFontPart, OutputFormat:String*, ScaleMode:HmiScaleMode*, ScalingType:HmiScalingType*, SubDivisionCount:Int32*, TickColor:Color*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiXValueAxisPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiXValueAxisPart
+   methods: Create(String name); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiYValueAxisPart : HmiValueAxisPartBase
+   props: Parent:IEngineeringObject, HelpLines:HmiHelpLinePartComposition, ScalingEntries:HmiScalingEntryPartComposition, ApplyScalingEntries:Boolean*, AutoRange:Boolean*, AxisColor:Color*, DisplayName:MultilingualText, Name:String*, ShowScalingDisplayNames:Boolean*, Visible:Boolean*, AutoScaling:Boolean*, BeginValue:Double*, DivisionCount:Int32*, EndValue:Double*, LabelColor:Color*, LabelFont:HmiFontPart, OutputFormat:String*, ScaleMode:HmiScaleMode*, ScalingType:HmiScalingType*, SubDivisionCount:Int32*, TickColor:Color*, Dynamizations:DynamizationBaseComposition, PropertyEventHandlers:PropertyEventHandlerComposition
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.UI.Parts.HmiYValueAxisPartComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiYValueAxisPart
+   methods: Create(String name); Find(String name)

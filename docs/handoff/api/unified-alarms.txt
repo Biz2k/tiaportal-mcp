@@ -1,0 +1,34 @@
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmClass : HmiBase
+   props: Parent:IEngineeringObject, AcknowledgedClearedState:HmiAcknowledgedClearedState, AcknowledgedState:HmiAcknowledgedState, ClearedState:HmiClearedState, CommonAlarmClass:String, Id:UInt32, IsSystem:Boolean, Log:String*, Name:String*, Priority:Byte*, RaisedState:HmiRaisedState, StateMachine:HmiAlarmStateMachine*
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmClassComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiAlarmClass
+   methods: Create(String name); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.AlarmBase : HmiBase
+   props: EventText:MultilingualText, EventText1:MultilingualText, EventText2:MultilingualText, EventText3:MultilingualText, EventText4:MultilingualText, EventText5:MultilingualText, EventText6:MultilingualText, EventText7:MultilingualText, EventText8:MultilingualText, EventText9:MultilingualText, InfoText:MultilingualText, Parent:IEngineeringObject, AlarmClass:String*, AlarmParameterTags:Object*, Area:String*, AuditClass:String*, Id:UInt32*, Origin:String*, Priority:Byte*, RaisedStateTag:String*, Name:String*
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.AlarmStatusVisuals : Object
+   props: Parent:IEngineeringObject, BackColor:Color*, Flashing:Boolean*, TextColor:Color*
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.HmiAcknowledgedClearedState : AlarmStatusVisuals
+   props: Parent:IEngineeringObject, BackColor:Color*, Flashing:Boolean*, TextColor:Color*
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.HmiAcknowledgedState : AlarmStatusVisuals
+   props: Parent:IEngineeringObject, BackColor:Color*, Flashing:Boolean*, TextColor:Color*
+ENUM Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.HmiAlarmCondition: LowerLimit, UpperLimit, Equal, NotEqual, LowerLimitOrEqual, UpperLimitOrEqual
+ENUM Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.HmiAlarmStateMachine: Raise, RaiseClear, RaiseRequiresAcknowledgement, RaiseClearOptionalAcknowledgement, RaiseClearRequiresAcknowledgement, RaiseClearRequiresAcknowledgementAndReset
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.HmiClearedState : AlarmStatusVisuals
+   props: Parent:IEngineeringObject, BackColor:Color*, Flashing:Boolean*, TextColor:Color*
+ENUM Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.HmiDiscreteAlarmTriggerMode: OnRisingEdge, OnFallingEdge
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon.HmiRaisedState : AlarmStatusVisuals
+   props: Parent:IEngineeringObject, BackColor:Color*, Flashing:Boolean*, TextColor:Color*
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiAnalogAlarm : AlarmBase
+   props: Condition:HmiAlarmCondition*, ConditionValue:Object*, Name:String*, TriggerAddress:String, EventText:MultilingualText, EventText1:MultilingualText, EventText2:MultilingualText, EventText3:MultilingualText, EventText4:MultilingualText, EventText5:MultilingualText, EventText6:MultilingualText, EventText7:MultilingualText, EventText8:MultilingualText, EventText9:MultilingualText, InfoText:MultilingualText, Parent:IEngineeringObject, AlarmClass:String*, AlarmParameterTags:Object*, Area:String*, AuditClass:String*, Id:UInt32*, Origin:String*, Priority:Byte*, RaisedStateTag:String*
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiAnalogAlarmComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiAnalogAlarm
+   methods: Create(String name); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiDiscreteAlarm : AlarmBase
+   props: AcknowledgmentControlTag:String*, AcknowledgmentControlTagBitNumber:Int32*, AcknowledgmentStateTag:String*, AcknowledgmentStateTagBitNumber:Int32*, Name:String*, RaisedStateTagBitNumber:UInt32*, TriggerBitAddress:String, TriggerMode:HmiDiscreteAlarmTriggerMode*, EventText:MultilingualText, EventText1:MultilingualText, EventText2:MultilingualText, EventText3:MultilingualText, EventText4:MultilingualText, EventText5:MultilingualText, EventText6:MultilingualText, EventText7:MultilingualText, EventText8:MultilingualText, EventText9:MultilingualText, InfoText:MultilingualText, Parent:IEngineeringObject, AlarmClass:String*, AlarmParameterTags:Object*, Area:String*, AuditClass:String*, Id:UInt32*, Origin:String*, Priority:Byte*, RaisedStateTag:String*
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.HmiAlarm.HmiDiscreteAlarmComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiDiscreteAlarm
+   methods: Create(String name); Find(String name)

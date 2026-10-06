@@ -1,0 +1,32 @@
+CLASS Siemens.Engineering.HW.CommunicationConnections.Connection : Object
+   props: Parent:IEngineeringObject, ConnectionType:ConnectionType, IsValid:Boolean, LocalInterface:Node*, LocalSubnetName:String, LocalTarget:DeviceItem, PartnerInterface:Node*, PartnerSubnetName:String, PartnerTarget:DeviceItem*
+   methods: Delete()
+CLASS Siemens.Engineering.HW.CommunicationConnections.ConnectionComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:Connection
+   methods: Create<T>(Node localInterface, DeviceItem partnerTarget, Node partnerInterface)
+ENUM Siemens.Engineering.HW.CommunicationConnections.ConnectionType: S7Connection, FdlConnection, IsoConnection, IsoOnTcpConnection, PtpConnection, TcpConnection, UdpConnection, HmiConnection
+CLASS Siemens.Engineering.HW.CommunicationConnections.FdlConnection : Connection
+   props: Parent:IEngineeringObject, LocalAddress:String, LocalConnectionId:String*, LocalConnectionName:String*, LocalLsap:Int32*, PartnerAddress:String*, PartnerConnectionId:String*, PartnerConnectionName:String*, PartnerLsap:Int32*, ConnectionType:ConnectionType, IsValid:Boolean, LocalInterface:Node*, LocalSubnetName:String, LocalTarget:DeviceItem, PartnerInterface:Node*, PartnerSubnetName:String, PartnerTarget:DeviceItem*
+   methods: Delete()
+CLASS Siemens.Engineering.HW.CommunicationConnections.HmiConnection : Connection
+   props: Parent:IEngineeringObject, AccessPoint:String*, LocalAddress:String, LocalConnectionName:String*, Online:Boolean*, PartnerAddress:String*, TimeSynchronizationMode:String*, ConnectionType:ConnectionType, IsValid:Boolean, LocalInterface:Node*, LocalSubnetName:String, LocalTarget:DeviceItem, PartnerInterface:Node*, PartnerSubnetName:String, PartnerTarget:DeviceItem*
+   methods: Delete()
+CLASS Siemens.Engineering.HW.CommunicationConnections.IsoConnection : Connection
+   props: Parent:IEngineeringObject, LocalActiveEstablishment:Boolean*, LocalAddress:String, LocalConnectionId:String*, LocalConnectionName:String*, LocalTsap:String*, PartnerActiveEstablishment:Boolean*, PartnerAddress:String*, PartnerConnectionId:String*, PartnerConnectionName:String*, PartnerTsap:String*, ConnectionType:ConnectionType, IsValid:Boolean, LocalInterface:Node*, LocalSubnetName:String, LocalTarget:DeviceItem, PartnerInterface:Node*, PartnerSubnetName:String, PartnerTarget:DeviceItem*
+   methods: Delete()
+CLASS Siemens.Engineering.HW.CommunicationConnections.IsoOnTcpConnection : Connection
+   props: Parent:IEngineeringObject, LocalActiveEstablishment:Boolean*, LocalAddress:String, LocalConnectionId:String*, LocalConnectionName:String*, LocalTsap:String*, PartnerActiveEstablishment:Boolean*, PartnerAddress:String*, PartnerConnectionId:String*, PartnerConnectionName:String*, PartnerTsap:String*, ConnectionType:ConnectionType, IsValid:Boolean, LocalInterface:Node*, LocalSubnetName:String, LocalTarget:DeviceItem, PartnerInterface:Node*, PartnerSubnetName:String, PartnerTarget:DeviceItem*
+   methods: Delete()
+CLASS Siemens.Engineering.HW.CommunicationConnections.PtpConnection : Connection
+   props: Parent:IEngineeringObject, Direction:PtpConnectionDirection*, LocalConnectionId:String*, LocalConnectionName:String*, LocalConnectionResourceId:Int64*, LocalCpuNumber:String*, LocalRack:Int32, LocalSlot:Int32, LocalTsap:String, PartnerCpuNumber:String*, ConnectionType:ConnectionType, IsValid:Boolean, LocalInterface:Node*, LocalSubnetName:String, LocalTarget:DeviceItem, PartnerInterface:Node*, PartnerSubnetName:String, PartnerTarget:DeviceItem*
+   methods: Delete()
+ENUM Siemens.Engineering.HW.CommunicationConnections.PtpConnectionDirection: LocalToPartner, PartnerToLocal, LocalToAndFromPartner
+CLASS Siemens.Engineering.HW.CommunicationConnections.S7Connection : Connection
+   props: Parent:IEngineeringObject, LocalActiveEstablishment:Boolean*, LocalAddress:String, LocalConnectionId:String*, LocalConnectionName:String*, LocalConnectionResourceId:Int64*, LocalRack:Int32, LocalSlot:Int32, LocalTsap:String, LocalUseSimaticACC:Boolean*, PartnerActiveEstablishment:Boolean*, PartnerAddress:String*, PartnerConnectionId:String*, PartnerConnectionName:String*, PartnerConnectionResourceId:Int64*, PartnerRack:Int32*, PartnerSlot:Int32*, PartnerTsap:String*, PartnerUseSimaticACC:Boolean*, ConnectionType:ConnectionType, IsValid:Boolean, LocalInterface:Node*, LocalSubnetName:String, LocalTarget:DeviceItem, PartnerInterface:Node*, PartnerSubnetName:String, PartnerTarget:DeviceItem*
+   methods: Delete()
+CLASS Siemens.Engineering.HW.CommunicationConnections.TcpConnection : Connection
+   props: Parent:IEngineeringObject, LocalActiveEstablishment:Boolean*, LocalAddress:String, LocalConnectionId:String*, LocalConnectionName:String*, LocalPort:Int64*, PartnerActiveEstablishment:Boolean*, PartnerAddress:String*, PartnerConnectionId:String*, PartnerConnectionName:String*, PartnerPort:Int64*, ConnectionType:ConnectionType, IsValid:Boolean, LocalInterface:Node*, LocalSubnetName:String, LocalTarget:DeviceItem, PartnerInterface:Node*, PartnerSubnetName:String, PartnerTarget:DeviceItem*
+   methods: Delete()
+CLASS Siemens.Engineering.HW.CommunicationConnections.UdpConnection : Connection
+   props: Parent:IEngineeringObject, LocalAddress:String, LocalConnectionId:String*, LocalConnectionName:String*, LocalPort:Int64*, PartnerAddress:String*, PartnerConnectionId:String*, PartnerConnectionName:String*, PartnerPort:Int64*, ConnectionType:ConnectionType, IsValid:Boolean, LocalInterface:Node*, LocalSubnetName:String, LocalTarget:DeviceItem, PartnerInterface:Node*, PartnerSubnetName:String, PartnerTarget:DeviceItem*
+   methods: Delete()

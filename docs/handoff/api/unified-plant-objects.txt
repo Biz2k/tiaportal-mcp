@@ -1,0 +1,50 @@
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantObject : Object
+   props: Parent:IEngineeringObject, PlantObjectInterfaces:PlantObjectInterfaceComposition, Type:String
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantObjectInterface : Object
+   props: Comment:MultilingualText, Members:PlantObjectInterfaceMemberComposition, Parent:IEngineeringObject, AccessMode:PlantObjectTagAccessMode, AcquisitionCycle:String*, AcquisitionMode:PlantObjectTagAcquisitionMode*, Connection:String*, DataType:String, HmiDataType:String, MaxLength:UInt32, Name:String*, Persistent:Boolean, PlcName:String, PlcTag:String*
+   methods: Validate()
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantObjectInterfaceComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:PlantObjectInterface
+   methods: Find(String name)
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantObjectInterfaceMember : Object
+   props: Comment:MultilingualText, LoggingTags:PlantObjectLoggingTagComposition, Members:PlantObjectInterfaceMemberComposition, Parent:IEngineeringObject, DataType:String, HmiDataType:String, InitialMaxValue:PlantObjectTagUpperRange, InitialMinValue:PlantObjectTagLowerRange, InitialValue:Object*, MaxLength:UInt32, Name:String, SubstituteValue:PlantObjectTagSubstituteValue
+   methods: Validate()
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantObjectInterfaceMemberComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:PlantObjectInterfaceMember
+   methods: Find(String name)
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantObjectLoggingTag : Object
+   props: Parent:IEngineeringObject, AggregationDelay:TimeSpan, AggregationMode:PlantObjectLoggingTagAggregationMode, Cycle:String, CycleFactor:UInt32, DataLog:String, HighLimit:Object, LimitScope:PlantObjectLoggingTagLimitScope, LoggingMode:PlantObjectLoggingTagLoggingMode, LowLimit:Object, Name:String, SmoothingDeltaValue:Double, SmoothingMaxTime:TimeSpan, SmoothingMinTime:TimeSpan, SmoothingMode:PlantObjectLoggingTagSmoothingMode, Source:String, TriggerMode:PlantObjectLoggingTagTriggerMode, TriggerTag:String, TriggerTagBitNumber:UInt32
+ENUM Siemens.Engineering.HmiUnified.Cpm.PlantObjectLoggingTagAggregationMode: NoAggregation, Minimum, Maximum, MinimumWithTimeStamp, MaximumWithTimeStamp, Sum, TimeAverageStepped, Average, End
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantObjectLoggingTagComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:PlantObjectLoggingTag
+   methods: Find(String name)
+ENUM Siemens.Engineering.HmiUnified.Cpm.PlantObjectLoggingTagLimitScope: NoLimitsUsed, Greater, Less, GreaterOrEqual, LessOrEqual, WithinLimits, WithinOrEqualLimits, OutsideLimits, OutsideOrEqualLimits
+ENUM Siemens.Engineering.HmiUnified.Cpm.PlantObjectLoggingTagLoggingMode: Undefined, Cyclic, OnDemand, OnChange
+ENUM Siemens.Engineering.HmiUnified.Cpm.PlantObjectLoggingTagSmoothingMode: NoSmoothing, Value, CompareValues, ValueRelative, SwingingDoor
+ENUM Siemens.Engineering.HmiUnified.Cpm.PlantObjectLoggingTagTriggerMode: None, RisingEdge, FallingEdge, RisingAndFallingEdge
+ENUM Siemens.Engineering.HmiUnified.Cpm.PlantObjectTagAccessMode: None, AbsoluteAccess, SymbolicAccess
+ENUM Siemens.Engineering.HmiUnified.Cpm.PlantObjectTagAcquisitionMode: None, CyclicOnUse, CyclicContinuous
+ENUM Siemens.Engineering.HmiUnified.Cpm.PlantObjectTagLimitValueType: None, Constant, Tag
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantObjectTagLowerRange : PlantObjectTagRange
+   props: Parent:IEngineeringObject, Value:Object*, ValueType:PlantObjectTagLimitValueType*
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantObjectTagRange : Object
+   props: Parent:IEngineeringObject, Value:Object*, ValueType:PlantObjectTagLimitValueType*
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantObjectTagSubstituteValue : Object
+   props: Parent:IEngineeringObject, SubstituteValueUsage:PlantObjectTagSubstituteValueUsage, Value:Object
+ENUM Siemens.Engineering.HmiUnified.Cpm.PlantObjectTagSubstituteValueUsage: None, InvalidValue, RangeViolation, InvalidValueOrRangeViolation
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantObjectTagUpperRange : PlantObjectTagRange
+   props: Parent:IEngineeringObject, Value:Object*, ValueType:PlantObjectTagLimitValueType*
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantView : Object
+   props: Parent:IEngineeringObject, PlantViewNodes:PlantViewNodeComposition, AssignedHmiDevice:String*, Name:String*
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantViewComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:PlantView
+   methods: FindPlantViewNode(String hierarchyPath); Create(String name); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantViewNode : Object
+   props: Parent:IEngineeringObject, PlantViewNodes:PlantViewNodeComposition, Name:String*, PlantObject:PlantObject, PlantView:String, ViewPath:String
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantViewNodeComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:PlantViewNode
+   methods: Create(String name); Create(String name, String plantObjectTypeName); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.Cpm.PlantViewsProvider : Object
+   props: Parent:IEngineeringObject, PlantViews:PlantViewComposition

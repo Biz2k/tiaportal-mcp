@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added (development)
+
+- `tools/`: the scripts this series of work was done with - `mcp-call.ps1` drives a built server
+  over stdio, `openness-probe.ps1` tries Openness calls one at a time with writes rolled back,
+  `openness-reflect.ps1` lists what Openness offers in a namespace, `finish.ps1` fixes line
+  endings, builds, runs the unit tests and updates `Install`, `start-tia.ps1` starts TIA Portal
+  with the test project.
+- `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
+  and references of the Openness classes for WinCC Unified taken by reflection from V21.
+
+### Known issues
+
+- Screens inside screen groups are invisible to the `unified_*` tools: they look in
+  `HmiSoftware.Screens`, which holds only the top-level screens. Task 01 of the handoff package.
 ### Changed (WinCC Unified lists)
 
 - __Breaking: `unified_manage_text_lists` is now `unified_manage_lists`__ and writes graphic lists as

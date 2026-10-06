@@ -1,0 +1,14 @@
+CLASS Siemens.Engineering.HmiUnified.HmiConnections.DriverProperty : Object
+   props: Parent:IEngineeringObject, Info:String, PropertyName:String, Value:String*
+CLASS Siemens.Engineering.HmiUnified.HmiConnections.DriverPropertyComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:DriverProperty
+   methods: Find(String propertyName)
+CLASS Siemens.Engineering.HmiUnified.HmiConnections.HmiConnection : Object
+   props: DriverProperties:DriverPropertyComposition, Parent:IEngineeringObject, Comment:String*, CommunicationDriver:String*, DisabledAtStartup:Boolean*, InitialAddress:String*, Name:String*, Node:String, Partner:String, Station:String
+   methods: GetService<T>(); Validate(); Delete()
+CLASS Siemens.Engineering.HmiUnified.HmiConnections.HmiConnectionComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiConnection
+   methods: Create(String name); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.HmiConnections.OpcUaAlarm : Object
+   props: Parent:IEngineeringObject, DisplayNames:IList`1
+   methods: GetNodeId(String displayName); Import(String xmlPath)

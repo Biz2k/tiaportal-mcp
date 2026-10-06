@@ -2,6 +2,14 @@
 
 This repository can be used with agentic coding assistants. Follow these guidelines to collaborate safely and efficiently.
 
+## Start Here
+
+Development of this server is continued from a handoff package. Before any work, read
+[`docs/handoff/README.md`](docs/handoff/README.md): it leads to the project context, the rules
+that protect the user's TIA Portal session, the open tasks, and the scripts in `tools/`.
+
+The test policy below is the general rule for unknown environments. For the owner's own test
+project the standing permissions are written down in `docs/handoff/context.md`.
 ## Test Execution Policy
 
 - Offer to run tests, but only run them after explicit user confirmation.

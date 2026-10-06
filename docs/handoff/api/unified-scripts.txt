@@ -1,0 +1,6 @@
+CLASS Siemens.Engineering.HmiUnified.Scripts.HmiScriptModule : Object
+   props: Parent:IEngineeringObject, Name:String
+   methods: Export(DirectoryInfo destinationLocation); Export(DirectoryInfo destinationLocation, String name)
+CLASS Siemens.Engineering.HmiUnified.Scripts.HmiScriptModuleComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiScriptModule
+   methods: Export(DirectoryInfo destinationLocation); Import(DirectoryInfo sourceLocation); Import(DirectoryInfo sourceLocation, String name)

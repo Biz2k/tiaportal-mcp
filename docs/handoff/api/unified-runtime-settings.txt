@@ -1,0 +1,35 @@
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiExclusiveOperationSettings : Object
+   props: Parent:IEngineeringObject, ExclusiveOperationControlTag:String*, ExclusiveOperationStatusTag:String*
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiLanguageAndFont : Object
+   props: Parent:IEngineeringObject, DefaultFont:String*, Enable:Boolean*, EnableForLogging:Boolean*, FixedFont1:String, FixedFont2:String, FixedFont3:String, FixedFont4:String, Language:String, Order:Int16
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiLanguageAndFontAssociation : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiLanguageAndFont
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiMaxLoginRuntimeSettings : Object
+   props: Parent:IEngineeringObject, EnableLockAfterNumberOfAttempts:Boolean*, MaxLoginErrors:UInt32*
+   methods: Validate()
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiOpcUaServerRuntimeSettings : Object
+   props: Parent:IEngineeringObject, ActAsOPCServer:Boolean*, AllowAlarmOperations:Boolean*, EnableAlarmConditions:Boolean*, EnableGuestAuthentication:Boolean*, EnableLocalDiscoveryServer:Boolean*, EnableUsernameAndPasswordAuthentication:Boolean*, EndpointUrlPortNumber:Int32*, MaxMonitoredItemPerSubscriptionCount:Int32*, MaxSessionCount:Int32*, MaxSessionTimeout:Int32*, MinPublishingInterval:Int32*, OpcUaServerSecurity128RsaModeSigned:Boolean*, OpcUaServerSecurity128RsaModeSignedAndEncrypted:Boolean*, OpcUaServerSecurity256ModeSigned:Boolean*, OpcUaServerSecurity256ModeSignedAndEncrypted:Boolean*, OpcUaServerSecurity256ShaModeSigned:Boolean*, OpcUaServerSecurity256ShaModeSignedAndEncrypted:Boolean*, OpcUaServerSecurityAes128Sha256RsaOaepSigned:Boolean*, OpcUaServerSecurityAes128Sha256RsaOaepSignedAndEncrypted:Boolean*, OpcUaServerSecurityAes256Sha256RsaPssSigned:Boolean*, OpcUaServerSecurityAes256Sha256RsaPssSignedAndEncrypted:Boolean*, OpcUaServerSecurityNone:Boolean*
+   methods: Validate()
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiProcessDiagnosticsRuntimeSettings : Object
+   props: Parent:IEngineeringObject, CriteriaAnalysisAbsoluteAddress:Boolean*, CriteriaAnalysisAll:ExtendTextWith*, CriteriaAnalysisComment:Boolean*, CriteriaAnalysisExtendText:CriteriaAnalysisExtendedText*, CriteriaAnalysisSymbol:Boolean*, CriteriaAnalysisValue:Boolean*, EnableProcessDiagnostics:Boolean*
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiReportingSettings : Object
+   props: Parent:IEngineeringObject, IsReportingEnabled:Boolean*, ReportingDatabaseStorage:StorageLocation*, ReportingDatabaseStoragePath:String*, ReportingMainStorage:StorageLocation*, ReportingMainStoragePath:String*
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiRuntimeResourceSettings : Object
+   props: Parent:IEngineeringObject, EnableHighResolutionGraphicsOptimization:Boolean*
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiRuntimeSetting : Object
+   props: Parent:IEngineeringObject, AutoLogOffURL:String*, BitSelection:Boolean*, BitSelectionStrategyForResourceLists:BitNumberEvaluationType*, BitSelectionStrategyForTagDynamization:BitNumberEvaluationType*, CentralInputHint:CentralInteractionSetting*, CentralPanning:CentralInteractionSetting*, CentralZooming:CentralInteractionSetting*, EnableLanguageCompatibleFontFamilies:Boolean*, GMPEnabled:Boolean*, GeneralESIGCommentsStrategy:GeneralESIGCommentsStrategy*, HmiExclusiveOperationSettings:HmiExclusiveOperationSettings*, HmiReportingSettings:HmiReportingSettings*, HmiUnifiedTagSettings:HmiUnifiedTagSettings*, HmiUpssRuntimeSettings:HmiUpssRuntimeSettings*, LanguageAndFonts:HmiLanguageAndFontAssociation, MaxLoginRuntimeSettings:HmiMaxLoginRuntimeSettings*, OpcUaServerRuntimeSettings:HmiOpcUaServerRuntimeSettings*, ProcessDiagnosticsRuntimeSettings:HmiProcessDiagnosticsRuntimeSettings*, RuntimeResourceSettings:HmiRuntimeResourceSettings*, ScreenResolution:ScreenResolution*, StartScreen:String*, TelemetryRuntimeSettings:HmiTelemetryRuntimeSettings*
+   methods: Validate()
+ENUM Siemens.Engineering.HmiUnified.RuntimeSettings.HmiRuntimeSettingsCommon.BitNumberEvaluationType: ExactMatch, LeastSignificantBit
+ENUM Siemens.Engineering.HmiUnified.RuntimeSettings.HmiRuntimeSettingsCommon.CentralInteractionSetting: Customized, Enabled, Disabled
+ENUM Siemens.Engineering.HmiUnified.RuntimeSettings.HmiRuntimeSettingsCommon.CriteriaAnalysisExtendedText: None, EventText, InfoText, AdditionalText1, AdditionalText2, AdditionalText3, AdditionalText4, AdditionalText5, AdditionalText6, AdditionalText7, AdditionalText8, AdditionalText9
+ENUM Siemens.Engineering.HmiUnified.RuntimeSettings.HmiRuntimeSettingsCommon.ExtendTextWith: TheFirstFaultyOperand, AllFaultyOperand
+ENUM Siemens.Engineering.HmiUnified.RuntimeSettings.HmiRuntimeSettingsCommon.GeneralESIGCommentsStrategy: BothComments, SignatureComment, OperationComment
+ENUM Siemens.Engineering.HmiUnified.RuntimeSettings.HmiRuntimeSettingsCommon.GeneralPersistencyStrategy: Discard, UserScope
+ENUM Siemens.Engineering.HmiUnified.RuntimeSettings.HmiRuntimeSettingsCommon.ScreenResolution: SR_1980X1280, SR_1920X1200, SR_1920X1080, SR_1680X1050, SR_1600X1200, SR_1440X900, SR_1366X768, SR_1280X1024, SR_1280X800, SR_1200X1920, SR_1200X1600, SR_1080X1980, SR_1080X1920, SR_1050X1680, SR_1024X1280, SR_1024X768, SR_900X1440, SR_800X1280, SR_800X600, SR_800X480, SR_768X1366, SR_768X1024, SR_640X480, SR_600X800, SR_480X800, SR_480X640, SR_480X272, SR_320X240, SR_272X480, SR_240X320, SR_240X80, SR_3840x2160
+ENUM Siemens.Engineering.HmiUnified.RuntimeSettings.HmiRuntimeSettingsCommon.StorageLocation: Default, None, Off, Local, SDX51, USBX61, USBX62, Internal, ProjectFolder
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiTelemetryRuntimeSettings : Object
+   props: Parent:IEngineeringObject, TelemetryActive:Boolean*, TelemetryStorageFolder:String*, TelemetryStorageMedia:StorageLocation*
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiUnifiedTagSettings : Object
+   props: Parent:IEngineeringObject, IgnoreInitialQCNotifications:Boolean*, IgnoreTimestampNotifications:Boolean*, TagOptimizationActive:Boolean*
+CLASS Siemens.Engineering.HmiUnified.RuntimeSettings.HmiUpssRuntimeSettings : Object
+   props: Parent:IEngineeringObject, GlobalScopePersistencyAuthorization:String*, PersistencyStrategy:GeneralPersistencyStrategy*

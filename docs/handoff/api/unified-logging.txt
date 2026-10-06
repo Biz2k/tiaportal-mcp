@@ -1,0 +1,34 @@
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiAlarmLog : LoggingBase
+   props: Parent:IEngineeringObject, Name:String*, Backup:LogBackup, Segment:LogSegment, Settings:LogSettings
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiAlarmLogComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiAlarmLog
+   methods: Create(String name); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiAuditTrail : LoggingBase
+   props: Parent:IEngineeringObject, Name:String*, Backup:LogBackup, Segment:LogSegment, Settings:LogSettings
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiAuditTrailComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiAuditTrail
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiDataLog : LoggingBase
+   props: Parent:IEngineeringObject, Name:String*, Backup:LogBackup, Segment:LogSegment, Settings:LogSettings
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiDataLogComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiDataLog
+   methods: Create(String name); Find(String name)
+ENUM Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon.DeviceNode: None, Off, Default, Local, SDX51, USBX61, USBX62
+ENUM Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon.HmiBackupMode: NoBackup, PrimaryPath
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon.LogBackup : Object
+   props: Parent:IEngineeringObject, BackupMode:HmiBackupMode*, PrimaryPath:String*
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon.LogDuration : Object
+   props: Parent:IEngineeringObject, Days:UInt32*, Hours:UInt32*, Minutes:UInt32*, Seconds:UInt32*, Ticks:UInt32*
+   methods: GetDoubleLogDuration(); GetStringLogDuration(); SetLogDuration(UInt32 days, UInt32 hours, UInt32 minutes, UInt32 seconds, UInt32 ticks)
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon.LoggingBase : HmiBase
+   props: Parent:IEngineeringObject, Backup:LogBackup, Segment:LogSegment, Settings:LogSettings, Name:String*
+   methods: GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon.LogSegment : Object
+   props: Parent:IEngineeringObject, SegmentMaxSize:UInt32*, SegmentStartTime:DateTime*, SegmentTimePeriod:SegmentDuration
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon.LogSettings : Object
+   props: Parent:IEngineeringObject, LogMaxSize:UInt32*, LogTimePeriod:LogDuration, StorageDevice:DeviceNode*, StorageFolder:String*
+CLASS Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon.SegmentDuration : Object
+   props: Parent:IEngineeringObject, Days:UInt32*, Hours:UInt32*, Minutes:UInt32*, Seconds:UInt32*, Ticks:UInt32*
+   methods: GetDoubleSegmentDuration(); GetStringSegmentDuration(); SetSegmentDuration(UInt32 days, UInt32 hours, UInt32 minutes, UInt32 seconds, UInt32 ticks)

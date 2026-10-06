@@ -1,0 +1,55 @@
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.DynamizationBase : Object
+   props: Parent:IEngineeringObject, DynamizationType:DynamizationType, PropertyName:String
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.DynamizationBaseComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:DynamizationBase
+   methods: Create<T>(String propertyName); Find(String propertyName)
+ENUM Siemens.Engineering.HmiUnified.UI.Dynamization.DynamizationType: None, Tag, Script, ResourceList, Flashing, Expression, TagParameter
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.ExpressionDynamization : DynamizationBase
+   props: Parent:IEngineeringObject, ValueConverter:ValueConverter*, DynamizationType:DynamizationType, PropertyName:String
+   methods: Delete()
+ENUM Siemens.Engineering.HmiUnified.UI.Dynamization.Flashing.FlashingCondition: Never, Always, RangeViolation
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.Flashing.FlashingDynamization : DynamizationBase
+   props: Parent:IEngineeringObject, AlternateColor:Color*, Color:Color*, FlashingCondition:FlashingCondition*, FlashingRate:FlashingRate*, DynamizationType:DynamizationType, PropertyName:String
+   methods: Delete()
+ENUM Siemens.Engineering.HmiUnified.UI.Dynamization.Flashing.FlashingRate: Slow, Medium, Fast
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.ResourceListDynamization : DynamizationBase
+   props: Parent:IEngineeringObject, ResourceList:String*, Tag:String*, DynamizationType:DynamizationType, PropertyName:String
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.Script.IHmiScript : 
+   props: Async:Boolean*, GlobalDefinitionAreaScriptCode:String*, ScriptCode:String*
+   methods: SyntaxCheck()
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.Script.ScriptDynamization : DynamizationBase
+   props: Parent:IEngineeringObject, Async:Boolean*, GlobalDefinitionAreaScriptCode:String*, ScriptCode:String*, Trigger:Trigger, DynamizationType:DynamizationType, PropertyName:String
+   methods: SyntaxCheck(); Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.Script.Trigger : Object
+   props: Parent:IEngineeringObject, CustomDuration:String*, Tags:Object*, Type:TriggerType*
+ENUM Siemens.Engineering.HmiUnified.UI.Dynamization.Script.TriggerType: Disabled, T1s, T2s, CustomCycle, Tags, T5s, AutomaticTags, T10s, T100ms, T250ms, T500ms
+ENUM Siemens.Engineering.HmiUnified.UI.Dynamization.Tag.BitDynamizationType: SingleBit, MultiBit
+ENUM Siemens.Engineering.HmiUnified.UI.Dynamization.Tag.ConditionType: None, Range, Bitmask, Singlebit, Expression
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.Tag.MappingTable : Object
+   props: Entries:MappingTableEntryBaseComposition, Parent:IEngineeringObject, ConditionType:ConditionType*
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.Tag.MappingTableEntryBase : Object
+   props: Parent:IEngineeringObject, AlternateValue:Object*, Flashing:Boolean*, FlashingRate:FlashingRate*, Value:Object*
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.Tag.MappingTableEntryBaseComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:MappingTableEntryBase
+   methods: Create(BitDynamizationType bitDynamizationType); Create<T>()
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.Tag.MappingTableEntryBitmask : MappingTableEntryBase
+   props: Parent:IEngineeringObject, BitDynamizationType:BitDynamizationType, Condition:UInt64*, Relevant:UInt64, AlternateValue:Object*, Flashing:Boolean*, FlashingRate:FlashingRate*, Value:Object*
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.Tag.MappingTableEntryRange : MappingTableEntryBase
+   props: Parent:IEngineeringObject, From:Object*, RangeType:RangeType, To:Object*, AlternateValue:Object*, Flashing:Boolean*, FlashingRate:FlashingRate*, Value:Object*
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.Tag.MappingTableEntrySimple : MappingTableEntryBase
+   props: Parent:IEngineeringObject, Condition:String*, AlternateValue:Object*, Flashing:Boolean*, FlashingRate:FlashingRate*, Value:Object*
+   methods: Delete()
+ENUM Siemens.Engineering.HmiUnified.UI.Dynamization.Tag.RangeType: Range, From, To
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.Tag.ValueConverter : Object
+   props: Parent:IEngineeringObject, Formula:String*, IsFormulaSelected:Boolean*, MappingTable:MappingTable
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.TagDynamization : DynamizationBase
+   props: Parent:IEngineeringObject, Address:String, DataType:String, PlcTag:String, ReadOnly:Boolean*, Tag:String*, UseIndirectAddressing:Boolean*, ValueConverter:ValueConverter*, DynamizationType:DynamizationType, PropertyName:String
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Dynamization.TagParameterDynamization : DynamizationBase
+   props: Parent:IEngineeringObject, DynamicTagName:String*, DynamizationType:DynamizationType, PropertyName:String
+   methods: Delete()

@@ -572,6 +572,8 @@ dotnet test tests\TiaMcpServer.Test\TiaMcpServer.Test.csproj -c Release --filter
 | [`docs/error-model.md`](docs/error-model.md) | Как возникают и передаются ошибки (на английском) |
 | [`docs/fix-plan-test-report-2026-10-05.md`](docs/fix-plan-test-report-2026-10-05.md) | Незавершённые работы и предложения |
 | [`TODO.md`](TODO.md) | Долгосрочный список задач |
+| [`docs/handoff/README.md`](docs/handoff/README.md) | Для разработчиков: контекст проекта, открытые задачи, справочники по API Openness |
+| [`tools/README.md`](tools/README.md) | Скрипты разработки: проба Openness, вызов сервера, завершение изменения (на английском) |
 | [`Install/INSTALL_RU.md`](Install/INSTALL_RU.md) | Установка и подключение к клиентам |
 
 ## Материалы

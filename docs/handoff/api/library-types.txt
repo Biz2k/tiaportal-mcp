@@ -1,0 +1,48 @@
+ENUM Siemens.Engineering.Library.Types.CleanUpMode: PreserveDefaultVersionOfUnusedTypes, DeleteUnusedTypes
+ENUM Siemens.Engineering.Library.Types.ConsistencyStatus: None, Consistent, DefaultVersionInconsistent, DuplicateVersionInconsistent, NonDefaultVersionInstantiation, MultipleVersionsInstantiationInSameDevice
+ENUM Siemens.Engineering.Library.Types.CreateOptions: None, Override
+ENUM Siemens.Engineering.Library.Types.CreateOrReleaseDependenciesMode: DoNotAutomaticallyCreateOrReleaseDependencies, AutomaticallyCreateOrReleaseDependenciesIfRequired
+ENUM Siemens.Engineering.Library.Types.DeleteUnusedVersionsMode: AutomaticallyDelete, DoNotDelete
+ENUM Siemens.Engineering.Library.Types.ForceUpdateMode: SetOnlyHigherUpdatedVersionAsDefault, ForceSetAnyUpdatedVersionAsDefault, NoDefaultVersionChange
+ENUM Siemens.Engineering.Library.Types.HarmonizeProjectOptions: None, HarmonizePaths, HarmonizeNames
+CLASS Siemens.Engineering.Library.Types.IInstanceSearchScope : 
+CLASS Siemens.Engineering.Library.Types.ILibraryTypeInstantiationTarget : 
+CLASS Siemens.Engineering.Library.Types.ILibraryTypeOrFolderSelection : 
+CLASS Siemens.Engineering.Library.Types.IUpdateProjectScope : 
+CLASS Siemens.Engineering.Library.Types.LibraryType : Object
+   props: Comment:MultilingualText, Parent:IEngineeringObject, Versions:LibraryTypeVersionComposition, Author:String, DoNotUse:Boolean*, Guid:Guid, MinimumTargetDeviceVersion:Version, Name:String*, Namespace:String, SetForUpdate:Boolean*, Status:ConsistencyStatus
+   methods: GetService<T>(); CompareTo(LibraryType targetLibraryObject); GetSupportedExportFormats(); UpdateLibrary(ILibrary targetLibrary); UpdateLibrary(ILibrary targetLibrary, DeleteUnusedVersionsMode deleteUnusedVersionsMode, StructureConflictResolutionMode structureConflictResolutionMode, ForceUpdateMode forceUpdateMode); UpdateProject(IUpdateProjectScope updateProjectScope); UpdateProject(IUpdateProjectScope updateProjectScope, DeleteUnusedVersionsMode deleteUnusedVersionsMode, StructureConflictResolutionMode structureConflictResolutionMode, ForceUpdateMode forceUpdateMode); Delete()
+CLASS Siemens.Engineering.Library.Types.LibraryTypeComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:LibraryType
+   methods: CreateFromDocuments(DirectoryInfo dirInfo, String fileNameWithoutExtension, LibraryImportOptions libraryImportOptions); CreateFromDocuments(DirectoryInfo dirInfo, String fileNameWithoutExtension, IEngineeringObject targetEnvironment, LibraryImportOptions libraryImportOptions); Find(String name)
+CLASS Siemens.Engineering.Library.Types.LibraryTypeFolder : Object
+   props: Folders:LibraryTypeUserFolderComposition, Parent:IEngineeringObject, Types:LibraryTypeComposition, Name:String, Status:ConsistencyStatus
+CLASS Siemens.Engineering.Library.Types.LibraryTypeInstanceInfo : Object
+   props: LibraryTypeInstance:IEngineeringObject, Parent:IEngineeringObject, LibraryTypeVersion:LibraryTypeVersion
+CLASS Siemens.Engineering.Library.Types.LibraryTypeSystemFolder : LibraryTypeFolder
+   props: Parent:IEngineeringObject, Name:String, Folders:LibraryTypeUserFolderComposition, Types:LibraryTypeComposition, Status:ConsistencyStatus
+   methods: GetService<T>()
+CLASS Siemens.Engineering.Library.Types.LibraryTypeUserFolder : LibraryTypeFolder
+   props: Parent:IEngineeringObject, Name:String*, Folders:LibraryTypeUserFolderComposition, Types:LibraryTypeComposition, Status:ConsistencyStatus
+   methods: GetService<T>(); Delete()
+CLASS Siemens.Engineering.Library.Types.LibraryTypeUserFolderComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:LibraryTypeUserFolder
+   methods: Create(String name); Find(String name)
+CLASS Siemens.Engineering.Library.Types.LibraryTypeVersion : Object
+   props: Comment:MultilingualText, Parent:IEngineeringObject, Author:String, Dependencies:LibraryTypeVersionAssociation, Dependents:LibraryTypeVersionAssociation, Guid:Guid, IsDefault:Boolean, MasterCopiesContainingInstances:MasterCopyAssociation, ModifiedDate:DateTime, OriginalLibrary:String, State:LibraryTypeVersionState, TypeObject:LibraryType, VersionNumber:Version
+   methods: GetService<T>(); CompareTo(LibraryTypeVersion targetLibraryObject); Discard(); Edit(); Edit(LibraryTypeInstanceInfo libraryTypeInstanceInfo); Export(FileInfo exportFileInfo, ExportOptions exportOptions); Export(FileInfo exportFileInfo, ExportOptions exportOptions, DocumentInfoOptions documentInfoOptions); ExportAsDocuments(DirectoryInfo directoryInfo, String fileNameWithoutExtenstion, String exportFormat, LibraryExportOptions libraryExportOptions); FindInstances(IInstanceSearchScope searchScope); Release(CreateOrReleaseDependenciesMode createOrReleaseDependenciesMode, Version versionNumber, String author, String comment); SetAsDefault(); Delete()
+CLASS Siemens.Engineering.Library.Types.LibraryTypeVersionAssociation : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:LibraryTypeVersion
+CLASS Siemens.Engineering.Library.Types.LibraryTypeVersionComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:LibraryTypeVersion
+   methods: CreateFromDocuments(DirectoryInfo dirInfo, String fileNameWithoutExtension, CreateOptions createOption, LibraryImportOptions libraryImportOptions); CreateFromDocuments(DirectoryInfo dirInfo, String fileNameWithoutExtension, IEngineeringObject targetEnvironment, CreateOptions createOption, LibraryImportOptions libraryImportOptions); Find(Version versionNumber)
+ENUM Siemens.Engineering.Library.Types.LibraryTypeVersionState: InWork, Committed
+ENUM Siemens.Engineering.Library.Types.StructureConflictResolutionMode: UpdateStructure, RetainStructure, CancelIfStructureConflicts
+ENUM Siemens.Engineering.Library.Types.UpdateCheckMode: ReportOutOfDateOnly, ReportOutOfDateAndUpToDate
+CLASS Siemens.Engineering.Library.Types.UpdateCheckResult : Object
+   props: Messages:UpdateCheckResultMessageComposition, Parent:IEngineeringObject
+CLASS Siemens.Engineering.Library.Types.UpdateCheckResultMessage : Object
+   props: Messages:UpdateCheckResultMessageComposition, Parent:IEngineeringObject, Description:String, MessageParts:IDictionary`2
+CLASS Siemens.Engineering.Library.Types.UpdateCheckResultMessageComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:UpdateCheckResultMessage
+ENUM Siemens.Engineering.Library.Types.UpdatePathsMode: UpdatePathsInTarget, KeepExistingPathsInTarget, ThrowIfPathsConflict

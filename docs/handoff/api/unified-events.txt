@@ -1,0 +1,289 @@
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiAlarmControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiAlarmControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiAlarmControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiAlarmControlEventHandler
+   methods: Create(HmiAlarmControlEventType eventType); Find(HmiAlarmControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiAlarmIndicatorEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiAlarmIndicatorEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiAlarmIndicatorEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiAlarmIndicatorEventHandler
+   methods: Create(HmiAlarmIndicatorEventType eventType); Find(HmiAlarmIndicatorEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiAlarmLineControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiAlarmLineControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiAlarmLineControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiAlarmLineControlEventHandler
+   methods: Create(HmiAlarmLineControlEventType eventType); Find(HmiAlarmLineControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiBarEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiBarEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiBarEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiBarEventHandler
+   methods: Create(HmiBarEventType eventType); Find(HmiBarEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiButtonEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiButtonEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiButtonEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiButtonEventHandler
+   methods: Create(HmiButtonEventType eventType); Find(HmiButtonEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCheckBoxGroupEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiCheckBoxGroupEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCheckBoxGroupEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiCheckBoxGroupEventHandler
+   methods: Create(HmiCheckBoxGroupEventType eventType); Find(HmiCheckBoxGroupEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCircleEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiCircleEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCircleEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiCircleEventHandler
+   methods: Create(HmiCircleEventType eventType); Find(HmiCircleEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCircleSegmentEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiCircleSegmentEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCircleSegmentEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiCircleSegmentEventHandler
+   methods: Create(HmiCircleSegmentEventType eventType); Find(HmiCircleSegmentEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCircularArcEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiCircularArcEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCircularArcEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiCircularArcEventHandler
+   methods: Create(HmiCircularArcEventType eventType); Find(HmiCircularArcEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiClockEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiClockEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiClockEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiClockEventHandler
+   methods: Create(HmiClockEventType eventType); Find(HmiClockEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiComboBoxEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiComboBoxEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiComboBoxEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiComboBoxEventHandler
+   methods: Create(HmiComboBoxEventType eventType); Find(HmiComboBoxEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCustomWebControlContainerEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:String, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCustomWebControlContainerEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiCustomWebControlContainerEventHandler
+   methods: GetValidEnumValues(); Create(String eventType); Find(String eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCustomWidgetContainerEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:String, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiCustomWidgetContainerEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiCustomWidgetContainerEventHandler
+   methods: GetValidEnumValues(); Create(String eventType); Find(String eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiDetailedParameterControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiDetailedParameterControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiDetailedParameterControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiDetailedParameterControlEventHandler
+   methods: Create(HmiDetailedParameterControlEventType eventType); Find(HmiDetailedParameterControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiDotNetControlContainerEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiDotNetControlContainerEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiDotNetControlContainerEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiDotNetControlContainerEventHandler
+   methods: Create(HmiDotNetControlContainerEventType eventType); Find(HmiDotNetControlContainerEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiEllipseEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiEllipseEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiEllipseEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiEllipseEventHandler
+   methods: Create(HmiEllipseEventType eventType); Find(HmiEllipseEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiEllipseSegmentEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiEllipseSegmentEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiEllipseSegmentEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiEllipseSegmentEventHandler
+   methods: Create(HmiEllipseSegmentEventType eventType); Find(HmiEllipseSegmentEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiEllipticalArcEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiEllipticalArcEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiEllipticalArcEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiEllipticalArcEventHandler
+   methods: Create(HmiEllipticalArcEventType eventType); Find(HmiEllipticalArcEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiFaceplateContainerEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiFaceplateContainerEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiFaceplateContainerEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiFaceplateContainerEventHandler
+   methods: Create(HmiFaceplateContainerEventType eventType); Find(HmiFaceplateContainerEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiFunctionTrendControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiFunctionTrendControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiFunctionTrendControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiFunctionTrendControlEventHandler
+   methods: Create(HmiFunctionTrendControlEventType eventType); Find(HmiFunctionTrendControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiGaugeEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiGaugeEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiGaugeEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiGaugeEventHandler
+   methods: Create(HmiGaugeEventType eventType); Find(HmiGaugeEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiGraphicViewEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiGraphicViewEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiGraphicViewEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiGraphicViewEventHandler
+   methods: Create(HmiGraphicViewEventType eventType); Find(HmiGraphicViewEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiIOFieldEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiIOFieldEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiIOFieldEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiIOFieldEventHandler
+   methods: Create(HmiIOFieldEventType eventType); Find(HmiIOFieldEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiLineEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiLineEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiLineEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiLineEventHandler
+   methods: Create(HmiLineEventType eventType); Find(HmiLineEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiListBoxEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiListBoxEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiListBoxEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiListBoxEventHandler
+   methods: Create(HmiListBoxEventType eventType); Find(HmiListBoxEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiMediaControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiMediaControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiMediaControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiMediaControlEventHandler
+   methods: Create(HmiMediaControlEventType eventType); Find(HmiMediaControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiPolygonEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiPolygonEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiPolygonEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiPolygonEventHandler
+   methods: Create(HmiPolygonEventType eventType); Find(HmiPolygonEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiPolylineEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiPolylineEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiPolylineEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiPolylineEventHandler
+   methods: Create(HmiPolylineEventType eventType); Find(HmiPolylineEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiProcessControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiProcessControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiProcessControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiProcessControlEventHandler
+   methods: Create(HmiProcessControlEventType eventType); Find(HmiProcessControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiProcessDiagnosisGraphOverviewControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiProcessDiagnosisGraphOverviewControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiProcessDiagnosisGraphOverviewControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiProcessDiagnosisGraphOverviewControlEventHandler
+   methods: Create(HmiProcessDiagnosisGraphOverviewControlEventType eventType); Find(HmiProcessDiagnosisGraphOverviewControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiProcessDiagnosisOverviewControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiProcessDiagnosisOverviewControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiProcessDiagnosisOverviewControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiProcessDiagnosisOverviewControlEventHandler
+   methods: Create(HmiProcessDiagnosisOverviewControlEventType eventType); Find(HmiProcessDiagnosisOverviewControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiProcessDiagnosisPlcCodeViewerControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiProcessDiagnosisPlcCodeViewerControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiProcessDiagnosisPlcCodeViewerControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiProcessDiagnosisPlcCodeViewerControlEventHandler
+   methods: Create(HmiProcessDiagnosisPlcCodeViewerControlEventType eventType); Find(HmiProcessDiagnosisPlcCodeViewerControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiProDiagCriteriaAnalysisControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiProcessDiagnosisCriteriaAnalysisControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiProDiagCriteriaAnalysisControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiProDiagCriteriaAnalysisControlEventHandler
+   methods: Create(HmiProcessDiagnosisCriteriaAnalysisControlEventType eventType); Find(HmiProcessDiagnosisCriteriaAnalysisControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiRadioButtonGroupEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiRadioButtonGroupEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiRadioButtonGroupEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiRadioButtonGroupEventHandler
+   methods: Create(HmiRadioButtonGroupEventType eventType); Find(HmiRadioButtonGroupEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiRectangleEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiRectangleEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiRectangleEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiRectangleEventHandler
+   methods: Create(HmiRectangleEventType eventType); Find(HmiRectangleEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiScreenEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiScreenEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiScreenEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiScreenEventHandler
+   methods: Create(HmiScreenEventType eventType); Find(HmiScreenEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiScreenWindowEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiScreenWindowEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiScreenWindowEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiScreenWindowEventHandler
+   methods: Create(HmiScreenWindowEventType eventType); Find(HmiScreenWindowEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiSliderEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiSliderEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiSliderEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiSliderEventHandler
+   methods: Create(HmiSliderEventType eventType); Find(HmiSliderEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiSymbolicIOFieldEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiSymbolicIOFieldEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiSymbolicIOFieldEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiSymbolicIOFieldEventHandler
+   methods: Create(HmiSymbolicIOFieldEventType eventType); Find(HmiSymbolicIOFieldEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiSystemDiagnosisControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiSystemDiagnosisControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiSystemDiagnosisControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiSystemDiagnosisControlEventHandler
+   methods: Create(HmiSystemDiagnosisControlEventType eventType); Find(HmiSystemDiagnosisControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiTextBoxEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiTextBoxEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiTextBoxEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTextBoxEventHandler
+   methods: Create(HmiTextBoxEventType eventType); Find(HmiTextBoxEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiTextEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiTextEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiTextEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTextEventHandler
+   methods: Create(HmiTextEventType eventType); Find(HmiTextEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiToggleSwitchEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiToggleSwitchEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiToggleSwitchEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiToggleSwitchEventHandler
+   methods: Create(HmiToggleSwitchEventType eventType); Find(HmiToggleSwitchEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiTouchAreaEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiTouchAreaEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiTouchAreaEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTouchAreaEventHandler
+   methods: Create(HmiTouchAreaEventType eventType); Find(HmiTouchAreaEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiTrendCompanionEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiTrendCompanionEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiTrendCompanionEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTrendCompanionEventHandler
+   methods: Create(HmiTrendCompanionEventType eventType); Find(HmiTrendCompanionEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiTrendControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiTrendControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiTrendControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiTrendControlEventHandler
+   methods: Create(HmiTrendControlEventType eventType); Find(HmiTrendControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiWebControlEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:HmiWebControlEventType, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.HmiWebControlEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiWebControlEventHandler
+   methods: Create(HmiWebControlEventType eventType); Find(HmiWebControlEventType eventType)
+CLASS Siemens.Engineering.HmiUnified.UI.Events.PropertyEventHandler : Object
+   props: Parent:IEngineeringObject, EventType:PropertyEventType, PropertyName:String, Script:IHmiScript
+   methods: Delete()
+CLASS Siemens.Engineering.HmiUnified.UI.Events.PropertyEventHandlerComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:PropertyEventHandler
+   methods: Create(String propertyName, PropertyEventType eventType); Find(String propertyName, PropertyEventType eventType)
+ENUM Siemens.Engineering.HmiUnified.UI.Events.PropertyEventType: Change, QualityCodeChange

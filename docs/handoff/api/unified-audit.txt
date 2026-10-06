@@ -1,0 +1,10 @@
+ENUM Siemens.Engineering.HmiUnified.HmiAudit.AuditConfirmationMode: None, Acknowledgement, ElectronicSignature
+CLASS Siemens.Engineering.HmiUnified.HmiAudit.HmiAlarmAuditClass : HmiAuditClass
+   props: Parent:IEngineeringObject, CommentRequired:Boolean, ConfirmationMode:AuditConfirmationMode, DisplayName:String, IsGmpEnabled:Boolean, Name:String*, RequiredFunctionRights:String
+   methods: Delete(); GetService<T>(); Validate()
+CLASS Siemens.Engineering.HmiUnified.HmiAudit.HmiAlarmAuditClassComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiAlarmAuditClass
+   methods: Create(); Find(String name)
+CLASS Siemens.Engineering.HmiUnified.HmiAudit.HmiAuditClass : HmiBase
+   props: Parent:IEngineeringObject, CommentRequired:Boolean, ConfirmationMode:AuditConfirmationMode, DisplayName:String, IsGmpEnabled:Boolean, Name:String*, RequiredFunctionRights:String
+   methods: GetService<T>(); Validate()

@@ -1,0 +1,11 @@
+ENUM Siemens.Engineering.HmiUnified.LoggingTags.HmiAggregationMode: NoAggregation, Minimum, Maximum, MinimumWithTimeStamp, MaximumWithTimeStamp, Sum, TimeAverageStepped, Average, End
+ENUM Siemens.Engineering.HmiUnified.LoggingTags.HmiLimitScope: NoLimitsUsed, Greater, Less, GreaterOrEqual, LessOrEqual, WithinLimits, WithinOrEqualLimits, OutsideLimits, OutsideOrEqualLimits
+ENUM Siemens.Engineering.HmiUnified.LoggingTags.HmiLoggingMode: Undefined, Cyclic, OnDemand, OnChange
+CLASS Siemens.Engineering.HmiUnified.LoggingTags.HmiLoggingTag : Object
+   props: Parent:IEngineeringObject, AggregationDelay:TimeSpan*, AggregationMode:HmiAggregationMode*, Cycle:String*, CycleFactor:UInt32*, DataLog:String*, HighLimit:Object*, LimitScope:HmiLimitScope*, LoggingMode:HmiLoggingMode*, LowLimit:Object*, Name:String*, SmoothingDeltaValue:Double*, SmoothingMaxTime:TimeSpan*, SmoothingMinTime:TimeSpan*, SmoothingMode:HmiSmoothingMode*, Source:String*, TriggerMode:HmiTriggerMode*, TriggerTag:String*, TriggerTagBitNumber:UInt32*
+   methods: Validate(); Delete()
+CLASS Siemens.Engineering.HmiUnified.LoggingTags.HmiLoggingTagComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:HmiLoggingTag
+   methods: Create(String name); Find(String name)
+ENUM Siemens.Engineering.HmiUnified.LoggingTags.HmiSmoothingMode: NoSmoothing, Value, CompareValues, ValueRelative, SwingingDoor
+ENUM Siemens.Engineering.HmiUnified.LoggingTags.HmiTriggerMode: None, RisingEdge, FallingEdge, RisingAndFallingEdge
