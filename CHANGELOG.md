@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- A script trigger without a type takes it from its parts: `{"tags": [...]}` is `Tags`, `{"cycle": "..."}` is `CustomCycle`. A trigger with nothing in it is refused with the list of types instead of a type with an empty name.
 - A batch tool whose actions failed no longer writes the error code twice (`... [code: NotFound] [code: InvalidParams; softwarePath: ...]`): the batch carries the code its failed actions share, or names each action's own when they differ.
 - `save_as_project`: the path is the FOLDER of the new project, without an extension. A path ending in `.apXX` / `.alsXX`
   (which made a folder `X.ap21` holding `X.ap21.ap21`, or failed with "storage medium is no longer available") is refused with the

@@ -253,7 +253,7 @@ property gets either a static value or a dynamization, and `events` attaches scr
   or `{"type": "none"}`.
 - A script takes `"async"`, `"globalDefinitions"` (one area for all script dynamizations of the screen) and
   `"trigger"`: `"T1s"` (`T100ms` to `T10s`), `"AutomaticTags"`, `"Disabled"`, `{"type": "Tags", "tags": ["Tag_1"]}` or
-  `{"type": "CustomCycle", "cycle": "Cycle name"}`.
+  `{"type": "CustomCycle", "cycle": "Cycle name"}`. The type may be left out: `{"tags": [...]}` is the trigger `Tags`, `{"cycle": "..."}` is `CustomCycle`.
 - `{ "expression": "formula" }` gives the property an expression, `{ "flashing": { "condition": "Always", "rate": "Fast",
   "color": "#FF0000", "alternateColor": "#0000FF" } }` makes a color property flash.
 - After the writes TIA Portal validates the object (`Validate()`): a screen, graphic, tag, connection, list or cycle

@@ -184,6 +184,19 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
             }
 
+            // A trigger given only by its parts says what it is: tags are the trigger 'Tags', a cycle is 'CustomCycle'.
+            if (string.IsNullOrWhiteSpace(type))
+            {
+                var hasCycle = !string.IsNullOrWhiteSpace(spec.Cycle);
+
+                if (spec.Tags.Count > 0 && hasCycle)
+                {
+                    throw Invalid("'trigger' has both 'tags' and 'cycle'. Say the type: \"Tags\" runs the script when the tags change, \"CustomCycle\" runs it in the cycle.");
+                }
+
+                type = spec.Tags.Count > 0 ? "Tags" : hasCycle ? "CustomCycle" : null;
+            }
+
             spec.Type = CanonicalTriggerType(type);
 
             RequireNoMissingParts(spec);
@@ -203,7 +216,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static string CanonicalTriggerType(string? type)
         {
-            var match = TriggerTypes.FirstOrDefault(t => t.Equals(type?.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (string.IsNullOrWhiteSpace(type))
+            {
+                throw Invalid($"The trigger has no type. Give 'type' ({string.Join(", ", TriggerTypes)}), or only 'tags' (the trigger 'Tags') or only 'cycle' (the trigger 'CustomCycle').");
+            }
+
+            var match = TriggerTypes.FirstOrDefault(t => t.Equals(type!.Trim(), StringComparison.OrdinalIgnoreCase));
 
             return match ?? throw Invalid($"Trigger type '{type}' does not exist. Types: {string.Join(", ", TriggerTypes)}.");
         }

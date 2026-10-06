@@ -40,6 +40,30 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
+        public void Test_2302a_ParseTrigger_TypeFollowsFromTheParts()
+        {
+            var tags = UnifiedDynamizationSpec.ParseTrigger(Json("{\"tags\": [\"T1\"]}"));
+            var cycle = UnifiedDynamizationSpec.ParseTrigger(Json("{\"cycle\": \"Custom cycle\"}"));
+
+            Assert.AreEqual("Tags", tags.Type);
+            CollectionAssert.AreEqual(new[] { "T1" }, tags.Tags);
+            Assert.AreEqual("CustomCycle", cycle.Type);
+            Assert.AreEqual("Custom cycle", cycle.Cycle);
+        }
+
+        [TestMethod]
+        public void Test_2302b_ParseTrigger_NoTypeAndNoParts_ListsTheTypesWithoutEmptyQuotes()
+        {
+            var empty = Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.ParseTrigger(Json("{}")));
+            var both = Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.ParseTrigger(Json("{\"tags\": [\"A\"], \"cycle\": \"C\"}")));
+
+            StringAssert.Contains(empty.Message, "has no type");
+            StringAssert.Contains(empty.Message, "AutomaticTags");
+            Assert.IsFalse(empty.Message.Contains("''"));
+            StringAssert.Contains(both.Message, "both");
+        }
+
+        [TestMethod]
         public void Test_2302_ParseTrigger_TakesATypeNameOrAnObject()
         {
             Assert.AreEqual("T5s", UnifiedDynamizationSpec.ParseTrigger(Json("\"t5s\"")).Type);

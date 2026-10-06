@@ -258,7 +258,7 @@ Comfort, Advanced и Professional, поэтому все три сообщают
   `{"type": "singlebit", "entries": [{"bit": 0, "value": "Red"}, {"bit": 1, "value": "Green"}]}` или `{"type": "none"}`.
 - Скрипт принимает `"async"`, `"globalDefinitions"` (область одна на все скрипт-динамизации экрана) и `"trigger"`:
   `"T1s"` (от `T100ms` до `T10s`), `"AutomaticTags"`, `"Disabled"`, `{"type": "Tags", "tags": ["Tag_1"]}` или
-  `{"type": "CustomCycle", "cycle": "Имя цикла"}`.
+  `{"type": "CustomCycle", "cycle": "Имя цикла"}`. Тип можно не указывать: `{"tags": [...]}` — это триггер `Tags`, `{"cycle": "..."}` — `CustomCycle`.
 - `{ "expression": "формула" }` задаёт свойству выражение, `{ "flashing": { "condition": "Always", "rate": "Fast",
   "color": "#FF0000", "alternateColor": "#0000FF" } }` включает мигание у свойства-цвета.
 - После записи объект проверяет сам TIA Portal (`Validate()`): несуществующие экран, рисунок, тег, соединение,
