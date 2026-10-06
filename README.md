@@ -139,7 +139,7 @@ Always available (57):
 | Search and references   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Export and preview      | `export_objects`, `preview_import` |
 | Libraries               | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
-| WinCC Unified           | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections` |
+| WinCC Unified           | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes` |
 | Download                | `get_download_targets` |
 
 Left out with `--read-only` (57):
@@ -156,7 +156,7 @@ Left out with `--read-only` (57):
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Hardware                | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections` |
+| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes` |
 | Download                | `download_to_plc` |
 
 `plc_get_software_tree` accepts a `sections` argument - any comma separated subset of
@@ -289,15 +289,57 @@ trend control.
 `unified_manage_tag_tables` creates, renames and deletes tag tables. Deleting a table deletes its
 tags; the default tag table cannot be deleted.
 
-`unified_manage_connections` creates, updates and deletes connections. `properties` takes
-`CommunicationDriver`, `Comment`, `DisabledAtStartup` and `Name`; `driverProperties` takes the
-parameters of the driver, e.g. `{ "Protocol.RemStAddress": "192.168.0.10" }` -
-`unified_get_connections` lists them. A connection made here is **not integrated**: Openness
-cannot assign a PLC of the project as its partner, so tags on it use absolute addresses. A
-connection to a project PLC is made in the network view of TIA Portal.
+`unified_manage_connections` creates, updates and deletes connections. With `partner` - the
+path of a PLC of the project - a new connection is an **integrated** one, on which HMI tags can
+name PLC tags symbolically:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1",
+  "actions": [
+    { "action": "create", "connectionName": "HMI_Connection_1", "partner": "PLC_1" }
+  ]
+}
+```
+
+- The HMI and the PLC need interfaces on a common subnet (`net_connect_subnet`). The tool picks
+  the first such pair; `localInterface` and `partnerInterface` choose others.
+- Without `partner` the connection is not integrated: set `CommunicationDriver` in `properties`
+  and the address in `driverProperties`, e.g. `{ "Protocol.RemStAddress": "192.168.0.10" }` -
+  `unified_get_connections` lists the parameters. Tags on it use absolute addresses.
+- `properties` also takes `Comment`, `DisabledAtStartup` and `Name`.
+- The partner of an existing connection cannot be changed; delete it and create it again.
 
 All three apply all of their actions or none. A tag or a connection that is still in use is
 deleted without a warning from TIA Portal.
+
+### Alarms
+
+`unified_manage_alarms` creates, updates, upserts and deletes discrete and analog alarms:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1",
+  "actions": [
+    { "action": "upsert", "alarmName": "Pump1_Fault",
+      "properties": { "RaisedStateTag": "Pump1_Status", "RaisedStateTagBitNumber": 3,
+                      "AlarmClass": "Alarm", "EventText": "Pump 1 fault" } },
+    { "action": "upsert", "alarmName": "Level_High", "type": "analog",
+      "properties": { "RaisedStateTag": "Level", "Condition": "UpperLimit", "ConditionValue": 80.5,
+                      "AlarmClass": "Warning", "EventText": { "en-US": "Level high" } } }
+  ]
+}
+```
+
+- A discrete alarm is raised by a bit of an HMI tag (`RaisedStateTag`, `RaisedStateTagBitNumber`,
+  `TriggerMode`), an analog alarm by a limit (`RaisedStateTag`, `Condition`, `ConditionValue`).
+- `EventText`, `EventText1` .. `EventText9` and `InfoText` take a string for every project
+  language or `{ "en-US": "..." }` for single ones. `unified_get_alarms` returns them as plain text.
+- The tag and the alarm class have to exist: Openness itself would accept any name.
+- `unified_manage_alarm_classes` sets `Priority`, `StateMachine`, `Log` and the look of each
+  state as `"RaisedState.BackColor": "#FFA500"` (states: `RaisedState`, `ClearedState`,
+  `AcknowledgedState`, `AcknowledgedClearedState`; properties: `BackColor`, `TextColor`,
+  `Flashing`). System classes cannot be deleted.
 
 ### Faceplates
 

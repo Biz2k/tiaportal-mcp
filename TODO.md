@@ -251,7 +251,7 @@ Streamable HTTP **недоступен из этого проекта**: SDK п�
 > 06.10.2026: HMI-инструменты переименованы в `unified_*` и работают только с WinCC Unified
 > (`unified_manage_items` — элементы и события, `unified_manage_faceplate` — фейсплейты,
 > `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections` — теги,
-> таблицы тегов и соединения).
+> таблицы тегов и соединения, `unified_manage_alarms`, `unified_manage_alarm_classes` — алармы).
 > Имена `hmi_*` ниже — исторические; новые инструменты для Unified называть `unified_*`.
 > Классический WinCC (Comfort / Advanced / Professional) отложен, наработки — в
 > `docs/hmi-classic-notes.md` и `src/TiaMcpServer/Siemens/Classic/`.

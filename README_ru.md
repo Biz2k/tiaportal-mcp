@@ -143,7 +143,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Поиск и ссылки                   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Экспорт и предпросмотр           | `export_objects`, `preview_import` |
 | Библиотеки                       | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
-| WinCC Unified                    | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections` |
+| WinCC Unified                    | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes` |
 | Загрузка                         | `get_download_targets` |
 
 Не регистрируются с `--read-only` (57):
@@ -160,7 +160,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Внешние исходные файлы           | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Оборудование                     | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections` |
+| WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes` |
 | Загрузка                         | `download_to_plc` |
 
 `plc_get_software_tree` принимает параметр `sections` — любое подмножество
@@ -297,15 +297,59 @@ Comfort, Advanced и Professional, поэтому все три сообщают
 `unified_manage_tag_tables` создаёт, переименовывает и удаляет таблицы тегов. Удаление таблицы
 удаляет её теги; таблицу по умолчанию удалить нельзя.
 
-`unified_manage_connections` создаёт, изменяет и удаляет соединения. `properties` принимает
-`CommunicationDriver`, `Comment`, `DisabledAtStartup` и `Name`; `driverProperties` — параметры
-драйвера, например `{ "Protocol.RemStAddress": "192.168.0.10" }`, их перечисляет
-`unified_get_connections`. Созданное так соединение **не интегрированное**: Openness не может
-назначить партнёром ПЛК проекта, поэтому теги на нём используют абсолютные адреса. Соединение с
-ПЛК проекта создаётся в сетевом виде TIA Portal.
+`unified_manage_connections` создаёт, изменяет и удаляет соединения. С параметром `partner` —
+путём к ПЛК проекта — новое соединение получается **интегрированным**: HMI-теги на нём
+ссылаются на теги ПЛК по именам:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1",
+  "actions": [
+    { "action": "create", "connectionName": "HMI_Connection_1", "partner": "PLC_1" }
+  ]
+}
+```
+
+- У HMI и ПЛК должны быть интерфейсы в общей подсети (`net_connect_subnet`). Инструмент берёт
+  первую такую пару; `localInterface` и `partnerInterface` выбирают другие.
+- Без `partner` соединение неинтегрированное: задайте `CommunicationDriver` в `properties` и
+  адрес в `driverProperties`, например `{ "Protocol.RemStAddress": "192.168.0.10" }` —
+  параметры перечисляет `unified_get_connections`. Теги на нём используют абсолютные адреса.
+- `properties` принимает также `Comment`, `DisabledAtStartup` и `Name`.
+- Партнёра у существующего соединения изменить нельзя; удалите его и создайте заново.
 
 Все три инструмента применяют все действия или ни одного. Тег или соединение, которые ещё
 используются, TIA Portal удаляет без предупреждения.
+
+### Алармы
+
+`unified_manage_alarms` создаёт, изменяет, создаёт-или-изменяет и удаляет дискретные и
+аналоговые алармы:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1",
+  "actions": [
+    { "action": "upsert", "alarmName": "Pump1_Fault",
+      "properties": { "RaisedStateTag": "Pump1_Status", "RaisedStateTagBitNumber": 3,
+                      "AlarmClass": "Alarm", "EventText": "Pump 1 fault" } },
+    { "action": "upsert", "alarmName": "Level_High", "type": "analog",
+      "properties": { "RaisedStateTag": "Level", "Condition": "UpperLimit", "ConditionValue": 80.5,
+                      "AlarmClass": "Warning", "EventText": { "en-US": "Level high" } } }
+  ]
+}
+```
+
+- Дискретный аларм срабатывает по биту HMI-тега (`RaisedStateTag`, `RaisedStateTagBitNumber`,
+  `TriggerMode`), аналоговый — по пределу (`RaisedStateTag`, `Condition`, `ConditionValue`).
+- `EventText`, `EventText1` .. `EventText9` и `InfoText` принимают строку для всех языков
+  проекта или `{ "en-US": "..." }` для отдельных. `unified_get_alarms` возвращает их простым
+  текстом.
+- Тег и класс алармов должны существовать: сам Openness принял бы любое имя.
+- `unified_manage_alarm_classes` задаёт `Priority`, `StateMachine`, `Log` и вид каждого
+  состояния в форме `"RaisedState.BackColor": "#FFA500"` (состояния: `RaisedState`,
+  `ClearedState`, `AcknowledgedState`, `AcknowledgedClearedState`; свойства: `BackColor`,
+  `TextColor`, `Flashing`). Системные классы удалить нельзя.
 
 ### Фейсплейты
 

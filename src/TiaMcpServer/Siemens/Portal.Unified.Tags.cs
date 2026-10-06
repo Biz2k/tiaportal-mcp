@@ -1,5 +1,7 @@
 using Siemens.Engineering;
 using Siemens.Engineering.HmiUnified;
+using Siemens.Engineering.HW;
+using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.HmiUnified.HmiConnections;
 using Siemens.Engineering.HmiUnified.HmiTags;
 using System;
@@ -26,8 +28,12 @@ namespace TiaMcpServer.Siemens
     //   - A tag cannot be moved between tables: TagTableName is read-only.
     //   - Deleting a tag table deletes its tags. The default tag table cannot be deleted.
     //   - A tag or a connection that is in use is deleted without complaint.
-    //   - A new connection is not integrated: Partner, Node and Station are read-only, so it
-    //     cannot be pointed at a PLC of the project. Its address is set through driver properties.
+    //   - HmiSoftware.Connections.Create makes a non-integrated connection: Partner, Node and
+    //     Station are read-only there, its address is set through driver properties.
+    //   - An integrated connection to a PLC of the project is made on the hardware side: the
+    //     device item that holds the HMI software offers CommunicationManagement, and
+    //     Connections.Create<HmiConnection>(local node, PLC item, PLC node) there makes a
+    //     connection that then shows up in HmiSoftware.Connections with its partner set.
     public partial class Portal
     {
         /// <summary>Tag properties in the order they have to be set; the rest follow as given.</summary>
@@ -275,12 +281,23 @@ namespace TiaMcpServer.Siemens
                                 $"Unknown action '{action.Action}'. Use 'create', 'update', 'upsert' or 'delete'.");
                     }
 
-                    if (connection == null)
+                    var partner = action.Partner?.Trim();
+
+                    if (connection == null && !string.IsNullOrEmpty(partner))
+                    {
+                        connection = CreateIntegratedConnection(software, softwarePath, name, partner!, action.LocalInterface, action.PartnerInterface, result);
+                    }
+                    else if (connection == null)
                     {
                         connection = software.Connections.Create(name);
 
-                        result.Notes.Add("Created as a non-integrated connection: Openness cannot assign a PLC of the project as its partner. " +
-                                         "Set the address through driverProperties; a connection to a project PLC is made in the network view.");
+                        result.Notes.Add("Created as a non-integrated connection: it has no partner in the project and its address is set through driverProperties. " +
+                                         "Pass 'partner' with the path of a PLC to create an integrated connection instead.");
+                    }
+                    else if (!string.IsNullOrEmpty(partner) && !string.Equals(connection.Partner, PathSegments(partner!).LastOrDefault(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new PortalException(PortalErrorCode.NotSupported,
+                            $"Connection '{name}' already exists with partner '{connection.Partner}'. The partner of an existing connection cannot be changed; delete the connection and create it again.");
                     }
 
                     SetUnifiedAttributes(connection, "A connection", action.Properties, ConnectionPropertyOrder, result);
@@ -319,10 +336,116 @@ namespace TiaMcpServer.Siemens
             return result;
         }
 
+        /// <summary>
+        /// Creates an HMI connection to a PLC of the project. It is made between two network
+        /// nodes, so both devices need an interface on a common subnet.
+        /// </summary>
+        private HmiConnection CreateIntegratedConnection(
+            HmiSoftware software, string softwarePath, string name, string partnerPath, string? localInterface, string? partnerInterface, UnifiedActionResult result)
+        {
+            var hmiItem = RequireHmiContainer(softwarePath).Parent as DeviceItem
+                ?? throw new PortalException(PortalErrorCode.NotSupported, $"'{softwarePath}' is not hosted by a device item.");
+
+            var management = hmiItem.GetService<CommunicationManagement>()
+                ?? throw new PortalException(PortalErrorCode.NotSupported, $"'{softwarePath}' does not support connections to project devices.");
+
+            var partnerContainer = GetSoftwareContainer(partnerPath);
+
+            if (!(partnerContainer?.Software is global::Siemens.Engineering.SW.PlcSoftware) || !(partnerContainer.Parent is DeviceItem partnerItem))
+            {
+                throw new PortalException(PortalErrorCode.NotFound,
+                    $"No PLC found at '{partnerPath}'. 'partner' is the path of the PLC as the plc_* tools take it, e.g. 'PLC_1' or 'Station_1/PLC_1'.");
+            }
+
+            var localNodes = NetworkNodes(TopDeviceItems(hmiItem)).ToList();
+            var partnerNodes = NetworkNodes(new[] { partnerItem }).ToList();
+
+            var local = PickNodes(localNodes, localInterface, "localInterface", softwarePath);
+            var remote = PickNodes(partnerNodes, partnerInterface, "partnerInterface", partnerPath);
+
+            // The pair has to share a subnet; without one the connection would be created unusable.
+            var pair = (from l in local
+                        from r in remote
+                        where l.Node.ConnectedSubnet != null && r.Node.ConnectedSubnet != null
+                              && l.Node.ConnectedSubnet.Name == r.Node.ConnectedSubnet.Name
+                        select new { Local = l, Remote = r }).FirstOrDefault()
+                       ?? throw new PortalException(PortalErrorCode.InvalidState,
+                           $"'{softwarePath}' and '{partnerPath}' have no interfaces on a common subnet. " +
+                           $"HMI: {DescribeNodes(localNodes)}. PLC: {DescribeNodes(partnerNodes)}. Connect them with 'net_connect_subnet' first.");
+
+            var created = management.Connections.Create<global::Siemens.Engineering.HW.CommunicationConnections.HmiConnection>(pair.Local.Node, partnerItem, pair.Remote.Node);
+
+            created.LocalConnectionName = name;
+
+            result.Notes.Add($"Created as an integrated connection to '{partnerItem.Name}' over subnet '{pair.Local.Node.ConnectedSubnet.Name}' " +
+                             $"({pair.Local.Interface} {created.LocalAddress} -> {pair.Remote.Interface} {created.PartnerAddress}).");
+
+            return software.Connections.Find(name)
+                ?? throw new PortalException(PortalErrorCode.CreateFailed,
+                    $"The connection to '{partnerItem.Name}' was created but does not show up among the HMI connections as '{name}'.");
+        }
+
+        /// <summary>The top-level items of the device an item belongs to: an HMI keeps its interfaces beside its runtime item.</summary>
+        private static IEnumerable<DeviceItem> TopDeviceItems(DeviceItem item)
+        {
+            IEngineeringObject current = item;
+
+            while (current.Parent is DeviceItem parent)
+            {
+                current = parent;
+            }
+
+            return current.Parent is Device device ? device.DeviceItems : new[] { item };
+        }
+
+        private static IEnumerable<(Node Node, string Interface)> NetworkNodes(IEnumerable<DeviceItem> items)
+        {
+            foreach (var item in items)
+            {
+                var networkInterface = item.GetService<NetworkInterface>();
+
+                if (networkInterface != null)
+                {
+                    foreach (var node in networkInterface.Nodes)
+                    {
+                        yield return (node, item.Name);
+                    }
+                }
+
+                foreach (var nested in NetworkNodes(item.DeviceItems))
+                {
+                    yield return nested;
+                }
+            }
+        }
+
+        private static List<(Node Node, string Interface)> PickNodes(List<(Node Node, string Interface)> nodes, string? wanted, string parameter, string path)
+        {
+            if (string.IsNullOrWhiteSpace(wanted))
+            {
+                return nodes;
+            }
+
+            var picked = nodes
+                .Where(n => n.Interface.Equals(wanted!.Trim(), StringComparison.OrdinalIgnoreCase) || n.Node.Name.Equals(wanted.Trim(), StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            return picked.Count > 0
+                ? picked
+                : throw new PortalException(PortalErrorCode.NotFound,
+                    $"{parameter} '{wanted}' not found on '{path}'. Available: {DescribeNodes(nodes)}.");
+        }
+
+        private static string DescribeNodes(List<(Node Node, string Interface)> nodes)
+        {
+            return nodes.Count == 0
+                ? "no network interfaces"
+                : string.Join(", ", nodes.Select(n => $"{n.Interface} ({n.Node.Name}, {(n.Node.ConnectedSubnet == null ? "no subnet" : "subnet " + n.Node.ConnectedSubnet.Name)})"));
+        }
+
         #endregion
 
         #region shared
-
         private static string RequireName(string? value, string parameter)
         {
             return string.IsNullOrWhiteSpace(value)

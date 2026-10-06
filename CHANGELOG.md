@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+### Added (WinCC Unified alarms, integrated connections)
+
+- __`unified_manage_alarms`__ and __`unified_get_alarms`__: discrete and analog alarms - the tag and
+  bit or limit that raise them, alarm class, texts per language, priority, area, origin. Texts are
+  given and returned as plain text; the document format Unified stores is handled by the tool. The
+  tag and the alarm class are checked, because Openness accepts names that do not exist.
+- __`unified_manage_alarm_classes`__ and __`unified_get_alarm_classes`__: priority, state machine and
+  the colors of the four alarm states.
+- __`unified_manage_connections` creates integrated connections.__ With `partner` set to the path of
+  a PLC, the connection is made on the hardware side (`CommunicationManagement` of the HMI runtime
+  item) between two interfaces on a common subnet, and HMI tags on it can name PLC tags
+  symbolically. The earlier statement that Openness cannot do this was wrong: it cannot do it
+  through `HmiSoftware.Connections`.
+- 116 tools are registered by default.
+
+### Notes
+
+- Calling `GetAttributeInfos()` on a WinCC Unified alarm closes TIA Portal (`NonRecoverableException`,
+  V21): the class declares an `AuditClass` attribute the object does not have. The alarm tools use
+  the typed properties only and never touch `AuditClass`.
 ### Added (WinCC Unified tags and connections)
 
 - __`unified_manage_tags`__: create, update, upsert and delete HMI tags, several per call - internal

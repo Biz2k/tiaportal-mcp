@@ -42,7 +42,16 @@ namespace TiaMcpServer.ModelContextProtocol
         [Description("Name of the connection")]
         public string? ConnectionName { get; set; }
 
-        [Description("Properties to set, by name: CommunicationDriver (e.g. 'SIMATIC S7 1200/1500', 'OPC UA'), Comment, DisabledAtStartup, Name (renames), InitialAddress")]
+        [Description("For a new connection to a PLC of the project (integrated connection): the path of the PLC as the plc_* tools take it, e.g. 'PLC_1' or 'Station_1/PLC_1'. The HMI and the PLC need interfaces on a common subnet. Leave empty for a non-integrated connection that is addressed through driverProperties")]
+        public string? Partner { get; set; }
+
+        [Description("With 'partner': interface of the HMI to use, by item name or node name (e.g. 'PROFINET Interface_1' or 'X1'); empty picks the first one that shares a subnet with the PLC")]
+        public string? LocalInterface { get; set; }
+
+        [Description("With 'partner': interface of the PLC to use, by item name or node name; empty picks the first one that shares a subnet with the HMI")]
+        public string? PartnerInterface { get; set; }
+
+        [Description("Properties to set, by name: CommunicationDriver (e.g. 'SIMATIC S7 1200/1500', 'OPC UA'; not needed with 'partner'), Comment, DisabledAtStartup, Name (renames), InitialAddress")]
         public Dictionary<string, JsonElement>? Properties { get; set; }
 
         [Description("Driver parameters to set, by name, e.g. {\"Protocol.RemStAddress\": \"192.168.0.10\"}. They depend on the driver; 'unified_get_connections' lists them")]

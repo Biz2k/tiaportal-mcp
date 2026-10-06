@@ -99,12 +99,16 @@ save_project
 unified_configure_trend_control
 unified_create_screen
 unified_delete_screen
+unified_get_alarm_classes
+unified_get_alarms
 unified_get_connections
 unified_get_screen_item_properties
 unified_get_screen_items
 unified_get_screens
 unified_get_tag_tables
 unified_get_tags
+unified_manage_alarm_classes
+unified_manage_alarms
 unified_manage_connections
 unified_manage_faceplate
 unified_manage_items

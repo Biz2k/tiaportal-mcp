@@ -166,6 +166,52 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "unified_get_alarms", Title = "Get WinCC Unified alarms", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the discrete and analog alarms of a WinCC Unified HMI: alarm class, the tag and bit or limit that raise the alarm, and the alarm text per language. An HMI can have hundreds of alarms: narrow the list with type or nameFilter")]
+        public static ResponseUnifiedAlarms GetUnifiedAlarms(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("type: 'discrete' or 'analog'; empty (default) returns both")] string type = "",
+            [Description("nameFilter: regular expression on the alarm name, case-insensitive; empty (default) returns every alarm")] string nameFilter = "")
+        {
+            try
+            {
+                var alarms = Portal.GetUnifiedAlarms(softwarePath, type, nameFilter);
+
+                return new ResponseUnifiedAlarms
+                {
+                    Message = $"{alarms.Count} alarm(s) in '{softwarePath}'" + (string.IsNullOrEmpty(nameFilter) ? string.Empty : $" match '{nameFilter}'"),
+                    Items = alarms,
+                    Meta = ReadMeta()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
+        [McpServerTool(Name = "unified_get_alarm_classes", Title = "Get WinCC Unified alarm classes", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the alarm classes of a WinCC Unified HMI with priority, state machine and the colors of each alarm state")]
+        public static ResponseUnifiedAlarmClasses GetUnifiedAlarmClasses(
+            [Description(UnifiedPath)] string softwarePath)
+        {
+            try
+            {
+                var classes = Portal.GetUnifiedAlarmClasses(softwarePath);
+
+                return new ResponseUnifiedAlarmClasses
+                {
+                    Message = $"{classes.Count} alarm class(es) in '{softwarePath}'",
+                    Items = classes,
+                    Meta = ReadMeta()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
         private static System.Text.Json.Nodes.JsonObject ReadMeta() => new System.Text.Json.Nodes.JsonObject
         {
             ["timestamp"] = DateTime.Now,
@@ -208,7 +254,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #endregion
 
-        #region tags and connections (write)
+        #region tags, connections and alarms (write)
 
         [WriteTool]
         [McpServerTool(Name = "unified_manage_tags", Title = "Manage WinCC Unified tags", Destructive = true, OpenWorld = false, UseStructuredContent = true),
@@ -232,12 +278,32 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "unified_manage_connections", Title = "Manage WinCC Unified connections", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Create, update, upsert or delete connections of a WinCC Unified HMI, several at once. A connection created here is not integrated: Openness cannot assign a PLC of the project as its partner, so its address is set through driverProperties, and HMI tags on it use absolute addresses. A connection to a project PLC is made in the network view of TIA Portal. A call applies all of its actions or none. A connection that tags still use is deleted without warning")]
+         Description("Create, update, upsert or delete connections of a WinCC Unified HMI, several at once. With 'partner' a new connection is an integrated connection to a PLC of the project, on which HMI tags can name PLC tags symbolically; without it the connection is not integrated and is addressed through driverProperties. A call applies all of its actions or none. A connection that tags still use is deleted without warning")]
         public static ResponseUnifiedActions ManageUnifiedConnections(
             [Description(UnifiedPath)] string softwarePath,
             [Description("actions: the changes to make, applied in order")] List<UnifiedConnectionAction> actions)
         {
             return Guarded(nameof(ManageUnifiedConnections), () => UnifiedActions(Portal.ManageUnifiedConnections(softwarePath, actions)));
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "unified_manage_alarms", Title = "Manage WinCC Unified alarms", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, update, upsert or delete discrete and analog alarms of a WinCC Unified HMI, several at once. A discrete alarm is raised by a bit of an HMI tag (RaisedStateTag, RaisedStateTagBitNumber), an analog alarm by a limit (RaisedStateTag, Condition, ConditionValue). The tag and the alarm class have to exist. A call applies all of its actions or none")]
+        public static ResponseUnifiedActions ManageUnifiedAlarms(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("actions: the changes to make, applied in order")] List<UnifiedAlarmAction> actions)
+        {
+            return Guarded(nameof(ManageUnifiedAlarms), () => UnifiedActions(Portal.ManageUnifiedAlarms(softwarePath, actions)));
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "unified_manage_alarm_classes", Title = "Manage WinCC Unified alarm classes", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, update, upsert or delete alarm classes of a WinCC Unified HMI, several at once: priority, state machine and the colors of the alarm states. System classes cannot be deleted. A call applies all of its actions or none")]
+        public static ResponseUnifiedActions ManageUnifiedAlarmClasses(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("actions: the changes to make, applied in order")] List<UnifiedAlarmClassAction> actions)
+        {
+            return Guarded(nameof(ManageUnifiedAlarmClasses), () => UnifiedActions(Portal.ManageUnifiedAlarmClasses(softwarePath, actions)));
         }
 
         // All or nothing: the Portal method throws when any action fails, which rolls the
