@@ -12,6 +12,21 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Added (WinCC Unified logs and logging tags)
+
+- __`unified_get_logs`__ and __`unified_manage_logs`__: data logs, alarm logs (create, update, upsert, delete) and
+  audit trails (read only). Settings by name - `Settings.LogMaxSize`, `Settings.LogTimePeriod` (`{"days": 7}`),
+  `Settings.StorageDevice`, `Segment.SegmentStartTime` (ISO), `Backup.BackupMode`... Renaming a log renames it in
+  the logging tags; deleting one leaves them pointing at it, which is reported.
+- __`unified_get_logging_tags`__ and __`unified_manage_logging_tags`__: the archiving of an HMI tag into a data log.
+  Data log and trigger tag are checked, the smoothing times are set in the order Openness needs.
+- `unified_configure_trend_control` checks a data source of the form `<HMI tag>:<logging tag>` - how a trend shows an
+  archived tag (as on the PC station of the test project).
+- `ConvertHmiValue` reads `DateTime` (ISO) and `TimeSpan` (`hh:mm:ss` or seconds).
+- Found on V21: a new log on a panel starts on a storage device the panel then refuses (only the medium of the
+  existing logs is accepted); the form of `Cycle` for a cyclic logging tag is unknown, no sample exists.
+- 127 tools are registered by default.
+
 ### Added (WinCC Unified script modules)
 
 - __`unified_get_scripts`__ and __`unified_manage_scripts`__: read global script modules (global definitions,

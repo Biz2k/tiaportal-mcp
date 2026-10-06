@@ -595,6 +595,19 @@ namespace TiaMcpServer.Siemens
                         return ParseHmiColor(value.GetString() ?? string.Empty);
                     }
 
+                    if (targetType == typeof(DateTime))
+                    {
+                        return DateTime.Parse(value.GetString() ?? string.Empty, CultureInfo.InvariantCulture, DateTimeStyles.None);
+                    }
+
+                    if (targetType == typeof(TimeSpan))
+                    {
+                        // "hh:mm:ss" (or "d.hh:mm:ss"), or a number of seconds.
+                        return value.ValueKind == JsonValueKind.Number
+                            ? TimeSpan.FromSeconds(value.GetDouble())
+                            : TimeSpan.Parse(value.GetString() ?? string.Empty, CultureInfo.InvariantCulture);
+                    }
+
                     if (targetType == typeof(bool))
                     {
                         return value.ValueKind == JsonValueKind.String ? bool.Parse(value.GetString()!) : value.GetBoolean();
@@ -618,7 +631,9 @@ namespace TiaMcpServer.Siemens
                 {
                     var expected = targetType.IsEnum
                         ? $"one of {string.Join(", ", Enum.GetNames(targetType))}"
-                        : targetType == typeof(System.Drawing.Color) ? "a color such as \"#FF0000\" or \"Red\"" : $"a {targetType.Name}";
+                        : targetType == typeof(System.Drawing.Color) ? "a color such as \"#FF0000\" or \"Red\""
+                        : targetType == typeof(DateTime) ? "an ISO date and time such as \"2026-01-02T03:04:05\""
+                        : targetType == typeof(TimeSpan) ? "a time such as \"00:00:30\" or a number of seconds" : $"a {targetType.Name}";
 
                     _ = ex; // the reason is fully stated below; the parser's own text adds nothing
 

@@ -524,6 +524,33 @@ namespace TiaMcpServer.Siemens
         #region trend control (write)
 
         /// <summary>
+        /// An archived tag is written '&lt;HMI tag&gt;:&lt;logging tag&gt;' (as in the trends of the PC
+        /// station of the test project); Openness takes any text, so that form is checked here.
+        /// A plain name is left alone: it may be an HMI tag or something else a trend can show.
+        /// </summary>
+        private static void CheckTrendDataSource(HmiSoftware software, string dataSource)
+        {
+            var colon = dataSource.IndexOf(':');
+
+            if (colon <= 0)
+            {
+                return;
+            }
+
+            var tagName = dataSource.Substring(0, colon);
+            var loggingName = dataSource.Substring(colon + 1);
+            var tag = software.Tags.Find(tagName)
+                ?? throw new PortalException(PortalErrorCode.NotFound,
+                    $"Data source '{dataSource}': HMI tag '{tagName}' does not exist. Use 'unified_get_tags' to list the tags.");
+
+            if (tag.LoggingTags.Find(loggingName) == null)
+            {
+                throw new PortalException(PortalErrorCode.NotFound,
+                    $"Data source '{dataSource}': HMI tag '{tagName}' has no logging tag '{loggingName}'. It has: {DescribeLoggingTagNames(tag)}. 'unified_manage_logging_tags' creates one.");
+            }
+        }
+
+        /// <summary>
         /// Adds a trend (a pen) to an HmiTrendControl and binds it to a data source. The trend
         /// lives in nested parts of the control - trend areas, then trends - which is why this
         /// is its own operation rather than a property for ManageUnifiedItems.
@@ -582,6 +609,7 @@ namespace TiaMcpServer.Siemens
 
                     if (!string.IsNullOrEmpty(dataSource))
                     {
+                        CheckTrendDataSource(RequireUnifiedSoftware(softwarePath), dataSource);
                         trend!.DataSourceY.Source = dataSource;
                         applied.Add("DataSourceY=" + dataSource);
                     }

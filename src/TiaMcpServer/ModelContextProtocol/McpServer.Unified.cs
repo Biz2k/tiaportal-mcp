@@ -192,6 +192,58 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "unified_get_logs", Title = "Get WinCC Unified logs", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the data logs, alarm logs and audit trails of a WinCC Unified HMI with their settings: maximum size, duration, storage device and folder, segment size, start time and duration, backup. For a data log also the number of logging tags that archive into it. Audit trails can only be read")]
+        public static ResponseUnifiedLogs GetUnifiedLogs(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("type: 'data', 'alarm' or 'audit'; empty (default) returns all kinds")] string type = "",
+            [Description("logName: return only this log; empty (default) returns all")] string logName = "")
+        {
+            try
+            {
+                var logs = Portal.GetUnifiedLogs(softwarePath, type, logName);
+
+                return new ResponseUnifiedLogs
+                {
+                    Message = $"{logs.Count} log(s) in '{softwarePath}'",
+                    Items = logs,
+                    Meta = ReadMeta()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
+        [McpServerTool(Name = "unified_get_logging_tags", Title = "Get WinCC Unified logging tags", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the logging tags of a WinCC Unified HMI: which HMI tag is archived into which data log, and how (mode, cycle, aggregation, smoothing, limits, trigger). A large HMI has hundreds: narrow the list with tagName or logName")]
+        public static ResponseUnifiedLoggingTags GetUnifiedLoggingTags(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("tagName: regular expression on the name of the HMI tag, case-insensitive; empty (default) for all tags")] string tagName = "",
+            [Description("logName: only the logging tags that archive into this data log")] string logName = "",
+            [Description("limit: the most logging tags to return (default 500)")] int limit = 500)
+        {
+            try
+            {
+                var items = Portal.GetUnifiedLoggingTags(softwarePath, tagName, logName, limit, out var truncated);
+
+                return new ResponseUnifiedLoggingTags
+                {
+                    Message = truncated
+                        ? $"{items.Count} logging tag(s) returned, there are more: narrow the list with tagName or logName"
+                        : $"{items.Count} logging tag(s) in '{softwarePath}'",
+                    Items = items,
+                    Truncated = truncated,
+                    Meta = ReadMeta()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
         [McpServerTool(Name = "unified_get_connections", Title = "Get WinCC Unified connections", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
          Description("List the connections of a WinCC Unified HMI with their attributes and driver parameters ('DriverProperties')")]
         public static ResponseUnifiedList GetUnifiedConnections(
@@ -372,6 +424,26 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
+        [McpServerTool(Name = "unified_manage_logs", Title = "Manage WinCC Unified logs", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, update, upsert or delete data logs and alarm logs of a WinCC Unified HMI, several at once; settings are given by name, e.g. \"Settings.LogMaxSize\" or \"Segment.SegmentMaxSize\". Audit trails cannot be changed. Renaming a log renames it in the logging tags that use it; deleting one leaves them pointing at it. A call applies all of its actions or none")]
+        public static ResponseUnifiedActions ManageUnifiedLogs(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("actions: the changes to make, applied in order")] List<UnifiedLogAction> actions)
+        {
+            return Guarded(nameof(ManageUnifiedLogs), () => UnifiedActions(Portal.ManageUnifiedLogs(softwarePath, actions)));
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "unified_manage_logging_tags", Title = "Manage WinCC Unified logging tags", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, update, upsert or delete logging tags of a WinCC Unified HMI, several at once: the archiving of an HMI tag into a data log. A new logging tag starts in the first data log with the mode OnChange. The data log and the trigger tag are checked. A trend shows an archived tag when its data source is '<HMI tag>:<logging tag>' (see 'unified_configure_trend_control'). A call applies all of its actions or none")]
+        public static ResponseUnifiedActions ManageUnifiedLoggingTags(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("actions: the changes to make, applied in order")] List<UnifiedLoggingTagAction> actions)
+        {
+            return Guarded(nameof(ManageUnifiedLoggingTags), () => UnifiedActions(Portal.ManageUnifiedLoggingTags(softwarePath, actions)));
+        }
+
+        [WriteTool]
         [McpServerTool(Name = "unified_manage_tag_tables", Title = "Manage WinCC Unified tag tables", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Create, rename or delete tag tables of a WinCC Unified HMI, several at once. Deleting a table deletes the tags in it; the default tag table cannot be deleted. A call applies all of its actions or none")]
         public static ResponseUnifiedActions ManageUnifiedTagTables(
@@ -492,7 +564,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("screenName: name of the screen")] string screenName,
             [Description("trendControlName: name of the HmiTrendControl item")] string trendControlName,
             [Description("trendName: display name of the trend")] string trendName,
-            [Description("dataSource: HMI tag or logging tag the trend shows")] string dataSource,
+            [Description("dataSource: what the trend shows: an HMI tag, or an archived tag as '<HMI tag>:<logging tag>' (the logging tag is checked; 'unified_get_logging_tags' lists them)")] string dataSource,
             [Description("trendMode: how the trend is drawn, e.g. Points, Interpolated, Stepped, Bar, Value (optional)")] string? trendMode = null,
             [Description("lineWidth: line width, 0-255 (optional)")] int? lineWidth = null,
             [Description("lineColor: line color by name (e.g. Red) or as '#RRGGBB' (optional)")] string? lineColor = null)
