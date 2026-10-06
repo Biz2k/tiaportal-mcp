@@ -370,10 +370,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "unified_set_runtime_settings", Title = "Set WinCC Unified runtime settings", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Set runtime settings of a WinCC Unified HMI by name. A setting of a group is written with a dotted name: {\"StartScreen\": \"Start\", \"OpcUaServerRuntimeSettings.MaxSessionCount\": 20, \"MaxLoginRuntimeSettings.MaxLoginErrors\": 5, \"LanguageAndFonts.en-US.Enable\": true}. A setting can depend on another one (MaxLoginErrors needs EnableLockAfterNumberOfAttempts true): give both in the call. All settings are applied or none; 'unified_get_runtime_settings' shows the names and current values")]
+         Description("Set runtime settings of a WinCC Unified HMI by name. A setting of a group is written with a dotted name: {\"StartScreen\": \"Start\", \"OpcUaServerRuntimeSettings.MaxSessionCount\": 20, \"MaxLoginRuntimeSettings.MaxLoginErrors\": 5, \"LanguageAndFonts.English (United States).Enable\": true, \"LanguageAndFonts.ru-RU.Enable\": false}. A setting can depend on another one (MaxLoginErrors needs EnableLockAfterNumberOfAttempts true): give both in the call. All settings are applied or none; 'unified_get_runtime_settings' shows the names and current values")]
         public static ResponseMessage SetUnifiedRuntimeSettings(
             [Description(UnifiedPath)] string softwarePath,
-            [Description("settings: names and new values; groups with a dot, a language by its name (e.g. 'en-US')")] Dictionary<string, JsonElement> settings)
+            [Description("settings: names and new values; groups with a dot, a language by the name TIA Portal gives it or by its culture code: 'LanguageAndFonts.English (United States).Enable' or 'LanguageAndFonts.en-US.Enable'")] Dictionary<string, JsonElement> settings)
         {
             return Guarded(nameof(SetUnifiedRuntimeSettings), () =>
             {

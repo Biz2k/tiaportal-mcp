@@ -194,10 +194,12 @@ namespace TiaMcpServer.Siemens
         {
             if (current is HmiLanguageAndFontAssociation languages)
             {
-                var found = languages.Cast<HmiLanguageAndFont>().FirstOrDefault(l => l.Language.Equals(name, StringComparison.OrdinalIgnoreCase));
+                var all = languages.Cast<HmiLanguageAndFont>().ToList();
+                var matched = RuntimeLanguageName.Find(name, all.Select(l => l.Language));
+                var found = all.FirstOrDefault(l => l.Language == matched);
 
                 return found ?? throw new PortalException(PortalErrorCode.NotFound,
-                    $"'{dottedName}': no language '{name}'. Languages: {string.Join(", ", languages.Cast<HmiLanguageAndFont>().Select(l => l.Language))}.");
+                    $"'{dottedName}': no language '{name}'. Name it as TIA Portal does or by its culture code. Languages: {RuntimeLanguageName.Describe(all.Select(l => l.Language))}.");
             }
 
             var nested = current.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)

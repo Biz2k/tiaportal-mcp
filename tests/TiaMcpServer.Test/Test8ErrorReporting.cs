@@ -153,6 +153,20 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
+        public void Test_808_RuntimeLanguageName_AcceptsTheNameAndTheCultureCode()
+        {
+            var languages = new[] { "English (United States)", "Russian (Russia)", "Ukrainian (Ukraine)" };
+
+            Assert.AreEqual("English (United States)", RuntimeLanguageName.Find("en-US", languages));
+            Assert.AreEqual("Russian (Russia)", RuntimeLanguageName.Find("ru-ru", languages));
+            Assert.AreEqual("Ukrainian (Ukraine)", RuntimeLanguageName.Find("Ukrainian (Ukraine)", languages));
+            Assert.AreEqual("Russian (Russia)", RuntimeLanguageName.Find("russian (russia)", languages));
+            Assert.IsNull(RuntimeLanguageName.Find("de-DE", languages), "a language the HMI does not have");
+            Assert.IsNull(RuntimeLanguageName.Find("German", languages));
+            StringAssert.Contains(RuntimeLanguageName.Describe(languages), "Russian (Russia) (ru-RU)");
+        }
+
+        [TestMethod]
         public void Test_807_ErrorText_ForAction_HasNoBracket()
         {
             var ex = new PortalException(PortalErrorCode.NotFound, "Tag 'X' not found.");

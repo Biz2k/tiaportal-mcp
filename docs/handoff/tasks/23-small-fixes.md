@@ -22,7 +22,7 @@
       (разбор `trigger`, `CanonicalTriggerType`): при заданных `tags` и пустом `type`
       подставлять `Tags`; при заданном `cycle` и пустом `type` — `CustomCycle`; при пустом
       всём — ошибка со списком типов, без пустых кавычек. Тесты — `Test23UnifiedDynamizations.cs`.
-- [ ] **Описание `unified_set_runtime_settings`** (`McpServer.Unified.cs`) называет язык
+- [x] **Описание `unified_set_runtime_settings`** (`McpServer.Unified.cs`) называет язык
       `en-US`, а настройки языка адресуются полным именем (`English (United States)`).
       Принимать оба вида: код культуры сопоставлять с именем языка по перечню языков runtime;
       в описании показать оба. Проверить вживую на `HMI Unified/HMI_RT_3` (включить и
@@ -63,3 +63,5 @@
 - **Код ошибки указан дважды.** Проверено вживую (`unified_manage_tags`, два отказа `NotFound`: один код в конце; `plc_manage_tag_table_entries` отвечает списком результатов без кода, дубля там нет) и тестами `Test_805`–`Test_807`. Действия пакета теперь несут только причину (`ErrorText.ForAction`), код и контекст пишет общий отказ; код пакета — общий код отказавших действий, при разных кодах каждое действие называет свой в квадратных скобках (`BatchErrorText`). `unified_manage_items` код в действиях не писал.
 
 - **Триггер скрипта без типа.** Проверено вживую (`HmiRectangle.Visible` с `{"script": ..., "trigger": {"tags": ["MCPT_T1"]}}` — записан как `Tags`; пустой `trigger: {}` — ошибка со списком типов без пустых кавычек) и тестами `Test_2302a`, `Test_2302b`. Теги без типа — `Tags`, цикл без типа — `CustomCycle`, и то и другое — ошибка.
+
+- **Описание `unified_set_runtime_settings`** Проверено вживую на `HMI Unified/HMI_RT_3` (`LanguageAndFonts.ru-RU.Enable` включён и выключен, то же по полному имени и для `en-US`; `de-DE` — `NotFound` со списком языков и кодами; исходное состояние возвращено) и тестом `Test_808`. `RuntimeLanguageName` сопоставляет код культуры с именем по `CultureInfo.EnglishName` (в проверочном проекте совпадает с именами TIA Portal).
