@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `unified_manage_items`: a formula of a tag or expression dynamization is now checked. Openness stores a formula as
+  text and reports nothing: a tag that does not exist and a tag written without its quotes were kept as given, and a
+  formula TIA Portal cannot take (`$value * 2`) was replaced by `'InvalidTag'` while the tool answered "applied".
+  Now the tags a formula names in single quotes must exist, a tag written without quotes is refused with the
+  correction, an unclosed quote is refused, and the stored formula is read back and compared (TIA Portal correcting
+  the case of a tag name is not a difference). The syntax itself cannot be checked through Openness; the tool
+  description says so. Checked live on a temporary screen of the panel.
+
 ### Changed (documents)
 
 - The plan is `docs/PLAN.md` (was `docs/fix-plan-test-report-2026-10-05.md`). It now holds only

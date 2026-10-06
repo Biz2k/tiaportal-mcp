@@ -17,6 +17,12 @@ namespace TiaMcpServer.Siemens
     // in UnifiedDynamizationSpec; this file does the Openness side.
     //
     // Found on TIA Portal V21 (2026-10-06, samples on the screen A7 of the test project):
+    //   - ValueConverter.Formula is text over HMI tags in single quotes: 'iCP2'*2+1. Openness checks nothing
+    //     in it. Stored exactly as given: a tag that does not exist ('NoSuchTag'+1), a tag without its quotes
+    //     (iCP2*2), a syntax error ('iCP2' +), double quotes, function calls. Changed without an error: the
+    //     case of an existing tag name is corrected ('icp2' -> 'iCP2'), and "$value * 2" becomes 'InvalidTag'.
+    //     A tag and an expression dynamization behave alike. Hence CheckFormulaTags before the write and the
+    //     comparison with the stored text after it.
     //   - ScriptDynamization.Trigger is an object: Type (Disabled, T100ms, T250ms, T500ms, T1s, T2s, T5s,
     //     T10s, CustomCycle, Tags, AutomaticTags), Tags (a List<string>, assigned as a whole; setting it
     //     with another type than Tags is refused: "Invalid property Call for the current trigger type")
@@ -64,7 +70,7 @@ namespace TiaMcpServer.Siemens
                     return SetScriptDynamizationWithOptions(software, target, name, value, payload);
 
                 case "expression":
-                    return SetExpressionDynamization(target, name, value, payload);
+                    return SetExpressionDynamization(software, target, name, value, payload);
 
                 default:
                     return SetFlashingDynamization(target, name, value, payload);
@@ -107,7 +113,7 @@ namespace TiaMcpServer.Siemens
                 ((dynamic)dynamization).UseIndirectAddressing = indirect.Value;
             }
 
-            ApplyValueConverter(target, name, dynamization, formula, mapping);
+            ApplyValueConverter(software, target, name, dynamization, formula, mapping);
 
             return null;
         }
@@ -183,7 +189,7 @@ namespace TiaMcpServer.Siemens
             return notes.Count == 0 ? null : string.Join(" ", notes);
         }
 
-        private string? SetExpressionDynamization(object target, string name, JsonElement value, JsonElement payload)
+        private string? SetExpressionDynamization(HmiSoftware software, object target, string name, JsonElement value, JsonElement payload)
         {
             var options = UnifiedDynamizationSpec.Options(value, "expression", "mapping");
 
@@ -207,7 +213,7 @@ namespace TiaMcpServer.Siemens
 
             var dynamization = GetOrCreateHmiDynamization(target, name, ExpressionDynamizationType);
 
-            ApplyValueConverter(target, name, dynamization, string.IsNullOrWhiteSpace(formula) ? null : formula, mapping);
+            ApplyValueConverter(software, target, name, dynamization, string.IsNullOrWhiteSpace(formula) ? null : formula, mapping);
 
             return null;
         }
@@ -291,11 +297,16 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>A formula or a table for the value converter of a tag or expression dynamization.</summary>
-        private static void ApplyValueConverter(object target, string propertyName, object dynamization, string? formula, UnifiedMappingSpec? mapping)
+        private static void ApplyValueConverter(HmiSoftware software, object target, string propertyName, object dynamization, string? formula, UnifiedMappingSpec? mapping)
         {
             if (formula == null && mapping == null)
             {
                 return;
+            }
+
+            if (formula != null)
+            {
+                CheckFormulaTags(software, formula);
             }
 
             dynamic converter = ((dynamic)dynamization).ValueConverter;
@@ -308,11 +319,52 @@ namespace TiaMcpServer.Siemens
                 converter.Formula = formula;
                 SetEnumProperty(table, "ConditionType", "None");
 
+                // Openness reports no error for a formula TIA Portal cannot take: it stores 'InvalidTag' in its place
+                // ("$value * 2" does that). Reading back is the only way to notice.
+                var stored = (string?)converter.Formula;
+
+                if (!UnifiedDynamizationSpec.SameFormula(formula, stored))
+                {
+                    throw new PortalException(PortalErrorCode.InvalidParams,
+                        $"TIA Portal did not take the formula \"{formula}\" of '{propertyName}': it stored \"{stored}\" instead. " + FormulaHelp);
+                }
+
                 return;
             }
 
             converter.IsFormulaSelected = false;
             ApplyMappingTable(target, propertyName, table, mapping!);
+        }
+
+        private const string FormulaHelp =
+            "A formula is an expression over HMI tags, each written in single quotes: 'Tag_1'*2+1, ('Tag_1'+'Tag_2')/2. " +
+            "Openness does not check the syntax; an error in it shows when the HMI is compiled in TIA Portal.";
+
+        /// <summary>
+        /// Openness stores a formula as text: a tag that does not exist and a tag without its quotes are both kept as
+        /// written (probe of 06.10.2026) and fail only at runtime. The names are therefore checked here, before the write.
+        /// </summary>
+        private static void CheckFormulaTags(HmiSoftware software, string formula)
+        {
+            var existing = new HashSet<string>(software.Tags.Select(t => t.Name), StringComparer.OrdinalIgnoreCase);
+
+            foreach (var tag in UnifiedDynamizationSpec.FormulaTags(formula))
+            {
+                // A member of a structured tag is addressed as 'Tag.Member'; only the tag itself is in the collection.
+                if (!existing.Contains(tag) && !existing.Contains(UnifiedTagPath.Split(tag)[0]))
+                {
+                    throw new PortalException(PortalErrorCode.NotFound,
+                        $"Formula \"{formula}\": HMI tag '{tag}' does not exist. Openness would store the formula and it would fail at runtime. Use 'unified_get_tags' to list the tags.");
+                }
+            }
+
+            var bare = UnifiedDynamizationSpec.FormulaBareWords(formula).FirstOrDefault(existing.Contains);
+
+            if (bare != null)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams,
+                    $"Formula \"{formula}\": '{bare}' is an HMI tag written without quotes; TIA Portal would not read it as a tag. Write '{bare}' in single quotes. " + FormulaHelp);
+            }
         }
 
         private static void ApplyMappingTable(object target, string propertyName, object table, UnifiedMappingSpec mapping)

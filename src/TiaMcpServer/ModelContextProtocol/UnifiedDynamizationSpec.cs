@@ -499,6 +499,96 @@ namespace TiaMcpServer.ModelContextProtocol
             return (key.Substring(0, dot).Trim(), canonical);
         }
 
+        /// <summary>
+        /// The HMI tags a formula names. In a formula of a value converter a tag is written in single quotes:
+        /// 'Tag_1'*2+1. Openness stores a formula as text and checks nothing in it, so the names are checked here.
+        /// </summary>
+        /// <exception cref="PortalException">InvalidParams for an unclosed quote or an empty name.</exception>
+        public static List<string> FormulaTags(string formula)
+        {
+            var names = new List<string>();
+            var start = -1;
+
+            for (var i = 0; i < formula.Length; i++)
+            {
+                if (formula[i] != '\'')
+                {
+                    continue;
+                }
+
+                if (start < 0)
+                {
+                    start = i;
+
+                    continue;
+                }
+
+                var name = formula.Substring(start + 1, i - start - 1);
+
+                if (name.Trim().Length == 0)
+                {
+                    throw Invalid($"Formula \"{formula}\": the single quotes at position {start + 1} hold no tag name. A tag is written as 'Tag_1'.");
+                }
+
+                names.Add(name);
+                start = -1;
+            }
+
+            if (start >= 0)
+            {
+                throw Invalid($"Formula \"{formula}\": the single quote at position {start + 1} is not closed. A tag is written as 'Tag_1'.");
+            }
+
+            return names;
+        }
+
+        /// <summary>The words of a formula outside the quoted tag names: candidates for a tag written without its quotes.</summary>
+        public static List<string> FormulaBareWords(string formula)
+        {
+            var words = new List<string>();
+            var quoted = false;
+            var start = -1;
+
+            for (var i = 0; i <= formula.Length; i++)
+            {
+                var c = i < formula.Length ? formula[i] : ' ';
+
+                if (c == '\'')
+                {
+                    quoted = !quoted;
+                }
+
+                var inWord = !quoted && c != '\'' && (char.IsLetterOrDigit(c) || c == '_' || c == '.');
+
+                if (inWord && start < 0)
+                {
+                    start = i;
+                }
+                else if (!inWord && start >= 0)
+                {
+                    var word = formula.Substring(start, i - start);
+
+                    if (char.IsLetter(word[0]) || word[0] == '_')
+                    {
+                        words.Add(word);
+                    }
+
+                    start = -1;
+                }
+            }
+
+            return words;
+        }
+
+        /// <summary>
+        /// Whether TIA Portal kept the formula. It corrects the case of a tag name ('tag_1' becomes 'Tag_1'), which is
+        /// not a change; a formula it cannot take it replaces, without an error, by 'InvalidTag'.
+        /// </summary>
+        public static bool SameFormula(string given, string? stored)
+        {
+            return string.Equals(given.Trim(), (stored ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
         private static PortalException Invalid(string message)
         {
             return new PortalException(PortalErrorCode.InvalidParams, message);

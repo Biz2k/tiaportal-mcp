@@ -179,5 +179,30 @@ namespace TiaMcpServer.Test
             StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.CanonicalCondition("Sometimes")).Message, "Never, Always, RangeViolation");
             StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.CanonicalRate("Quick")).Message, "Slow, Medium, Fast");
         }
+
+        [TestMethod]
+        public void Test_2313_FormulaTags_ReadsTheQuotedNames()
+        {
+            CollectionAssert.AreEqual(new[] { "Tag_1", "Tag 2.Member" }, UnifiedDynamizationSpec.FormulaTags("('Tag_1'+'Tag 2.Member')/2"));
+            Assert.AreEqual(0, UnifiedDynamizationSpec.FormulaTags("2+2").Count);
+
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.FormulaTags("'Tag_1*2")).Message, "is not closed");
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.FormulaTags("''+1")).Message, "no tag name");
+        }
+
+        [TestMethod]
+        public void Test_2314_FormulaBareWords_LeavesOutQuotedNamesAndNumbers()
+        {
+            CollectionAssert.AreEqual(new[] { "Tag_2", "Math.abs" }, UnifiedDynamizationSpec.FormulaBareWords("'Tag_1'*2 + Tag_2 - Math.abs(3.5)"));
+            Assert.AreEqual(0, UnifiedDynamizationSpec.FormulaBareWords("'Tag_1'*2+1").Count);
+        }
+
+        [TestMethod]
+        public void Test_2315_SameFormula_AllowsTheCaseCorrectionOnly()
+        {
+            Assert.IsTrue(UnifiedDynamizationSpec.SameFormula("'tag_1'+1", "'Tag_1'+1"));
+            Assert.IsFalse(UnifiedDynamizationSpec.SameFormula("$value * 2", "'InvalidTag'"));
+            Assert.IsFalse(UnifiedDynamizationSpec.SameFormula("'Tag_1'+1", null));
+        }
     }
 }
