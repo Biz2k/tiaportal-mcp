@@ -18,14 +18,16 @@
       подсказкой. Поискать признак: у `HmiFaceplateInterface` (`docs/handoff/api/unified-parts.txt`)
       или в типе значения `Value`.
       **Сделано 06.10.2026:** Невозможно: у `HmiFaceplateInterface` только `PropertyName`, `Value` и `Dynamizations`, признака вида нет. Тег-интерфейс принимает `TagParameterDynamization` и отклоняет `TagDynamization` (и наоборот), сообщение об ошибке подсказывает другой вид — это сохранено.
-- [ ] **Теги: пороги.** `Thresholds.Create()` на новом теге отвечает «New thresholds are not
+- [x] **Теги: пороги.** `Thresholds.Create()` на новом теге отвечает «New thresholds are not
       supported» (проба 06.10.2026). Выяснить: создаются ли пороги на теге другого типа данных,
       можно ли менять существующие (`Value*`, `ValueType*`), как устроены `InitialMaxValue` /
       `InitialMinValue` (объекты `UpperRange` / `LowerRange` с `Value*`, `ValueType*`).
       Вероятный итог — поддержать границы через `InitialMaxValue.Value`, а пороги только читать.
-- [ ] **Теги: остальное.** Линейное масштабирование (`LinearScaling`, `HmiStartValue`,
+      **Сделано 06.10.2026:** Создать пороги через Openness **нельзя**: `Thresholds.Create()` отвечает «New thresholds are not supported» на всех типах данных (Real, Int, DInt, Bool, UInt, Word, String, LReal); в проекте нет ни одного тега с порогом, менять нечего. Границы — `InitialMaxValue` / `InitialMinValue` (`ValueType` None/Constant/Tag и `Value`): записываются и читаются.
+- [~] **Теги: остальное.** Линейное масштабирование (`LinearScaling`, `HmiStartValue`,
       `HmiEndValue`, `PlcStartValue`, `PlcEndValue`), подстановочное значение
       (`SubstituteValue.Value*`, `SubstituteValueUsage*`), члены UDT-тега (`Members`).
+      **Частично 06.10.2026:** `LinearScaling` и четыре границы шкалы, подстановочное значение и границы задаются через `unified_manage_tags` (`"SubstituteValue.Value"`, `"InitialMaxValue.ValueType"`...) и читаются в `unified_get_tags`; проверено вживую на внешнем теге. На внутреннем теге Openness отвечает «disabled fields» — сервер объясняет, что нужно сначала. Тег границы проверяется на существование. **Члены структурного тега:** это `HmiTag`, `Comment` пишется, `AcquisitionMode` принимает None/OnDemand/CyclicOnUse/CyclicContinuous; адресация члена в `unified_manage_tags` (`Тег.Член`) пока не сделана — только для архивных тегов.
 - [ ] **Группы таблиц тегов.** Только читаются. Создание / переименование / удаление группы и
       создание таблицы в группе — по образцу задачи 01.
 - [ ] **Соединения: другие драйверы.** Проверен S7-1200/1500. Проверить `OPC UA` и

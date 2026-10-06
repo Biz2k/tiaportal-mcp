@@ -16,7 +16,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [Description("Tag table a new tag is created in; empty for the default tag table. A tag cannot be moved to another table afterwards")]
         public string? TagTable { get; set; }
 
-        [Description("Properties to set, by name, e.g. {\"DataType\": \"Real\", \"InitialValue\": 1.5} for an internal tag or {\"Connection\": \"HMI_Connection_1\", \"PlcTag\": \"Motor.Speed\"} for a PLC tag. An empty Connection makes the tag internal. 'Name' renames the tag. Comment takes a string (all languages) or {\"en-US\": \"...\"}. DisplayName cannot be set through Openness")]
+        [Description("Properties to set, by name, e.g. {\"DataType\": \"Real\", \"InitialValue\": 1.5} for an internal tag or {\"Connection\": \"HMI_Connection_1\", \"PlcTag\": \"Motor.Speed\"} for a PLC tag. An empty Connection makes the tag internal. 'Name' renames the tag. Comment takes a string (all languages) or {\"en-US\": \"...\"}. DisplayName cannot be set through Openness. Linear scaling (LinearScaling, HmiStartValue, HmiEndValue, PlcStartValue, PlcEndValue) and the substitute value (\"SubstituteValue.SubstituteValueUsage\": None, InvalidValue, RangeViolation, InvalidValueOrRangeViolation; \"SubstituteValue.Value\") work on an external tag only. Limits: \"InitialMaxValue.ValueType\" and \"InitialMinValue.ValueType\" (None, Constant, Tag), then \".Value\" (a number, or a tag name for the type Tag)")]
         public Dictionary<string, JsonElement>? Properties { get; set; }
     }
 

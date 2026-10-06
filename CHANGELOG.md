@@ -12,6 +12,14 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Added (WinCC Unified tags: scaling, substitute value, limits)
+
+- `unified_manage_tags` sets linear scaling (`LinearScaling`, `HmiStartValue`, `HmiEndValue`, `PlcStartValue`, `PlcEndValue`),
+  the substitute value (`"SubstituteValue.SubstituteValueUsage"`, `"SubstituteValue.Value"`) and the limits
+  (`"InitialMaxValue.ValueType"` None/Constant/Tag, `"InitialMaxValue.Value"`, and the same for the minimum); a limit that
+  names a tag is checked. `unified_get_tags` shows them. They are "disabled fields" on an internal tag: the error now says
+  an external tag is needed first. Thresholds cannot be created through Openness ("New thresholds are not supported").
+
 ### Fixed (TIA Portal closed by a call)
 
 - After a call that closes TIA Portal (`NonRecoverableException`) the server believed it was still connected and answered

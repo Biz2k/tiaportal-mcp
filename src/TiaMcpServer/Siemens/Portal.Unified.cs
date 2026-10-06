@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
 using Siemens.Engineering.Hmi;
 using Siemens.Engineering.HmiUnified;
+using Siemens.Engineering.HmiUnified.HmiTags;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,6 +43,18 @@ namespace TiaMcpServer.Siemens
         public string? Connection { get; set; }
         public string? PlcTag { get; set; }
         public string? Address { get; set; }
+
+        /// <summary>"HMI 0..100 = PLC 0..27648" when linear scaling is on, else null.</summary>
+        public string? LinearScaling { get; set; }
+
+        /// <summary>"RangeViolation: 5" when a substitute value is in use, else null.</summary>
+        public string? SubstituteValue { get; set; }
+
+        /// <summary>"Constant: 100" or "Tag: iCP2" when the upper limit is set, else null.</summary>
+        public string? InitialMaxValue { get; set; }
+
+        /// <summary>Like <see cref="InitialMaxValue"/>, for the lower limit.</summary>
+        public string? InitialMinValue { get; set; }
     }
 
     // WinCC Unified: reading screens, items, tags and connections, creating and deleting
@@ -277,13 +290,26 @@ namespace TiaMcpServer.Siemens
                                 ? null
                                 : ReadTagAttribute(tag, attributes, "Connection"),
                             PlcTag = ReadTagAttribute(tag, attributes, "PlcTag"),
-                            Address = ReadTagAttribute(tag, attributes, "Address")
+                            Address = ReadTagAttribute(tag, attributes, "Address"),
+                            LinearScaling = tag.LinearScaling
+                                ? $"HMI {tag.HmiStartValue}..{tag.HmiEndValue} = PLC {tag.PlcStartValue}..{tag.PlcEndValue}"
+                                : null,
+                            SubstituteValue = tag.SubstituteValue.SubstituteValueUsage == HmiSubstituteValueUsage.None
+                                ? null
+                                : $"{tag.SubstituteValue.SubstituteValueUsage}: {tag.SubstituteValue.Value}",
+                            InitialMaxValue = DescribeTagLimit(tag.InitialMaxValue.ValueType, tag.InitialMaxValue.Value),
+                            InitialMinValue = DescribeTagLimit(tag.InitialMinValue.ValueType, tag.InitialMinValue.Value)
                         });
                     }
 
                     return tags;
                 },
                 ("softwarePath", softwarePath), ("nameFilter", nameFilter), ("tagTable", tagTable));
+        }
+
+        private static string? DescribeTagLimit(HmiLimitValueType type, object? value)
+        {
+            return type == HmiLimitValueType.None ? null : $"{type}: {value}";
         }
 
         /// <summary>What Openness reports as the connection of a tag that has none.</summary>

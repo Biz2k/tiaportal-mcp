@@ -28,6 +28,17 @@ namespace TiaMcpServer.Siemens
     //   - A tag cannot be moved between tables: TagTableName is read-only.
     //   - Deleting a tag table deletes its tags. The default tag table cannot be deleted.
     //   - A tag or a connection that is in use is deleted without complaint.
+    //   - LinearScaling, HmiStartValue, HmiEndValue, PlcStartValue, PlcEndValue and the substitute
+    //     value (SubstituteValue.SubstituteValueUsage / .Value) are "disabled fields" on an internal
+    //     tag ("Set is not allowed for disabled fields") and write normally once the tag is external
+    //     (Connection and AccessMode set; checked 2026-10-06 on a DB word of HMI_Connection_3).
+    //   - InitialMaxValue / InitialMinValue are objects with ValueType (None, Constant, Tag) and
+    //     Value; Value is a disabled field while ValueType is None, and with the type Tag Openness
+    //     takes any text, so the tag name is checked here.
+    //   - Thresholds.Create() answers "New thresholds are not supported" on every data type tried
+    //     (Real, Int, DInt, Bool, UInt, Word, String, LReal) and no tag of the test project has one:
+    //     thresholds cannot be created through Openness. Members of a structured tag are HmiTag
+    //     objects and take Comment; AcquisitionMode takes None, OnDemand, CyclicOnUse, CyclicContinuous.
     //   - HmiSoftware.Connections.Create makes a non-integrated connection: Partner, Node and
     //     Station are read-only there, its address is set through driver properties.
     //   - An integrated connection to a PLC of the project is made on the hardware side: the
@@ -227,11 +238,90 @@ namespace TiaMcpServer.Siemens
                             "DisplayName of an HMI tag cannot be set through Openness: the attempt closes TIA Portal. Set it in the tag editor; Comment can be set here.");
                     }
 
-                    SetUnifiedAttributes(tag, "An HMI tag", action.Properties, TagPropertyOrder, result);
+                    var (plain, nested) = SplitNestedTagProperties(action.Properties);
+
+                    SetUnifiedAttributes(tag, "An HMI tag", plain, TagPropertyOrder, result);
+                    SetNestedTagProperties(software, tag, nested, result);
                 });
         }
 
         #endregion
+
+        /// <summary>The nested objects of a tag that take dotted names: "InitialMaxValue.Value", "SubstituteValue.Value", ...</summary>
+        private static readonly string[] TagNestedObjects = { "InitialMaxValue", "InitialMinValue", "SubstituteValue" };
+
+        private static (Dictionary<string, JsonElement>? Plain, List<KeyValuePair<string, JsonElement>> Nested) SplitNestedTagProperties(Dictionary<string, JsonElement>? properties)
+        {
+            var nested = new List<KeyValuePair<string, JsonElement>>();
+
+            if (properties == null)
+            {
+                return (null, nested);
+            }
+
+            var plain = new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var entry in properties)
+            {
+                if (entry.Key.IndexOf('.') > 0)
+                {
+                    nested.Add(entry);
+                }
+                else
+                {
+                    plain[entry.Key] = entry.Value;
+                }
+            }
+
+            return (plain, nested);
+        }
+
+        private static void SetNestedTagProperties(HmiSoftware software, HmiTag tag, List<KeyValuePair<string, JsonElement>> nested, UnifiedActionResult result)
+        {
+            // ValueType before Value: Value is a disabled field while the type is None.
+            foreach (var entry in nested.OrderBy(e => e.Key.EndsWith(".Value", StringComparison.OrdinalIgnoreCase) ? 1 : 0))
+            {
+                var parts = entry.Key.Split(new[] { '.' }, 2);
+                var objectName = TagNestedObjects.FirstOrDefault(n => n.Equals(parts[0], StringComparison.OrdinalIgnoreCase))
+                    ?? throw new PortalException(PortalErrorCode.NotFound,
+                        $"An HMI tag has no nested property '{parts[0]}'. Nested: {string.Join(", ", TagNestedObjects)}. Plain properties are given without a dot.");
+
+                var target = tag.GetType().GetProperty(objectName)!.GetValue(tag)!;
+                var available = target.GetType().GetProperties().Where(p => p.CanWrite).ToList();
+                var property = FindTypedProperty(available, parts[1], objectName);
+                var value = ConvertHmiValue(entry.Value, property.PropertyType == typeof(object) ? null : property.PropertyType, entry.Key);
+
+                if (property.Name == "Value" && objectName != "SubstituteValue")
+                {
+                    var limitType = target.GetType().GetProperty("ValueType")!.GetValue(target)?.ToString();
+
+                    if (string.Equals(limitType, "Tag", StringComparison.Ordinal) && value is string limitTag && software.Tags.Find(limitTag) == null)
+                    {
+                        throw new PortalException(PortalErrorCode.NotFound,
+                            $"{entry.Key}: HMI tag '{limitTag}' does not exist. Use 'unified_get_tags' to list the tags.");
+                    }
+                }
+
+                try
+                {
+                    SetTypedProperty(target, property, value);
+                }
+                catch (Exception ex) when (ex is not PortalException && ErrorText.Describe(ex).IndexOf("disabled fields", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    throw new PortalException(PortalErrorCode.InvalidParams, DisabledFieldHint(entry.Key), null, ex);
+                }
+
+                result.Applied.Add($"{objectName}.{property.Name}");
+            }
+        }
+
+        /// <summary>TIA Portal says only "Set is not allowed for disabled fields"; which fields are disabled when is what the caller needs.</summary>
+        private static string DisabledFieldHint(string property)
+        {
+            return $"{property} cannot be set on this tag now (TIA Portal: the field is disabled). " +
+                   "Linear scaling and the substitute value need an external tag - Connection and AccessMode set first; " +
+                   "the Value of InitialMaxValue / InitialMinValue needs their ValueType to be 'Constant' or 'Tag'.";
+        }
 
         #region connections
 
@@ -562,6 +652,10 @@ namespace TiaMcpServer.Siemens
                     try
                     {
                         target.SetAttribute(property.Name, converted);
+                    }
+                    catch (EngineeringException ex) when (ErrorText.Describe(ex).IndexOf("disabled fields", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, DisabledFieldHint(property.Name), null, ex);
                     }
                     catch (EngineeringException ex) when (property.Name == "CommunicationDriver")
                     {
