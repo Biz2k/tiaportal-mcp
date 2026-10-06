@@ -338,6 +338,37 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
+        [McpServerTool(Name = "unified_compile", Title = "Compile a WinCC Unified HMI", Destructive = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Compile a WinCC Unified HMI and list the errors and warnings with the place of each (device/Screens/screen/item). This is the check for what the writing tools cannot see: a syntax error in the script of a dynamization or of an event and an invalid formula of a tag dynamization are reported here and nowhere else. Call it after a batch that wrote scripts or formulas, with pathFilter set to the screen. The compile is incremental, so after the first one it takes seconds. It compiles the device (Openness cannot compile one screen or one script), does not save the project and leaves it marked as modified. Not reported: a broken formula of an 'expression' dynamization and calls of functions that do not exist")]
+        public static ResponseUnifiedCompile CompileUnified(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("pathFilter: keep only the messages whose path contains this text, e.g. the name of a screen; empty keeps all")] string pathFilter = "",
+            [Description("errorsOnly: leave the warnings out")] bool errorsOnly = false)
+        {
+            return GuardedNoTransaction(nameof(CompileUnified), () =>
+            {
+                var result = Portal.CompileUnified(softwarePath, pathFilter, errorsOnly);
+                var filtered = !string.IsNullOrWhiteSpace(pathFilter) || errorsOnly;
+
+                return new ResponseUnifiedCompile
+                {
+                    State = result.State,
+                    ErrorCount = result.ErrorCount,
+                    WarningCount = result.WarningCount,
+                    Items = result.Items,
+                    Message = $"Device '{result.Device}' compiled: {result.State}, {result.ErrorCount} error(s), {result.WarningCount} warning(s)" +
+                              (filtered ? $"; {result.Items.Count} message(s) match the filter." : ".") +
+                              " The project was not saved.",
+                    Meta = new System.Text.Json.Nodes.JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = result.ErrorCount == 0
+                    }
+                };
+            });
+        }
+
+        [WriteTool]
         [McpServerTool(Name = "unified_set_runtime_settings", Title = "Set WinCC Unified runtime settings", Destructive = true, OpenWorld = false, UseStructuredContent = true),
          Description("Set runtime settings of a WinCC Unified HMI by name. A setting of a group is written with a dotted name: {\"StartScreen\": \"Start\", \"OpcUaServerRuntimeSettings.MaxSessionCount\": 20, \"MaxLoginRuntimeSettings.MaxLoginErrors\": 5, \"LanguageAndFonts.en-US.Enable\": true}. A setting can depend on another one (MaxLoginErrors needs EnableLockAfterNumberOfAttempts true): give both in the call. All settings are applied or none; 'unified_get_runtime_settings' shows the names and current values")]
         public static ResponseMessage SetUnifiedRuntimeSettings(

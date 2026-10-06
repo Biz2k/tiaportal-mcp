@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Added
+
+- `unified_compile`: compiles a WinCC Unified HMI and lists the errors and warnings, each with its place
+  (`HMI Unified/Screens/MyScreen/Button_1`). It is the check for what neither Openness nor the validation looks into:
+  a syntax error in the script of a dynamization or an event, an invalid formula of a tag dynamization. `pathFilter`
+  keeps the messages of one screen, `errorsOnly` drops the warnings. Openness lets only the device of an HMI be
+  compiled - not a screen or a script on its own - but the compile is incremental (about a second after a change on
+  the test panel). It is refused inside a transaction, so it cannot stop a write: it reports on what is in the
+  project. It does not save the project. Seen not to be reported: a broken formula of an `expression`
+  dynamization, a call of a function that does not exist.
+
 ### Changed
 
 - The writing WinCC Unified tools now let TIA Portal validate what they wrote. Unified objects have a `Validate()`

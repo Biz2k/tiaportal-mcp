@@ -59,4 +59,42 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>Script that computes the property, if it has one.</summary>
         public string? Script { get; set; }
     }
+
+    /// <summary>One error or warning of the compile of an HMI.</summary>
+    public class UnifiedCompileMessage
+    {
+        /// <summary>"Error" or "Warning".</summary>
+        public string? Severity { get; set; }
+
+        /// <summary>Where: the device, then e.g. "Screens", the screen and the item, joined with '/'.</summary>
+        public string? Path { get; set; }
+
+        public string? Text { get; set; }
+    }
+
+    /// <summary>What Portal.CompileUnified found.</summary>
+    public class UnifiedCompileResult
+    {
+        public string? Device { get; set; }
+
+        public string? State { get; set; }
+
+        public int ErrorCount { get; set; }
+
+        public int WarningCount { get; set; }
+
+        public List<UnifiedCompileMessage> Items { get; set; } = new List<UnifiedCompileMessage>();
+    }
+
+    public class ResponseUnifiedCompile : ResponseMessage
+    {
+        /// <summary>Success, Warning or Error - of the whole device, whatever the filters left of the messages.</summary>
+        public string? State { get; set; }
+
+        public int? ErrorCount { get; set; }
+
+        public int? WarningCount { get; set; }
+
+        public IEnumerable<UnifiedCompileMessage>? Items { get; set; }
+    }
 }

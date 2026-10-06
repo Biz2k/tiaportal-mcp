@@ -4,6 +4,7 @@ Screens, items, tags, scripts, logs, alarms, connections, lists and runtime sett
 
 | Tool | Kind |
 |---|---|
+| [`unified_compile`](#unified_compile) | session |
 | [`unified_configure_trend_control`](#unified_configure_trend_control) | write |
 | [`unified_create_screen`](#unified_create_screen) | write |
 | [`unified_delete_screen`](#unified_delete_screen) | write |
@@ -38,6 +39,16 @@ Screens, items, tags, scripts, logs, alarms, connections, lists and runtime sett
 | [`unified_manage_tag_tables`](#unified_manage_tag_tables) | write |
 | [`unified_manage_tags`](#unified_manage_tags) | write |
 | [`unified_set_runtime_settings`](#unified_set_runtime_settings) | write |
+
+## unified_compile
+
+Compile a WinCC Unified HMI and list the errors and warnings with the place of each (device/Screens/screen/item). This is the check for what the writing tools cannot see: a syntax error in the script of a dynamization or of an event and an invalid formula of a tag dynamization are reported here and nowhere else. Call it after a batch that wrote scripts or formulas, with pathFilter set to the screen. The compile is incremental, so after the first one it takes seconds. It compiles the device (Openness cannot compile one screen or one script), does not save the project and leaves it marked as modified. Not reported: a broken formula of an 'expression' dynamization and calls of functions that do not exist
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
+| `pathFilter` | string | no (default ``) | pathFilter: keep only the messages whose path contains this text, e.g. the name of a screen; empty keeps all |
+| `errorsOnly` | boolean | no (default `False`) | errorsOnly: leave the warnings out |
 
 ## unified_configure_trend_control
 

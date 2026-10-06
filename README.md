@@ -156,7 +156,7 @@ Left out with `--read-only` (57):
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Hardware                | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_delete_subnet`, `net_create_io_system`, `net_connect_to_io_system`, `net_get_connections`, `net_create_connection`, `net_delete_connection` |
-| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_tag_table_groups`, `unified_manage_logs`, `unified_manage_logging_tags`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists`, `unified_get_runtime_settings`, `unified_set_runtime_settings`, `unified_get_system_tags` |
+| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_compile`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_tag_table_groups`, `unified_manage_logs`, `unified_manage_logging_tags`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists`, `unified_get_runtime_settings`, `unified_set_runtime_settings`, `unified_get_system_tags` |
 | Download                | `download_to_plc` |
 
 `plc_get_software_tree` accepts a `sections` argument - any comma separated subset of
@@ -260,7 +260,7 @@ property gets either a static value or a dynamization, and `events` attaches scr
   that does not exist, an initial value that does not fit the data type, and a script dynamization that no tag
   triggers fail the action, although Openness stored them without an error. Findings that were there before the
   write come back as `notes`. In a formula the tags are checked (`'Tag_1'` in single quotes); the syntax of a formula
-  or a script is not - that shows when the HMI is compiled.
+  or a script is not - `unified_compile` compiles the HMI and reports such errors with the screen and the item.
 - `events` also takes `{ "script": "...", "async": true, "globalDefinitions": "..." }` per event; `propertyEvents` sets the
   script that runs when a property changes (`{ "ProcessValue": "..." }`, `"ProcessValue.QualityCodeChange"` for the
   quality code, which needs a tag binding).
