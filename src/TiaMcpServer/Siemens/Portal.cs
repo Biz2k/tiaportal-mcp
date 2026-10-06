@@ -29,6 +29,9 @@ namespace TiaMcpServer.Siemens
 
         private LocalSession? _session;
 
+        /// <summary>Id of the TIA Portal process the server attached to; 0 when the server started it itself.</summary>
+        private int _portalProcessId;
+
         private readonly ILogger<Portal>? _logger;
 
         #region ctor
@@ -36,6 +39,7 @@ namespace TiaMcpServer.Siemens
         public Portal(ILogger<Portal>? logger = null)
         {
             _logger = logger;
+            Operation.LossHandler = DetectLoss;
         }
 
         #endregion
@@ -140,9 +144,7 @@ namespace TiaMcpServer.Siemens
         {
             _logger?.LogInformation("Connecting to TIA Portal...");
 
-            _project = null;
-            _session = null;
-            _portal = null;
+            DropConnection();
 
             bool running;
 
@@ -155,7 +157,10 @@ namespace TiaMcpServer.Siemens
 
                 if (running)
                 {
-                    _portal = processes.First().Attach();
+                    var process = processes.First();
+
+                    _portal = process.Attach();
+                    _portalProcessId = process.Id;
 
                     // check for existing local sessions
                     if (_portal.LocalSessions.Any())
@@ -202,7 +207,65 @@ namespace TiaMcpServer.Siemens
 
         public bool IsConnected()
         {
+            if (_portal != null && _portalProcessId != 0 && !PortalProcessRuns())
+            {
+                // TIA Portal was closed since the last call (by the user, or by a call that
+                // killed it): say so instead of keeping a connection to nothing.
+                _logger?.LogWarning("TIA Portal (process {ProcessId}) is no longer running; the connection is dropped", _portalProcessId);
+                DropConnection();
+            }
+
             return _portal != null;
+        }
+
+        private bool PortalProcessRuns()
+        {
+            try
+            {
+                return TiaPortal.GetProcesses().Any(p => p.Id == _portalProcessId);
+            }
+            catch (Exception)
+            {
+                // Cannot tell: assume it runs, an actual failure will show soon enough.
+                return true;
+            }
+        }
+
+        /// <summary>Forgets everything that belongs to a TIA Portal that is gone. Does not dispose: the objects are dead.</summary>
+        private void DropConnection()
+        {
+            _portal = null;
+            _project = null;
+            _session = null;
+            _portalProcessId = 0;
+            _inTransaction = false;
+        }
+
+        /// <summary>
+        /// Decides whether an exception means TIA Portal is gone. When it is, the connection is
+        /// dropped and the message tells the client what happened and what to do; an ordinary
+        /// failure returns null.
+        /// </summary>
+        private string? DetectLoss(Exception ex)
+        {
+            var kind = TiaLoss.Classify(ex);
+
+            if (kind == TiaLoss.Kind.None)
+            {
+                return null;
+            }
+
+            var gone = kind == TiaLoss.Kind.Fatal || (_portalProcessId != 0 && !PortalProcessRuns());
+
+            if (gone)
+            {
+                _logger?.LogError(ex, "TIA Portal is gone ({Kind}); the connection is dropped", kind);
+                DropConnection();
+
+                return TiaLoss.GoneMessage(kind);
+            }
+
+            return TiaLoss.ClosedProjectMessage();
         }
 
         public bool DisconnectPortal()
@@ -234,26 +297,48 @@ namespace TiaMcpServer.Siemens
         public State GetState()
         {
             _logger?.LogInformation("Getting TIA Portal state...");
-            if (_portal != null)
+
+            if (IsConnected())
             {
-                // check for existing local sessions
-                if (_portal.LocalSessions.Any())
+                try
                 {
-                    _session = _portal.LocalSessions.First();
-                    _project = _session.Project;
+                    // check for existing local sessions
+                    if (_portal!.LocalSessions.Any())
+                    {
+                        _session = _portal.LocalSessions.First();
+                        _project = _session.Project;
+                    }
+                    // checks for existing projects
+                    else if (_portal.Projects.Any())
+                    {
+                        _project = _portal.Projects.First();
+                    }
                 }
-                // checks for existing projects
-                else if (_portal.Projects.Any())
+                catch (Exception ex) when (DetectLoss(ex) != null)
                 {
-                    _project = _portal.Projects.First();
+                    // TIA Portal went away between the process check and the read: DetectLoss
+                    // has dropped the connection, and the state below says "not connected".
                 }
+            }
+
+            string? project = null;
+            string? session = null;
+
+            try
+            {
+                project = _project?.Name;
+                session = _session?.Project.Name;
+            }
+            catch (Exception ex) when (DetectLoss(ex) != null)
+            {
+                // The project object is dead: reported as not connected below.
             }
 
             return new State
             {
-                IsConnected = IsConnected(),
-                Project = _project != null ? _project.Name : "-",
-                Session = _session != null ? _session.Project.Name : "-"
+                IsConnected = _portal != null,
+                Project = project ?? "-",
+                Session = session ?? "-"
             };
         }
 
@@ -584,6 +669,11 @@ namespace TiaMcpServer.Siemens
             return false;
         }
 
+        /// <summary>Why there is no project: not connected at all (TIA Portal gone or never attached), or connected with nothing open.</summary>
+        private string NoProjectMessage => _portal == null
+            ? "Not connected to TIA Portal. Start it if it is not running, call 'connect', and 'open_project' if no project is open."
+            : "No project is open in TIA Portal. Open one with 'open_project'.";
+
         private bool IsProjectNull()
         {
             if (_project == null)
@@ -891,7 +981,9 @@ namespace TiaMcpServer.Siemens
                 return body();
             }
 
-            using (access)
+            var failed = false;
+
+            try
             {
                 Transaction? transaction;
 
@@ -906,7 +998,7 @@ namespace TiaMcpServer.Siemens
                     return body();
                 }
 
-                using (transaction)
+                try
                 {
                     T result;
 
@@ -921,8 +1013,8 @@ namespace TiaMcpServer.Siemens
                         _inTransaction = false;
                     }
 
-                    // Only reached when the body did not throw. Without this call the using
-                    // block rolls the transaction back on dispose.
+                    // Only reached when the body did not throw. Without this call the dispose
+                    // below rolls the transaction back.
                     transaction.CommitOnDispose();
 
                     if (access.IsCancellationRequested)
@@ -932,6 +1024,51 @@ namespace TiaMcpServer.Siemens
 
                     return result;
                 }
+                catch (Exception)
+                {
+                    failed = true;
+
+                    throw;
+                }
+                finally
+                {
+                    DisposeAfterWrite(transaction, failed);
+                }
+            }
+            catch (Exception ex) when (ex is not PortalException)
+            {
+                failed = true;
+
+                // A write that closed TIA Portal ends here with whatever the dead objects throw.
+                var translated = Operation.TranslateLoss(ex);
+
+                if (ReferenceEquals(translated, ex))
+                {
+                    throw;
+                }
+
+                throw translated;
+            }
+            finally
+            {
+                DisposeAfterWrite(access, failed);
+            }
+        }
+
+        /// <summary>
+        /// Disposes the transaction or the exclusive access. After a failed write the objects may
+        /// belong to a TIA Portal that is gone, and a dispose that throws there would replace the
+        /// failure the client has to read - so it is only logged then.
+        /// </summary>
+        private void DisposeAfterWrite(IDisposable disposable, bool writeFailed)
+        {
+            try
+            {
+                disposable.Dispose();
+            }
+            catch (Exception ex) when (writeFailed)
+            {
+                _logger?.LogDebug(ex, "Disposing {Type} after a failed write threw", disposable.GetType().Name);
             }
         }
 

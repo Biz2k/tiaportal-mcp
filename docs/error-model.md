@@ -156,3 +156,15 @@ than a `PortalErrorCode`:
 
 - Portal-layer C# files and their unit tests must retain Windows CRLF line endings to avoid newline parsing faults during deploy scripts.
 - Markdown docs in this repo should also use CRLF and UTF-8 with BOM when committed from Windows to prevent the "UTF-8 signature" warnings the tooling flags.
+
+## TIA Portal gone
+
+A few Openness calls end in a `NonRecoverableException` and TIA Portal closes with the unsaved project.
+`Operation.Decorate` (and `Portal.InTransaction`) pass every exception through `TiaLoss.Classify`:
+
+- `NonRecoverableException` anywhere in the chain (matched by type name) - the connection is dropped and the client reads
+  "TIA Portal was closed by the call that was just made ... Start TIA Portal and call 'connect'" (`InvalidState`).
+- "disposed object" - the same when the TIA Portal process the server attached to has gone; when it still runs, the
+  message says the project was closed in TIA Portal and points at `get_state` / `open_project`.
+- `get_state` and `IsConnected()` check that the process is alive, so they report `isConnected: false` without a failing call.
+- Disposing the transaction after a failed write is logged, not thrown: on a dead TIA Portal it would replace the real failure.

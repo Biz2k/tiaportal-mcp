@@ -126,7 +126,7 @@ namespace TiaMcpServer.Siemens
                     {
                         if (IsProjectNull())
                         {
-                            throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
+                            throw new PortalException(PortalErrorCode.InvalidState, NoProjectMessage);
                         }
 
                         library = _project!.ProjectLibrary;

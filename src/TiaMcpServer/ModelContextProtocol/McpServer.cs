@@ -330,7 +330,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     else
                     {
-                        throw new McpException("Failed to save project");
+                        throw new McpException(Portal.IsConnected()
+                            ? "Failed to save project: no project is open in TIA Portal."
+                            : "Failed to save project: not connected to TIA Portal. Call 'connect' first.");
                     }
                 }
             }

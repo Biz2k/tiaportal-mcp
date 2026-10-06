@@ -58,6 +58,21 @@ namespace TiaMcpServer.Siemens
     // every method here carried a second code path that could not do the job, guarded by
     // try/catch. Each tool name now says which system it is for.
     //
+    // GetAttributeInfos / GetAttribute on Openness objects: audited 2026-10-06 on V21, one object
+    // per kind, every attribute read, in the test project (task 05 of docs/handoff). None closed
+    // TIA Portal - except the WinCC Unified ALARM (see Portal.Unified.Alarms.cs), which is never
+    // touched this way. Safe: HmiScreen; every screen item type of the project (IOField,
+    // SymbolicIOField, Rectangle, Circle, Line, Polyline, Polygon, ScreenWindow, TextBox, Text,
+    // Button, GraphicView, CustomWidgetContainer, FaceplateContainer, AlarmControl, TrendControl,
+    // TrendCompanion, Gauge, Bar, ToggleSwitch) and every other type the server can create
+    // (Slider, Clock, ListBox, RadioButtonGroup, ... - 39 of 45, the rest do not exist on a panel);
+    // the dynamizations Script, Tag, Expression, ResourceList and Flashing; the event handlers of
+    // screens, buttons, IO fields and widgets, and the property event handler; HmiConnection (S7);
+    // HmiTag and the members of structured tags; and, for the classic Openness objects behind
+    // Helper.cs, device, device items (rail, CPU, switch), OB/FB/FC/DB blocks in LAD/STL/SCL,
+    // PlcStruct, tag tables, PLC tags and subnets. Not audited: an item type that can only be
+    // made by hand in TIA Portal and is not in the project, and connections of other drivers.
+    //
     // The Unified UI classes are reached through 'dynamic': they live in an assembly this
     // project does not reference at compile time for every TIA Portal version it supports.
 
@@ -71,7 +86,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull())
             {
-                throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
+                throw new PortalException(PortalErrorCode.InvalidState, NoProjectMessage);
             }
 
             var container = GetSoftwareContainer(softwarePath);

@@ -12,6 +12,18 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Fixed (TIA Portal closed by a call)
+
+- After a call that closes TIA Portal (`NonRecoverableException`) the server believed it was still connected and answered
+  every later call with "Access to a disposed object of type 'Siemens.Engineering.Project' is not possible". It now
+  recognises the loss, drops the connection and says what happened: TIA Portal was closed by the call, unsaved changes are
+  lost, start it and call `connect`. `get_state` reports `isConnected: false`, also when TIA Portal was closed by the user.
+  Disposing a transaction on a dead TIA Portal no longer replaces the real error. "No project is open" says "Not connected to
+  TIA Portal" when that is the case.
+- Audit of `GetAttributeInfos` (task 05): safe on every screen item type, dynamization, event handler, tag, tag member,
+  connection, device, block, type and subnet that could be made or found in the test project; only the WinCC Unified alarm
+  closes TIA Portal. A guard test keeps generic attribute access out of the alarm, log, script and screen group code.
+
 ### Added (WinCC Unified logs and logging tags)
 
 - __`unified_get_logs`__ and __`unified_manage_logs`__: data logs, alarm logs (create, update, upsert, delete) and

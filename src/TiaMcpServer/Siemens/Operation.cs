@@ -29,6 +29,35 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         private const string LoggedKey = "__logged";
 
+        /// <summary>
+        /// Set by Portal: tells whether an exception means TIA Portal is gone (and drops the
+        /// connection) by returning the message for the client, or null for an ordinary failure.
+        /// </summary>
+        internal static Func<Exception, string?>? LossHandler { get; set; }
+
+        /// <summary>The exception as the client should see it: a TIA Portal that is gone gets a message that says so.</summary>
+        internal static Exception TranslateLoss(Exception ex)
+        {
+            if (ex is PortalException)
+            {
+                return ex;
+            }
+
+            string? lost;
+
+            try
+            {
+                lost = LossHandler?.Invoke(ex);
+            }
+            catch (Exception)
+            {
+                // Looking for the reason must not hide the failure itself.
+                return ex;
+            }
+
+            return lost == null ? ex : new PortalException(PortalErrorCode.InvalidState, lost, null, ex);
+        }
+
         internal static T Run<T>(
             ILogger? logger,
             string operation,
@@ -100,7 +129,7 @@ namespace TiaMcpServer.Siemens
         {
             // The reason goes into the message itself: the MCP SDK sends the message to the
             // client and nothing else, so text left in InnerException never reaches the model.
-            var pex = ex as PortalException
+            var pex = TranslateLoss(ex) as PortalException
                       ?? new PortalException(failCode, $"{operation} failed: {ErrorText.Describe(ex)}", null, ex);
 
             // Inner frames win: an inner Run already recorded the most specific context.
