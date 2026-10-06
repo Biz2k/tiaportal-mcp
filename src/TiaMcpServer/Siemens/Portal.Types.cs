@@ -160,51 +160,32 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        public bool ImportXmlType(string softwarePath, string groupPath, string importPath)
+        /// <summary>Imports a SimaticML type file into a group; see <see cref="ImportXmlBlock"/> for 'overwrite'.</summary>
+        public bool ImportXmlType(string softwarePath, string groupPath, string importPath, bool overwrite = true)
         {
-            _logger?.LogInformation($"Importing type from path: {importPath}");
-
-            var success = false;
-
-            if (IsProjectNull())
-            {
-                return success;
-            }
-
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software is PlcSoftware plcSoftware)
-            {
-                var typeGroup = plcSoftware?.TypeGroup;
-
-                if (typeGroup != null)
+            return Operation.Run(_logger, nameof(ImportXmlType), PortalErrorCode.ImportFailed,
+                () =>
                 {
-                    var group = GetPlcTypeGroupByPath(softwarePath, groupPath);
-                    if (group == null)
+                    var group = GetPlcTypeGroupByPath(softwarePath, groupPath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Type group not found at '{groupPath}'. Use 'plc_get_software_tree' to discover valid group paths.");
+
+                    if (!File.Exists(importPath))
                     {
-                        return false;
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"Import file '{importPath}' does not exist on the machine running this server.");
                     }
 
-                    try
-                    {
-                        // Correct the argument type by using FileInfo instead of FileStream  
-                        var fileInfo = new FileInfo(importPath);
-                        if (fileInfo.Exists)
-                        {
-                            var list = group.Types.Import(fileInfo, ImportOptions.Override);
-                            if (list != null && list.Count > 0)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        return false;
-                    }
-                }
-            }
+                    var list = group.Types.Import(new FileInfo(importPath), overwrite ? ImportOptions.Override : ImportOptions.None);
 
-            return success;
+                    if (list == null || list.Count == 0)
+                    {
+                        throw new PortalException(PortalErrorCode.ImportFailed, $"TIA Portal imported nothing from '{importPath}'.");
+                    }
+
+                    return true;
+                },
+                ("softwarePath", softwarePath), ("groupPath", groupPath), ("importPath", importPath), ("overwrite", overwrite));
         }
 
         public IEnumerable<PlcType>? ExportXmlTypes(string softwarePath, string exportPath, string regexName = "", bool preservePath = false)

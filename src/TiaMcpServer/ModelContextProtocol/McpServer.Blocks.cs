@@ -597,7 +597,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "plc_create_fb", Title = "Create function block", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Create an empty function block in LAD, FBD, STL, SCL or ProDiag. For a block with code use 'plc_create_scl_block' (SCL text) or 'import_objects' (exported XML). The response carries the block number TIA Portal assigned")]
+         Description("Create an empty function block in LAD, FBD, STL, SCL or ProDiag (LAD, FBD and STL are built from a template made for TIA Portal V21; on an older version they are untested). For a block with code use 'plc_create_scl_block' (SCL text) or 'import_objects' (exported XML). The response carries the block number TIA Portal assigned")]
         public static ResponseCreated CreateFB(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: root-relative block group that receives the FB; empty uses the Program blocks root")] string groupPath,

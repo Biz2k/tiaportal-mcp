@@ -822,57 +822,53 @@ namespace TiaMcpServer.Siemens
             return exportList;
         }
 
+        /// <summary>Imports one block from a source document; a failure reaches the caller with the messages TIA Portal gave.</summary>
         public bool ImportFromDocuments(string softwarePath, string groupPath, string importPath, string fileNameWithoutExtension, ImportDocumentOptions option)
         {
-            _logger?.LogInformation($"Importing block from documents: {fileNameWithoutExtension} in {importPath}");
-
-            if (IsProjectNull())
-            {
-                return false;
-            }
-
-            if (Engineering.TiaMajorVersion < 20)
-            {
-                _logger?.LogWarning("ImportFromDocuments is only supported on TIA Portal V20 or newer");
-                return false;
-            }
-
-            try
-            {
-                var softwareContainer = GetSoftwareContainer(softwarePath);
-                if (softwareContainer?.Software is PlcSoftware plcSoftware)
+            return Operation.Run(_logger, nameof(ImportFromDocuments), PortalErrorCode.ImportFailed,
+                () =>
                 {
-                    var group = GetPlcBlockGroupByPath(softwarePath, groupPath);
-                    var dir = new DirectoryInfo(importPath);
-                    if (!dir.Exists)
+                    if (Engineering.TiaMajorVersion < 20)
                     {
-                        _logger?.LogWarning($"Import directory does not exist: {importPath}");
-                        return false;
+                        throw new PortalException(PortalErrorCode.NotSupported, "ImportFromDocuments requires TIA Portal V20 or newer.");
                     }
 
-                    DocumentImportResult? result = null;
+                    var plcSoftware = GetPlcSoftwareOrThrow(softwarePath);
+                    var group = GetPlcBlockGroupByPath(softwarePath, groupPath);
+                    var dir = new DirectoryInfo(importPath);
+
+                    if (!dir.Exists)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"Import directory '{importPath}' does not exist on the machine running this server.");
+                    }
+
+                    DocumentImportResult? result;
+
                     try
                     {
-                        result = (group != null)
+                        result = group != null
                             ? group.Blocks.ImportFromDocuments(dir, fileNameWithoutExtension, option)
                             : plcSoftware.BlockGroup.Blocks.ImportFromDocuments(dir, fileNameWithoutExtension, option);
                     }
                     catch (EngineeringNotSupportedException ex)
                     {
-                        throw new PortalException(PortalErrorCode.ExportFailed, $"EngineeringNotSupportedException at file '{fileNameWithoutExtension}'. {ex.Message}", null, ex);
+                        throw new PortalException(PortalErrorCode.NotSupported,
+                            $"TIA Portal cannot import '{fileNameWithoutExtension}' from a source document. {ex.Message}", null, ex);
                     }
 
-                    if (result != null && result.State == DocumentResultState.Success)
+                    if (result == null || result.State == DocumentResultState.Failure)
                     {
-                        return true;
+                        var detail = DescribeImportMessages(result);
+
+                        throw new PortalException(PortalErrorCode.ImportFailed,
+                            $"TIA Portal reported '{result?.State.ToString() ?? "Failure"}' importing '{fileNameWithoutExtension}'. " +
+                            (detail.Length > 0 ? detail : "No further detail was returned."));
                     }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Error importing block from documents");
-            }
-            return false;
+
+                    return true;
+                },
+                ("softwarePath", softwarePath), ("groupPath", groupPath), ("importPath", importPath), ("file", fileNameWithoutExtension));
         }
 
         public IEnumerable<PlcBlock>? ImportBlocksFromDocuments(string softwarePath, string groupPath, string importPath, string regexName, ImportDocumentOptions option, bool preservePath = false)

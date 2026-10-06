@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
+using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -114,20 +115,33 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        /// <summary>True when the failure says the object's name is already in use (an import without 'overwrite').</summary>
+        private static bool IsNameTaken(Exception ex)
+        {
+            var text = Why(ex);
+
+            return text.IndexOf("already exist", StringComparison.OrdinalIgnoreCase) >= 0
+                || text.IndexOf("already in use", StringComparison.OrdinalIgnoreCase) >= 0
+                || text.IndexOf("name conflict", StringComparison.OrdinalIgnoreCase) >= 0
+                || text.IndexOf("same name", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         [WriteTool]
         [McpServerTool(Name = "import_objects", Title = "Import objects", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Universal tool to import files into the PLC. format must be 'xml', 'document', or 'source'. For document/xml imports conflict_resolution must be 'overwrite', 'skip', or 'rename'.")]
+         Description("Universal tool to import files into the PLC. format must be 'xml', 'document', or 'source'. conflict_resolution is 'overwrite' (a block or type of the same name in the target group is replaced; one in another group makes the import fail) or 'skip' (a name that is taken is left alone and reported as skipped); 'rename' is not offered. A 'source' file is compiled into the group its folder implies (target_group does not apply to it). Every file gets its own result; nothing is reported as imported unless TIA Portal imported it")]
         public static object ImportObjects(
             [Description("softwarePath: path to PLC software")] string softwarePath,
             [Description("file_paths: list of file paths to import")] string[] file_paths,
             [Description("format: 'xml', 'document', or 'source'")] string format,
             [Description("target_group: optional group path to import into (e.g. 'MyGroup'). Leave empty for root.")] string target_group = "",
-            [Description("conflict_resolution: 'overwrite', 'skip', or 'rename'")] string conflict_resolution = "overwrite")
+            [Description("conflict_resolution: 'overwrite' (default) or 'skip'")] string conflict_resolution = "overwrite")
         {
             try
             {
+                var overwrite = ImportConflictResolution.ParseOverwrite(conflict_resolution);
                 var results = new List<object>();
                 int successCount = 0;
+                int skipped = 0;
 
                 foreach (var file in file_paths)
                 {
@@ -135,28 +149,49 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         if (format.ToLower() == "xml")
                         {
+                            if (!File.Exists(file))
+                            {
+                                throw new PortalException(PortalErrorCode.InvalidParams, $"Import file '{file}' does not exist on the machine running this server.");
+                            }
+
                             string xmlContent = File.ReadAllText(file);
                             if (xmlContent.Contains("<SW.Blocks."))
-                                Portal.ImportXmlBlock(softwarePath, target_group, file);
+                                Portal.ImportXmlBlock(softwarePath, target_group, file, overwrite);
                             else if (xmlContent.Contains("<SW.Types."))
-                                Portal.ImportXmlType(softwarePath, target_group, file);
+                                Portal.ImportXmlType(softwarePath, target_group, file, overwrite);
                             else if (xmlContent.Contains("<SW.Tags."))
-                                Portal.ImportXmlTagTable(softwarePath, target_group, file);
+                                Portal.ImportXmlTagTable(softwarePath, target_group, file, overwrite);
                             else if (xmlContent.Contains("<SW.WatchAndForceTables."))
-                                Portal.ImportWatchTable(softwarePath, target_group, file);
+                                Portal.ImportWatchTable(softwarePath, target_group, file, overwrite);
                             else
-                                throw new Exception("Unknown XML content type. Could not determine block/type/tag/watch from file.");
+                                throw new PortalException(PortalErrorCode.InvalidParams, "Unknown XML content type. Could not determine block/type/tag/watch from file.");
                         }
                         else if (format.ToLower() == "document")
                         {
                             var importPath = Path.GetDirectoryName(file);
                             var fileName = Path.GetFileNameWithoutExtension(file);
-                            var option = ParseImportDocumentOption(conflict_resolution == "skip" ? "None" : "Override");
+                            var option = ParseImportDocumentOption(overwrite ? "Override" : "None");
                             Portal.ImportFromDocuments(softwarePath, target_group, importPath, fileName, option);
                         }
                         else if (format.ToLower() == "source")
                         {
-                            Portal.ImportSources(softwarePath, file, "", false); 
+                            if (!File.Exists(file))
+                            {
+                                throw new PortalException(PortalErrorCode.InvalidParams, $"Import file '{file}' does not exist on the machine running this server.");
+                            }
+
+                            var sources = Portal.ImportSources(softwarePath, Path.GetDirectoryName(Path.GetFullPath(file)) ?? string.Empty,
+                                "^" + System.Text.RegularExpressions.Regex.Escape(Path.GetFileNameWithoutExtension(file)) + "$", false);
+
+                            if (sources.Failures.Count > 0)
+                            {
+                                throw new PortalException(PortalErrorCode.ImportFailed, string.Join(" ", sources.Failures));
+                            }
+
+                            if (sources.Items.Count == 0)
+                            {
+                                throw new PortalException(PortalErrorCode.ImportFailed, $"Nothing was generated from '{file}'.");
+                            }
                         }
                         else
                         {
@@ -166,14 +201,20 @@ namespace TiaMcpServer.ModelContextProtocol
                         results.Add(new { status = "success", file = file });
                         successCount++;
                     }
+                    catch (Exception ex) when (!overwrite && IsNameTaken(ex))
+                    {
+                        results.Add(new { status = "skipped", file = file, reason = Why(ex) });
+                        skipped++;
+                    }
                     catch (Exception ex)
                     {
-                        results.Add(new { status = "error", file = file, error = Why(ex) });
+                        results.Add(new { status = "error", file = file, error = Why(ex) + (overwrite && IsNameTaken(ex)
+                            ? " 'overwrite' replaces only an object of that name in the target group: import into the group that holds it, or move or delete the existing object." : string.Empty) });
                     }
                 }
 
                 return new { 
-                    Message = $"Imported {successCount} out of {file_paths.Length} files.",
+                    Message = $"Imported {successCount} out of {file_paths.Length} files" + (skipped > 0 ? $", {skipped} skipped because the name is taken." : "."),
                     SuccessCount = successCount, 
                     Results = results, 
                     Meta = OkMeta() 

@@ -190,51 +190,36 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        public bool ImportXmlBlock(string softwarePath, string groupPath, string importPath)
+        /// <summary>
+        /// Imports a SimaticML block file into a group. With 'overwrite' a block of the same name is replaced
+        /// (wherever it lives, so the result may not be in the target group); without it TIA Portal refuses a
+        /// name that is taken. Every failure reaches the caller with its reason.
+        /// </summary>
+        public bool ImportXmlBlock(string softwarePath, string groupPath, string importPath, bool overwrite = true)
         {
-            _logger?.LogInformation($"Importing block from path: {importPath}");
-
-            if (IsProjectNull())
-            {
-                return false;
-            }
-
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software is PlcSoftware plcSoftware)
-            {
-                var blockGroup = plcSoftware?.BlockGroup;
-
-                if (blockGroup != null)
+            return Operation.Run(_logger, nameof(ImportXmlBlock), PortalErrorCode.ImportFailed,
+                () =>
                 {
+                    var group = GetPlcBlockGroupByPath(softwarePath, groupPath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"Block group not found at '{groupPath}'. Use 'plc_get_software_tree' to discover valid group paths.");
 
-                    var group = GetPlcBlockGroupByPath(softwarePath, groupPath);
-                    if (group == null)
+                    if (!File.Exists(importPath))
                     {
-                        return false;
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"Import file '{importPath}' does not exist on the machine running this server.");
                     }
 
-                    try
-                    {
-                        // Correct the argument type by using FileInfo instead of FileStream  
-                        var fileInfo = new FileInfo(importPath);
-                        if (fileInfo.Exists)
-                        {
-                            var list = group.Blocks.Import(fileInfo, ImportOptions.Override);
-                            if (list != null && list.Count > 0)
-                            {
-                                return true;
-                            }
-                        }
+                    var list = group.Blocks.Import(new FileInfo(importPath), overwrite ? ImportOptions.Override : ImportOptions.None);
 
-                    }
-                    catch (Exception)
+                    if (list == null || list.Count == 0)
                     {
-                        return false;
+                        throw new PortalException(PortalErrorCode.ImportFailed, $"TIA Portal imported nothing from '{importPath}'.");
                     }
-                }
-            }
 
-            return false;
+                    return true;
+                },
+                ("softwarePath", softwarePath), ("groupPath", groupPath), ("importPath", importPath), ("overwrite", overwrite));
         }
 
         public IEnumerable<PlcBlock>? ExportXmlBlocks(string softwarePath, string exportPath, string regexName = "", bool preservePath = false)

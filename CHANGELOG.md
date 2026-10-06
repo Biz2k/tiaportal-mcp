@@ -12,6 +12,14 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Fixed (import_objects)
+
+- `import_objects` reported every file as imported even when TIA Portal refused it: the block, type and document imports
+  swallowed the reason and the tool ignored the result, and a `source` file was passed where a folder is needed. Each file
+  now gets its own result with the reason. `conflict_resolution` is `overwrite` or `skip` (a taken name is reported as
+  `skipped`); `rename` is refused, because TIA Portal cannot rename on import. `overwrite` replaces only an object of that
+  name in the target group; another group gives a refusal with the way out.
+
 ### Added (WinCC Unified dynamization options and property events)
 
 - `unified_manage_items`: a tag binding takes `readOnly`, `indirect` (a String tag naming the tag to read), `formula` or a
