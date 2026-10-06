@@ -255,7 +255,8 @@ Comfort, Advanced и Professional, поэтому все три сообщают
 - Привязка к тегу принимает рядом с `tag` параметры: `"readOnly"`, `"indirect"` (тег типа String с именем читаемого
   тега) и либо `"formula"` (`"'Tag_1'*2+1"`), либо `"mapping"`: `{"type": "range", "entries": [{"from": 0, "to": 30,
   "value": "#00FF00"}, {"from": 31, "to": 70, "value": "Yellow", "flashing": true, "rate": "Fast", "alternate": "#808080"}]}`,
-  `{"type": "singlebit", "entries": [{"bit": 0, "value": "Red"}, {"bit": 1, "value": "Green"}]}` или `{"type": "none"}`.
+  `{"type": "singlebit", "entries": [{"bit": 0, "value": "Red"}, {"bit": 1, "value": "Green"}]}` или `{"type": "none"}`. Каждой строке диапазона нужны `from` и `to`: строки «до значения» и «от значения» создать
+  нельзя (Openness отдаёт тип диапазона строки только для чтения) — для открытого конца берите очень большое `to`.
 - Скрипт принимает `"async"`, `"globalDefinitions"` (область одна на все скрипт-динамизации экрана) и `"trigger"`:
   `"T1s"` (от `T100ms` до `T10s`), `"AutomaticTags"`, `"Disabled"`, `{"type": "Tags", "tags": ["Tag_1"]}` или
   `{"type": "CustomCycle", "cycle": "Имя цикла"}`. Тип можно не указывать: `{"tags": [...]}` — это триггер `Tags`, `{"cycle": "..."}` — `CustomCycle`.
