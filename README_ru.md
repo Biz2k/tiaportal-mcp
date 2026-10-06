@@ -143,7 +143,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Поиск и ссылки                   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Экспорт и предпросмотр           | `export_objects`, `preview_import` |
 | Библиотеки                       | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
-| WinCC Unified                    | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_connections` |
+| WinCC Unified                    | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections` |
 | Загрузка                         | `get_download_targets` |
 
 Не регистрируются с `--read-only` (57):
@@ -160,7 +160,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Внешние исходные файлы           | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Оборудование                     | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control` |
+| WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections` |
 | Загрузка                         | `download_to_plc` |
 
 `plc_get_software_tree` принимает параметр `sections` — любое подмножество
@@ -263,6 +263,49 @@ Comfort, Advanced и Professional, поэтому все три сообщают
 `unified_configure_trend_control` добавляет тренд в `HmiTrendControl` и привязывает его к
 источнику данных. `HmiTrendCompanion` — обычный элемент: его свойство `SourceTrendControl`
 называет элемент тренда.
+
+### Теги, таблицы тегов и соединения
+
+`unified_manage_tags` создаёт, изменяет, создаёт-или-изменяет и удаляет HMI-теги, сразу несколько
+за вызов:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1",
+  "actions": [
+    { "action": "create", "tagName": "Setpoint", "tagTable": "Internal",
+      "properties": { "DataType": "Real", "InitialValue": 1.5, "Persistent": true } },
+    { "action": "upsert", "tagName": "Pump1", "tagTable": "Pumps",
+      "properties": { "Connection": "HMI_Connection_1", "PlcTag": "HMI.Pumps.CP_1" } },
+    { "action": "upsert", "tagName": "Level",
+      "properties": { "Connection": "HMI_Connection_1", "AccessMode": "AbsoluteAccess",
+                      "DataType": "Int", "Address": "%MW100" } },
+    { "action": "delete", "tagName": "Old_Tag" }
+  ]
+}
+```
+
+- Новый тег — внутренний, типа `Int`, в таблице тегов по умолчанию, если `tagTable` и
+  `properties` не задают иное. Пустое `Connection` снова делает тег внутренним.
+- Символьному тегу ПЛК нужны `Connection` и `PlcTag`; тип данных берётся от тега ПЛК.
+  Абсолютному — `Connection`, `AccessMode`, `DataType` и `Address`. Порядок, в котором вы их
+  пишете, не важен.
+- `Name` переименовывает тег. `Comment` принимает строку или `{ "en-US": "..." }`.
+- `DisplayName` отклоняется: его запись через Openness закрывает TIA Portal.
+- Тег нельзя перенести в другую таблицу; удалите его и создайте там.
+
+`unified_manage_tag_tables` создаёт, переименовывает и удаляет таблицы тегов. Удаление таблицы
+удаляет её теги; таблицу по умолчанию удалить нельзя.
+
+`unified_manage_connections` создаёт, изменяет и удаляет соединения. `properties` принимает
+`CommunicationDriver`, `Comment`, `DisabledAtStartup` и `Name`; `driverProperties` — параметры
+драйвера, например `{ "Protocol.RemStAddress": "192.168.0.10" }`, их перечисляет
+`unified_get_connections`. Созданное так соединение **не интегрированное**: Openness не может
+назначить партнёром ПЛК проекта, поэтому теги на нём используют абсолютные адреса. Соединение с
+ПЛК проекта создаётся в сетевом виде TIA Portal.
+
+Все три инструмента применяют все действия или ни одного. Тег или соединение, которые ещё
+используются, TIA Portal удаляет без предупреждения.
 
 ### Фейсплейты
 

@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+### Added (WinCC Unified tags and connections)
+
+- __`unified_manage_tags`__: create, update, upsert and delete HMI tags, several per call - internal
+  tags, symbolic PLC tags (`Connection` + `PlcTag`) and absolute ones (`Connection`, `AccessMode`,
+  `DataType`, `Address`). The properties are applied in the order Openness needs, whatever order
+  they are given in. `DisplayName` is refused: writing it through Openness ends in a
+  `NonRecoverableException` that closes TIA Portal (found on V21, 2026-10-06).
+- __`unified_manage_tag_tables`__: create, rename and delete tag tables.
+- __`unified_manage_connections`__: create, update and delete connections and set their driver
+  parameters. A connection created through Openness is not integrated - `Partner`, `Node` and
+  `Station` are read-only - and the tool says so.
+- __`unified_get_tag_tables`__: the tag tables with their group and tag count.
+- `unified_get_tags` reports the tag table of each tag and takes `tagTable`; an internal tag has no
+  connection instead of `<Internal tag>`. `unified_get_connections` lists the driver parameters.
+- 112 tools are registered by default.
 ### Changed (WinCC Unified tool set)
 
 - __Breaking: the HMI tools are now `unified_*` and serve WinCC Unified only.__ The `hmi_*` tools

@@ -97,14 +97,15 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "unified_get_tags", Title = "Get WinCC Unified tags", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
-         Description("List the HMI tags of a WinCC Unified HMI with data type, connection and PLC tag. A large HMI has thousands of tags: narrow the list with nameFilter")]
+         Description("List the HMI tags of a WinCC Unified HMI with tag table, data type, connection and PLC tag; a tag without a connection is an internal tag. A large HMI has thousands of tags: narrow the list with nameFilter or tagTable")]
         public static ResponseHmiTags GetUnifiedTags(
             [Description(UnifiedPath)] string softwarePath,
-            [Description("nameFilter: regular expression on the tag name, case-insensitive; empty (default) returns every tag")] string nameFilter = "")
+            [Description("nameFilter: regular expression on the tag name, case-insensitive; empty (default) returns every tag")] string nameFilter = "",
+            [Description("tagTable: return only the tags of this tag table; 'unified_get_tag_tables' lists the tables")] string tagTable = "")
         {
             try
             {
-                var tags = Portal.GetUnifiedTags(softwarePath, nameFilter);
+                var tags = Portal.GetUnifiedTags(softwarePath, nameFilter, tagTable);
 
                 return new ResponseHmiTags
                 {
@@ -121,8 +122,30 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "unified_get_tag_tables", Title = "Get WinCC Unified tag tables", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("List the tag tables of a WinCC Unified HMI with the number of tags in each")]
+        public static ResponseUnifiedTagTables GetUnifiedTagTables(
+            [Description(UnifiedPath)] string softwarePath)
+        {
+            try
+            {
+                var tables = Portal.GetUnifiedTagTables(softwarePath);
+
+                return new ResponseUnifiedTagTables
+                {
+                    Message = $"{tables.Count} tag table(s) in '{softwarePath}'",
+                    Items = tables,
+                    Meta = ReadMeta()
+                };
+            }
+            catch (Exception ex)
+            {
+                throw ToolError(ex);
+            }
+        }
+
         [McpServerTool(Name = "unified_get_connections", Title = "Get WinCC Unified connections", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
-         Description("List the connections of a WinCC Unified HMI to PLCs with their attributes")]
+         Description("List the connections of a WinCC Unified HMI with their attributes and driver parameters ('DriverProperties')")]
         public static ResponseUnifiedList GetUnifiedConnections(
             [Description(UnifiedPath)] string softwarePath)
         {
@@ -182,6 +205,50 @@ namespace TiaMcpServer.ModelContextProtocol
                 return Deleted("Screen", screenName);
             });
         }
+
+        #endregion
+
+        #region tags and connections (write)
+
+        [WriteTool]
+        [McpServerTool(Name = "unified_manage_tags", Title = "Manage WinCC Unified tags", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, update, upsert or delete HMI tags of a WinCC Unified HMI, several at once. A new tag is an internal Int tag in the default tag table unless tagTable and properties say otherwise. For a PLC tag set Connection and PlcTag (symbolic; the data type follows the PLC tag) or Connection, AccessMode 'AbsoluteAccess', DataType and Address. A call applies all of its actions or none. A tag that screens still use is deleted without warning")]
+        public static ResponseUnifiedActions ManageUnifiedTags(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("actions: the changes to make, applied in order")] List<UnifiedTagAction> actions)
+        {
+            return Guarded(nameof(ManageUnifiedTags), () => UnifiedActions(Portal.ManageUnifiedTags(softwarePath, actions)));
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "unified_manage_tag_tables", Title = "Manage WinCC Unified tag tables", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, rename or delete tag tables of a WinCC Unified HMI, several at once. Deleting a table deletes the tags in it; the default tag table cannot be deleted. A call applies all of its actions or none")]
+        public static ResponseUnifiedActions ManageUnifiedTagTables(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("actions: the changes to make, applied in order")] List<UnifiedTagTableAction> actions)
+        {
+            return Guarded(nameof(ManageUnifiedTagTables), () => UnifiedActions(Portal.ManageUnifiedTagTables(softwarePath, actions)));
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "unified_manage_connections", Title = "Manage WinCC Unified connections", Destructive = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, update, upsert or delete connections of a WinCC Unified HMI, several at once. A connection created here is not integrated: Openness cannot assign a PLC of the project as its partner, so its address is set through driverProperties, and HMI tags on it use absolute addresses. A connection to a project PLC is made in the network view of TIA Portal. A call applies all of its actions or none. A connection that tags still use is deleted without warning")]
+        public static ResponseUnifiedActions ManageUnifiedConnections(
+            [Description(UnifiedPath)] string softwarePath,
+            [Description("actions: the changes to make, applied in order")] List<UnifiedConnectionAction> actions)
+        {
+            return Guarded(nameof(ManageUnifiedConnections), () => UnifiedActions(Portal.ManageUnifiedConnections(softwarePath, actions)));
+        }
+
+        // All or nothing: the Portal method throws when any action fails, which rolls the
+        // transaction back, so a list that arrives here holds only applied actions.
+        private static ResponseUnifiedActions UnifiedActions(List<UnifiedActionResult> results) => new ResponseUnifiedActions
+        {
+            Results = results,
+            SuccessCount = results.Count,
+            Message = $"{results.Count} action(s) applied. {SaveHint}",
+            Meta = OkMeta()
+        };
 
         #endregion
 

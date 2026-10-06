@@ -139,7 +139,7 @@ Always available (57):
 | Search and references   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Export and preview      | `export_objects`, `preview_import` |
 | Libraries               | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
-| WinCC Unified           | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_connections` |
+| WinCC Unified           | `unified_get_screens`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections` |
 | Download                | `get_download_targets` |
 
 Left out with `--read-only` (57):
@@ -156,7 +156,7 @@ Left out with `--read-only` (57):
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Hardware                | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control` |
+| WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_connections` |
 | Download                | `download_to_plc` |
 
 `plc_get_software_tree` accepts a `sections` argument - any comma separated subset of
@@ -256,6 +256,48 @@ property gets either a static value or a dynamization, and `events` attaches scr
 `unified_configure_trend_control` adds a trend to an `HmiTrendControl` and binds it to its data
 source. An `HmiTrendCompanion` is an ordinary item: its `SourceTrendControl` property names the
 trend control.
+
+### Tags, tag tables and connections
+
+`unified_manage_tags` creates, updates, upserts and deletes HMI tags, several at once:
+
+```json
+{
+  "softwarePath": "HMI_1/HMI_RT_1",
+  "actions": [
+    { "action": "create", "tagName": "Setpoint", "tagTable": "Internal",
+      "properties": { "DataType": "Real", "InitialValue": 1.5, "Persistent": true } },
+    { "action": "upsert", "tagName": "Pump1", "tagTable": "Pumps",
+      "properties": { "Connection": "HMI_Connection_1", "PlcTag": "HMI.Pumps.CP_1" } },
+    { "action": "upsert", "tagName": "Level",
+      "properties": { "Connection": "HMI_Connection_1", "AccessMode": "AbsoluteAccess",
+                      "DataType": "Int", "Address": "%MW100" } },
+    { "action": "delete", "tagName": "Old_Tag" }
+  ]
+}
+```
+
+- A new tag is an internal `Int` tag in the default tag table unless `tagTable` and
+  `properties` say otherwise. An empty `Connection` turns a tag back into an internal one.
+- A symbolic PLC tag needs `Connection` and `PlcTag`; the data type follows the PLC tag. An
+  absolute one needs `Connection`, `AccessMode`, `DataType` and `Address`. The order in which
+  you write them does not matter.
+- `Name` renames the tag. `Comment` takes a string or `{ "en-US": "..." }`.
+- `DisplayName` is refused: writing it through Openness closes TIA Portal.
+- A tag cannot be moved to another tag table; delete it and create it there.
+
+`unified_manage_tag_tables` creates, renames and deletes tag tables. Deleting a table deletes its
+tags; the default tag table cannot be deleted.
+
+`unified_manage_connections` creates, updates and deletes connections. `properties` takes
+`CommunicationDriver`, `Comment`, `DisabledAtStartup` and `Name`; `driverProperties` takes the
+parameters of the driver, e.g. `{ "Protocol.RemStAddress": "192.168.0.10" }` -
+`unified_get_connections` lists them. A connection made here is **not integrated**: Openness
+cannot assign a PLC of the project as its partner, so tags on it use absolute addresses. A
+connection to a project PLC is made in the network view of TIA Portal.
+
+All three apply all of their actions or none. A tag or a connection that is still in use is
+deleted without a warning from TIA Portal.
 
 ### Faceplates
 

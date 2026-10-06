@@ -87,7 +87,8 @@ namespace TiaMcpServer.Test
                 "hw_create_device", "hw_plug_module", "hw_delete_device",
                 "net_connect_subnet", "net_disconnect_subnet", "net_create_io_system", "net_connect_to_io_system",
                 "instantiate_master_copy", "import_objects", "unified_create_screen", "unified_delete_screen", "unified_manage_items",
-                "unified_manage_faceplate", "unified_configure_trend_control"
+                "unified_manage_faceplate", "unified_configure_trend_control",
+                "unified_manage_tags", "unified_manage_tag_tables", "unified_manage_connections"
             };
 
             // Act

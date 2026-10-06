@@ -32,7 +32,10 @@ namespace TiaMcpServer.Siemens
     public class HmiTagInfo
     {
         public string Name { get; set; } = string.Empty;
+        public string? TagTable { get; set; }
         public string? DataType { get; set; }
+
+        /// <summary>Name of the connection; null for an internal tag.</summary>
         public string? Connection { get; set; }
         public string? PlcTag { get; set; }
         public string? Address { get; set; }
@@ -186,7 +189,8 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <param name="nameFilter">Regular expression on the tag name; empty returns every tag.</param>
-        public List<HmiTagInfo> GetUnifiedTags(string softwarePath, string nameFilter = "")
+        /// <param name="tagTable">Name of a tag table; empty returns the tags of every table.</param>
+        public List<HmiTagInfo> GetUnifiedTags(string softwarePath, string nameFilter = "", string tagTable = "")
         {
             return Operation.Run(_logger, nameof(GetUnifiedTags), PortalErrorCode.InvalidState,
                 () =>
@@ -209,7 +213,13 @@ namespace TiaMcpServer.Siemens
                     var tags = new List<HmiTagInfo>();
                     HashSet<string>? attributes = null;
 
-                    foreach (var tag in RequireUnifiedSoftware(softwarePath).Tags)
+                    var software = RequireUnifiedSoftware(softwarePath);
+
+                    var source = string.IsNullOrWhiteSpace(tagTable)
+                        ? software.Tags
+                        : RequireTagTable(software, tagTable.Trim()).Tags;
+
+                    foreach (var tag in source)
                     {
                         if (filter != null && !filter.IsMatch(tag.Name))
                         {
@@ -224,8 +234,11 @@ namespace TiaMcpServer.Siemens
                         tags.Add(new HmiTagInfo
                         {
                             Name = tag.Name,
+                            TagTable = ReadTagAttribute(tag, attributes, "TagTableName"),
                             DataType = ReadTagAttribute(tag, attributes, "DataType"),
-                            Connection = ReadTagAttribute(tag, attributes, "Connection"),
+                            Connection = InternalTagConnection.Equals(ReadTagAttribute(tag, attributes, "Connection"), StringComparison.Ordinal)
+                                ? null
+                                : ReadTagAttribute(tag, attributes, "Connection"),
                             PlcTag = ReadTagAttribute(tag, attributes, "PlcTag"),
                             Address = ReadTagAttribute(tag, attributes, "Address")
                         });
@@ -233,8 +246,11 @@ namespace TiaMcpServer.Siemens
 
                     return tags;
                 },
-                ("softwarePath", softwarePath), ("nameFilter", nameFilter));
+                ("softwarePath", softwarePath), ("nameFilter", nameFilter), ("tagTable", tagTable));
         }
+
+        /// <summary>What Openness reports as the connection of a tag that has none.</summary>
+        private const string InternalTagConnection = "<Internal tag>";
 
         private static string? ReadTagAttribute(IEngineeringObject tag, HashSet<string> attributes, string name)
         {
@@ -336,6 +352,8 @@ namespace TiaMcpServer.Siemens
                             }
                             catch { }
                         }
+
+                        entry["DriverProperties"] = DescribeDriverProperties(connection);
 
                         result.Add(entry);
                     }
