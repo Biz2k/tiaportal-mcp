@@ -342,7 +342,7 @@ namespace TiaMcpServer.Siemens
                 {
                     var value = member.GetType().GetProperty("Value")?.GetValue(member);
 
-                    entry.Value = value?.ToString();
+                    entry.Value = Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture);
                     entry.ValueType = value?.GetType().Name;
                 }
                 catch (Exception)

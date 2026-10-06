@@ -12,6 +12,11 @@
 - `docs/handoff/`: project context, recipes for adding a tool, the open work split into tasks,
   and references of the Openness classes for WinCC Unified taken by reflection from V21.
 
+### Changed (WinCC Unified faceplate interface)
+
+- Number and color interface properties of a faceplate are set and read back (checked on a type with Int64, UInt64, Double and Color
+  properties); values are reported culture-independent (`3.5`, not `3,5`).
+
 ### Added (WinCC Unified system text lists)
 
 - `unified_get_text_lists` with `system: true` reads the system text lists of the HMI (alarm texts, error reasons; 22 on the
