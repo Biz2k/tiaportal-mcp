@@ -79,17 +79,17 @@ access. Confirm it in the TIA Portal window.
 
 ### Working on the PC while an agent works in TIA Portal
 
-Two recommendations, both found by measuring on TIA Portal V21:
-
-- **Minimize the TIA Portal window while the agent works.** Every write and every compile makes TIA Portal
-  ask Windows to bring it to the front, and Windows grants that at the moment you switch windows yourself - a click
-  on another window or on the taskbar, Alt+Tab. With an agent calling the server every few seconds the keyboard
-  focus keeps jumping to TIA Portal. A minimized TIA Portal window stays minimized and does not take the focus; the
-  work of the agent is not affected.
-- **Make the first connection after installing or updating the server with the TIA Portal window open.** The
-  question about Openness access is a window of TIA Portal. With TIA Portal minimized it does not come to the front:
-  the first `connect` or `open_tia_project` then waits until it runs into the time limit of the client, and
-  nothing on the screen says why. Open TIA Portal, answer the question, and minimize it again.
+- **TIA Portal takes the keyboard focus now and then while an agent works.** Every write and every compile makes
+  TIA Portal ask Windows to bring it to the front, and Windows grants that at moments of its own choosing - mostly
+  when you switch windows yourself. Minimizing TIA Portal does not prevent it: in a long run the focus still jumped
+  and the window restored itself. Nothing in the server can stop this. Keystrokes you type at such a moment go to
+  TIA Portal - and to the window of the running operation, where Enter or Space presses **Cancel** and stops the
+  batch the agent is writing (nothing is changed, the agent is told). For long work of an agent use a PC, a virtual
+  machine or a remote session you are not typing in.
+- **The first connection after installing or updating the server needs your answer.** TIA Portal asks whether to
+  grant Openness access in a window of its own, which may stay behind other windows. After five seconds `connect`
+  or `open_tia_project` answers that TIA Portal is waiting for you, and the agent asks you to confirm: open TIA
+  Portal, answer the question; the agent then connects.
 
 ## Quick start
 

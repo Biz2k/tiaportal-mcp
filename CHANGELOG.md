@@ -38,13 +38,17 @@
 
 ### Documentation
 
-- README and the skill: minimize the TIA Portal window while an agent works - TIA Portal takes the keyboard focus
-  when the user switches windows during a write or a compile, and a minimized window does not; make the first
-  connection after an update with the window open, because the question about Openness access does not come to the
-  front of a minimized TIA Portal and the call waits without a word.
+- README and the skill: a warning that TIA Portal takes the keyboard focus at moments of its own while an agent
+  writes or compiles, that minimizing it does not prevent this, and that a key pressed then can cancel the running
+  batch; the first connection after an update needs the user's answer to the question about Openness access.
 
 ### Fixed
 
+- A connect that waits for the user says so. TIA Portal asks the user to grant Openness access to every build of the
+  server it does not know, and the call waited for the answer without a time limit and without a word - with TIA
+  Portal minimized the question is not even seen. Now, when an attach is not through after five seconds and TIA
+  Portal shows that question, `connect` and `open_tia_project` answer that TIA Portal is waiting for the user; the
+  attach goes on, and the next `connect` takes it up once the user has confirmed.
 - A LAD organization block that is not a program cycle OB (Startup, cyclic interrupt ...) is refused by the LAD tools
   and by `plc_replace_source`: the text form of a block has no place for the event of an OB, and the import would
   have left a program cycle OB. Found before any such block was written; `Main` and other program cycle OBs work.

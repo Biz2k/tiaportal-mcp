@@ -160,7 +160,7 @@ namespace TiaMcpServer.Siemens
                     var picked = TiaInstanceSelection.Pick(processes.Select(ToInstanceInfo).ToList(), processId, projectPath);
                     var process = processes.First(p => p.Id == picked.Id);
 
-                    _portal = process.Attach();
+                    _portal = AttachOrReportQuestion(process);
                     _portalProcessId = process.Id;
 
                     // check for existing local sessions
@@ -186,7 +186,9 @@ namespace TiaMcpServer.Siemens
             {
                 _logger?.LogWarning(ex, "Attaching to TIA Portal failed");
 
-                return false;
+                // The reason, not only 'failed': a refused Openness access and a missing group membership read differently.
+                throw new PortalException(PortalErrorCode.InvalidState,
+                    $"Attaching to TIA Portal failed: {ErrorText.Describe(ex)} Run the 'doctor' tool to check the installation and the membership in the group 'Siemens TIA Openness'.", null, ex);
             }
 
             if (processId.HasValue || !string.IsNullOrWhiteSpace(projectPath))
@@ -213,6 +215,58 @@ namespace TiaMcpServer.Siemens
                 _logger?.LogWarning(ex, "Starting TIA Portal failed");
 
                 return false;
+            }
+        }
+
+        /// <summary>An attach that waits for the user's answer to the question about Openness access, and the process it goes to.</summary>
+        private System.Threading.Tasks.Task<TiaPortal>? _pendingAttach;
+
+        private int _pendingAttachProcessId;
+
+        /// <summary>How long an attach may take before the server looks for the question of TIA Portal.</summary>
+        private const int AttachPatienceMilliseconds = 5000;
+
+        /// <summary>
+        /// Attaches to a TIA Portal process. An attach of a build TIA Portal does not know waits until the user answers
+        /// its question about Openness access - without a time limit, and without anything telling the agent why. So
+        /// the attach runs beside this thread: when it is not through after five seconds and TIA Portal shows that
+        /// question, the call ends with a message saying so, and the attach goes on. The next connect takes its result
+        /// up, or says the same again while the user has not answered.
+        /// </summary>
+        private TiaPortal AttachOrReportQuestion(TiaPortalProcess process)
+        {
+            var task = _pendingAttach != null && _pendingAttachProcessId == process.Id && !_pendingAttach.IsFaulted && !_pendingAttach.IsCanceled
+                ? _pendingAttach
+                : System.Threading.Tasks.Task.Run(() => process.Attach());
+
+            _pendingAttach = null;
+
+            var waited = System.Diagnostics.Stopwatch.StartNew();
+
+            while (true)
+            {
+                try
+                {
+                    if (task.Wait(500))
+                    {
+                        return task.Result;
+                    }
+                }
+                catch (AggregateException ex) when (ex.InnerException != null)
+                {
+                    System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+                }
+
+                if (waited.ElapsedMilliseconds >= AttachPatienceMilliseconds && OpennessAccessPrompt.IsShown(process.Id))
+                {
+                    _pendingAttach = task;
+                    _pendingAttachProcessId = process.Id;
+
+                    throw new PortalException(PortalErrorCode.InvalidState,
+                        "TIA Portal is waiting for the user: it asks whether to grant this server Openness access (a window 'Openness access' of TIA Portal; it does not come " +
+                        "to the front when TIA Portal is minimized or covered). Ask the user to open TIA Portal and confirm the access with 'Yes' or 'Yes to all', then call " +
+                        "'connect' again. Nothing is connected yet.");
+                }
             }
         }
 

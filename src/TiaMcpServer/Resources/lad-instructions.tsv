@@ -16,6 +16,7 @@ BITSUM		BITSUM	BITSUM( IN := #i, Ret_Val => #i )		LAD | Count number of set bits
 Calculate	CALCULATE	Calc	Calculate( in1 := #r, in2 := #r, in3 := 2.0, out => #r )	the expression is written in S7_Expression with IN1, IN2, ... for the inputs; as many inputs as the expression uses	LAD | Calculate	{ S7_Templates := "SrcType := Real"; S7_Expression := "(IN1 + IN2) * IN3" }
 CAN_DINT		CAN_DINT	CAN_DINT( OB_NR := #i, RET_VAL => #i )		Extended | Cancel time-delay interrupt	
 CAN_TINT		CAN_TINT	CAN_TINT( OB_NR := #i, Ret_Val => #i )		Extended | Cancel time-of-day interrupt	
+Cd	S_CD		Cd( Top := , S := , PV := , R := , CV => , CVBCD => )	from a block made in the editor; Top is the SIMATIC counter (%C1)	LAD | Assign parameters and count down (SIMATIC counter)	
 CD_Coil			CD_Coil( #b )		Basic | Count down (SIMATIC counter)	
 Ceil		Ceil	Ceil( in := #i, out => #i )	from a floating point type to an integer type	LAD | Generate next higher integer	{ S7_Templates := "[SrcType := Real, DestType := DInt]" }
 Chars_TO_Strg			Chars_TO_Strg( Chars := #i, pChars := #i, Cnt := #i, Strg => #i )		Extended | Convert Array of CHAR to character string	
@@ -29,7 +30,9 @@ CREATE_DB		CREATE_DB	CREATE_DB( REQ := #i, LOW_LIMIT := #i, UP_LIMIT := #i, COUN
 CTD		CTD	CTD( ld := #i, pv := #i, cv => #i )	called through an instance: #Counter_0.CTD( ... ) with Counter_0 : CTD_INT; in the interface, or "CounterDB".CTD( ... )	LAD | Count down	{ S7_Templates := "value_type := Int" }
 CTU		CTU	CTU( r := #i, pv := #i, cv => #i )	called through an instance: #Counter_0.CTU( ... ) with Counter_0 : CTU_INT; in the interface, or "CounterDB".CTU( ... )	LAD | Count up	{ S7_Templates := "value_type := Int" }
 CTUD		CTUD	CTUD( cd := #i, r := #i, ld := #i, pv := #i, qd => #i, cv => #i )	called through an instance: #Counter_0.CTUD( ... ) with Counter_0 : CTUD_INT; in the interface, or "CounterDB".CTUD( ... )	LAD | Count up and down	{ S7_Templates := "value_type := Int" }
+Cu	S_CU		Cu( Top := , S := , PV := , R := , CV => , CVBCD => )	from a block made in the editor; Top is the SIMATIC counter (%C1)	LAD | Assign parameters and count up (SIMATIC counter)	
 CU_Coil			CU_Coil( #b )		Basic | Count up (SIMATIC counter)	
+Cud	S_CUD		Cud( Top := , CD := , S := , PV := , R := , CV => , CVBCD => )	from a block made in the editor; Top is the SIMATIC counter (%C1)	LAD | Assign parameters and count up / down (SIMATIC counter)	
 D_ACT_DP		D_ACT_DP	D_ACT_DP( REQ := #i, MODE := #i, LADDR := #i, RET_VAL => #i, BUSY => #i )		Extended | Activate/deactivate DP slaves	
 DataLogClear		DataLogClear	DataLogClear( REQ := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, ID := #i )		Extended | Empty data log	
 DataLogClose		DataLogClose	DataLogClose( REQ := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, ID := #i )		Extended | Close data log	
@@ -226,10 +229,6 @@ S_CONV			{ S7_GenerateENO := "TRUE" } S_CONV( in := #i, out => #i )		Extended | 
 S_Fill	FILL	FILL	S_Fill( BVAL := #i, RET_VAL => #i, BLK => #i )		LAD | Fill block	
 S_MOVE			S_MOVE( in := #i, out => #i )		Extended | Move character string	
 S_Normalize	UNSCALE	UNSCALE	S_Normalize( in := #i, hiLim := #i, loLim := #i, bipolar := #i, ret_val => #i, out => #i )		LAD | Unscale	
-S_OffDelay	S_OFFDT		S_OffDelay(  )	SIMATIC timer of S7-1500: the name is known to TIA Portal, its pins were not found out - take them from a block made in the editor	LAD | Assign off-delay timer parameters and start	
-S_OnDelay	S_ODT		S_OnDelay(  )	SIMATIC timer of S7-1500: the name is known to TIA Portal, its pins were not found out - take them from a block made in the editor	LAD | Assign on-delay timer parameters and start	
-S_Pulse	S_PULSE		S_Pulse(  )	SIMATIC timer of S7-1500: the name is known to TIA Portal, its pins were not found out - take them from a block made in the editor	LAD | Assign pulse timer parameters and start	
-S_PulseExt	S_PEXT		S_PulseExt(  )	SIMATIC timer of S7-1500: the name is known to TIA Portal, its pins were not found out - take them from a block made in the editor	LAD | Assign extended pulse timer parameters and start	
 S_RS	RS	Rs	S_RS( operand := #i, s1 := #i )		LAD | Reset/set flip-flop	
 S_Scale	SCALE		S_Scale( in := #i, hiLim := #i, loLim := #i, bipolar := #i, ret_val => #i, out => #i )		LAD | Scale	
 S_SR	SR	Sr	S_SR( operand := #i, r1 := #i )		LAD | Set/reset flip-flop	
@@ -237,7 +236,9 @@ SC_Coil		ScCoil	SC_Coil( counter => #b, pv := #i )		Basic | Set counter value (S
 Scale	SCALE_X	Scale	Scale( min := #i, value := #i, max := #i, out => #i )	the floating point type of value and the type of min, max, out	LAD | Scale	{ S7_Templates := "[SrcType := Real, DestType := Int]" }
 SCATTER			{ S7_GenerateENO := "TRUE" } SCATTER( in := #i, out => #i )		LAD | Parse the bit sequence into individual bits	
 ScatterBlock	SCATTER_BLK		{ S7_GenerateENO := "TRUE" } ScatterBlock( in := #i, countIn := #i, out => #i )		LAD | Parse elements of an ARRAY of bit sequence into individual bits	
+Sd	S_ODT		Sd( Top := , TV := , R := , RT => , RTBCD => )	from a block made in the editor; Top is the SIMATIC timer (%T1), TV the time (S5T#2s)	LAD | Assign on-delay timer parameters and start (SIMATIC timer)	
 SD_Coil		SdCoil	SD_Coil( timer => #b, pt := #i )		Basic | Start on-delay timer (SIMATIC timer)	
+Se	S_PEXT		Se( Top := , TV := , R := , RT => , RTBCD => )	from a block made in the editor; Top is the SIMATIC timer (%T1), TV the time (S5T#2s)	LAD | Assign extended pulse timer parameters and start (SIMATIC timer)	
 SE_Coil		SeCoil	SE_Coil( timer => #b, pt := #i )		Basic | Start extended pulse timer (SIMATIC timer)	
 SEG		SEG	SEG( IN := #i, OUT => #i )		LAD | Create bit pattern for seven-segment display	
 SEL			SEL( g := #i, in0 := #i, in1 := #i, out => #i )		LAD | Select	
@@ -248,6 +249,7 @@ SET_TINT		SET_TINT	SET_TINT( OB_NR := #i, SDT := #i, PERIOD := #i, RET_VAL => #i
 SET_TINTL		SET_TINTL	SET_TINTL( OB_NR := #i, SDT := #i, LOCAL := #i, PERIOD := #i, ACTIVATE := #i, RET_VAL => #i )		Extended | Set time-of-day interrupt	
 SETIO		SETIO	SETIO( ID := #i, STATUS => #i, OUTPUTS := #i )		Extended | Write all outputs of a submodule	
 SETIO_PART		SETIO_PART	SETIO_PART( ID := #i, OFFSET := #i, LEN := #i, STATUS => #i, ERROR => #i, OUTPUTS := #i )		Extended | Write outputs of a submodule	
+Sf	S_OFFDT		Sf( Top := , TV := , R := , RT => , RTBCD => )	from a block made in the editor; Top is the SIMATIC timer (%T1), TV the time (S5T#2s)	LAD | Assign off-delay timer parameters and start (SIMATIC timer)	
 SF_Coil		SfCoil	SF_Coil( timer => #b, pt := #i )		Basic | Start off-delay timer (SIMATIC timer)	
 SHA2		SHA2	SHA2( REQ := #i, Data := #i, DataLen := #i, HashLen := #i, Done => #i, Busy => #i, Error => #i, Status => #i, Hash := #i )		Extended | Form hash value using SHA2	
 Shl	SHL	Shl	Shl( in := #i, n := #i, out => #i )		LAD | Shift left	
@@ -255,11 +257,13 @@ Shr	SHR	Shr	Shr( in := #i, n := #i, out => #i )		LAD | Shift right
 Sin		Sin	Sin( in := #i, out => #i )	Real or LReal only	LAD | Form sine value	{ S7_Templates := "SrcType := Real" }
 SMC		SMC	SMC( IN_BIT0 := #i, IN_BIT1 := #i, IN_BIT2 := #i, IN_BIT3 := #i, IN_BIT4 := #i, IN_BIT5 := #i, IN_BIT6 := #i, IN_BIT7 := #i, IN_BIT8 := #i, IN_BIT9 := #i, IN_BIT10 := #i, IN_BIT11 := #i, IN_BIT12 := #i, IN_BIT13 := #i, IN_BIT14 := #i, IN_BIT15 := #i, OUT => #i, OUT_STEP => #i, ERR_CODE => #i )		LAD | Compare scan matrix	
 SNC_RTCB			SNC_RTCB( RET_VAL => )		Extended | Synchronize slave clocks	
+Sp	S_PULSE		Sp( Top := , TV := , R := , RT => , RTBCD => )	from a block made in the editor; Top is the SIMATIC timer (%T1), TV the time (S5T#2s)	LAD | Assign pulse timer parameters and start (SIMATIC timer)	
 SP_Coil		SpCoil	SP_Coil( timer => #b, pt := #i )		Basic | Start pulse timer (SIMATIC timer)	
 Split	SPLIT	SPLIT	Split( mode := #i, recSeparator := #i, endSeparator := #i, srcArray := #i, ret_val => #i, count => #i, dstStruct := #i, position := #i )		Extended | Splitting an array of characters into multiple strings	
 Sqr		Sqr	Sqr( in := #i, out => #i )	Real or LReal only	LAD | Form square	{ S7_Templates := "SrcType := Real" }
 Sqrt		Sqrt	Sqrt( in := #i, out => #i )	Real or LReal only	LAD | Form square root	{ S7_Templates := "SrcType := Real" }
 SRT_DINT		SRT_DINT	SRT_DINT( OB_NR := #i, DTIME := #i, SIGN := #i, RET_VAL => #i )		Extended | Start time-delay interrupt	
+Ss	S_ODTS		Ss( Top := , TV := , R := , RT => , RTBCD => )	from a block made in the editor; Top is the SIMATIC timer (%T1), TV the time (S5T#2s)	LAD | Assign retentive on-delay timer parameters and start (SIMATIC timer)	
 SS_Coil		SsCoil	SS_Coil( timer => #b, pt := #i )		Basic | Start retentive on-delay timer (SIMATIC timer)	
 STP			STP(  )		LAD | Exit program	
 Strg_TO_Chars			Strg_TO_Chars( Strg := #i, pChars := #i, Cnt => #i, Chars := #i )		Extended | Convert character string to Array of CHAR	

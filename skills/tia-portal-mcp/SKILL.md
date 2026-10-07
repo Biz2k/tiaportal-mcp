@@ -25,10 +25,10 @@ and look in `CHANGELOG.md` of the repository for the new name.
    `get_tia_instances` lists them.
 4. Before the first change, read `get_project` and compare the project name with what the user
    asked for. The user may have another project open than the one you expect.
-5. Before a longer piece of work, recommend the user to minimize the TIA Portal window (or
-   windows) you work in: otherwise it takes the keyboard focus from them now and then. If a first
-   `connect` hangs, TIA Portal is asking for Openness access in a window of its own: ask the user
-   to open TIA Portal and answer it.
+5. Before a longer piece of work, warn the user: while you write or compile, TIA Portal takes the
+   keyboard focus at moments nobody chooses, and a key pressed then may cancel your operation.
+6. If connecting answers that TIA Portal is waiting for the user to grant Openness access, ask the
+   user to open TIA Portal and confirm it there, wait for their reply, then call `connect` again.
 
 ## 2. Find objects, do not guess paths
 
