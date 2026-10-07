@@ -30,6 +30,13 @@
   the import - it is quoted; the start values of an embedded technology object (`PID_Compact`) are not carried by
   the document - such a change is detected, rolled back and refused.
 
+### Documentation
+
+- README and the skill: minimize the TIA Portal window while an agent works - TIA Portal takes the keyboard focus
+  when the user switches windows during a write or a compile, and a minimized window does not; make the first
+  connection after an update with the window open, because the question about Openness access does not come to the
+  front of a minimized TIA Portal and the call waits without a word.
+
 ### Fixed
 
 - A LAD organization block that is not a program cycle OB (Startup, cyclic interrupt ...) is refused by the LAD tools

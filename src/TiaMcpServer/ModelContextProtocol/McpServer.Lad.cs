@@ -9,7 +9,8 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Tools for the networks of LAD blocks. The work is in Siemens/Portal.Lad.cs, the text handling in LadDocument.cs.
+    // Tools for the networks of LAD blocks. The work is in Siemens/Portal.Lad.cs, the text handling in LadDocument.cs,
+    // the instruction table in LadInstructions.cs.
     public static partial class McpServer
     {
         [McpServerTool(Name = "plc_get_lad_networks", Title = "Get the networks of a LAD block", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),

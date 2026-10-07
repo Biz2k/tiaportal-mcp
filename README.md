@@ -77,6 +77,20 @@ Clients configured with JSON (Claude Desktop uses `mcpServers`, VS Code uses `se
 The first time a new build attaches to TIA Portal, TIA Portal asks whether to grant Openness
 access. Confirm it in the TIA Portal window.
 
+### Working on the PC while an agent works in TIA Portal
+
+Two recommendations, both found by measuring on TIA Portal V21:
+
+- **Minimize the TIA Portal window while the agent works.** Every write and every compile makes TIA Portal
+  ask Windows to bring it to the front, and Windows grants that at the moment you switch windows yourself - a click
+  on another window or on the taskbar, Alt+Tab. With an agent calling the server every few seconds the keyboard
+  focus keeps jumping to TIA Portal. A minimized TIA Portal window stays minimized and does not take the focus; the
+  work of the agent is not affected.
+- **Make the first connection after installing or updating the server with the TIA Portal window open.** The
+  question about Openness access is a window of TIA Portal. With TIA Portal minimized it does not come to the front:
+  the first `connect` or `open_tia_project` then waits until it runs into the time limit of the client, and
+  nothing on the screen says why. Open TIA Portal, answer the question, and minimize it again.
+
 ## Quick start
 
 1. Start TIA Portal. The server attaches to a running instance and does not start one on its own.

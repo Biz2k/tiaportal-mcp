@@ -25,6 +25,10 @@ and look in `CHANGELOG.md` of the repository for the new name.
    `get_tia_instances` lists them.
 4. Before the first change, read `get_project` and compare the project name with what the user
    asked for. The user may have another project open than the one you expect.
+5. Before a longer piece of work, recommend the user to minimize the TIA Portal window (or
+   windows) you work in: otherwise it takes the keyboard focus from them now and then. If a first
+   `connect` hangs, TIA Portal is asking for Openness access in a window of its own: ask the user
+   to open TIA Portal and answer it.
 
 ## 2. Find objects, do not guess paths
 
@@ -54,9 +58,8 @@ name, and the change lands there.
   copied or moved, and the project is not ready to download.
 - **Before deleting or renaming**, look at who uses the object (`plc_where_used`,
   `plc_get_cross_references`) and tell the user what depends on it.
-- While a write runs, TIA Portal shows a window with the name of the tool and, for a batch, the running step. The
-  user can press Cancel there: the batch stops, nothing is changed, and the call says it was cancelled. Do not
-  repeat a cancelled call without asking.
+- While a write runs, TIA Portal shows a window with the tool and the running step. Cancel there stops a batch
+  with nothing changed, and the call says so. Do not repeat a cancelled call without asking.
 - If the write tools are missing from the session, the server runs with `--read-only`
   (`get_state` shows `allowWrite: false`). Say so; do not look for a way around it.
 
