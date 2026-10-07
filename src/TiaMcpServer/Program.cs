@@ -103,7 +103,7 @@ namespace TiaMcpServer
         }
 
         /// <summary>
-        /// The tools as '--compact' shows them: <see cref="BuildTools"/> wrapped into the group tools of
+        /// The tools as a client sees them without '--full': <see cref="BuildTools"/> wrapped into the group tools of
         /// <see cref="ToolGroups"/> and 'tia_help'.
         /// </summary>
         public static IEnumerable<global::ModelContextProtocol.Server.McpServerTool> BuildCompactTools(bool allowWrite, bool debugTools = false, IReadOnlyCollection<string>? areas = null)
@@ -181,15 +181,15 @@ namespace TiaMcpServer
                                 ? string.Empty
                                 : $" Only these tool areas are registered: {ToolSets.Describe(options.ToolAreas)} (and the tools for connection, " +
                                   "project and diagnostics); the other areas exist but were left out with '--tools'.") +
-                            (options?.Compact == true
-                                ? " The server runs compact: the tools named here and in the answers are called through the group tools (project_read, plc_read, " +
+                            (options?.Full != true
+                                ? " The tools named here and in the answers are called through the group tools (project_read, plc_read, " +
                                   "plc_write, ...) as {\"tool\": \"<name>\", \"arguments\": {...}}; each group tool lists its tools, and 'tia_help' gives the parameters of a tool."
                                 : string.Empty);
                     })
                     .WithStdioServerTransport()
-                    .WithTools(options?.Compact == true
-                        ? BuildCompactTools(WritePolicy.AllowWrite, options.DebugTools, options.ToolAreas)
-                        : BuildTools(WritePolicy.AllowWrite, options?.DebugTools ?? false, options?.ToolAreas))
+                    .WithTools(options?.Full == true
+                        ? BuildTools(WritePolicy.AllowWrite, options.DebugTools, options.ToolAreas)
+                        : BuildCompactTools(WritePolicy.AllowWrite, options?.DebugTools ?? false, options?.ToolAreas))
                     .WithRequestFilters(filters => filters.AddCallToolFilter(ToolCallGate.Filter));
 
                 // Register the Portal service for dependency injection

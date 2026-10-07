@@ -17,8 +17,10 @@ param(
     # JSON file with the calls, or a JSON string.
     [string]$Calls = '[]',
     [string]$Exe = (Join-Path $PSScriptRoot '..\src\TiaMcpServer\bin\Release\net48\TiaMcpServer.exe'),
-    # Arguments for the server, e.g. '--read-only' or '--debug-tools'.
+    # Arguments for the server, e.g. '--read-only' or '--debug-tools'. '--full' is added unless -Grouped is given:
+    # the calls files name the tools themselves, not the group tools a client sees by default.
     [string]$ExeArgs = '',
+    [switch]$Grouped,
     # Longest result text printed per call.
     [int]$Max = 1500,
     [int]$TimeoutSec = 300,
@@ -34,7 +36,7 @@ param(
 
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName = (Resolve-Path $Exe).Path
-$psi.Arguments = $ExeArgs
+$psi.Arguments = $(if ($Grouped) { $ExeArgs } else { ('--full ' + $ExeArgs).Trim() })
 $psi.UseShellExecute = $false
 $psi.RedirectStandardInput = $true
 $psi.RedirectStandardOutput = $true

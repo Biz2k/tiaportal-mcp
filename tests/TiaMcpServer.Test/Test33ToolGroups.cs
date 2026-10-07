@@ -4,7 +4,7 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Test
 {
-    /// <summary>The '--compact' start flag: the group tools a client sees. These tests do not connect to TIA Portal.</summary>
+    /// <summary>The group tools a client sees unless the server is started with '--full'. These tests do not connect to TIA Portal.</summary>
     [TestClass]
     [TestCategory("NoTia")]
     public class Test33ToolGroups
@@ -87,10 +87,10 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
-        public void Test_3305_ParseArgs_CompactFlag()
+        public void Test_3305_ParseArgs_FullFlag()
         {
-            Assert.IsTrue(CliOptions.ParseArgs(new[] { "--compact" }).Compact);
-            Assert.IsFalse(CliOptions.ParseArgs(new string[0]).Compact);
+            Assert.IsTrue(CliOptions.ParseArgs(new[] { "--full" }).Full);
+            Assert.IsFalse(CliOptions.ParseArgs(new string[0]).Full);
         }
     }
 }

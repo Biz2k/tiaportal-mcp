@@ -110,14 +110,15 @@ access. Confirm it in the TIA Portal window.
 | `--doctor`                | Print the environment report and exit without starting the MCP server.         |
 | `--debug-tools`           | Register the server-development tools (`unified_debug_*`).                      |
 | `--tools <areas>`         | Register only the named tool areas, e.g. `--tools plc,unified`. See below.     |
-| `--compact`               | Show fifteen group tools instead of one tool per operation. See below.         |
+| `--full`                  | Show one tool per operation (157) instead of the fifteen group tools. See below. |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
 
-## Compact mode: fifteen tools instead of 157
+## Fifteen group tools, and `--full`
 
 A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 157 rows are no
-choice at all. Started with `--compact`, the server shows fifteen tools instead: fourteen groups cut along what a
-user wants to decide (reading, changing, deleting, downloading, protection) and `tia_help`.
+choice at all. So the server shows fifteen tools: fourteen groups cut along what a user wants to decide (reading,
+changing, deleting, downloading, protection) and `tia_help`. Started with `--full` it shows every tool by itself, as
+it did before.
 
 | Group tool            | What it holds                                                              |
 | --------------------- | -------------------------------------------------------------------------- |
@@ -200,7 +201,7 @@ model and through the logs of the client.
 
 Each kind of change is a tool of its own, marked as changing and destructive, so that a client which lets you decide
 per tool can treat them apart: in Claude open the settings of the connector and set each tool to "Always allow",
-"Needs approval" or "Blocked" (with `--compact` these are three rows: `security_read`, `security_protection`,
+"Needs approval" or "Blocked" (three rows: `security_read`, `security_protection`,
 `security_users`). The server cannot set that choice for you - it belongs to the client; clients that
 have no such setting ask (or do not ask) by their own rules. To leave the tools out altogether, start the server with
 `--tools` naming the areas you want without `security`; `--read-only` leaves out every tool that changes the project.
@@ -208,7 +209,7 @@ have no such setting ask (or do not ask) by their own rules. To leave the tools 
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. 157 tools are registered by default (81 with `--read-only`). A short
+when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 157 tools (81 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Always available (73):

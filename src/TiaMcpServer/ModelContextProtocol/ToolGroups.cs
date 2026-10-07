@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace TiaMcpServer.ModelContextProtocol
 {
     /// <summary>
-    /// The compact face of the server ('--compact'): instead of one MCP tool per operation the client sees a handful of
+    /// The face of the server unless it is started with '--full': instead of one MCP tool per operation the client sees a handful of
     /// group tools, each taking the name of an operation and its arguments, and 'tia_help' that gives the parameters of
     /// an operation. Why: a client that lets the user decide per tool (always allow / ask / block) shows one row per
     /// tool, and 150 rows are no choice at all; fifteen groups cut along what a user wants to decide - reading, changing,

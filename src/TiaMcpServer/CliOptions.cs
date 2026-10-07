@@ -10,8 +10,8 @@ namespace TiaMcpServer
         public bool AllowWrite { get; set; } = true;
         public bool DebugTools { get; set; } // register the server-development tools ([DebugTool])
 
-        // '--compact': the client sees fifteen group tools instead of one tool per operation (ToolGroups).
-        public bool Compact { get; set; }
+        // '--full': one MCP tool per operation, as before. Without it the client sees fifteen group tools (ToolGroups).
+        public bool Full { get; set; }
 
         // '--tools plc,unified': the areas to register; null registers all of them.
         public System.Collections.Generic.IReadOnlyList<string>? ToolAreas { get; set; }
@@ -50,9 +50,9 @@ namespace TiaMcpServer
                         options.AllowWrite = false;
                         break;
 
-                    case "-compact":
-                    case "--compact":
-                        options.Compact = true;
+                    case "-full":
+                    case "--full":
+                        options.Full = true;
                         break;
 
                     case "-debug-tools":
