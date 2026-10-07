@@ -1,0 +1,36 @@
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcForceTable : Object
+   props: Entries:PlcTableCommentEntryComposition, Parent:IEngineeringObject, IsConsistent:Boolean, Name:String
+   methods: Export(FileInfo path, ExportOptions exportOptions); Export(FileInfo path, ExportOptions exportOptions, DocumentInfoOptions documentInfoOptions); ShowInEditor()
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcForceTableComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:PlcForceTable
+   methods: Import(FileInfo path, ImportOptions importOptions); Find(String name)
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcForceTableEntry : PlcTableCommentEntry
+   props: Parent:IEngineeringObject, Address:String, DisplayFormat:PlcWatchAndForceTableDisplayFormat, ForceIntention:Boolean, ForceValue:String, MonitorTrigger:PlcWatchAndForceTablePreDefinedTrigger, Name:String
+   methods: Delete()
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcTableCommentEntry : Object
+   props: Parent:IEngineeringObject
+   methods: Delete()
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcTableCommentEntryComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:PlcTableCommentEntry
+   methods: Create()
+ENUM Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableDisplayFormat: Undef, Any_pointer, BCD, Bin, Bool, Character, Character_sequence, Date, DATE_AND_TIME, DEC_sequence, DEC_signed, DEC_unsigned, Hex, Block_number, Octal, Pointer, Float, Counter, SIMATIC_Time, String, Time, TIME_OF_DAY, Unicode_character, Unicode_character_sequence, Unicode_string, Symbolic
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableGroup : Object
+   props: ForceTables:PlcForceTableComposition, Groups:PlcWatchAndForceTableUserGroupComposition, Parent:IEngineeringObject, WatchTables:PlcWatchTableComposition, Name:String
+ENUM Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTablePreDefinedTrigger: Permanent, PermanentAtStart, OnceOnlyAtStart, PermanentAtEnd, OnceOnlyAtEnd, PermanentAtStop, OnceOnlyAtStop, Undef
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableSystemGroup : PlcWatchAndForceTableGroup
+   props: Parent:IEngineeringObject, ForceTables:PlcForceTableComposition, Groups:PlcWatchAndForceTableUserGroupComposition, WatchTables:PlcWatchTableComposition, Name:String
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableUserGroup : PlcWatchAndForceTableGroup
+   props: Parent:IEngineeringObject, Name:String*, ForceTables:PlcForceTableComposition, Groups:PlcWatchAndForceTableUserGroupComposition, WatchTables:PlcWatchTableComposition
+   methods: Delete()
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableUserGroupComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:PlcWatchAndForceTableUserGroup
+   methods: CreateFrom(MasterCopy sourceMasterCopy); CreateFrom(MasterCopy sourceMasterCopy, MasterCopyMode copyMode); Create(String name); Find(String name)
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTable : Object
+   props: Entries:PlcTableCommentEntryComposition, Parent:IEngineeringObject, IsConsistent:Boolean, Name:String*
+   methods: Export(FileInfo path, ExportOptions exportOptions); Export(FileInfo path, ExportOptions exportOptions, DocumentInfoOptions documentInfoOptions); ShowInEditor(); Delete()
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:PlcWatchTable
+   methods: Import(FileInfo path, ImportOptions importOptions); Create(String name); Find(String name)
+CLASS Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableEntry : PlcTableCommentEntry
+   props: Parent:IEngineeringObject, Address:String, DisplayFormat:PlcWatchAndForceTableDisplayFormat, ModifyIntention:Boolean, ModifyTrigger:PlcWatchAndForceTablePreDefinedTrigger, ModifyValue:String, MonitorTrigger:PlcWatchAndForceTablePreDefinedTrigger, Name:String
+   methods: Delete()

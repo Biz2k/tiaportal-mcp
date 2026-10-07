@@ -1,0 +1,41 @@
+CLASS Siemens.Engineering.SW.OpcUa.AccessControl.AccessControl : Object
+   props: NamespaceAccessRestrictions:NamespaceAccessRestrictionComposition, Parent:IEngineeringObject, RoleMappings:RoleMappingComposition
+CLASS Siemens.Engineering.SW.OpcUa.AccessControl.NamespaceAccessRestriction : Object
+   props: Parent:IEngineeringObject, ApplyRestrictionsToBrowse:Boolean*, EncryptionRequired:Boolean*, NamespaceIndex:Int32, NamespaceUri:String, SessionRequired:Boolean*, SigningRequired:Boolean*
+CLASS Siemens.Engineering.SW.OpcUa.AccessControl.NamespaceAccessRestrictionComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:NamespaceAccessRestriction
+CLASS Siemens.Engineering.SW.OpcUa.AccessControl.NamespacePermission : Object
+   props: Parent:IEngineeringObject, Browse:Boolean, Call:Boolean, NamespaceIndex:Int32, NamespaceUri:String, Read:Boolean, ReadRolePermissions:Boolean, ReceiveEvents:Boolean, Write:Boolean
+   methods: SetPermission(String permission, Boolean isEnabled)
+CLASS Siemens.Engineering.SW.OpcUa.AccessControl.NamespacePermissionComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:NamespacePermission
+CLASS Siemens.Engineering.SW.OpcUa.AccessControl.RoleMapping : Object
+   props: NamespacePermissions:NamespacePermissionComposition, Parent:IEngineeringObject, DefinedInNamespace:String, Name:String, ProjectRole:String, RoleId:String
+   methods: SetDefiningNamespace(String definingNamespace); SetProjectRole(String projectRole); SetRoleName(String roleName); Delete()
+CLASS Siemens.Engineering.SW.OpcUa.AccessControl.RoleMappingComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:RoleMapping
+   methods: AddStandardOpcUaRole(String name); Create(String name, String definedInNamespace)
+CLASS Siemens.Engineering.SW.OpcUa.OpcUaCommunicationGroup : Object
+   props: Parent:IEngineeringObject, ServerInterfaceGroup:ServerInterfaceGroup
+CLASS Siemens.Engineering.SW.OpcUa.OpcUaProvider : Object
+   props: CommunicationGroup:OpcUaCommunicationGroup, Parent:IEngineeringObject
+CLASS Siemens.Engineering.SW.OpcUa.ReferenceNamespace : Object
+   props: Comment:MultilingualText, Parent:IEngineeringObject, Author:String*, CreationTime:DateTime, Enabled:Boolean*, GenerateNodes:Boolean*, GeneratedInterfaceName:String*, LastModified:DateTime, Name:String*, UseStringNodeIds:Boolean*
+   methods: Export(FileInfo filePath); Import(FileInfo filePath); Delete()
+CLASS Siemens.Engineering.SW.OpcUa.ReferenceNamespaceComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:ReferenceNamespace
+   methods: Create(String name, FileInfo xMLFilePath)
+CLASS Siemens.Engineering.SW.OpcUa.ServerInterface : Object
+   props: Comment:MultilingualText, Parent:IEngineeringObject, Author:String*, CreationTime:DateTime, Enabled:Boolean*, LastModified:DateTime, Name:String
+   methods: Export(FileInfo filePath); Import(FileInfo filePath); Delete()
+CLASS Siemens.Engineering.SW.OpcUa.ServerInterfaceComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:ServerInterface
+   methods: Create(String name)
+CLASS Siemens.Engineering.SW.OpcUa.ServerInterfaceGroup : Object
+   props: AccessControl:AccessControl, Parent:IEngineeringObject, ReferenceNamespaces:ReferenceNamespaceComposition, ServerInterfaces:ServerInterfaceComposition, SimaticInterfaces:SimaticInterfaceComposition
+CLASS Siemens.Engineering.SW.OpcUa.SimaticInterface : Object
+   props: Comment:MultilingualText, Parent:IEngineeringObject, Author:String*, CreationTime:DateTime, Enabled:Boolean*, LastModified:DateTime, Name:String*, UseStringNodeIds:Boolean*
+   methods: Export(FileInfo filePath); Delete()
+CLASS Siemens.Engineering.SW.OpcUa.SimaticInterfaceComposition : Object
+   props: Parent:IEngineeringObject, Count:Int32, IsReadOnly:Boolean, Item:SimaticInterface
+   methods: Create(String name)

@@ -1,7 +1,7 @@
 # Общий контекст проекта
 
 Этот файл читается один раз в начале работы над любой задачей из `docs/handoff/tasks/`.
-Написан 06.10.2026 при первой передаче разработки, обновлён при второй (коммит после `deb2088`).
+Написан 06.10.2026 при первой передаче разработки, обновлён при второй и при третьей (07.10.2026, после выпуска 0.6.0).
 
 ## Что это за проект
 
@@ -42,12 +42,14 @@ MCP-сервер на C# (.NET Framework 4.8), который даёт ИИ-кл
 
 ```
 src/TiaMcpServer/
-  Program.cs, CliOptions.cs        запуск, флаги --read-only и --debug-tools, регистрация инструментов
+  Program.cs, CliOptions.cs        запуск, флаги --read-only, --tools, --full, --debug-tools, регистрация
   ModelContextProtocol/            слой инструментов: partial class McpServer, типы запросов и ответов
     McpServer.cs                   общие помощники: Guarded, ToolError, Created, Deleted, OkMeta
     McpServer.<Область>.cs         инструменты области (Blocks, Tags, Hardware, Unified, Libraries...)
     Unified*.cs, Response*.cs      типы действий и ответов
     WritePolicy.cs                 [WriteTool], [DebugTool]
+    ToolSets.cs, ToolGroups.cs     области (--tools) и групповые инструменты - вид по умолчанию
+    ToolCallGate.cs                вызовы инструментов идут по одному
   Siemens/                         слой Openness: partial class Portal
     Portal.cs                      подключение, проект, InTransaction
     Operation.cs, ErrorText.cs     Operation.Run - блокировка и оформление ошибок
@@ -157,19 +159,22 @@ exception is thrown». Следствия:
    Что принимает молча, в каком порядке задавать свойства, что возвращает после создания.
 4. Написать операцию в `Portal.<Область>.cs` и инструмент в `McpServer.<Область>.cs`.
 5. `tools/finish.ps1` — окончания строк, сборка, модульные тесты.
-6. Проверить вживую собранный сервер: `tools/mcp-call.ps1`. Обязательно: удачный путь, ошибочные
-   случаи, уборка за собой. На панели `HMI Unified/HMI_RT_3` и, где важно, на ПК-станции
-   `АРМ Unified/HMI_RT_1`. После изменения слоя `Siemens\` прогнать оба «дымовых» прогона:
-   `tools/smoke.ps1` (чтение не меняет проект) и `tools/smoke.ps1 -Write` (каждый изменяющий
-   инструмент, с уборкой; 6–7 минут; проект должен быть сохранён). Новому изменяющему инструменту
-   нужен вызов в `tools/smoke/write.json`, иначе прогон его назовёт.
+6. Проверить вживую. Пока идёт разработка — `tools/inproc-call.ps1`: он вызывает инструменты
+   сборки внутри PowerShell, и TIA Portal не спрашивает про доступ. Обязательно: удачный путь,
+   ошибочные случаи, уборка за собой. На панели `HMI Unified/HMI_RT_3` и, где важно, на
+   ПК-станции `АРМ Unified/HMI_RT_1`. Когда задача закончена — один раз через установленный
+   сервер: `tools/mcp-call.ps1 -Grouped` (вид по умолчанию) и «дымовые» прогоны `tools/smoke.ps1`
+   (чтение не меняет проект) и `tools/smoke.ps1 -Write` (каждый изменяющий инструмент, с уборкой;
+   около 10 минут; проект должен быть сохранён). Новому изменяющему инструменту нужен вызов в
+   `tools/smoke/write.json`, иначе прогон его назовёт.
 7. Документация: `README.md`, `README_ru.md`, `Implemented_Tools.md`, `CHANGELOG.md`
    (раздел `[Unreleased]`), `docs/tools-list.txt`, список в `Test_703`, файл задачи и индекс
    `docs/handoff/README.md`.
 8. `tools/finish.ps1 -Install`, сразу после — коммит и `git push origin main`.
 
 Новая сборка сервера при первом подключении вызывает в TIA Portal запрос доступа Openness —
-его подтверждает Biz. Предупредить его перед живой проверкой, если он не у компьютера.
+его подтверждает только Biz. Поэтому установленный сервер и «дымовой» прогон — один раз на
+законченную задачу, предупредив Biz; до того — `tools/inproc-call.ps1`.
 
 ## Тестовый проект: что в нём есть
 
@@ -218,7 +223,7 @@ exception is thrown». Следствия:
 | `docs/handoff/README.md` | Индекс задач и порядок работы с ними |
 | `docs/handoff/recipes.md` | Как добавить инструмент: образцы кода и чек-лист |
 | `docs/handoff/tasks/*.md` | Задачи Sonnet, по одной на файл |
-| `docs/handoff/findings.md` | Что выяснено в закрытых задачах первой передачи |
+| `docs/handoff/findings.md` | Что выяснено в закрытых задачах первой и второй передачи |
 | `docs/handoff/decisions.md`, `deferred.md`, `lad.md` | Решения Biz; отложенное; заметки к LAD |
 | `docs/handoff/api/*.txt` | Справочники по классам Openness, сняты отражением с V21 |
 | `docs/PLAN.md` | План: что осталось сделать, и что через Openness невозможно |
