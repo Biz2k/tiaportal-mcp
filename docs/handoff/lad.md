@@ -144,3 +144,54 @@ END_NETWORK
 не удался», Safety-блоки (F_LAD отвергается по языку), проект с одним языком.
 
 Осталось: справочник инструкций LAD (имена, выводы, `S7_Templates`).
+
+## Имена инструкций — 07.10.2026
+
+Готового списка нет: ни в справке TIA Portal (раздел «Representation of LAD program code in
+SIMATIC SD format» описывает только `RUNG`/`wire#`), ни в файлах установки (разборщик —
+`Siemens.Simatic.Lang.FLD.TextLad.Parser.Impl.dll`, имён в нём почти нет), ни в чужих серверах.
+Имена получены **у самого TIA Portal** скриптом `tools/lad-instruction-probe.ps1`: импорт
+`Имя()` отвечает «Instruction 'Sr' : Pin 'r1' connection is missing» (имя известно, вывод
+обязателен), «Not a Valid instruction» либо принимает строку как вызов блока (тогда компиляция
+говорит «Имя_Callee no longer exists»). Кандидаты — названия из справки (287) и догадки.
+
+Результат — `docs/handoff/api/lad-instructions.tsv`: **298 инструкций** с канонической записью
+и выводами (V21, S7-1500). Колонки: имя, принятые синонимы, внутреннее имя, запись, замечания,
+название из справки.
+
+- Имя из справки принимается на входе, но возвращается в своём написании: `SR` → `S_SR`,
+  `SCALE_X` → `Scale`, `NORM_X` → `Normalize`, `BLKMOV` → `S_BlockMove`,
+  `MOVE_BLK_VARIANT` → `MoveBlockVariant`, `EQ_Type` → `EQ_TypeContact`.
+- Имена в верхнем регистре, совпадающие с ключевыми словами, отвергаются разбором:
+  `ABS`, `SIN`, `SQRT`, `MOD`, `ROUND`, `AND`, `OR`, `XOR`, `SWAP` — писать `Abs`, `Sin`, `Mod`.
+- Контакты и катушки: `Contact`, `I_Contact`, `P_Contact( x, bit := m )`, `N_Contact`,
+  `Coil`, `I_Coil`, `S_Coil`, `R_Coil`, `P_Coil( x, bit := m )`, `N_Coil`, `P_Trig( m )`,
+  `N_Trig( m )`, `Not()`, `OK( x )`, `NOK( x )`; таймеры и счётчики катушками:
+  `TP_Coil( t, pt := )`, `TON_Coil`, `TOF_Coil`, `TONR_Coil`, `RT_Coil`, `PT_Coil`,
+  `SP_/SE_/SD_/SS_/SF_Coil`, `SC_Coil`, `CU_Coil`, `CD_Coil`.
+- Переходы: `JumpCoil( M01 )`, `I_JumpCoil( M01 )` (переход по нулю), `ReturnCoil( x )`,
+  `JumpList( k := )`, `Switch`; метка — `Label(M01)` строкой **перед** `RUNG`.
+- Сравнения: `EQ_/NE_/GT_/GE_/LT_/LE_Contact( in1 := , in2 := )`, `InRange`, `OutRange`.
+- 27 инструкций требуют тип: без `{ S7_Templates := "SrcType := Int" }` перед ними компиляция
+  говорит «Please select a data type» (математика, сравнения, `Move`-подобные, `Round`,
+  `Convert` с `[SrcType := Real, DestType := DInt]`, таймеры с `time_type := Time`). Имена
+  параметров шаблона для каждой инструкции ещё не собраны.
+- `Add`, `Mul`, `And`, `Or`, `Xor`, `Calculate`, `MIN`, `MAX`, `CONCAT` берут `in1, in2, ...`
+  сколько нужно; `Sub`, `Div` — ровно два.
+- `R_Trig`, `F_Trig`, `S_Pulse`, таймеры и счётчики IEC вызываются через экземпляр:
+  `#Timer_0.TON( pt := ..., et => )`.
+- Направление вывода (`:=` или `=>`) у вызовов блоков импорт исправляет сам.
+
+**Не найдено написание** для 22 названий справки: `SET_BF`, `RESET_BF`, `MOVE_BLK`,
+`UMOVE_BLK`, `FILL_BLK`, `UFILL_BLK` (имена `MoveBlock`, `U_MoveBlock`, `FillBlock`
+принимаются, но выводы не получены), старые таймеры и счётчики `S_PEXT`, `S_ODT`, `S_ODTS`,
+`S_OFFDT`, `S_CU`, `S_CD`, `S_CUD`, а также `INVERT`, `CTRL_PWM`, `CTRL_PTO`, `RH_CTRL`,
+`RH_GetPrimaryID`, `ACK_FCT_WARN`, `InitIOSystemSync`, `StartIOSystemSync`,
+`GetIOSystemSync` (часть из них есть только на S7-1200 или в R/H-системах). Надёжный способ —
+положить такую инструкцию в LAD-блок в редакторе TIA Portal и экспортировать документ.
+
+Из справки Siemens про формат: при экспорте и импорте документа **теряются** атрибут «IEC Check»,
+«Download without reinitialization» с резервом памяти, пользовательские атрибуты, «Visibility in
+block calls», «Predefined actual parameter», свойства DB (только в загрузочной памяти, защита
+от записи, доступность из OPC UA и веб-сервера); супервизии и алармы не экспортируются; конструкция
+AT не поддерживается. Инструменты LAD это пока не проверяют и не восстанавливают.
