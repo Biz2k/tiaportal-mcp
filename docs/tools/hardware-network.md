@@ -4,6 +4,7 @@ Devices, modules, subnets, IO systems and communication connections.
 
 | Tool | Kind |
 |---|---|
+| [`hw_compile`](#hw_compile) | session |
 | [`hw_create_device`](#hw_create_device) | write |
 | [`hw_delete_device`](#hw_delete_device) | write |
 | [`hw_get_device_info`](#hw_get_device_info) | read |
@@ -21,6 +22,14 @@ Devices, modules, subnets, IO systems and communication connections.
 | [`net_delete_subnet`](#net_delete_subnet) | write |
 | [`net_disconnect_subnet`](#net_disconnect_subnet) | write |
 | [`net_get_connections`](#net_get_connections) | read |
+
+## hw_compile
+
+Compile a device (station) the way 'Compile' on the device does in TIA Portal - its hardware configuration and the software on it - and return the errors and warnings with the object each belongs to; the same message for the same object is given once with a count. Use it after changing hardware, addresses, networks or connections, and when 'download_to_plc' answers that the hardware configuration does not compile - a download says only that. For the software alone 'plc_compile_software' is the tool. Errors are returned as the result; the call itself fails only when the device is not found or cannot be compiled
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `devicePath` | string | yes | devicePath: path of the device (station) as 'hw_get_devices' lists it, e.g. 'S7-1500%2FET200MP station_1' |
 
 ## hw_create_device
 

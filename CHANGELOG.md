@@ -4,6 +4,9 @@
 
 ### Added
 
+- `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
+  software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
+  count. `download_to_plc` says only that the hardware does not compile; this says why.
 - `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
   interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
   subnet. `download_to_plc` takes `targetAddress`, the address the device answers at now when it is not the one of the
@@ -15,7 +18,7 @@
   "Connect to module ... failed".
 - `download_to_plc` takes `passwords`: the passwords the PLC asks for during the download, by the type of the step
   (`ModuleWriteAccessPassword`, `PlcMasterSecretPassword`, ...). A step that asked and got none is named in the answer.
-- **Changed default:** the client sees ten tools instead of 159 - `tia_read` for everything that only reads (with
+- **Changed default:** the client sees ten tools instead of 160 - `tia_read` for everything that only reads (with
   `tia_help`, the parameters of a tool) and nine group tools for what changes something (`project_write`, `plc_write`,
   `plc_delete`, `hw_write`, `hw_delete`, `hmi_write`, `plc_download`, `security_protection`, `security_users`); each
   takes the name of a tool and its arguments. For clients with a permission per tool, and to keep the descriptions of
@@ -368,6 +371,9 @@ below):
 
 ### Added
 
+- `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
+  software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
+  count. `download_to_plc` says only that the hardware does not compile; this says why.
 - `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
   interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
   subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
@@ -459,6 +465,9 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
 
 ### Added
 
+- `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
+  software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
+  count. `download_to_plc` says only that the hardware does not compile; this says why.
 - `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
   interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
   subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
@@ -824,6 +833,9 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
   counterpart; each links to the other at the top.
 ### Added
 
+- `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
+  software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
+  count. `download_to_plc` says only that the hardware does not compile; this says why.
 - `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
   interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
   subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
@@ -895,6 +907,9 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
 
 ### Added
 
+- `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
+  software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
+  count. `download_to_plc` says only that the hardware does not compile; this says why.
 - `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
   interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
   subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
@@ -913,6 +928,9 @@ PLC data types. The read tool surface grows from 56 to 59.
 
 ### Added
 
+- `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
+  software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
+  count. `download_to_plc` says only that the hardware does not compile; this says why.
 - `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
   interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
   subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
@@ -985,6 +1003,9 @@ surface grows from 31 tools to 44 read tools plus 37 project-mutating tools.
 
 ### Added
 
+- `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
+  software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
+  count. `download_to_plc` says only that the hardware does not compile; this says why.
 - `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
   interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
   subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
@@ -1132,6 +1153,9 @@ Upgrade to the current MCP .NET SDK and adopt the newer protocol surface.
 
 ### Added
 
+- `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
+  software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
+  count. `download_to_plc` says only that the hardware does not compile; this says why.
 - `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
   interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
   subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
@@ -1172,6 +1196,9 @@ Upgrade to the current MCP .NET SDK and adopt the newer protocol surface.
 
 ### Added
 
+- `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
+  software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
+  count. `download_to_plc` says only that the hardware does not compile; this says why.
 - `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
   interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
   subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC

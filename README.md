@@ -110,12 +110,12 @@ access. Confirm it in the TIA Portal window.
 | `--doctor`                | Print the environment report and exit without starting the MCP server.         |
 | `--debug-tools`           | Register the server-development tools (`unified_debug_*`).                      |
 | `--tools <areas>`         | Register only the named tool areas, e.g. `--tools plc,unified`. See below.     |
-| `--full`                  | Show one tool per operation (159) instead of the ten group tools. See below. |
+| `--full`                  | Show one tool per operation (160) instead of the ten group tools. See below. |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
 
 ## Ten group tools, and `--full`
 
-A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 159 rows are no
+A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 160 rows are no
 choice at all. So the server shows ten tools: one for everything that only reads - there is nothing to decide about reading, set it
 to "Always allow" once - and nine groups cut along what a user does want to decide (changing, deleting, downloading,
 protection). Started with `--full` it shows every tool by itself, as
@@ -138,7 +138,7 @@ A group tool takes the name of a tool and its parameters, `{"tool": "plc_get_blo
 its tools with a line each; the tool `tia_help` of `tia_read` gives the full description and the parameters of the tools named. The tools
 behind the groups are the same ones, with the same names, so the rest of this document and the skill apply as they
 are. `--read-only` and `--tools` work as before: a group with no tool left is not shown. The price is one more
-call - the model reads the help of a tool before it first uses it - and in return the descriptions of 159 tools stay
+call - the model reads the help of a tool before it first uses it - and in return the descriptions of 160 tools stay
 out of its context.
 
 ## Tool areas
@@ -151,7 +151,7 @@ code 2).
 | Area       | Tools of the area                                                                              | Count |
 | ---------- | ---------------------------------------------------------------------------------------------- | ----- |
 | `plc`      | `plc_*`                                                                                        | 71    |
-| `hw`       | `hw_*` and `net_*`: devices, hardware, subnets, connections                                    | 17    |
+| `hw`       | `hw_*` and `net_*`: devices, hardware, subnets, connections                                    | 18    |
 | `unified`  | `unified_*`                                                                                    | 35    |
 | `library`  | `get_libraries`, `get_library_types`, `get_master_copies`, `instantiate_master_copy`, `open_global_library` | 5 |
 | `transfer` | `export_objects`, `import_objects`, `preview_import`                                           | 3     |
@@ -204,7 +204,7 @@ have no such setting ask (or do not ask) by their own rules. To leave the tools 
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 159 tools (82 with `--read-only`). A short
+when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 160 tools (82 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Always available (74):
@@ -227,7 +227,7 @@ Always available (74):
 | Download                | `get_download_targets`, `get_accessible_devices` |
 | Security                | `sec_get_plc_security`, `sec_get_project_users` |
 
-Left out with `--read-only` (85):
+Left out with `--read-only` (86):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
@@ -240,7 +240,7 @@ Left out with `--read-only` (85):
 | Tags and constants      | `plc_create_tag`, `plc_update_tag`, `plc_delete_tag`, `plc_create_user_constant`, `plc_update_user_constant`, `plc_delete_user_constant`, `plc_manage_tag_table_entries` |
 | Watch tables            | `plc_create_watch_table`, `plc_rename_watch_table`, `plc_delete_watch_table`, `plc_create_watch_table_group`, `plc_delete_watch_table_group` |
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
-| Hardware                | `hw_create_device`, `hw_plug_module`, `hw_set_device_item_attributes`, `hw_delete_device` |
+| Hardware                | `hw_create_device`, `hw_plug_module`, `hw_set_device_item_attributes`, `hw_compile`, `hw_delete_device` |
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_delete_subnet`, `net_create_io_system`, `net_connect_to_io_system`, `net_create_connection`, `net_delete_connection` |
 | WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_compile`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_tag_table_groups`, `unified_manage_logs`, `unified_manage_logging_tags`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists`, `unified_set_runtime_settings` |
 | Download                | `download_to_plc` |
