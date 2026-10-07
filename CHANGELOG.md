@@ -6,8 +6,11 @@
 
 - `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
   interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
-  subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
-  interface; any other address is refused before the download starts.
+  subnet. `download_to_plc` takes `targetAddress`, the address the device answers at now when it is not the one of the
+  project; an address nothing answers at is refused before the download starts. The search also returns the addresses
+  of the PC interface and says when a device is outside their subnets.
+- `download_to_plc` takes `passwords`: the passwords the PLC asks for during the download, by the type of the step
+  (`ModuleWriteAccessPassword`, `PlcMasterSecretPassword`, ...). A step that asked and got none is named in the answer.
 - **Changed default:** the client sees ten tools instead of 159 - `tia_read` for everything that only reads (with
   `tia_help`, the parameters of a tool) and nine group tools for what changes something (`project_write`, `plc_write`,
   `plc_delete`, `hw_write`, `hw_delete`, `hmi_write`, `plc_download`, `security_protection`, `security_users`); each

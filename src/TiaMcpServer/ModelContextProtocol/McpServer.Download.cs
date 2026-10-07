@@ -32,7 +32,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "get_accessible_devices", Title = "Search the network for accessible devices", ReadOnly = true, OpenWorld = false, UseStructuredContent = true)]
-        [Description("Search the network behind a PC interface for devices, as 'Online access > Update accessible devices' in TIA Portal does: name, address, MAC address of each device found - a PLC, a PLCSIM instance. Also returns 'downloadAddresses': the addresses 'download_to_plc' takes as targetAddress. softwarePath names a PLC of the project, whose download settings give the PC interfaces")]
+        [Description("Search the network behind a PC interface for devices, as 'Online access > Update accessible devices' in TIA Portal does: name, address, MAC address of each device found - a PLC, a PLCSIM instance. Also returns 'pcAddresses', the addresses of the PC interface itself - a device outside their subnets is found but cannot be loaded - and 'downloadAddresses', the addresses the project gives the PLC. The list of TIA Portal can lag behind: a device started or readdressed a moment ago may be missing or shown at its old address. softwarePath names a PLC of the project, whose download settings give the PC interfaces")]
         public static ResponseAccessibleDevices GetAccessibleDevices(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("pcInterfaceName: PC interface, second part of a target of 'get_download_targets' (e.g. 'Siemens PLCSIM Virtual Ethernet Adapter')")] string pcInterfaceName,
@@ -70,13 +70,14 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("maxMessages: how many informational result messages to return (default 40); errors and warnings are always returned in full")] int maxMessages = 40,
             [Description("selections: optional answers that override the defaults, as 'StepType=Option' pairs separated by commas, e.g. 'OverwriteSystemData=Overwrite,StopModules=StopAll'. Step types and their options are listed under 'steps' in every response")] string selections = "",
             [Description("downloadUserManagement: what to do with the user management data (users, roles) when the CPU holds data that differs from the project: 'keep' (default) leaves the CPU's data as it is, 'update' takes the users of the project but keeps the CPU's passwords, 'overwrite' replaces all of it by the project's data and resets the passwords. The same answer can be given as 'UserManagementDownload=<option>' in selections, which wins")] string downloadUserManagement = "keep",
-            [Description("targetAddress: one of the 'downloadAddresses' of 'get_accessible_devices', to load through the subnet instead of the target interface - for a device the target interface does not reach; empty (default) goes through the target interface")] string targetAddress = "")
+            [Description("targetAddress: the address the device answers at now, when it is not the address of the project - an empty PLCSIM instance, a new PLC, a PLC whose address the project changed. The device has to answer from this PC (see 'pcAddresses' of 'get_accessible_devices'). When hardware is loaded the device takes the address of the project and the rest of the download fails: repeat the call without targetAddress to finish. Empty (default) goes to the address of the project")] string targetAddress = "",
+            [Description("passwords: the passwords the PLC asks for during the download, by the type of the step that asks - e.g. {\"ModuleWriteAccessPassword\": \"...\"} for the access level, {\"PlcMasterSecretPassword\": \"...\"} for the protection of confidential PLC configuration data; the key \"*\" answers every step that asks. A step that asked and got none is named under 'steps'. Use only passwords the user of this conversation gave; never make one up, never repeat it in your answer")] Dictionary<string, string>? passwords = null)
         {
             return GuardedNoTransaction(nameof(DownloadToPlc), () =>
             {
                 var outcome = Portal.DownloadToPlc(
                     softwarePath, modeName, pcInterfaceName, targetInterfaceName,
-                    hardware, software, stopPlc, startPlc, ParseSelections(selections), downloadUserManagement, targetAddress);
+                    hardware, software, stopPlc, startPlc, ParseSelections(selections), downloadUserManagement, targetAddress, passwords);
 
                 var unanswered = outcome.Steps.Where(s => !s.Answered).Select(s => s.Type).Distinct().ToList();
 

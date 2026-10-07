@@ -97,6 +97,11 @@ namespace TiaMcpServer.Siemens
     {
         public string? PcInterface { get; set; }
 
+        /// <summary>The IPv4 addresses of that adapter of the PC, with prefix length - a device outside all of them is found by the search but cannot be loaded.</summary>
+        public List<string> PcAddresses { get; set; } = new List<string>();
+
+        public List<string> Notes { get; set; } = new List<string>();
+
         public List<AccessibleDevice> Devices { get; set; } = new List<AccessibleDevice>();
 
         /// <summary>The addresses 'download_to_plc' takes as targetAddress: those TIA Portal knows on the subnets of this PC interface.</summary>
@@ -124,9 +129,92 @@ namespace TiaMcpServer.Siemens
 
                 result.DownloadAddresses = SubnetAddresses(pcInterface).Select(a => a.Address).Distinct().ToList();
 
+                var own = PcAddressesOf(pcInterface.Name);
+
+                result.PcAddresses = own.Select(a => $"{a.Address}/{a.Prefix}").ToList();
+
+                foreach (var device in result.Devices)
+                {
+                    if (own.Count > 0 && System.Net.IPAddress.TryParse(device.Address, out var ip) && !own.Any(a => SameSubnet(a.Address, ip, a.Prefix)))
+                    {
+                        result.Notes.Add($"'{device.Name}' at {device.Address} is in none of the subnets of this PC interface ({string.Join(", ", result.PcAddresses)}): the search finds it, a download cannot connect to it. " +
+                                         "Either the PC interface gets an address in the subnet of the device (the user's to do; the download dialog of TIA Portal adds one by itself), or the device and the PLC of the project get an address in a subnet of the PC interface.");
+                    }
+                }
+
                 return result;
             },
             ("softwarePath", softwarePath), ("pcInterfaceName", pcInterfaceName));
+        }
+
+        /// <summary>The IPv4 addresses Windows has on the adapter TIA Portal calls by this name (its description).</summary>
+        private static List<(System.Net.IPAddress Address, int Prefix)> PcAddressesOf(string pcInterfaceName)
+        {
+            var result = new List<(System.Net.IPAddress, int)>();
+
+            try
+            {
+                foreach (var adapter in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+                {
+                    if (!string.Equals(adapter.Description, pcInterfaceName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    foreach (var address in adapter.GetIPProperties().UnicastAddresses)
+                    {
+                        if (address.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                        {
+                            result.Add((address.Address, address.PrefixLength));
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // the addresses are a hint; the search does not depend on them
+            }
+
+            return result;
+        }
+
+        /// <summary>Whether something answers a ping at the address; false for anything that is no IPv4 address.</summary>
+        private static bool Answers(string address)
+        {
+            try
+            {
+                if (!System.Net.IPAddress.TryParse(address, out var ip) || ip.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    return false;
+                }
+
+                using (var ping = new System.Net.NetworkInformation.Ping())
+                {
+                    return ping.Send(ip, 1000)?.Status == System.Net.NetworkInformation.IPStatus.Success;
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private static bool SameSubnet(System.Net.IPAddress a, System.Net.IPAddress b, int prefix)
+        {
+            var x = a.GetAddressBytes();
+            var y = b.GetAddressBytes();
+
+            for (var bit = 0; bit < prefix && bit < 32; bit++)
+            {
+                var mask = (byte)(0x80 >> (bit % 8));
+
+                if ((x[bit / 8] & mask) != (y[bit / 8] & mask))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static ConfigurationPcInterface RequirePcInterface(DownloadProvider provider, string modeName, string pcInterfaceName)
@@ -212,7 +300,8 @@ namespace TiaMcpServer.Siemens
             bool startPlc = false,
             IDictionary<string, string>? selections = null,
             string userManagement = "keep",
-            string? targetAddress = null)
+            string? targetAddress = null,
+            IDictionary<string, string>? passwords = null)
         {
             return Operation.Run(_logger, nameof(DownloadToPlc), PortalErrorCode.InvalidState, () =>
             {
@@ -254,23 +343,44 @@ namespace TiaMcpServer.Siemens
                     }
                 }
 
-                // An address is taken only from those TIA Portal offers on the subnets of the PC interface. NEVER make one
-                // with target.Addresses.Create(...): a download to such an address closed TIA Portal (2026-10-07).
+                // An address TIA Portal offers on the subnets of the PC interface is a configuration of its own. Any other
+                // address is made with target.Addresses.Create(...) and goes into the SECOND argument of Download - handed
+                // over as the configuration itself it closed TIA Portal (2026-10-07, with a device that was not reachable).
                 ConfigurationAddress? address = null;
+
+                // A device that sits at another address than the project gives it - found by the search - is loaded with
+                // the overload Download(targetInterface, customAddress, ...).
+                ConfigurationAddress? custom = null;
 
                 if (!string.IsNullOrWhiteSpace(targetAddress))
                 {
+                    var wanted = targetAddress!.Trim();
                     var known = SubnetAddresses(pcInterface);
 
-                    address = known.FirstOrDefault(a => string.Equals(a.Address, targetAddress!.Trim(), StringComparison.OrdinalIgnoreCase))
-                        ?? throw new PortalException(PortalErrorCode.NotFound,
-                            $"TIA Portal offers no address '{targetAddress}' on the subnets of PC interface '{pcInterface.Name}'. Offered: {(known.Count == 0 ? "none" : Quote(known.Select(a => a.Address).Distinct()))}. " +
-                            "'get_accessible_devices' searches the network. Nothing was loaded.");
+                    address = known.FirstOrDefault(a => string.Equals(a.Address, wanted, StringComparison.OrdinalIgnoreCase));
+
+                    if (address == null)
+                    {
+                        // Only a device that answers at the address is tried. The search is no proof of that: it finds
+                        // devices the PC cannot reach by IP, and after a download changed the address of a PLCSIM instance
+                        // it went on naming the old one (2026-10-07).
+                        if (!Answers(wanted))
+                        {
+                            var own = PcAddressesOf(pcInterface.Name).Select(a => $"{a.Address}/{a.Prefix}").ToList();
+
+                            throw new PortalException(PortalErrorCode.NotFound,
+                                $"No device answers at '{targetAddress}' from this PC, so nothing was loaded. PC interface '{pcInterface.Name}' has {(own.Count == 0 ? "no IPv4 address" : string.Join(", ", own))}: " +
+                                "a device outside these subnets is found by 'get_accessible_devices' but cannot be loaded until the PC interface has an address in its subnet " +
+                                "(the user's to add; the download dialog of TIA Portal adds one by itself) or the device is given an address in one of them.");
+                        }
+
+                        custom = target.Addresses.Create(wanted);
+                    }
                 }
 
                 var outcome = new DownloadOutcome
                 {
-                    Target = $"{mode.Name} / {pcInterface.Name} / {target.Name}" + (address == null ? string.Empty : $" at {address.Address}")
+                    Target = $"{mode.Name} / {pcInterface.Name} / {target.Name}" + (address == null && custom == null ? string.Empty : $" at {(address ?? custom)!.Address}")
                 };
 
                 var stage = "connecting to the target and preparing the download";
@@ -283,26 +393,38 @@ namespace TiaMcpServer.Siemens
 
                 try
                 {
-                    var result = downloadProvider.Download(
-                        address != null ? (IConfiguration)address : target,
-                        configuration =>
-                        {
-                            stage = "answering the configuration steps before loading";
-                            outcome.Steps.Add(AnswerDownloadStep(configuration, "before", answers));
-                            stage = "loading";
-                        },
-                        configuration =>
-                        {
-                            stage = "answering the configuration steps after loading";
-                            outcome.Steps.Add(AnswerDownloadStep(configuration, "after", answers));
-                        },
-                        options);
+                    DownloadConfigurationDelegate before = configuration =>
+                    {
+                        stage = "answering the configuration steps before loading";
+                        outcome.Steps.Add(AnswerDownloadStep(configuration, "before", answers, passwords));
+                        stage = "loading";
+                    };
+
+                    DownloadConfigurationDelegate after = configuration =>
+                    {
+                        stage = "answering the configuration steps after loading";
+                        outcome.Steps.Add(AnswerDownloadStep(configuration, "after", answers, passwords));
+                    };
+
+                    var result = custom != null
+                        ? downloadProvider.Download(target, custom, before, after, options)
+                        : downloadProvider.Download(address != null ? (IConfiguration)address : target, before, after, options);
 
                     outcome.State = result.State.ToString();
                     outcome.ErrorCount = result.ErrorCount;
                     outcome.WarningCount = result.WarningCount;
 
                     CollectDownloadMessages(result.Messages, 0, outcome.Messages);
+
+                    if (custom != null && hardware && outcome.ErrorCount > 0)
+                    {
+                        outcome.Messages.Insert(0, new DownloadMessage
+                        {
+                            State = "Information",
+                            Text = $"The download went to '{custom.Address}', which is not the address of the project. Seen on V21: the hardware configuration is loaded, the device takes the address of the project, " +
+                                   "and the rest of the download fails because the device is no longer at the address it was reached at. Repeat the download without 'targetAddress' to finish it."
+                        });
+                    }
                 }
                 catch (Exception ex) when (ex is not PortalException)
                 {
@@ -355,7 +477,7 @@ namespace TiaMcpServer.Siemens
             };
         }
 
-        private DownloadStep AnswerDownloadStep(object configuration, string phase, Dictionary<string, string[]> answers)
+        private DownloadStep AnswerDownloadStep(object configuration, string phase, Dictionary<string, string[]> answers, IDictionary<string, string>? passwords = null)
         {
             var type = configuration.GetType();
             var step = new DownloadStep { Phase = phase, Type = type.Name };
@@ -369,9 +491,29 @@ namespace TiaMcpServer.Siemens
                 if (selection == null || !selection.PropertyType.IsEnum)
                 {
                     // Password prompts and the like: there is nothing to select.
-                    step.Note = type.GetMethod("SetPassword") != null
-                        ? "This step asks for a password; the server does not supply passwords. Remove the protection or download from TIA Portal."
-                        : "This step offers no selection; it was left as it is.";
+                    var setPassword = type.GetMethod("SetPassword");
+
+                    if (setPassword == null)
+                    {
+                        step.Note = "This step offers no selection; it was left as it is.";
+
+                        return step;
+                    }
+
+                    // by the type of the step, or '*' for every step that asks
+                    var given = passwords?.FirstOrDefault(p => string.Equals(p.Key?.Trim(), type.Name, StringComparison.OrdinalIgnoreCase)).Value
+                                ?? passwords?.FirstOrDefault(p => p.Key?.Trim() == "*").Value;
+
+                    if (string.IsNullOrEmpty(given))
+                    {
+                        step.Note = $"This step asks for a password and none was given. Ask the user for it and pass it in 'passwords' as {{\"{type.Name}\": \"...\"}}.";
+
+                        return step;
+                    }
+
+                    setPassword.Invoke(configuration, new object[] { Secret(given, "password") });
+                    step.Answered = true;
+                    step.Note = "The password given in 'passwords' was supplied.";
 
                     return step;
                 }

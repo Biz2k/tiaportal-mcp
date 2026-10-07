@@ -69,7 +69,7 @@ No parameters.
 
 ## get_accessible_devices
 
-Search the network behind a PC interface for devices, as 'Online access > Update accessible devices' in TIA Portal does: name, address, MAC address of each device found - a PLC, a PLCSIM instance. Also returns 'downloadAddresses': the addresses 'download_to_plc' takes as targetAddress. softwarePath names a PLC of the project, whose download settings give the PC interfaces
+Search the network behind a PC interface for devices, as 'Online access > Update accessible devices' in TIA Portal does: name, address, MAC address of each device found - a PLC, a PLCSIM instance. Also returns 'pcAddresses', the addresses of the PC interface itself - a device outside their subnets is found but cannot be loaded - and 'downloadAddresses', the addresses the project gives the PLC. The list of TIA Portal can lag behind: a device started or readdressed a moment ago may be missing or shown at its old address. softwarePath names a PLC of the project, whose download settings give the PC interfaces
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|

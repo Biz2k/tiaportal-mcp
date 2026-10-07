@@ -62,6 +62,12 @@ name, and the change lands there.
   changed. Do not repeat a cancelled call without asking.
 - The tools named here are called through group tools (tia_read for all reading, plc_write, ...) as
   `{"tool": "<name>", "arguments": {...}}`; 'tia_help' (in tia_read) gives the parameters. `--full` shows them singly.
+- **Download to PLCSIM or a PLC in another subnet**: `get_accessible_devices` shows the device and
+  the addresses of the PC interface. If the device (or the address the project gives the PLC) is
+  outside them, say so and offer: the user adds an address to the PC interface, or - after their
+  yes - you set a port of the PLC (an unconfigured one, 0.0.0.0, else the first) to an address in
+  a subnet of the PC interface (`hw_set_device_item_attributes`, `Node.Address`), keep the old
+  value, load, and put the old address back when the simulation is over.
 - If the write tools are missing from the session, the server runs with `--read-only`
   (`get_state` shows `allowWrite: false`). Say so; do not look for a way around it.
 - **Protection, passwords, users (`sec_*`)**: before each call say what will change on which PLC,
