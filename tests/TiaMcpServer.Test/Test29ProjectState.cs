@@ -19,6 +19,13 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
+        public void Test_2902_ServerVersion_HasThreeParts()
+        {
+            Assert.IsTrue(System.Version.TryParse(TiaMcpServer.ModelContextProtocol.McpServer.ServerVersion, out var v) && v.Revision == -1,
+                TiaMcpServer.ModelContextProtocol.McpServer.ServerVersion);
+        }
+
+        [TestMethod]
         public void Test_2901_IsModified_IsNullWhenTheAttributeIsMissingOrNotABool()
         {
             Assert.IsNull(ToolHelper.IsModified(null));

@@ -2,6 +2,158 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-07
+
+139 tools (70 with `--read-only`), 154 unit tests that need no TIA Portal, two smoke runs against a live project. This release
+closes the second stage of the plan: every tool name has an area prefix, long lists page the same way, errors say what to do
+next, WinCC Unified is covered end to end (screens, items, tags, alarms, logs, lists, scripts, runtime settings, faceplates), the
+server runs one call at a time, and the writing tools have a smoke run that undoes itself. The sections below are the whole
+history since 0.3.0; the two blocks directly below are what to read when moving from 0.3.0.
+
+### Upgrading from 0.3.0
+
+Behaviour a caller notices:
+
+- **Writing is on by default.** `--read-only` leaves the project-changing tools (69) out of `tools/list`; `--allow-write` is still
+  accepted and does nothing.
+- **`connect` does not start TIA Portal** unless `startIfNotRunning=true`. Without `processId` or `projectPath` it attaches to the
+  only instance that has a project open; with several projects open it refuses and lists the instances (`get_tia_instances` lists
+  them without connecting).
+- **`save_as_project` takes the FOLDER** of the new project, without an extension; a path with `.apXX` / `.alsXX`, a relative path,
+  a missing parent folder and a folder that is not empty are refused before anything is written.
+- **Tool names** are `snake_case` with an area prefix (`plc_`, `hw_`, `net_`, `unified_`; connection, project, library, export,
+  import and download tools have none). The tables below give every old name. The prompts (`McpPrompts`) are gone.
+- **Export and import** are two tools, `export_objects` and `import_objects`, with `format` `xml`, `document` or `source`;
+  `import_objects` takes `conflict_resolution` `overwrite` or `skip` (`rename` is not offered).
+- **Long lists page** the same way: `limit` and `offset`, and `total`, `offset`, `truncated`, `nextOffset` in `meta`
+  (default page 500; `plc_get_tags` 200, `plc_get_cross_references` 100).
+- **One call at a time:** the server serializes tool calls (`get_state`, `get_tia_instances`, `doctor` excepted).
+- **Batches are all or nothing** (`unified_manage_*`); what TIA Portal would not take is refused, not stored.
+- **New start flags:** `--tools plc,unified` (tool areas), `--debug-tools` (`unified_debug_*`); `get_state` and `doctor` report
+  `serverVersion` and `toolAreas`, `get_project` reports `isModified`.
+
+Tools renamed or removed. The table is complete: every tool of 0.3.0 is in it.
+
+| was (0.3.0) | now |
+|---|---|
+| `CloseProject` | `close_project` |
+| `CompileSoftware` | `plc_compile_software` |
+| `Connect` | `connect` |
+| `CopyBlock` | `plc_copy_block` |
+| `CopyType` | `plc_copy_type` |
+| `CreateBlockGroup` | `plc_create_block_group` |
+| `CreateExternalSourceFromFile` | `plc_create_external_source` |
+| `CreateExternalSourceGroup` | `plc_create_external_source_group` |
+| `CreateFB` | `plc_create_fb` |
+| `CreateInstanceDB` | `plc_create_instance_db` |
+| `CreateTag` | `plc_create_tag` |
+| `CreateTagTable` | `plc_create_tag_table` |
+| `CreateTagTableGroup` | `plc_create_tag_table_group` |
+| `CreateTypeGroup` | `plc_create_type_group` |
+| `CreateUserConstant` | `plc_create_user_constant` |
+| `CreateWatchTable` | `plc_create_watch_table` |
+| `CreateWatchTableGroup` | `plc_create_watch_table_group` |
+| `DeleteBlock` | `plc_delete_block` |
+| `DeleteBlockGroup` | `plc_delete_block_group` |
+| `DeleteExternalSource` | `plc_delete_external_source` |
+| `DeleteExternalSourceGroup` | `plc_delete_external_source_group` |
+| `DeleteTag` | `plc_delete_tag` |
+| `DeleteTagTable` | `plc_delete_tag_table` |
+| `DeleteTagTableGroup` | `plc_delete_tag_table_group` |
+| `DeleteType` | `plc_delete_type` |
+| `DeleteTypeGroup` | `plc_delete_type_group` |
+| `DeleteUserConstant` | `plc_delete_user_constant` |
+| `DeleteWatchTable` | `plc_delete_watch_table` |
+| `DeleteWatchTableGroup` | `plc_delete_watch_table_group` |
+| `Disconnect` | `disconnect` |
+| `Doctor` | `doctor` |
+| `ExportAsDocuments` | `export_objects`, `format` `document` |
+| `ExportBlock` | `export_objects`, `format` `xml` |
+| `ExportBlocks` | `export_objects`, `format` `xml` |
+| `ExportBlocksAsDocuments` | `export_objects`, `format` `document` |
+| `ExportPlcAsSourceTree` | `export_objects`, `format` `document`, empty `object_paths` (or `plc_generate_sources` for source files) |
+| `ExportTagTable` | `export_objects`, `format` `xml` |
+| `ExportType` | `export_objects`, `format` `xml` |
+| `ExportTypeAsDocuments` | `export_objects`, `format` `document` |
+| `ExportTypes` | `export_objects`, `format` `xml` |
+| `ExportTypesAsDocuments` | `export_objects`, `format` `document` |
+| `ExportWatchTable` | `export_objects`, `format` `xml` |
+| `FindInCode` | `plc_find_in_code` |
+| `GenerateBlockSource` | `export_objects`, `format` `source` |
+| `GenerateBlocksFromSource` | `import_objects`, `format` `source` |
+| `GenerateSources` | `plc_generate_sources` |
+| `GenerateTypeSource` | `export_objects`, `format` `source` |
+| `GetBlockInfo` | `plc_get_block_info` |
+| `GetBlockInterface` | `plc_get_block_interface` |
+| `GetBlockSource` | `plc_get_block_source` |
+| `GetBlocks` | `plc_get_blocks` |
+| `GetBlocksWithHierarchy` | `plc_get_blocks_hierarchy` |
+| `GetConstants` | `plc_get_constants` |
+| `GetCrossReferences` | `plc_get_cross_references` |
+| `GetDeviceInfo` | `hw_get_device_info` |
+| `GetDeviceItemInfo` | `hw_get_device_item_info` |
+| `GetDevices` | `hw_get_devices` |
+| `GetExternalSourceInfo` | `plc_get_external_source_info` |
+| `GetExternalSources` | `plc_get_external_sources` |
+| `GetForceTables` | `plc_get_force_tables` |
+| `GetPlcSummary` | `plc_get_summary` |
+| `GetProject` | `get_project` |
+| `GetProjectTree` | `get_project_tree` |
+| `GetSoftwareInfo` | `plc_get_software_info` |
+| `GetSoftwareTree` | `plc_get_software_tree` |
+| `GetState` | `get_state` |
+| `GetTagInfo` | `plc_get_tag_info` |
+| `GetTagTableInfo` | `plc_get_tag_table_info` |
+| `GetTagTables` | `plc_get_tag_tables` |
+| `GetTags` | `plc_get_tags` |
+| `GetTypeInfo` | `plc_get_type_info` |
+| `GetTypeSource` | `plc_get_type_source` |
+| `GetTypes` | `plc_get_types` |
+| `GetWatchTableInfo` | `plc_get_watch_table_info` |
+| `GetWatchTables` | `plc_get_watch_tables` |
+| `ImportBlock` | `import_objects`, `format` `xml` |
+| `ImportBlocksFromDocuments` | `import_objects`, `format` `document` |
+| `ImportFromDocuments` | `import_objects`, `format` `document` |
+| `ImportSources` | `import_objects`, `format` `source` |
+| `ImportTagTable` | `import_objects`, `format` `xml` |
+| `ImportType` | `import_objects`, `format` `xml` |
+| `ImportTypeFromDocuments` | `import_objects`, `format` `document` |
+| `ImportTypesFromDocuments` | `import_objects`, `format` `document` |
+| `ImportWatchTable` | `import_objects`, `format` `xml` |
+| `MoveBlock` | `plc_move_block` |
+| `MoveType` | `plc_move_type` |
+| `OpenProject` | `open_project` |
+| `OpenTiaProject` | `open_tia_project` |
+| `PreviewImport` | `preview_import` |
+| `RenameBlock` | `plc_rename_block` |
+| `RenameTagTable` | `plc_rename_tag_table` |
+| `RenameType` | `plc_rename_type` |
+| `RenameWatchTable` | `plc_rename_watch_table` |
+| `ResolveObjectPath` | `plc_resolve_object_path` |
+| `SaveAsProject` | `save_as_project` |
+| `SaveProject` | `save_project` |
+| `UpdateTag` | `plc_update_tag` |
+| `UpdateUserConstant` | `plc_update_user_constant` |
+| `WhereUsed` | `plc_where_used` |
+
+Tools of the 0.4.0 build that no longer exist (the five prefixed tools are in the table under "Breaking (tool names and prompts)"
+below):
+
+| was (0.4.0 build) | now |
+|---|---|
+| `hmi_get_screens` | `unified_get_screens` |
+| `hmi_get_screen_items` | `unified_get_screen_items` |
+| `hmi_get_screen_item_properties` | `unified_get_screen_item_properties` |
+| `hmi_get_tags` | `unified_get_tags` |
+| `hmi_get_connections` | `unified_get_connections` |
+| `hmi_create_screen` | `unified_create_screen` |
+| `hmi_delete_screen` | `unified_delete_screen` |
+| `hmi_create_screen_item`, `hmi_configure_screen_item`, `hmi_set_screen_item_property`, `hmi_delete_screen_item`, `hmi_set_unified_screen_item_event`, `hmi_configure_unified_trend_companion` | `unified_manage_items` |
+| `hmi_configure_unified_trend_control` | `unified_configure_trend_control` |
+| `hmi_create_faceplate_instance`, `hmi_manage_unified_faceplate` | `unified_manage_faceplate` |
+| `hmi_get_library_types`, `hmi_get_library_faceplates` | `get_library_types` |
+
+
 ### Added (tool areas)
 
 - `--tools plc,unified` registers only the named tool areas (`plc`, `hw` with `net_*`, `unified`, `library`, `transfer`,

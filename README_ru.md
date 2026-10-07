@@ -130,7 +130,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 Инструменты, изменяющие проект, доступны по умолчанию. Чтобы их убрать, запустите сервер с
 параметром `--read-only`.
 
-- С `--read-only` 57 изменяющих инструментов **не регистрируются вообще** и не появляются в
+- С `--read-only` 69 изменяющих инструментов **не регистрируются вообще** и не появляются в
   `tools/list`. Модель не может вызвать то, чего не видит.
 - Без параметра они регистрируются с пометкой `destructiveHint: true`, так что клиент может
   запрашивать подтверждение перед каждым вызовом.
@@ -148,15 +148,15 @@ Openness. Подтвердите запрос в окне TIA Portal.
 
 Точный список имён инструментов — в [`docs/tools-list.txt`](docs/tools-list.txt); тест падает,
 если зарегистрированные инструменты расходятся с этим файлом. По умолчанию регистрируется
-114 инструментов. Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
+139 инструментов (70 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
 
-Доступны всегда (57):
+Доступны всегда (70):
 
 | Область                          | Инструменты |
 | -------------------------------- | ----------- |
-| Подключение и состояние          | `connect`, `disconnect`, `get_state`, `doctor` |
+| Подключение и состояние          | `connect`, `disconnect`, `get_state`, `get_tia_instances`, `doctor` |
 | Проект и сессия                  | `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
-| Структура проекта                | `get_project_tree`, `hw_get_devices`, `hw_get_device_info`, `hw_get_device_item_info`, `hw_get_topology`, `hw_search_catalog` |
+| Структура проекта                | `get_project_tree`, `hw_get_devices`, `hw_get_device_info`, `hw_get_device_item_info`, `hw_get_topology`, `hw_search_catalog`, `net_get_connections` |
 | Программа ПЛК                    | `plc_get_summary`, `plc_get_software_info`, `plc_get_software_tree`, `plc_compile_software` |
 | Блоки                            | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source` |
 | Типы данных                      | `plc_get_types`, `plc_get_type_info`, `plc_get_type_source` |
@@ -166,10 +166,10 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Поиск и ссылки                   | `plc_resolve_object_path`, `plc_find_in_code`, `plc_where_used`, `plc_get_cross_references` |
 | Экспорт и предпросмотр           | `export_objects`, `preview_import` |
 | Библиотеки                       | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
-| WinCC Unified                    | `unified_get_screens`, `unified_get_screen_groups`, `unified_get_scripts`, `unified_get_tag_table_groups`, `unified_get_logs`, `unified_get_logging_tags`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists` |
+| WinCC Unified                    | `unified_get_screens`, `unified_get_screen_groups`, `unified_get_scripts`, `unified_get_tag_table_groups`, `unified_get_logs`, `unified_get_logging_tags`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists`, `unified_get_runtime_settings`, `unified_get_system_tags` |
 | Загрузка                         | `get_download_targets` |
 
-Не регистрируются с `--read-only` (57):
+Не регистрируются с `--read-only` (69):
 
 | Область                          | Инструменты |
 | -------------------------------- | ----------- |
@@ -182,8 +182,8 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Таблицы наблюдения               | `plc_create_watch_table`, `plc_rename_watch_table`, `plc_delete_watch_table`, `plc_create_watch_table_group`, `plc_delete_watch_table_group` |
 | Внешние исходные файлы           | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Оборудование                     | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
-| Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system` |
-| WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_compile`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_tag_table_groups`, `unified_manage_logs`, `unified_manage_logging_tags`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists` |
+| Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system`, `net_create_connection`, `net_delete_connection`, `net_delete_subnet` |
+| WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_compile`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_tag_table_groups`, `unified_manage_logs`, `unified_manage_logging_tags`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists`, `unified_set_runtime_settings` |
 | Загрузка                         | `download_to_plc` |
 
 `plc_get_software_tree` принимает параметр `sections` — любое подмножество

@@ -240,6 +240,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseState : ResponseMessage
     {
+        /// <summary>Version of this server, e.g. 0.5.0.</summary>
+        public string? ServerVersion { get; set; }
         public bool? IsConnected { get; set; }
         public string? Project { get; set; }
         public string? Session { get; set; }
@@ -269,6 +271,7 @@ namespace TiaMcpServer.ModelContextProtocol
     public class ResponseDoctor : ResponseMessage
     {
         public string? Report { get; set; }
+        public string? ServerVersion { get; set; }
         public bool? IsConnected { get; set; }
         public int? ActiveTiaMajorVersion { get; set; }
         public string? ProjectName { get; set; }

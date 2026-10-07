@@ -162,6 +162,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        /// <summary>The version of this build, e.g. 0.5.0 (the assembly version without its fourth part).</summary>
+        internal static string ServerVersion => typeof(McpServer).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+
         [McpServerTool(Name = "get_state", Title = "Get server state", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get the state of the TIA-Portal MCP server")]
         public static ResponseState GetState()
         {
@@ -174,6 +177,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return new ResponseState
                     {
                         Message = "TIA-Portal MCP server state retrieved",
+                        ServerVersion = ServerVersion,
                         IsConnected = state.IsConnected,
                         Project = state.Project,
                         Session = state.Session,
@@ -214,6 +218,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = "TIA-Portal environment diagnosed",
                     Report = report.Text,
+                    ServerVersion = ServerVersion,
                     IsConnected = report.IsConnected,
                     ActiveTiaMajorVersion = report.ActiveTiaMajorVersion,
                     ProjectName = report.ProjectName,
