@@ -10,7 +10,7 @@
 #   -List    text file, one candidate per line; a second tab-separated column is a leading operand (#b for a contact or coil)
 #   -Out     result, tab-separated: candidate, verdict, internal name, steps, text sent, text returned or error, compile
 #   -Device  name of the device whose PLC is used; about 5 seconds per candidate
-# The result of 2026-10-07 (TIA Portal V21, S7-1500) is docs/handoff/api/lad-instructions.tsv.
+# The result of 2026-10-07 (TIA Portal V21, S7-1500) is src/TiaMcpServer/Resources/lad-instructions.tsv.
 param([Parameter(Mandatory)][string]$List, [Parameter(Mandatory)][string]$Out, [Parameter(Mandatory)][string]$Device, [string]$Work = (Join-Path $env:TEMP 'lad-instruction-probe'))
 . (Join-Path $PSScriptRoot 'openness-probe.ps1')
 Connect-Tia

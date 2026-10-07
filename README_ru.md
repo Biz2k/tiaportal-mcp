@@ -148,9 +148,9 @@ Openness. Подтвердите запрос в окне TIA Portal.
 
 Точный список имён инструментов — в [`docs/tools-list.txt`](docs/tools-list.txt); тест падает,
 если зарегистрированные инструменты расходятся с этим файлом. По умолчанию регистрируется
-142 инструментов (71 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
+143 инструментов (72 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
 
-Доступны всегда (70):
+Доступны всегда (71):
 
 | Область                          | Инструменты |
 | -------------------------------- | ----------- |
@@ -158,7 +158,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Проект и сессия                  | `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
 | Структура проекта                | `get_project_tree`, `hw_get_devices`, `hw_get_device_info`, `hw_get_device_item_info`, `hw_get_topology`, `hw_search_catalog`, `net_get_connections` |
 | Программа ПЛК                    | `plc_get_summary`, `plc_get_software_info`, `plc_get_software_tree` |
-| Блоки                            | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source`, `plc_get_lad_networks` |
+| Блоки                            | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source`, `plc_get_lad_networks`, `plc_get_lad_instructions` |
 | Типы данных                      | `plc_get_types`, `plc_get_type_info`, `plc_get_type_source` |
 | Теги и константы                 | `plc_get_tag_tables`, `plc_get_tag_table_info`, `plc_get_tags`, `plc_get_tag_info`, `plc_get_constants` |
 | Таблицы наблюдения               | `plc_get_watch_tables`, `plc_get_watch_table_info`, `plc_get_force_tables` |

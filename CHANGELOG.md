@@ -11,8 +11,16 @@
   comments are plain text, written for every language of the project. A call is all or nothing; the block is
   compiled, and when the new code does not compile the previous block is put back. SCL networks inside a LAD block
   are handled too. FBD, STL, GRAPH and CEM blocks are refused.
+- `plc_get_lad_instructions`: the reference for writing LAD as text - the syntax of a network and about 300
+  instructions with their exact names, pins and the data type line they need. No such list exists in the help or in
+  the installation of TIA Portal; this one was asked of TIA Portal itself, name by name
+  (`tools/lad-instruction-probe.ps1`), and is shipped inside the server.
 - `plc_create_lad_block`: a new FB or FC in LAD with its interface and its networks in one call, compiled; a block
   that does not compile is removed again by default.
+- Comments of interface members of a LAD block: `Start : Bool;   // text` in the declaration passed to
+  `plc_create_lad_block` or `plc_replace_source` becomes the comment of the member, and `plc_get_lad_networks`
+  shows the declaration that way. TIA Portal itself drops such a comment on the import without a word.
+- `plc_get_block_source` with format `document` reads an inconsistent block as well; it used to refuse.
 - `plc_replace_source` takes a LAD block as its whole document (format `document` of `plc_get_block_source`, both
   parts). This is the way to change the interface of a LAD block.
 - What the tools make up for, found by probes on TIA Portal V21: an import of a document without a block number
@@ -24,6 +32,9 @@
 
 ### Fixed
 
+- A LAD organization block that is not a program cycle OB (Startup, cyclic interrupt ...) is refused by the LAD tools
+  and by `plc_replace_source`: the text form of a block has no place for the event of an OB, and the import would
+  have left a program cycle OB. Found before any such block was written; `Main` and other program cycle OBs work.
 - `plc_replace_source` reset settings of a block that a source text does not carry: the memory reserve of "Download
   without reinitialization" (250 came back as 100), the retain memory reserve and the user-defined attributes. TIA
   Portal lets a program read these but not set them, so they cannot be put back: a block that has them changed from

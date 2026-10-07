@@ -143,10 +143,10 @@ running the server and never modify the project.
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. 142 tools are registered by default (71 with `--read-only`). A short
+when the registered tools and that file disagree. 143 tools are registered by default (72 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
-Always available (70):
+Always available (71):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
@@ -154,7 +154,7 @@ Always available (70):
 | Project and session     | `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
 | Project structure       | `get_project_tree`, `hw_get_devices`, `hw_get_device_info`, `hw_get_device_item_info`, `hw_get_topology`, `hw_search_catalog`, `net_get_connections` |
 | PLC software            | `plc_get_summary`, `plc_get_software_info`, `plc_get_software_tree` |
-| Blocks                  | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source`, `plc_get_lad_networks` |
+| Blocks                  | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source`, `plc_get_lad_networks`, `plc_get_lad_instructions` |
 | Types                   | `plc_get_types`, `plc_get_type_info`, `plc_get_type_source` |
 | Tags and constants      | `plc_get_tag_tables`, `plc_get_tag_table_info`, `plc_get_tags`, `plc_get_tag_info`, `plc_get_constants` |
 | Watch and force tables  | `plc_get_watch_tables`, `plc_get_watch_table_info`, `plc_get_force_tables` |

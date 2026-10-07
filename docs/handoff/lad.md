@@ -155,7 +155,7 @@ SIMATIC SD format» описывает только `RUNG`/`wire#`), ни в ф�
 обязателен), «Not a Valid instruction» либо принимает строку как вызов блока (тогда компиляция
 говорит «Имя_Callee no longer exists»). Кандидаты — названия из справки (287) и догадки.
 
-Результат — `docs/handoff/api/lad-instructions.tsv`: **298 инструкций** с канонической записью
+Результат — `src/TiaMcpServer/Resources/lad-instructions.tsv`: **298 инструкций** с канонической записью
 и выводами (V21, S7-1500). Колонки: имя, принятые синонимы, внутреннее имя, запись, замечания,
 название из справки.
 
@@ -224,3 +224,34 @@ readback». Выставить их для пробы удалось тольк�
 **Замечено:** `plc_get_block_source` с форматом `document` отказывает на несогласованном блоке,
 хотя документ экспортируется и с него (`plc_get_lad_networks` читает). Лишнее ограничение — снять.
 В установке есть Startdrive V21 Update 1 (видно в заголовке SimaticML) — к пункту 4.1 плана.
+
+## 07.10.2026, вечер
+
+**Комментарии переменных интерфейса.** `// текст` в объявлении TIA Portal при импорте молча
+отбрасывает; комментарий члена — это `{ S7_MLC := "id" }` перед ним и текст в `.s7res`.
+`LadDocument.AdoptMemberComments` превращает `Start : Bool;   // текст` в такую ссылку (и
+вливает её в уже имеющийся блок атрибутов члена), `HeadWithComments` показывает обратно.
+
+**OB.** Документ не несёт событие OB: импорт поверх «Startup» (OB100) и «Cyclic interrupt» (OB30)
+оставляет OB программного цикла с номером 1; `S7_BlockNumber` в документе не помогает. Запись в
+такой OB откатывается с отказом (`SecondaryType`, `PriorityNumber` в `UncarriedBlockSettings`).
+OB программного цикла (`Main`) меняются: вставка и удаление сети проверены.
+
+**Экземпляры системных FB.** `plc_create_instance_db` для `TON`, `CTU` не работает (ищет FB в
+ПЛК). Рабочие пути: мультиэкземпляр в интерфейсе FB (`Timer_0 : TON_TIME;`, вызов
+`#Timer_0.TON( ... )`) или DB из исходника через `plc_create_scl_block`:
+`DATA_BLOCK "T1" {InstructionName := 'TON_TIME'; LibVersion := '1.0'; S7_Optimized_Access := 'TRUE' } NON_RETAIN TON_TIME BEGIN END_DATA_BLOCK`,
+вызов `"T1".TON( pt := T#2s, et => )` с `{ S7_Templates := "time_type := Time" }` (для счётчика
+`CTU_INT` и `value_type := Int`). Проверено в FC, компилируется. Подсказка добавлена в отказ
+`plc_create_instance_db`.
+
+**Поиск.** `plc_find_in_code` ищет и в LAD-блоках (по документу).
+
+**Параметры типа** (перебор с компиляцией): один тип `SrcType := Int` — `Abs`, `Add`, `Mul`,
+`Neg`, `Sub`, `Div`, `Mod`, сравнения, `InRange`, `OutRange`; только `Real`/`LReal` —
+тригонометрия, `Sqr`, `Sqrt`, `Ln`, `Exp`, `Frac`; битовые строки `SrcType := Word` — `And`,
+`Or`, `Xor`, `Swap`; пара `[SrcType := Real, DestType := DInt]` — `Round`, `Ceil`, `Floor`,
+`Trunc`, `Convert`, `Scale`, `Normalize`. У `Calculate` текстовая запись выражения не найдена.
+
+**`plc_get_lad_instructions`** отдаёт синтаксис и таблицу
+`src/TiaMcpServer/Resources/lad-instructions.tsv` (встроена в сервер, 300 инструкций).

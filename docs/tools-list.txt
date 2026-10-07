@@ -76,6 +76,7 @@ plc_get_cross_references
 plc_get_external_source_info
 plc_get_external_sources
 plc_get_force_tables
+plc_get_lad_instructions
 plc_get_lad_networks
 plc_get_software_info
 plc_get_software_tree

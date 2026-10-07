@@ -28,6 +28,9 @@
     <InternalsVisibleTo Include="TiaMcpServer.Test" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Resources\lad-instructions.tsv" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Remove="tests\**" />
     <None Include="tests\**" />
   </ItemGroup>

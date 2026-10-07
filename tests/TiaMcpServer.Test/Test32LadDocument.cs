@@ -156,6 +156,47 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
+        public void Test_3208_MemberComments_BecomeTextsAndComeBackAsComments()
+        {
+            var document = LadDocument.Create("FB", "Demo", null, 0,
+                "VAR_INPUT\n    Start : Bool;   // Start button\n    Url : String := 'http://x';\n    { S7_Setpoint := \"True\" }\n    Lim : Int := 5; // limit: upper\nEND_VAR\n" +
+                "VAR\n    {\n        S7_Visibility := \"Hidden := External\"\n    }\n    T1 : TON_TIME; // timer\nEND_VAR",
+                "Block title", Cultures);
+
+            Assert.IsFalse(document.Head.Contains("// "), document.Head);
+            Assert.AreEqual(4, System.Text.RegularExpressions.Regex.Matches(document.Head, "MLC_mcp").Count, "the title and three comments");
+            StringAssert.Contains(document.Head, "{ S7_Setpoint := \"True\"; S7_MLC := \"MLC_mcp3\" }");
+            StringAssert.Contains(document.Head, "S7_Visibility := \"Hidden := External\";\n            S7_MLC := \"MLC_mcp4\"\n        }");
+            StringAssert.Contains(document.Head, "Url : String := 'http://x';");
+
+            var shown = document.HeadWithComments(Cultures);
+
+            StringAssert.Contains(shown, "Start : Bool;   // Start button");
+            StringAssert.Contains(shown, "Lim : Int := 5;   // limit: upper");
+            StringAssert.Contains(shown, "T1 : TON_TIME;   // timer");
+            StringAssert.Contains(shown, "{ S7_Setpoint := \"True\" }");
+            StringAssert.Contains(shown, "S7_BlockTitle");
+            Assert.IsFalse(shown.Contains("S7_MLC"), shown);
+        }
+
+        [TestMethod]
+        public void Test_3209_Instructions_AreShippedAndFoundByNameAliasAndDescription()
+        {
+            var all = LadInstructions.All;
+
+            Assert.IsTrue(all.Count > 250, $"{all.Count} instructions in the embedded table");
+            Assert.AreEqual(all.Count, all.Select(i => i.Name).Distinct().Count(), "names are unique");
+            Assert.AreEqual("S_SR", LadInstructions.Find(all, "^SR$").Single().Name);
+            Assert.AreEqual("Scale", LadInstructions.Find(all, "SCALE_X").First().Name);
+            StringAssert.Contains(LadInstructions.Find(all, "^TON$").Single().Template, "time_type");
+            StringAssert.Contains(LadInstructions.Find(all, "^Round$").Single().Template, "DestType");
+            Assert.IsTrue(LadInstructions.Find(all, "on-delay").Any(i => i.Name == "TON"));
+            Assert.AreEqual("Contact", LadInstructions.Find(all, "contact").First().Name, "the exact name comes first");
+            Assert.AreEqual(0, LadInstructions.Find(all, "no such thing").Count);
+            Assert.IsTrue(LadInstructions.Find(all, "[").Count >= 0, "a filter that is no regular expression is taken as text");
+        }
+
+        [TestMethod]
         public void Test_3207_LinesMissing_FindsWhatTheImportDropped()
         {
             var sent = "PID : PID_Compact := (\n  PhysicalUnit := 2,\n  Config := (\n    X := FALSE\n  )\n);\nT : Time := T#5000ms;";

@@ -532,6 +532,133 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #endregion
 
+        #region comments of interface members
+
+        private static readonly Regex MemberWithComment = new Regex(@"^(\s*)([^/{}]+?;)[ \t]*//[ \t]*(.+?)\s*$", RegexOptions.Compiled);
+        private static readonly Regex MemberLine = new Regex(@"^\s*[^/{}\s][^/{}]*:[^/{}]*;\s*$", RegexOptions.Compiled);
+        private static readonly Regex CommentPragma = new Regex(@"S7_MLC\s*:=\s*""(MLC_\w+)""\s*;?", RegexOptions.Compiled);
+
+        /// <summary>
+        /// A member written as "Start : Bool;   // text" gets the text as its comment. TIA Portal drops a // comment of
+        /// the declaration on the import without a word (2026-10-07); the comment of a member is a text of the
+        /// resource file, referred to by { S7_MLC := "id" } before the member.
+        /// </summary>
+        public void AdoptMemberComments(IList<string> cultures)
+        {
+            var lines = Head.Split('\n').ToList();
+
+            for (var i = 0; i < lines.Count; i++)
+            {
+                var match = MemberWithComment.Match(lines[i]);
+
+                if (!match.Success || lines[i].IndexOf(':') < 0)
+                {
+                    continue;
+                }
+
+                var indent = match.Groups[1].Value;
+                var id = AddText(match.Groups[3].Value, cultures);
+
+                lines[i] = indent + match.Groups[2].Value;
+
+                var before = i - 1;
+
+                while (before >= 0 && lines[before].Trim().Length == 0)
+                {
+                    before--;
+                }
+
+                var previous = before >= 0 ? lines[before].Trim() : string.Empty;
+
+                if (previous.StartsWith("{", StringComparison.Ordinal) && previous.EndsWith("}", StringComparison.Ordinal) && previous.Length > 2)
+                {
+                    // { S7_X := "..." } of this member: the comment joins it.
+                    var inner = CommentPragma.Replace(previous.Substring(1, previous.Length - 2), string.Empty).Trim().TrimEnd(';').Trim();
+
+                    lines[before] = indent + "{ " + (inner.Length > 0 ? inner + "; " : string.Empty) + $"S7_MLC := \"{id}\" }}";
+                }
+                else if (previous == "}")
+                {
+                    var open = before;
+
+                    while (open >= 0 && lines[open].Trim() != "{")
+                    {
+                        open--;
+                    }
+
+                    if (open >= 0)
+                    {
+                        for (var k = open + 1; k < before; k++)
+                        {
+                            if (CommentPragma.IsMatch(lines[k]))
+                            {
+                                lines.RemoveAt(k);
+                                before--;
+                                i--;
+                                break;
+                            }
+                        }
+
+                        if (!lines[before - 1].TrimEnd().EndsWith(";", StringComparison.Ordinal) && lines[before - 1].Trim() != "{")
+                        {
+                            lines[before - 1] = lines[before - 1].TrimEnd() + ";";
+                        }
+
+                        lines.Insert(before, indent + $"    S7_MLC := \"{id}\"");
+                        i++;
+                    }
+                }
+                else
+                {
+                    lines.Insert(i, indent + $"{{ S7_MLC := \"{id}\" }}");
+                    i++;
+                }
+            }
+
+            Head = string.Join("\n", lines);
+        }
+
+        /// <summary>The declaration for a reader: the comment of a member as "// text" behind it, not as an id before it.</summary>
+        public string HeadWithComments(IEnumerable<string>? cultures)
+        {
+            var lines = Head.Split('\n').ToList();
+            string? pending = null;
+
+            for (var i = 0; i < lines.Count; i++)
+            {
+                var pragma = CommentPragma.Match(lines[i]);
+
+                if (pragma.Success && lines[i].IndexOf("S7_BlockTitle", StringComparison.Ordinal) < 0)
+                {
+                    pending = TextOf(pragma.Groups[1].Value, cultures);
+
+                    var rest = CommentPragma.Replace(lines[i], string.Empty);
+
+                    if (Regex.IsMatch(rest, @"^\s*\{\s*\}\s*$") || rest.Trim().Length == 0)
+                    {
+                        lines.RemoveAt(i);
+                        i--;
+                    }
+                    else
+                    {
+                        lines[i] = Regex.Replace(rest, @";\s*\}", " }").TrimEnd();
+                    }
+
+                    continue;
+                }
+
+                if (pending != null && MemberLine.IsMatch(lines[i]))
+                {
+                    lines[i] = lines[i].TrimEnd() + "   // " + pending.Replace("\n", " ");
+                    pending = null;
+                }
+            }
+
+            return string.Join("\n", lines);
+        }
+
+        #endregion
+
         #region a new block
 
         /// <summary>The sections of an interface a caller may pass: VAR_INPUT ... END_VAR and the like, nothing else.</summary>
@@ -591,6 +718,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             document.Head = head.ToString() + "\n";
             document.Tail = kind == "FC" ? "END_FUNCTION" : "END_FUNCTION_BLOCK";
+            document.AdoptMemberComments(cultures);
 
             return document;
         }

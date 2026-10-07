@@ -819,7 +819,11 @@ namespace TiaMcpServer.Siemens
                     if (!GetBlocks(softwarePath).Any(b => b is FB && b.Name.Equals(instanceOf, StringComparison.OrdinalIgnoreCase)))
                     {
                         throw new PortalException(PortalErrorCode.NotFound,
-                            $"Function block '{instanceOf}' does not exist in this PLC. Use 'plc_get_blocks' to list the blocks.");
+                            $"Function block '{instanceOf}' does not exist in this PLC. Use 'plc_get_blocks' to list the blocks. " +
+                            "An instance of a system function block (TON, TOF, TP, CTU, CTD ...) is not created here: declare it in the interface of the FB that uses it " +
+                            "('Timer_0 : TON_TIME;', called as #Timer_0.TON( ... )), or create its data block from a source with 'plc_create_scl_block': " +
+                            "DATA_BLOCK \"Name\" {InstructionName := 'TON_TIME'; LibVersion := '1.0'; S7_Optimized_Access := 'TRUE' } NON_RETAIN TON_TIME BEGIN END_DATA_BLOCK " +
+                            "(CTU_INT for a counter), called as \"Name\".TON( ... ).");
                     }
 
                     EnsureBlockNameIsFree(softwarePath, name);

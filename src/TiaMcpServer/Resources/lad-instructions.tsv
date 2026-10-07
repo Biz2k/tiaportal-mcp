@@ -1,0 +1,301 @@
+name	aliases	internal	form	notes	help	template
+Abs		Abs	Abs( in := #i, out => #i )	the data type of the operands: Int, DInt, Real, ...	LAD | Form absolute value	{ S7_Templates := "SrcType := Int" }
+Ack_Alarms		Ack_Alarms	Ack_Alarms( MODE := #i, ERROR => #i, STATUS => #i )		Extended | Acknowledge alarms	
+Acos		Acos	Acos( in := #i, out => #i )	Real or LReal only	LAD | Form arccosine value	{ S7_Templates := "SrcType := Real" }
+ACT_TINT		ACT_TINT	ACT_TINT( OB_NR := #i, Ret_Val => #i )		Extended | Enable time-of-day interrupt	
+Add	ADD	Add	Add( in1 := #i, in2 := #i, out => #i )	takes in1, in2, ... as many as needed; the data type of the operands: Int, DInt, Real, ...	LAD | Add	{ S7_Templates := "SrcType := Int" }
+And		And	And( in1 := #w, in2 := #w, out => #w )	takes in1, in2, ... as many as needed; a bit string type: Word, DWord (And, Or, Xor also Byte)	LAD | AND logic operation on bit strings	{ S7_Templates := "SrcType := Word" }
+AsciiToHex	ATH	ATH	AsciiToHex( in := #i, n := #i, ret_val => #i, out => #i )		Extended | Convert ASCII string to hexadecimal number	
+Asin		Asin	Asin( in := #i, out => #i )	Real or LReal only	LAD | Form arcsine value	{ S7_Templates := "SrcType := Real" }
+AssignAttempt	AssignmentAttempt	AssignmentAttempt	AssignAttempt( in := #i, out => #i )		LAD | Attempt assignment to a reference	
+Atan		Atan	Atan( in := #i, out => #i )	Real or LReal only	LAD | Form arctangent value	{ S7_Templates := "SrcType := Real" }
+ATTACH		ATTACH	ATTACH( OB_NR := #i, EVENT := #i, ADD := #i, RET_VAL => #i )		Extended | Attach an OB to an interrupt event	
+ATTR_DB		ATTR_DB	ATTR_DB( REQ := #i, DB_NUMBER := #i, RET_VAL => #i, DB_LENGTH => #i, ATTRIB => #i )		Extended | Read data block attribute	
+BCDCPL		BCDCPL	BCDCPL( IN := #i, ERR_CODE => #i )		LAD | Create tens complement	
+BITSUM		BITSUM	BITSUM( IN := #i, Ret_Val => #i )		LAD | Count number of set bits	
+Calculate	CALCULATE	Calc	Calculate( out => #i )	the expression of the box has no known text form: build the calculation from Add, Mul and the like instead	LAD | Calculate	
+CAN_DINT		CAN_DINT	CAN_DINT( OB_NR := #i, RET_VAL => #i )		Extended | Cancel time-delay interrupt	
+CAN_TINT		CAN_TINT	CAN_TINT( OB_NR := #i, Ret_Val => #i )		Extended | Cancel time-of-day interrupt	
+CD_Coil			CD_Coil( #b )		Basic | Count down (SIMATIC counter)	
+Ceil		Ceil	Ceil( in := #i, out => #i )	from a floating point type to an integer type	LAD | Generate next higher integer	{ S7_Templates := "[SrcType := Real, DestType := DInt]" }
+Chars_TO_Strg			Chars_TO_Strg( Chars := #i, pChars := #i, Cnt := #i, Strg => #i )		Extended | Convert Array of CHAR to character string	
+Coil			Coil( #b )		Basic | Assignment (coil)	
+CONCAT			CONCAT( in1 := #s, in2 := #s, out => #s )	takes in1, in2, ... as many as needed	Extended | Combine character strings	
+Contact			Contact( #b )		Basic | Normally open contact	
+Convert	CONVERT	Convert	Convert( in := #i, out => #i )	the type of in and the type of out	LAD | Convert value	{ S7_Templates := "[SrcType := Int, DestType := Real]" }
+Cos		Cos	Cos( in := #i, out => #i )	Real or LReal only	LAD | Form cosine value	{ S7_Templates := "SrcType := Real" }
+CountOfElements		CountOfElements	CountOfElements( in := #i, ret_val => #i )		LAD | Get number of ARRAY elements	
+CREATE_DB		CREATE_DB	CREATE_DB( REQ := #i, LOW_LIMIT := #i, UP_LIMIT := #i, COUNT := #i, ATTRIB := #i, SRCBLK := #i, RET_VAL => #i, BUSY => #i, DB_NUM => #i )		Extended | Create data block	
+CTD		CTD	CTD( ld := #i, pv := #i, cv => #i )	called through an instance: #Counter_0.CTD( ... ) with Counter_0 : CTD_INT; in the interface, or "CounterDB".CTD( ... )	LAD | Count down	{ S7_Templates := "value_type := Int" }
+CTU		CTU	CTU( r := #i, pv := #i, cv => #i )	called through an instance: #Counter_0.CTU( ... ) with Counter_0 : CTU_INT; in the interface, or "CounterDB".CTU( ... )	LAD | Count up	{ S7_Templates := "value_type := Int" }
+CTUD		CTUD	CTUD( cd := #i, r := #i, ld := #i, pv := #i, qd => #i, cv => #i )	called through an instance: #Counter_0.CTUD( ... ) with Counter_0 : CTUD_INT; in the interface, or "CounterDB".CTUD( ... )	LAD | Count up and down	{ S7_Templates := "value_type := Int" }
+CU_Coil			CU_Coil( #b )		Basic | Count up (SIMATIC counter)	
+D_ACT_DP		D_ACT_DP	D_ACT_DP( REQ := #i, MODE := #i, LADDR := #i, RET_VAL => #i, BUSY => #i )		Extended | Activate/deactivate DP slaves	
+DataLogClear		DataLogClear	DataLogClear( REQ := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, ID := #i )		Extended | Empty data log	
+DataLogClose		DataLogClose	DataLogClose( REQ := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, ID := #i )		Extended | Close data log	
+DataLogCreate		DataLogCreate	DataLogCreate( REQ := #i, RECORDS := #i, FORMAT := #i, TIMESTAMP := #i, NAME := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, ID := #i, HEADER := #i, DATA := #i )		Extended | Create data log	
+DataLogDelete		DataLogDelete	DataLogDelete( REQ := #i, NAME := #i, DelFile := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, ID := #i )		Extended | Delete data log	
+DataLogNewFile		DataLogNewFile	DataLogNewFile( REQ := #i, RECORDS := #i, NAME := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, ID := #i, Data := #i )		Extended | Data log in new file	
+DataLogOpen		DataLogOpen	DataLogOpen( REQ := #i, MODE := #i, NAME := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, ID := #i, Data := #i )		Extended | Open data log	
+DataLogWrite		DataLogWrite	DataLogWrite( REQ := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, ID := #i )		Extended | Write data log	
+DCAT		DCAT	DCAT( CMD := #i, O_FB := #i, C_FB := #i, Q => #i, OA => #i, CA => #i )		LAD | Discrete control-timer alarm	
+Dec	DEC		Dec(  )		LAD | Decrement	
+DECO			{ S7_GenerateENO := "TRUE" } DECO( in := #i, out => #i )		LAD | Decode	
+DELETE			{ S7_GenerateENO := "TRUE" } DELETE( in := #i, l := #i, p := #i, out => #i )		Extended | Delete characters in a character string	
+DELETE_DB		DELETE_DB	DELETE_DB( REQ := #i, DB_NUMBER := #i, Ret_Val => #i, BUSY => #i )		Extended | Delete data block	
+Demux	DEMUX	Demux	Demux( k := #i, in := #i, else => #i )		LAD | Demultiplex	
+Deserialize		Deserialize	Deserialize( srcArray := #i, ret_val => #i, dstVariable => #i, pos := #i )		LAD | Deserialize	
+DETACH		DETACH	DETACH( OB_NR := #i, EVENT := #i, RET_VAL => #i )		Extended | Detach an OB from an interrupt event	
+DeviceStates		DeviceStates	DeviceStates( LADDR := #i, MODE := #i, Ret_Val => #i, STATE := #i )		Extended | Read module status information in an IO system	
+DIS_AIRT			DIS_AIRT( RET_VAL => )		Extended | Delay execution of higher priority interrupts and asynchronous error events	
+DIS_IRT		DIS_IRT	DIS_IRT( MODE := #i, OB_NR := #i, RET_VAL => #i )		Extended | Disable interrupt event	
+Div	DIV	Div	Div( in1 := #i, in2 := #i, out => #i )	the data type of the operands: Int, DInt, Real, ...	LAD | Divide	{ S7_Templates := "SrcType := Int" }
+DMSK_FLT		DMSK_FLT	DMSK_FLT( PRGFLT_RESET_MASK := #i, ACCFLT_RESET_MASK := #i, RET_VAL => #i, PRGFLT_MASKED => #i, ACCFLT_MASKED => #i )		Extended | Unmask synchronous error events	
+DP_TOPOL		DP_TOPOL	DP_TOPOL( REQ := #i, R := #i, DP_ID := #i, RET_VAL => #i, BUSY => #i, DPR => #i, DPRI => #i )		Extended | Determine topology for DP master system	
+DPNRM_DG		DPNRM_DG	DPNRM_DG( REQ := #i, LADDR := #i, RET_VAL => #i, RECORD => #i, BUSY => #i )		Extended | Read diagnostics data from a DP slave	
+DPRD_DAT		DPRD_DAT	DPRD_DAT( LADDR := #i, RET_VAL => #i, RECORD => #i )		Extended | Read consistent data of a DP standard slave	
+DPSYC_FR		DPSYC_FR	DPSYC_FR( REQ := #i, LADDR := #i, GROUP := #i, MODE := #i, RET_VAL => #i, BUSY => #i )		Extended | Synchronize DP slaves / Freeze inputs	
+DPWR_DAT		DPWR_DAT	DPWR_DAT( LADDR := #i, RECORD := #i, RET_VAL => #i )		Extended | Write consistent data of a DP standard slave	
+DRUM		DRUM	DRUM( RESET := #i, JOG := #i, DRUM_EN := #i, LST_STEP := #i, EVENT1 := #i, EVENT2 := #i, EVENT3 := #i, EVENT4 := #i, EVENT5 := #i, EVENT6 := #i, EVENT7 := #i, EVENT8 := #i, EVENT9 := #i, EVENT10 := #i, EVENT11 := #i, EVENT12 := #i, EVENT13 := #i, EVENT14 := #i, EVENT15 := #i, EVENT16 := #i, OUT1 => #i, OUT2 => #i, OUT3 => #i, OUT4 => #i, OUT5 => #i, OUT6 => #i, OUT7 => #i, OUT8 => #i, OUT9 => #i, OUT10 => #i, OUT11 => #i, OUT12 => #i, OUT13 => #i, OUT14 => #i, OUT15 => #i, OUT16 => #i, Q => #i, OUT_WORD => #i, ERR_CODE => #i )		LAD | Implement sequencer	
+EN_AIRT			EN_AIRT( RET_VAL => )		Extended | Enable execution of higher priority interrupts and asynchronous error events	
+EN_IRT		EN_IRT	EN_IRT( MODE := #i, OB_NR := #i, RET_VAL => #i )		Extended | Enable interrupt event	
+ENCO			{ S7_GenerateENO := "TRUE" } ENCO( in := #i, out => #i )		LAD | Encode	
+ENDIS_PW		ENDIS_PW	ENDIS_PW( REQ := #i, F_PWD := #i, FULL_PWD := #i, R_PWD := #i, HMI_PWD := #i, Ret_Val => #i, F_PWD_ON => #i, FULL_PWD_ON => #i, R_PWD_ON => #i, HMI_PWD_ON => #i )		LAD | Locking and unlocking passwords of the CPU access levels	
+EQ_ElemTypeContact	EQ_ElemType	EQ_ElemType	EQ_ElemTypeContact( in1 := #i, in2 := #i )		LAD | Compare data type of an ARRAY element for EQUAL with the data type of a tag	
+EQ_TypeContact	EQ_Type	EQ_Type	EQ_TypeContact( in1 := #i, in2 := #i )		LAD | Compare data type for EQUAL with the data type of a tag	
+EQ_TypeOfDBContact	EQ_TypeOfDB	EQ_TypeOfDB	EQ_TypeOfDBContact( in1 := #i, in2 := #i )		LAD | Compare data type of an indirectly addressed DB for EQUAL with a data type	
+Exp		Exp	Exp( in := #i, out => #i )	Real or LReal only	LAD | Form exponential value	{ S7_Templates := "SrcType := Real" }
+Expt	EXPT	Expt	Expt( in1 := #i, in2 := #i, out => #i )		LAD | Exponentiate	
+F_Trig	F_TRIG		F_Trig(  )	needs an instance: #Instance.F_Trig( ... )	LAD | Detect negative signal edge	
+FieldRead		FieldRead	FieldRead( index := #i, member := #i, value => #i )		LAD | Read field	
+FieldWrite		FieldWrite	FieldWrite( index := #i, member => #i, value := #i )		LAD | Write field	
+FileDelete		FileDelete	FileDelete( REQ := #i, Name := #i, Done => #i, Busy => #i, Error => #i, Status => #i )		Extended | Delete file on the memory card	
+FileReadC		FileReadC	FileReadC( REQ := #i, Name := #i, Offset := #i, Length := #i, Done => #i, Busy => #i, Error => #i, Status => #i, ResultLength => #i, Data := #i )		Extended | Read file from Memory Card	
+FileWriteC		FileWriteC	FileWriteC( REQ := #i, Name := #i, Offset := #i, Length := #i, Done => #i, Busy => #i, Error => #i, Status => #i, ResultLength => #i, Data := #i )		Extended | Write file on the memory card	
+FillBlockI	FILL_BLK		FillBlockI( IN := , COUNT := , OUT => )	from a block made in the editor	LAD | Fill block	
+FIND			{ S7_GenerateENO := "TRUE" } FIND( in1 := #i, in2 := #i, out => #i )		Extended | Find characters in a character string	
+Floor		Floor	Floor( in := #i, out => #i )	from a floating point type to an integer type	LAD | Generate next lower integer	{ S7_Templates := "[SrcType := Real, DestType := DInt]" }
+Frac		Frac	Frac( in := #i, out => #i )	Real or LReal only	LAD | Return fraction	{ S7_Templates := "SrcType := Real" }
+GADR_LGC		GADR_LGC	GADR_LGC( SUBNETID := #i, RACK := #i, SLOT := #i, SUBSLOT := #i, SUBADDR := #i, RET_VAL => #i, IOID => #i, LADDR => #i )		Extended | Determine hardware identifier from slot and offset in the user data address area	
+GATHER			{ S7_GenerateENO := "TRUE" } GATHER( in := #i, out => #i )		LAD | Merge individual bits into a bit sequence	
+GatherBlock	GATHER_BLK		{ S7_GenerateENO := "TRUE" } GatherBlock( in := #i, countOut := #i, out => #i )		LAD | Merge individual bits into multiple elements of an ARRAY of bit sequence	
+GEN_DIAG		GEN_DIAG	GEN_DIAG( LADDR := #i, MODE := #i, Ret_Val => #i, DiagEvent := #i )		Extended | Generate diagnostics information	
+Gen_UsrMsg		Gen_UsrMsg	Gen_UsrMsg( Mode := #i, TextID := #i, TextListID := #i, Ret_Val => #i, AssocValues := #i )		Extended | Generate user diagnostic alarms	
+GEO_LOG		GEO_LOG	GEO_LOG( MASTER := #i, STATION := #i, SLOT := #i, SUBSLOT := #i, RET_VAL => #i, LADDR => #i )		Extended | Determine hardware identifier from slot	
+GEO2LOG		GEO2LOG	GEO2LOG( GEOADDR := #i, RET_VAL => #i, LADDR => #i )		Extended | Determine hardware identifier from slot	
+Get_Alarm		Get_Alarm	Get_Alarm( OperateMode := #i, DataMode := #i, DispClassNr := #i, Lcid := #i, DataReady => #i, Busy => #i, Error => #i, Init => #i, Status => #i, Data := #i )		Extended | Read pending alarm	
+Get_AlarmResources			Get_AlarmResources( Ret_Val => )		Extended | Determine the number of available alarm instances	
+Get_AlarmState		Get_AlarmState	Get_AlarmState( Alarm := #i, AlarmState => #i, Error => #i, STATUS => #i )		Extended | Output alarm status	
+GET_DIAG		GET_DIAG	GET_DIAG( MODE := #i, LADDR := #i, RET_VAL => #i, CNT_DIAG => #i, DIAG := #i, DETAIL := #i )		Extended | Read diagnostic information	
+Get_IM_Data		Get_IM_Data	Get_IM_Data( LADDR := #i, IM_TYPE := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, DATA := #i )		Extended | Reading identification and maintenance data	
+Get_Name	GET_NAME	Get_Name	Get_Name( LADDR := #i, STATION_NR := #i, DONE => #i, BUSY => #i, ERROR => #i, LEN => #i, STATUS => #i, DATA := #i )		Extended | Read out name of an IO device or a DP slave	
+GetBlockName		GetBlockName	GetBlockName( size := #i, ret_val => #i )		Extended | Read out name of the block	
+GetChecksum		GetChecksum	GetChecksum( Scope := #i, Range := #i, Subrange := #i, Done => #i, Busy => #i, Error => #i, Status => #i, Checksum := #i )		Extended | Read out checksum	
+GetClockStatus		GetClockStatus	GetClockStatus( Ret_Val => #i, ClockStatus => #i )		Extended | Read out status of the CPU clock	
+GetError			GetError( error => )		LAD | Get error locally	
+GetErrorID	GetErrorId		GetErrorID( error => )		LAD | Get error ID locally	
+GetInstanceName		GetInstanceName	GetInstanceName( size := #i, out => #i )		Extended | Read out name of the read instance	
+GetInstancePath		GetInstancePath	GetInstancePath( size := #i, out => #i )		Extended | Query composite global name of the block instance	
+GETIO		GETIO	GETIO( ID := #i, STATUS => #i, LEN => #i, INPUTS := #i )		Extended | Read all inputs of a submodule	
+GETIO_PART		GETIO_PART	GETIO_PART( ID := #i, OFFSET := #i, LEN := #i, STATUS => #i, ERROR => #i, INPUTS := #i )		Extended | Read inputs of a submodule	
+GetPNWorkingClock		GetPNWorkingClock	GetPNWorkingClock( Mode := #i, Interface := #i, Ret_Val => #i, WorkingClock => #i )		Extended | Determine synchronization cycle of an isochronous PROFINET interface	
+GetSMCinfo		GetSMCinfo	GetSMCinfo( REQ := #i, Mode := #i, Done => #i, Busy => #i, Error => #i, Status => #i, Info := #i )		Extended | Reading out information about the SIMATIC memory card	
+GetStationInfo		GetStationInfo	GetStationInfo( REQ := #i, LADDR := #i, DETAIL := #i, MODE := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, DATA := #i )		Extended | Read information of an IO device	
+GetSymbolForReference		GetSymbolForReference	GetSymbolForReference( execute := #i, objectRef := #i, size := #i, done => #i, busy => #i, error => #i, status => #i, reliability => #i, symbol := #i )		Extended | Determine name of an indirectly addressed object	
+GetSymbolName		GetSymbolName	GetSymbolName( variable := #i, size := #i, out => #i )		Extended | Read out a tag on the input parameter	
+HexToAscii	HTA	HTA	HexToAscii( in := #i, n := #i, ret_val => #i, out => #i )		Extended | Convert hexadecimal number to ASCII string	
+I_Coil			I_Coil( #b )		Basic | Negated assignment	
+I_Contact			I_Contact( #b )		Basic | Normally closed contact	
+I_JumpCoil	JumpNot		I_JumpCoil( M01 )		Basic | Jump to the label if the result of logic operation is 0	
+IMC		IMC	IMC( IN_BIT0 := #i, IN_BIT1 := #i, IN_BIT2 := #i, IN_BIT3 := #i, IN_BIT4 := #i, IN_BIT5 := #i, IN_BIT6 := #i, IN_BIT7 := #i, IN_BIT8 := #i, IN_BIT9 := #i, IN_BIT10 := #i, IN_BIT11 := #i, IN_BIT12 := #i, IN_BIT13 := #i, IN_BIT14 := #i, IN_BIT15 := #i, CMP_STEP := #i, OUT => #i, ERR_CODE => #i )		LAD | Compare input bits with the bits of a mask	
+Inc	INC		Inc(  )		LAD | Increment	
+INIT_RD		INIT_RD	INIT_RD( REQ := #i, Ret_Val => #i )		LAD | Initialize all retain data	
+InRange		InRange	InRange( min := #i, in := #i, max := #i )	the data type of the operands: Int, DInt, Real, ...	LAD | Value within range	{ S7_Templates := "SrcType := Int" }
+INSERT			{ S7_GenerateENO := "TRUE" } INSERT( in1 := #i, in2 := #i, p := #i, out => #i )		Extended | Insert characters in a character string	
+IO2MOD		IO2MOD	IO2MOD( ADDR := #i, RET_VAL => #i, LADDR => #i )		Extended | Determine hardware identifier from an IO address	
+IS_ARRAY			IS_ARRAY(  )		LAD | Check for ARRAY	
+IS_NULL			IS_NULL(  )		LAD | Check for EQUALS NULL pointer	
+Join	JOIN	JOIN	Join( mode := #i, recSeparator := #i, endSeparator := #i, srcStruct := #i, count := #i, ret_val => #i, dstArray := #i, position := #i )		Extended | Join multiple strings	
+JumpCoil			JumpCoil( M01 )		Basic | Jump to the label if the result of logic operation is 1	
+JumpList		JmpList	JumpList( k := #i )		LAD | Define jump list	
+Label	LABEL		Label(M01)		Basic | Jump label: a line of its own before the first RUNG of the network	
+LEAD_LAG		LEAD_LAG	LEAD_LAG( IN := #i, SAMPLE_T := #i, OUT => #i, ERR_CODE => #i )		LAD | Lead and lag algorithm	
+LED		LED	LED( LADDR := #i, LED := #i, Ret_Val => #i )		Extended | Read LED status	
+LEFT			{ S7_GenerateENO := "TRUE" } LEFT( in := #i, l := #i, out => #i )		Extended | Read the left character of a character string	
+LEN			{ S7_GenerateENO := "TRUE" } LEN( in := #i, out => #i )		Extended | Determine the length of a character string	
+LGC_GADR		LGC_GADR	LGC_GADR( IOID := #i, LADDR := #i, RET_VAL => #i, AREA => #i, RACK => #i, SLOT => #i, SUBADDR => #i )		Extended | Determine slot from hardware identifier	
+Limit	LIMIT		{ S7_GenerateENO := "TRUE" } Limit( min := #i, in := #i, max := #i, out => #i )		LAD | Set limit value	
+Ln		Ln	Ln( in := #i, out => #i )	Real or LReal only	LAD | Form natural logarithm	{ S7_Templates := "SrcType := Real" }
+LOG_GEO		LOG_GEO	LOG_GEO( LADDR := #i, RET_VAL => #i, AREA => #i, MASTER => #i, STATION => #i, SLOT => #i, SUBSLOT => #i, OFFSET => #i )		Extended | Determine slot from hardware identifier	
+LOG2GEO		LOG2GEO	LOG2GEO( LADDR := #i, Ret_Val => #i, GEOADDR := #i )		Extended | Determine slot from hardware identifier	
+LOG2MOD		LOG2MOD	LOG2MOD( IOID := #i, ADDR := #i, Ret_Val => #i, HWID => #i )		Extended | Determine the hardware identifier from addressing of STEP 7 V5.5 SPx	
+Lower_Bound	LOWER_BOUND	Lower_Bound	Lower_Bound( arr := #i, dim := #i, out => #i )		LAD | Read out low ARRAY limit	
+MAX			MAX( in1 := #i, in2 := #i, out => #i )	takes in1, in2, ... as many as needed	LAD | Get maximum	
+MaxLen	MAX_LEN	MAX_LEN	MaxLen( in := #i, out => #i )		Extended | Determine the length of a character string	
+MCAT		MCAT	MCAT( O_CMD := #i, C_CMD := #i, S_CMD := #i, O_FB := #i, C_FB := #i, OO => #i, CO => #i, OA => #i, CA => #i, Q => #i )		LAD | Motor control-timer alarm	
+MID			{ S7_GenerateENO := "TRUE" } MID( in := #i, l := #i, p := #i, out => #i )		Extended | Read middle characters of a character string	
+MIN			MIN( in1 := #i, in2 := #i, out => #i )	takes in1, in2, ... as many as needed	LAD | Get minimum	
+Mod		Mod	Mod( in1 := #i, in2 := #i, out => #i )	the data type of the operands: Int, DInt, Real, ...	LAD | Return remainder of division	{ S7_Templates := "SrcType := Int" }
+ModuleStates		ModuleStates	ModuleStates( LADDR := #i, MODE := #i, Ret_Val => #i, STATE := #i )		Extended | Read module status information of a module	
+Move	MOVE	Move	Move( in := #i, out1 => #i )		LAD | Move value	
+MoveBlockI	MOVE_BLK		MoveBlockI( IN := , COUNT := , OUT => )	from a block made in the editor	LAD | Move block	
+MoveBlockU	UMOVE_BLK		MoveBlockU( IN := , COUNT := , OUT => )	from a block made in the editor	LAD | Move block uninterruptible	
+MoveBlockVariant	MOVE_BLK_VARIANT	MOVE_BLK_VARIANT	MoveBlockVariant( src := #i, count := #i, srcIndex := #i, dstIndex := #i, ret_val => #i, dst => #i )		LAD | Move block	
+MoveResolvedSymbolsFromBuffer		MoveResolvedSymbolsFromBuffer	MoveResolvedSymbolsFromBuffer( firstIndex := #i, lastIndex := #i, mode := #i, src := #i, srcOffsets := #i, Ret_Val => #i, dst := #i, status := #i )		LAD | Read values from buffer and write them into resolved symbols	
+MoveResolvedSymbolsToBuffer		MoveResolvedSymbolsToBuffer	MoveResolvedSymbolsToBuffer( firstIndex := #i, lastIndex := #i, src := #i, dstOffsets := #i, mode := #i, Ret_Val => #i, dst := #i, status := #i )		LAD | Read values from resolved symbols and write them into buffer	
+MSK_FLT		MSK_FLT	MSK_FLT( PRGFLT_SET_MASK := #i, ACCFLT_SET_MASK := #i, RET_VAL => #i, PRGFLT_MASKED => #i, ACCFLT_MASKED => #i )		Extended | Mask synchronous error events	
+Mul	MUL	Mul	Mul( in1 := #i, in2 := #i, out => #i )	takes in1, in2, ... as many as needed; the data type of the operands: Int, DInt, Real, ...	LAD | Multiply	{ S7_Templates := "SrcType := Int" }
+Mux	MUX	Mux	Mux( k := #i, else := #i, out => #i )		LAD | Multiplex	
+N_Coil		NCoil	N_Coil( operand => #b, bit := #i )		Basic | Set operand on negative signal edge	
+N_Contact		NContact	N_Contact( operand := #b, bit := #i )		Basic | Scan operand for negative signal edge; bit is the edge memory	
+N_Trig	N_TRIG		N_Trig( #b )		LAD | Scan RLO for negative signal edge	
+NE_ElemTypeContact	NE_ElemType	NE_ElemType	NE_ElemTypeContact( in1 := #i, in2 := #i )		LAD | Compare data type of an ARRAY element for UNEQUAL with the data type of a tag	
+NE_TypeContact	NE_Type	NE_Type	NE_TypeContact( in1 := #i, in2 := #i )		LAD | Compare data type for UNEQUAL with the data type of a tag	
+NE_TypeOfDBContact	NE_TypeOfDB	NE_TypeOfDB	NE_TypeOfDBContact( in1 := #i, in2 := #i )		LAD | Compare data type of an indirectly addressed DB for UNEQUAL with a data type	
+Neg		Neg	Neg( in := #i, out => #i )	the data type of the operands: Int, DInt, Real, ...	LAD | Create twos complement	{ S7_Templates := "SrcType := Int" }
+NOK	Nok		NOK( #b )		Basic | Check invalidity of a floating point number	
+Normalize		Normalize	Normalize( min := #i, value := #i, max := #i, out => #i )	the type of min, value, max and the floating point type of out	LAD | Normalize (NORM_X)	{ S7_Templates := "[SrcType := Real, DestType := Real]" }
+Not			Not(  )		Basic | Invert the result of logic operation	
+NOT_NULL			NOT_NULL(  )		LAD | Check for UNEQUALS NULL pointer	
+OK	Ok		OK( #b )		Basic | Check validity of a floating point number	
+Or		Or	Or( in1 := #w, in2 := #w, out => #w )	takes in1, in2, ... as many as needed; a bit string type: Word, DWord (And, Or, Xor also Byte)	LAD | OR logic operation on bit strings	{ S7_Templates := "SrcType := Word" }
+OutRange		OutRange	OutRange( min := #i, in := #i, max := #i )	the data type of the operands: Int, DInt, Real, ...	LAD | Value outside range	{ S7_Templates := "SrcType := Int" }
+P_Coil		PCoil	P_Coil( operand => #b, bit := #i )		Basic | Set operand on positive signal edge	
+P_Contact		PContact	P_Contact( operand := #b, bit := #i )		Basic | Scan operand for positive signal edge; bit is the edge memory	
+P_Trig	P_TRIG		P_Trig( #b )		LAD | Scan RLO for positive signal edge	
+PE_CMD		PE_CMD	PE_CMD( REQ := #i, ID := #i, CMD := #i, CMD_MODIFIER := #i, CMD_PARA := #i, CMD_PARA_LEN := #i, CMD_DSID_RQ := #i, VALID => #i, BUSY => #i, ERROR => #i, STATUS => #i, RESPONSE_DATA := #i )		Extended | Start and exit energy-saving mode / Read out status information	
+PE_DS3_Write_ET200S		PE_DS3_Write_ET200S	PE_DS3_Write_ET200S( enable := #i, ID := #i, Slot_No_1 := #i, Func_1 := #i, Slot_No_2 := #i, Func_2 := #i, Slot_No_3 := #i, Func_3 := #i, Slot_No_4 := #i, Func_4 := #i, Slot_No_5 := #i, Func_5 := #i, Slot_No_6 := #i, Func_6 := #i, Slot_No_7 := #i, Func_7 := #i, Slot_No_8 := #i, Func_8 := #i, busy => #i, done => #i, error => #i, status => #i )		Extended | Set power module switching behavior	
+PE_End_RSP		PE_End_RSP	PE_End_RSP( PE_I_DEV_NEW := #i, CMD := #i, Time_to_operate := #i, ERROR => #i, STATUS => #i, Activate := #i, VALID := #i, DATA_ERRORRSP := #i )		Extended | Generate answer to command at end of pause	
+PE_Error_RSP		PE_Error_RSP	PE_Error_RSP( PE_I_DEV_NEW := #i, ERROR_CODE := #i, ERROR => #i, STATUS => #i, Activate := #i, VALID := #i, DATA_ERRORRSP := #i )		Extended | Generate negative answer to command	
+PE_Get_Mode_RSP		PE_Get_Mode_RSP	PE_Get_Mode_RSP( PE_I_DEV_NEW := #i, CMD := #i, CMD_MODIFIER := #i, PE_Mode_ID := #i, PE_Mode_Attributes := #i, Time_min_Pause := #i, Time_to_Pause := #i, Time_to_Operate := #i, Time_min_Length_of_stay := #i, Time_max_length_of_stay := #i, Mode_Power_Consumption := #i, Energy_Consum_to_Pause := #i, Energy_Consum_to_operate := #i, ERROR => #i, STATUS => #i, Activate := #i, VALID := #i, DATA_ERRORRSP := #i )		Extended | Generate queried energy data as answer	
+PE_I_DEV		PE_I_DEV	PE_I_DEV( RESET := #i, ID := #i, VALID := #i, INDEX => #i, CMD => #i, CMD_MODIFIER => #i, NEW => #i, ERROR => #i, STATUS => #i, CMD_PARA := #i, DATA_ERRORRSP := #i )		Extended | Control PROFIenergy commands in the I-Device	
+PE_Identify_RSP		PE_Identify_RSP	PE_Identify_RSP( PE_I_DEV_NEW := #i, CMD := #i, Start_Pause := #i, End_Pause := #i, Query_Modes := #i, PEM_Status := #i, PE_Identify := #i, Query_Measurement := #i, ERROR => #i, STATUS => #i, Activate := #i, VALID := #i, DATA_ERRORRSP := #i )		Extended | Generate supported PROFIenergy commands as answer	
+PE_List_Modes_RSP		PE_List_Modes_RSP	PE_List_Modes_RSP( PE_I_DEV_NEW := #i, CMD := #i, CMD_MODIFIER := #i, Number_of_PE_Mode_IDs := #i, PE_Mode_ID := #i, ERROR => #i, STATUS => #i, Activate := #i, VALID := #i, DATA_ERRORRSP := #i )		Extended | Generate queried energy savings modes as answer	
+PE_Measurement_List_RSP		PE_Measurement_List_RSP	PE_Measurement_List_RSP( PE_I_DEV_NEW := #i, CMD := #i, CMD_MODIFIER := #i, Count := #i, Measurement_List := #i, ERROR => #i, STATUS => #i, Activate := #i, VALID := #i, DATA_ERRORRSP := #i )		Extended | Generate list of supported measured values as answer	
+PE_Measurement_Value_RSP		PE_Measurement_Value_RSP	PE_Measurement_Value_RSP( PE_I_DEV_NEW := #i, CMD := #i, CMD_MODIFIER := #i, Count := #i, Measurement_Values := #i, ERROR => #i, STATUS => #i, Activate := #i, VALID := #i, DATA_ERRORRSP := #i )		Extended | Generate queried measured values as answer	
+PE_PEM_Status_RSP		PE_PEM_Status_RSP	PE_PEM_Status_RSP( PE_I_DEV_NEW := #i, CMD := #i, PE_MODE_ID_Source := #i, PE_MODE_ID_Destination := #i, Time_to_Operate := #i, Remaining_time_to_dest := #i, Mode_Power_Consumption := #i, Energy_Cons_to_dest := #i, Energy_Cons_to_operate := #i, ERROR => #i, STATUS => #i, Activate := #i, VALID := #i, DATA_ERRORRSP := #i )		Extended | Generate PEM status as answer	
+PE_START_END		PE_START_END	PE_START_END( START := #i, END := #i, ID := #i, PAUSE_TIME := #i, VALID => #i, BUSY => #i, ERROR => #i, STATUS => #i, PE_MODE_ID => #i )		Extended | Start and exit energy-saving mode	
+PE_Start_RSP		PE_Start_RSP	PE_Start_RSP( PE_I_DEV_NEW := #i, CMD := #i, PE_MODE_ID := #i, ERROR => #i, STATUS => #i, Activate := #i, VALID := #i, DATA_ERRORRSP := #i )		Extended | Generate answer to command at start of pause	
+Profiling		Profiling	Profiling( mode := #i, Ret_Val => #i, config := #i )		Extended | Starting or stopping profiling with selected configuration	
+Program_Alarm		Program_Alarm	Program_Alarm( SIG := #i, TIMESTAMP := #i, SD_1 := #i, SD_2 := #i, SD_3 := #i, SD_4 := #i, SD_5 := #i, SD_6 := #i, SD_7 := #i, SD_8 := #i, SD_9 := #i, SD_10 := #i, Error => #i, Status => #i )		Extended | Generate program alarm with associated values	
+PRVREC		PRVREC	PRVREC( MODE := #i, F_ID := #i, CODE1 := #i, CODE2 := #i, LEN := #i, NEW => #i, STATUS => #i, SLOT => #i, SUBSLOT => #i, INDEX => #i, RLEN => #i, RECORD := #i )		Extended | Make data record available	
+PT_Coil		PtCoil	PT_Coil( timer => #b, PT := #i )		Basic | Load time duration	
+QRY_CINT		QRY_CINT	QRY_CINT( OB_NR := #i, RET_VAL => #i, CYCLE => #i, PHASE => #i, STATUS => #i )		Extended | Query cyclic interrupt parameters	
+QRY_DINT		QRY_DINT	QRY_DINT( OB_NR := #i, RET_VAL => #i, STATUS => #i )		Extended | Query time-delay interrupt status	
+QRY_TINT		QRY_TINT	QRY_TINT( OB_NR := #i, Ret_Val => #i, STATUS => #i )		Extended | Query status of time-of-day interrupt	
+R_BitfieldCoil	RESET_BF		R_BitfieldCoil( operand => , n := )	from a block made in the editor	LAD | Reset bit field	
+R_Coil			R_Coil( #b )		Basic | Reset output	
+R_Trig	R_TRIG		R_Trig(  )	needs an instance: #Instance.R_Trig( ... )	LAD | Detect positive signal edge	
+Random			Random( Ret_Val => )		Extended | Generate random number	
+RCVREC		RCVREC	RCVREC( MODE := #i, F_ID := #i, MLEN := #i, CODE1 := #i, CODE2 := #i, NEW => #i, STATUS => #i, SLOT => #i, SUBSLOT => #i, INDEX => #i, LEN => #i, RECORD := #i )		Extended | Receive data record	
+RD_ADDR		RD_ADDR	RD_ADDR( LADDR := #i, Ret_Val => #i, PIADDR => #i, PICount => #i, PQADDR => #i, PQCount => #i )		Extended | Determine IO addresses from the hardware identifier	
+RD_DPAR		RD_DPAR	RD_DPAR( REQ := #i, LADDR := #i, INDEX := #i, VALID => #i, BUSY => #i, ERROR => #i, STATUS => #i, LEN => #i, RECORD := #i )		Extended | Read module data record	
+RD_DPARA		RD_DPARA	RD_DPARA( REQ := #i, LADDR := #i, RECNUM := #i, RET_VAL => #i, BUSY => #i, RECORD => #i )		Extended | Read module data record asynchronously	
+RD_DPARM		RD_DPARM	RD_DPARM( IOID := #i, LADDR := #i, RECNUM := #i, RET_VAL => #i, RECORD => #i )		Extended | Read data record from configured system data	
+RD_LGADR		RD_LGADR	RD_LGADR( IOID := #i, LADDR := #i, RET_VAL => #i, PEADDR => #i, PECOUNT => #i, PAADDR => #i, PACOUNT => #i )		Extended | Determine IO addresses from the hardware identifier	
+RD_LOC_T			RD_LOC_T( RET_VAL => #i, OUT => #i )		Extended | Read local time	
+RD_REC		RD_REC	RD_REC( REQ := #i, LADDR := #i, RECNUM := #i, RET_VAL => #i, BUSY => #i, RECORD => #i )		Extended | Read data record from I/O	
+RD_SINFO		RD_SINFO	RD_SINFO( RET_VAL => #i, TOP_SI => #i, START_UP_SI => #i )		Extended | Read current OB start information	
+RD_SYS_T			RD_SYS_T( RET_VAL => #i, OUT => #i )		Extended | Read time-of-day	
+RDREC		RDREC	RDREC( REQ := #i, ID := #i, INDEX := #i, MLEN := #i, VALID => #i, BUSY => #i, ERROR => #i, STATUS => #i, LEN => #i, RECORD := #i )		Extended | Read data record	
+RE_TRIGR			RE_TRIGR(  )		LAD | Restart cycle monitoring time	
+READ_DBL		READ_DBL	READ_DBL( REQ := #i, SRCBLK := #i, RET_VAL => #i, BUSY => #i, DSTBLK => #i )		Extended | Read from data block in the load memory	
+READ_ERR		READ_ERR	READ_ERR( PRGFLT_QUERY := #i, ACCFLT_QUERY := #i, RET_VAL => #i, PRGFLT_CLR => #i, ACCFLT_CLR => #i )		Extended | Read out event status register	
+ReadFromArrayDB		ReadFromArrayDB	ReadFromArrayDB( db := #i, index := #i, ret_val => #i, value => #i )		LAD | Read from ARRAYdata block	
+ReadFromArrayDBL		ReadFromArrayDBL	ReadFromArrayDBL( req := #i, db := #i, index := #i, busy => #i, done => #i, error => #i, value := #i )		LAD | Read from ARRAY data block in load memory	
+RecipeExport		RecipeExport	RecipeExport( REQ := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, RECIPE_DB := #i )		Extended | Exporting recipes	
+RecipeImport		RecipeImport	RecipeImport( REQ := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, RECIPE_DB := #i )		Extended | Importing recipes	
+ReconfigIOSystem		ReconfigIOSystem	ReconfigIOSystem( REQ := #i, MODE := #i, LADDR := #i, CTRLREC := #i, STATUS => #i, BUSY => #i, DONE => #i, ERROR => #i, ERR_INFO => #i )		Extended | Reconfigure IO system	
+REPLACE			{ S7_GenerateENO := "TRUE" } REPLACE( in1 := #i, in2 := #i, l := #i, p := #i, out => #i )		Extended | Replace characters in a character string	
+ResolveSymbols		ResolveSymbols	ResolveSymbols( execute := #i, firstIndex := #i, lastIndex := #i, done => #i, busy => #i, error => #i, status => #i, nameList := #i, referenceList := #i )		LAD | Resolve several symbols	
+ReturnCoil			ReturnCoil( #b )		Basic | Return from the block	
+RIGHT			{ S7_GenerateENO := "TRUE" } RIGHT( in := #i, l := #i, out => #i )		Extended | Read the right characters of a character string	
+Rol	ROL	Rl	Rol( in := #i, n := #i, out => #i )		LAD | Rotate left	
+Ror	ROR	Rr	Ror( in := #i, n := #i, out => #i )		LAD | Rotate right	
+Round		Round	Round( in := #i, out => #i )	from a floating point type to an integer type	LAD | Round numerical value	{ S7_Templates := "[SrcType := Real, DestType := DInt]" }
+RT_Coil			RT_Coil( #b )		Basic | Reset timer	
+RT_INFO		RT_INFO	RT_INFO( MODE := #i, OB := #i, Ret_Val => #i, INFO := #i )		Extended | Read out runtime statistics	
+RTM		RTM	RTM( NR := #i, MODE := #i, PV := #i, RET_VAL => #i, CQ => #i, CV => #i )		Extended | Runtime meters	
+Runtime	RUNTIME	Runtime	Runtime( ret_val => #i, mem := #i )		LAD | Measure program runtime	
+S_BitfieldCoil	SET_BF		S_BitfieldCoil( operand => , n := )	from a block made in the editor	LAD | Set bit field	
+S_BlockMove	BLKMOV	BLKMOV	S_BlockMove( srcBlock := #i, ret_val => #i, dstBlock => #i )		LAD | Move block	
+S_Coil			S_Coil( #b )		Basic | Set output	
+S_COMP			S_COMP( in1 := #i, in2 := #i, out => #i )		Extended | Compare character strings	
+S_CONV			{ S7_GenerateENO := "TRUE" } S_CONV( in := #i, out => #i )		Extended | Convert character string	
+S_Fill	FILL	FILL	S_Fill( BVAL := #i, RET_VAL => #i, BLK => #i )		LAD | Fill block	
+S_MOVE			S_MOVE( in := #i, out => #i )		Extended | Move character string	
+S_Normalize	UNSCALE	UNSCALE	S_Normalize( in := #i, hiLim := #i, loLim := #i, bipolar := #i, ret_val => #i, out => #i )		LAD | Unscale	
+S_Pulse	S_PULSE		S_Pulse(  )	needs an instance: #Instance.S_Pulse( ... )	LAD | Assign pulse timer parameters and start	
+S_RS	RS	Rs	S_RS( operand := #i, s1 := #i )		LAD | Reset/set flip-flop	
+S_Scale	SCALE		S_Scale( in := #i, hiLim := #i, loLim := #i, bipolar := #i, ret_val => #i, out => #i )		LAD | Scale	
+S_SR	SR	Sr	S_SR( operand := #i, r1 := #i )		LAD | Set/reset flip-flop	
+SC_Coil		ScCoil	SC_Coil( counter => #b, pv := #i )		Basic | Set counter value (SIMATIC counter)	
+Scale	SCALE_X	Scale	Scale( min := #i, value := #i, max := #i, out => #i )	the floating point type of value and the type of min, max, out	LAD | Scale	{ S7_Templates := "[SrcType := Real, DestType := Int]" }
+SCATTER			{ S7_GenerateENO := "TRUE" } SCATTER( in := #i, out => #i )		LAD | Parse the bit sequence into individual bits	
+ScatterBlock	SCATTER_BLK		{ S7_GenerateENO := "TRUE" } ScatterBlock( in := #i, countIn := #i, out => #i )		LAD | Parse elements of an ARRAY of bit sequence into individual bits	
+SD_Coil		SdCoil	SD_Coil( timer => #b, pt := #i )		Basic | Start on-delay timer (SIMATIC timer)	
+SE_Coil		SeCoil	SE_Coil( timer => #b, pt := #i )		Basic | Start extended pulse timer (SIMATIC timer)	
+SEG		SEG	SEG( IN := #i, OUT => #i )		LAD | Create bit pattern for seven-segment display	
+SEL			SEL( g := #i, in0 := #i, in1 := #i, out => #i )		LAD | Select	
+Serialize		Serialize	Serialize( srcVariable := #i, ret_val => #i, dstArray => #i, pos := #i )		LAD | Serialize	
+SET_CINT		SET_CINT	SET_CINT( OB_NR := #i, CYCLE := #i, PHASE := #i, RET_VAL => #i )		Extended | Set cyclic interrupt parameters	
+SET_TIMEZONE		SET_TIMEZONE	SET_TIMEZONE( REQ := #i, TimeZone := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i )		Extended | Set time zone	
+SET_TINT		SET_TINT	SET_TINT( OB_NR := #i, SDT := #i, PERIOD := #i, RET_VAL => #i )		Extended | Set time-of-day interrupt	
+SET_TINTL		SET_TINTL	SET_TINTL( OB_NR := #i, SDT := #i, LOCAL := #i, PERIOD := #i, ACTIVATE := #i, RET_VAL => #i )		Extended | Set time-of-day interrupt	
+SETIO		SETIO	SETIO( ID := #i, STATUS => #i, OUTPUTS := #i )		Extended | Write all outputs of a submodule	
+SETIO_PART		SETIO_PART	SETIO_PART( ID := #i, OFFSET := #i, LEN := #i, STATUS => #i, ERROR => #i, OUTPUTS := #i )		Extended | Write outputs of a submodule	
+SF_Coil		SfCoil	SF_Coil( timer => #b, pt := #i )		Basic | Start off-delay timer (SIMATIC timer)	
+SHA2		SHA2	SHA2( REQ := #i, Data := #i, DataLen := #i, HashLen := #i, Done => #i, Busy => #i, Error => #i, Status => #i, Hash := #i )		Extended | Form hash value using SHA2	
+Shl	SHL	Shl	Shl( in := #i, n := #i, out => #i )		LAD | Shift left	
+Shr	SHR	Shr	Shr( in := #i, n := #i, out => #i )		LAD | Shift right	
+Sin		Sin	Sin( in := #i, out => #i )	Real or LReal only	LAD | Form sine value	{ S7_Templates := "SrcType := Real" }
+SMC		SMC	SMC( IN_BIT0 := #i, IN_BIT1 := #i, IN_BIT2 := #i, IN_BIT3 := #i, IN_BIT4 := #i, IN_BIT5 := #i, IN_BIT6 := #i, IN_BIT7 := #i, IN_BIT8 := #i, IN_BIT9 := #i, IN_BIT10 := #i, IN_BIT11 := #i, IN_BIT12 := #i, IN_BIT13 := #i, IN_BIT14 := #i, IN_BIT15 := #i, OUT => #i, OUT_STEP => #i, ERR_CODE => #i )		LAD | Compare scan matrix	
+SNC_RTCB			SNC_RTCB( RET_VAL => )		Extended | Synchronize slave clocks	
+SP_Coil		SpCoil	SP_Coil( timer => #b, pt := #i )		Basic | Start pulse timer (SIMATIC timer)	
+Split	SPLIT	SPLIT	Split( mode := #i, recSeparator := #i, endSeparator := #i, srcArray := #i, ret_val => #i, count => #i, dstStruct := #i, position := #i )		Extended | Splitting an array of characters into multiple strings	
+Sqr		Sqr	Sqr( in := #i, out => #i )	Real or LReal only	LAD | Form square	{ S7_Templates := "SrcType := Real" }
+Sqrt		Sqrt	Sqrt( in := #i, out => #i )	Real or LReal only	LAD | Form square root	{ S7_Templates := "SrcType := Real" }
+SRT_DINT		SRT_DINT	SRT_DINT( OB_NR := #i, DTIME := #i, SIGN := #i, RET_VAL => #i )		Extended | Start time-delay interrupt	
+SS_Coil		SsCoil	SS_Coil( timer => #b, pt := #i )		Basic | Start retentive on-delay timer (SIMATIC timer)	
+STP			STP(  )		LAD | Exit program	
+Strg_TO_Chars			Strg_TO_Chars( Strg := #i, pChars := #i, Cnt => #i, Chars := #i )		Extended | Convert character string to Array of CHAR	
+StringToValue	STRG_VAL		StringToValue( in := #i, format := #i, P := #i, out => #i )		Extended | Convert character string to numerical value	
+SU_BlockMove	UBLKMOV	UBLKMOV	SU_BlockMove( srcBlock := #i, ret_val => #i, dstBlock => #i )		LAD | Move block uninterruptible	
+Sub	SUB	Sub	Sub( in1 := #i, in2 := #i, out => #i )	the data type of the operands: Int, DInt, Real, ...	LAD | Subtract	{ S7_Templates := "SrcType := Int" }
+Swap		Swap	Swap( in := #i, out => #i )	a bit string type: Word, DWord (And, Or, Xor also Byte)	LAD | Swap bytes	{ S7_Templates := "SrcType := Word" }
+Switch	SWITCH	Switch	Switch( k := #i, else => #i )		LAD | Jump distributor	
+SYNC_PI		SYNC_PI	SYNC_PI( PART := #i, RET_VAL => #i, FLADDR => #i )		Extended | Synchronize the process image inputs	
+SYNC_PO		SYNC_PO	SYNC_PO( PART := #i, RET_VAL => #i, FLADDR => #i )		Extended | Synchronize the process image outputs	
+T_ADD			T_ADD( in1 := #i, in2 := #i, out => #i )		Extended | Add times	
+T_COMBINE			T_COMBINE( in1 := #i, in2 := #i, out => #i )		Extended | Combine times	
+T_COMP			T_COMP( in1 := #i, in2 := #i, out => #i )		Extended | Compare time tags	
+T_CONV			T_CONV( in := #i, out => #i )		Extended | Convert times and extract	
+T_DIFF			T_DIFF( in1 := #i, in2 := #i, out => #i )		Extended | Time difference	
+T_SUB			T_SUB( in1 := #i, in2 := #i, out => #i )		Extended | Subtract times	
+Tan		Tan	Tan( in := #i, out => #i )	Real or LReal only	LAD | Form tangent value	{ S7_Templates := "SrcType := Real" }
+TIME_TCK			TIME_TCK( RET_VAL => )		Extended | Read time counter	
+TOF		TOF	TOF( pt := #i, et => #i )	called through an instance: #Timer_0.TOF( ... ) with Timer_0 : TOF_TIME; in the interface, or "TimerDB".TOF( ... )	LAD | Generate off-delay	{ S7_Templates := "time_type := Time" }
+TOF_Coil		CoilTOF	TOF_Coil( timer => #b, pt := #i )		Basic | Start off-delay timer (coil)	
+TON		TON	TON( pt := #i, et => #i )	called through an instance: #Timer_0.TON( ... ) with Timer_0 : TON_TIME; in the interface, or "TimerDB".TON( ... )	LAD | Generate on-delay	{ S7_Templates := "time_type := Time" }
+TON_Coil		CoilTON	TON_Coil( timer => #b, pt := #i )		Basic | Start on-delay timer (coil)	
+TONR		TONR	TONR( r := #i, pt := #i, et => #i )	called through an instance: #Timer_0.TONR( ... ) with Timer_0 : TONR_TIME; in the interface, or "TimerDB".TONR( ... )	LAD | Time accumulator	{ S7_Templates := "time_type := Time" }
+TONR_Coil		CoilTONR	TONR_Coil( timer => #b, pt := #i )		Basic | Time accumulator (coil)	
+TP		TP	TP( pt := #i, et => #i )	called through an instance: #Timer_0.TP( ... ) with Timer_0 : TP_TIME; in the interface, or "TimerDB".TP( ... )	LAD | Generate pulse	{ S7_Templates := "time_type := Time" }
+TP_Coil		CoilTP	TP_Coil( timer => #b, pt := #i )		Basic | Start pulse timer (IEC timer as coil)	
+Trunc		Trunc	Trunc( in := #i, out => #i )	from a floating point type to an integer type	LAD | Truncate numerical value	{ S7_Templates := "[SrcType := Real, DestType := DInt]" }
+UPDAT_PI		UPDAT_PI	UPDAT_PI( PART := #i, RET_VAL => #i, FLADDR => #i )		Extended | Update the process image inputs	
+UPDAT_PO		UPDAT_PO	UPDAT_PO( PART := #i, RET_VAL => #i, FLADDR => #i )		Extended | Update the process image outputs	
+Upper_Bound	UPPER_BOUND	Upper_Bound	Upper_Bound( arr := #i, dim := #i, out => #i )		LAD | Read out high ARRAY limit	
+ValueToString	VAL_STRG		ValueToString( in := #i, size := #i, prec := #i, format := #i, P := #i, out => #i )		Extended | Convert numerical value to character string	
+VariantGet		VariantGet	VariantGet( src := #i, dst => #i )		LAD | Read out VARIANT tag value	
+VariantPut		VariantPut	VariantPut( src := #i, dst := #i )		LAD | Write VARIANT tag value	
+WAIT			WAIT( WT := )		LAD | Configure time delay	
+WR_DPARM		WR_DPARM	WR_DPARM( REQ := #i, LADDR := #i, RECNUM := #i, RET_VAL => #i, BUSY => #i )		Extended | Transfer data record	
+WR_LOC_T			WR_LOC_T( LOCTIME := #i, DST := #i, Ret_Val => #i )		Extended | Write local time	
+WR_REC		WR_REC	WR_REC( REQ := #i, LADDR := #i, RECNUM := #i, RECORD := #i, RET_VAL => #i, BUSY => #i )		Extended | Write data record to I/O	
+WR_SYS_T			WR_SYS_T( IN := #i, RET_VAL => #i )		Extended | Set time-of-day	
+WRIT_DBL		WRIT_DBL	WRIT_DBL( REQ := #i, SRCBLK := #i, RET_VAL => #i, BUSY => #i, DSTBLK => #i )		Extended | Write to data block in the load memory	
+WriteToArrayDB		WriteToArrayDB	WriteToArrayDB( db := #i, index := #i, value := #i, ret_val => #i )		LAD | Write to ARRAY data block	
+WriteToArrayDBL		WriteToArrayDBL	WriteToArrayDBL( req := #i, db := #i, index := #i, value := #i, busy => #i, done => #i, error => #i )		LAD | Write to ARRAY data block in load memory	
+WRREC		WRREC	WRREC( REQ := #i, ID := #i, INDEX := #i, LEN := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, RECORD := #i )		Extended | Write data record	
+Xor		Xor	Xor( in1 := #w, in2 := #w, out => #w )	takes in1, in2, ... as many as needed; a bit string type: Word, DWord (And, Or, Xor also Byte)	LAD | EXCLUSIVE OR logic operation on bit strings	{ S7_Templates := "SrcType := Word" }

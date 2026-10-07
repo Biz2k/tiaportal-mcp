@@ -37,10 +37,12 @@ namespace TiaMcpServer.Siemens
                         ?? throw new PortalException(PortalErrorCode.NotFound,
                             $"Block not found at '{blockPath}'. Use 'ResolveObjectPath' or 'plc_get_blocks' to find its path.");
 
-                    if (!block.IsConsistent)
+                    // A document is written for an inconsistent block as well ("bad blocks that cannot be compiled can also
+                    // be exported", help of V21; seen 2026-10-07); a source and SimaticML are not.
+                    if (!block.IsConsistent && !string.Equals(format.Trim(), "document", StringComparison.OrdinalIgnoreCase))
                     {
                         throw new PortalException(PortalErrorCode.InvalidState,
-                            $"Block '{block.Name}' is inconsistent; TIA Portal cannot export it. Compile the software first, " +
+                            $"Block '{block.Name}' is inconsistent; TIA Portal cannot export it as {format}. Compile it first, read it with format 'document', " +
                             "or use 'plc_get_block_interface', which works without an export.");
                     }
 

@@ -47,6 +47,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 | [`plc_get_external_source_info`](#plc_get_external_source_info) | read |
 | [`plc_get_external_sources`](#plc_get_external_sources) | read |
 | [`plc_get_force_tables`](#plc_get_force_tables) | read |
+| [`plc_get_lad_instructions`](#plc_get_lad_instructions) | read |
 | [`plc_get_lad_networks`](#plc_get_lad_networks) | read |
 | [`plc_get_software_info`](#plc_get_software_info) | read |
 | [`plc_get_software_tree`](#plc_get_software_tree) | read |
@@ -177,7 +178,7 @@ Create an instance data block for an existing function block. The response carri
 
 ## plc_create_lad_block
 
-Create a NEW function block (FB) or function (FC) in LAD with its interface and its networks in one call, then compile it. A network is the text 'plc_get_lad_networks' shows: 'RUNG wire#powerrail ... END_RUNG' with one instruction per line, e.g. Contact( #Start ), I_Contact( #Stop ), Coil( #Run ); a parallel branch is a further RUNG that ends with 'END_RUNG wire#w1', where 'wire#w1' stands in the first rung at the place the branches join. Instruction names cannot be guessed: take them from an existing network. If TIA Portal refuses the text nothing is created, and by default a block that does not compile is removed again. Existing blocks are changed with 'plc_manage_lad_networks'
+Create a NEW function block (FB) or function (FC) in LAD with its interface and its networks in one call, then compile it. A network is the text 'plc_get_lad_networks' shows: 'RUNG wire#powerrail ... END_RUNG' with one instruction per line, e.g. Contact( #Start ), I_Contact( #Stop ), Coil( #Run ); a parallel branch is a further RUNG that ends with 'END_RUNG wire#w1', where 'wire#w1' stands in the first rung at the place the branches join. Instruction names and pins cannot be guessed: 'plc_get_lad_instructions' has them and the syntax. If TIA Portal refuses the text nothing is created, and by default a block that does not compile is removed again. Existing blocks are changed with 'plc_manage_lad_networks'
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -185,7 +186,7 @@ Create a NEW function block (FB) or function (FC) in LAD with its interface and 
 | `name` | string | yes | name: name of the new block; must not exist in the PLC yet |
 | `networks` | array of object | yes | networks: the networks of the block, in order |
 | `kind` | string | no (default `FC`) | kind: 'FC' (default) or 'FB' |
-| `declaration` | string | no (default ``) | declaration: the interface of the block as text - VAR_INPUT ... END_VAR, VAR_OUTPUT, VAR_IN_OUT, VAR (FB only), VAR_TEMP - one tag per line, e.g. 'Start : Bool;'. Empty for a block without interface |
+| `declaration` | string | no (default ``) | declaration: the interface of the block as text - VAR_INPUT ... END_VAR, VAR_OUTPUT, VAR_IN_OUT, VAR (FB only), VAR_TEMP - one tag per line, e.g. 'Start : Bool;   // comment of the tag'. Empty for a block without interface |
 | `groupPath` | string | no (default ``) | groupPath: root-relative block group that receives the block; empty uses the Program blocks root |
 | `title` | string | no (default ``) | title: title of the block as plain text (optional) |
 | `returnType` | string | no (default `Void`) | returnType: data type an FC returns (default Void) |
@@ -518,6 +519,15 @@ List the PLC force tables of a plc software including their entries. A force tab
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 
+## plc_get_lad_instructions
+
+The reference for writing LAD networks as text ('plc_create_lad_block', 'plc_manage_lad_networks'): how a network is written, and the instructions with their exact names and pins - contacts, coils, timers, counters, comparisons, math, moves, conversions, jumps, extended instructions (about 300, TIA Portal V21, S7-1500). Without a filter it returns the syntax and the names by category; with a filter the matching instructions in full: name, pins, the data type line it needs, notes. Instruction names cannot be guessed and differ from the help (SR is S_SR, SCALE_X is Scale), so look an instruction up before using it. Needs no connection to TIA Portal
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `filter` | string | no (default ``) | filter: regular expression or text matched against name, other spellings and description, e.g. 'TON', 'timer', '^S_', 'compare'; empty returns the syntax and all names |
+| `limit` | integer | no (default `40`) | limit: the most instructions to return in full (default 40) |
+
 ## plc_get_lad_networks
 
 Read the networks of a LAD block (FB, FC, OB written in ladder logic): for each its number, title and comment as plain text, and its code as text - 'RUNG wire#powerrail ... END_RUNG' with one instruction per line, e.g. Contact( #Start ), Coil( "Motor_On" ). A LAD block may hold SCL networks; they are listed with language SCL. This is what 'plc_manage_lad_networks' takes back. Blocks in other languages are refused: use 'plc_get_block_source'
@@ -646,7 +656,7 @@ List the PLC watch tables of a plc software, optionally filtered by a regular ex
 
 ## plc_manage_lad_networks
 
-Replace, insert, delete or move networks of an EXISTING LAD block, or set their titles and comments, several at once; then compile the block. Every number in a call means the block as it is BEFORE the call, so one action never shifts the target of another. All or nothing: a call that TIA Portal refuses changes nothing and the error names the instruction and the line; if the new code does not compile (a tag that does not exist, a wrong operand type), the previous block is put back by default. The block keeps its number, its place and its instance DBs; the interface is not changed here - for that pass the whole document to 'plc_replace_source'. Write code after the pattern of an existing network from 'plc_get_lad_networks': instruction names cannot be guessed. Fields of an action: action, network, after, code, language, title, comment
+Replace, insert, delete or move networks of an EXISTING LAD block, or set their titles and comments, several at once; then compile the block. Every number in a call means the block as it is BEFORE the call, so one action never shifts the target of another. All or nothing: a call that TIA Portal refuses changes nothing and the error names the instruction and the line; if the new code does not compile (a tag that does not exist, a wrong operand type), the previous block is put back by default. The block keeps its number, its place and its instance DBs; the interface is not changed here - for that pass the whole document to 'plc_replace_source'. Instruction names and pins cannot be guessed: look them up with 'plc_get_lad_instructions', or follow an existing network from 'plc_get_lad_networks'. Fields of an action: action, network, after, code, language, title, comment
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|

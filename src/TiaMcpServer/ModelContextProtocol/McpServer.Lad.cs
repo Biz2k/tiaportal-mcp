@@ -52,15 +52,58 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [McpServerTool(Name = "plc_get_lad_instructions", Title = "Get the LAD instructions and how they are written", ReadOnly = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+         Description("The reference for writing LAD networks as text ('plc_create_lad_block', 'plc_manage_lad_networks'): how a network is written, and the instructions with their exact names and pins - contacts, coils, timers, counters, comparisons, math, moves, conversions, jumps, extended instructions (about 300, TIA Portal V21, S7-1500). Without a filter it returns the syntax and the names by category; with a filter the matching instructions in full: name, pins, the data type line it needs, notes. Instruction names cannot be guessed and differ from the help (SR is S_SR, SCALE_X is Scale), so look an instruction up before using it. Needs no connection to TIA Portal")]
+        public static ResponseLadInstructions GetLadInstructions(
+            [Description("filter: regular expression or text matched against name, other spellings and description, e.g. 'TON', 'timer', '^S_', 'compare'; empty returns the syntax and all names")] string filter = "",
+            [Description("limit: the most instructions to return in full (default 40)")] int limit = 40)
+        {
+            try
+            {
+                var all = LadInstructions.All;
+                var found = LadInstructions.Find(all, filter);
+
+                if (string.IsNullOrWhiteSpace(filter))
+                {
+                    return new ResponseLadInstructions
+                    {
+                        Syntax = LadInstructions.Syntax,
+                        Names = all.GroupBy(i => i.Category ?? "Basic").ToDictionary(g => g.Key, g => g.Select(i => i.Name).ToList()),
+                        Count = 0,
+                        Total = all.Count,
+                        Message = $"{all.Count} LAD instruction(s) known. Pass a filter to get an instruction with its pins.",
+                        Meta = Ok(new JsonObject { ["total"] = all.Count })
+                    };
+                }
+
+                var items = found.Take(limit <= 0 ? int.MaxValue : limit).ToList();
+
+                return new ResponseLadInstructions
+                {
+                    Items = items,
+                    Count = items.Count,
+                    Total = found.Count,
+                    Message = found.Count == 0
+                        ? $"No LAD instruction matches '{filter}'. Without a filter the answer lists all names."
+                        : $"{items.Count} of {found.Count} LAD instruction(s) matching '{filter}'" + (items.Count < found.Count ? "; narrow the filter or raise 'limit' for the rest" : string.Empty),
+                    Meta = Ok(new JsonObject { ["total"] = found.Count })
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw Failure("reading the LAD instructions", ex);
+            }
+        }
+
         [WriteTool]
         [McpServerTool(Name = "plc_create_lad_block", Title = "Create a LAD block", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
-         Description("Create a NEW function block (FB) or function (FC) in LAD with its interface and its networks in one call, then compile it. A network is the text 'plc_get_lad_networks' shows: 'RUNG wire#powerrail ... END_RUNG' with one instruction per line, e.g. Contact( #Start ), I_Contact( #Stop ), Coil( #Run ); a parallel branch is a further RUNG that ends with 'END_RUNG wire#w1', where 'wire#w1' stands in the first rung at the place the branches join. Instruction names cannot be guessed: take them from an existing network. If TIA Portal refuses the text nothing is created, and by default a block that does not compile is removed again. Existing blocks are changed with 'plc_manage_lad_networks'")]
+         Description("Create a NEW function block (FB) or function (FC) in LAD with its interface and its networks in one call, then compile it. A network is the text 'plc_get_lad_networks' shows: 'RUNG wire#powerrail ... END_RUNG' with one instruction per line, e.g. Contact( #Start ), I_Contact( #Stop ), Coil( #Run ); a parallel branch is a further RUNG that ends with 'END_RUNG wire#w1', where 'wire#w1' stands in the first rung at the place the branches join. Instruction names and pins cannot be guessed: 'plc_get_lad_instructions' has them and the syntax. If TIA Portal refuses the text nothing is created, and by default a block that does not compile is removed again. Existing blocks are changed with 'plc_manage_lad_networks'")]
         public static ResponseLadEdit CreateLadBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("name: name of the new block; must not exist in the PLC yet")] string name,
             [Description("networks: the networks of the block, in order")] List<LadNewNetwork> networks,
             [Description("kind: 'FC' (default) or 'FB'")] string kind = "FC",
-            [Description("declaration: the interface of the block as text - VAR_INPUT ... END_VAR, VAR_OUTPUT, VAR_IN_OUT, VAR (FB only), VAR_TEMP - one tag per line, e.g. 'Start : Bool;'. Empty for a block without interface")] string declaration = "",
+            [Description("declaration: the interface of the block as text - VAR_INPUT ... END_VAR, VAR_OUTPUT, VAR_IN_OUT, VAR (FB only), VAR_TEMP - one tag per line, e.g. 'Start : Bool;   // comment of the tag'. Empty for a block without interface")] string declaration = "",
             [Description("groupPath: root-relative block group that receives the block; empty uses the Program blocks root")] string groupPath = "",
             [Description("title: title of the block as plain text (optional)")] string title = "",
             [Description("returnType: data type an FC returns (default Void)")] string returnType = "Void",
@@ -110,7 +153,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "plc_manage_lad_networks", Title = "Change the networks of a LAD block", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
-         Description("Replace, insert, delete or move networks of an EXISTING LAD block, or set their titles and comments, several at once; then compile the block. Every number in a call means the block as it is BEFORE the call, so one action never shifts the target of another. All or nothing: a call that TIA Portal refuses changes nothing and the error names the instruction and the line; if the new code does not compile (a tag that does not exist, a wrong operand type), the previous block is put back by default. The block keeps its number, its place and its instance DBs; the interface is not changed here - for that pass the whole document to 'plc_replace_source'. Write code after the pattern of an existing network from 'plc_get_lad_networks': instruction names cannot be guessed. Fields of an action: action, network, after, code, language, title, comment")]
+         Description("Replace, insert, delete or move networks of an EXISTING LAD block, or set their titles and comments, several at once; then compile the block. Every number in a call means the block as it is BEFORE the call, so one action never shifts the target of another. All or nothing: a call that TIA Portal refuses changes nothing and the error names the instruction and the line; if the new code does not compile (a tag that does not exist, a wrong operand type), the previous block is put back by default. The block keeps its number, its place and its instance DBs; the interface is not changed here - for that pass the whole document to 'plc_replace_source'. Instruction names and pins cannot be guessed: look them up with 'plc_get_lad_instructions', or follow an existing network from 'plc_get_lad_networks'. Fields of an action: action, network, after, code, language, title, comment")]
         public static ResponseLadEdit ManageLadNetworks(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: root-relative path of the LAD block, e.g. 'Valves/Valve_Control'")] string blockPath,

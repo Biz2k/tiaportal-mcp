@@ -38,8 +38,8 @@ namespace TiaMcpServer.Siemens
     public partial class Portal
     {
         private const string LadWriteHelp =
-            "Take a network of 'plc_get_lad_networks' as the pattern: instruction names cannot be guessed (Contact, I_Contact, Coil, S_Coil, R_Coil, P_Trig, Move, " +
-            "EQ_Contact ...), a local tag is #Name, a global one \"Name\"; a name with other characters than ASCII letters, digits and '_' goes in quotes, also after #.";
+            "'plc_get_lad_instructions' has the exact names and pins of the instructions and the syntax (Contact, I_Contact, Coil, S_Coil, R_Coil, P_Trig, Move, " +
+            "EQ_Contact ...); a local tag is #Name, a global one \"Name\"; a name with other characters than ASCII letters, digits and '_' goes in quotes, also after #.";
 
         public LadNetworksResult GetLadNetworks(string softwarePath, string blockPath, int network, bool withCode, bool withDeclaration, int maxChars)
         {
@@ -62,10 +62,11 @@ namespace TiaMcpServer.Siemens
                         Kind = SourceDeclarations.KindOfBlockClass(block.GetType().Name),
                         Number = block.Number,
                         Count = document.Networks.Count,
-                        Declaration = withDeclaration ? document.Head.Replace("\n", "\r\n") : null
                     };
 
                     var cultures = ProjectCultures();
+
+                    result.Declaration = withDeclaration ? document.HeadWithComments(cultures).Replace("\n", "\r\n") : null;
                     var budget = maxChars <= 0 ? int.MaxValue : maxChars;
 
                     foreach (var item in document.Networks.Where(n => network == 0 || n.Original == network))
@@ -311,8 +312,10 @@ namespace TiaMcpServer.Siemens
                     $"before the line that declares {kind} \"{block.Name}\", as 'plc_get_block_source' (format 'document') returns it.");
             }
 
+            next.AdoptMemberComments(ProjectCultures());
+
             var known = new HashSet<string>(next.Texts.Select(t => t.Id), StringComparer.Ordinal);
-            var unknown = Regex.Matches(declaration, @":=\s*""(MLC_\w+)""").Cast<Match>().Select(m => m.Groups[1].Value).Where(id => !known.Contains(id)).Distinct().ToList();
+            var unknown = Regex.Matches(next.RenderDeclaration(), @":=\s*""(MLC_\w+)""").Cast<Match>().Select(m => m.Groups[1].Value).Where(id => !known.Contains(id)).Distinct().ToList();
 
             if (unknown.Count > 0)
             {
@@ -447,13 +450,14 @@ namespace TiaMcpServer.Siemens
                 ?? throw new PortalException(PortalErrorCode.ImportFailed,
                     $"After the import there is no block at '{blockPath}': TIA Portal put the result elsewhere. The change was rolled back.");
 
+            // Before the number: an organization block that lost its event cannot take its number back either.
+            RequireBlockSettingsKept(block, settingsBefore);
+
             if (block.Number != number)
             {
                 block.AutoNumber = false;
                 block.Number = number;
             }
-
-            RequireBlockSettingsKept(block, settingsBefore);
 
             if (notes == null)
             {
@@ -485,7 +489,10 @@ namespace TiaMcpServer.Siemens
         private static readonly string[] UncarriedBlockSettings =
         {
             "DownloadWithoutReinit", "MemoryReserve", "IsRetainMemResEnabled", "RetainMemoryReserve", "UDABlockProperties", "UDAEnableTagReadback",
-            "IsWriteProtected", "HandleErrorsWithinBlock"
+            "IsWriteProtected", "HandleErrorsWithinBlock",
+            // An organization block: the document has no place for its event. Imported over a Startup OB (OB100) or a
+            // cyclic interrupt OB (OB30) it leaves a program cycle OB with number 1 (probe of 2026-10-07).
+            "SecondaryType", "PriorityNumber"
         };
 
         private static Dictionary<string, string> ReadBlockSettings(PlcBlock block)
@@ -517,6 +524,14 @@ namespace TiaMcpServer.Siemens
 
             if (lost.Count > 0)
             {
+                if (before.TryGetValue("SecondaryType", out var was) && lost.Any(l => l.StartsWith("SecondaryType", StringComparison.Ordinal)))
+                {
+                    throw new PortalException(PortalErrorCode.NotSupported,
+                        $"Organization block '{block.Name}' is a '{was}' OB, and the text form of a block does not carry the event of an OB: the change would turn it into a program cycle OB " +
+                        $"({string.Join("; ", lost)}). Nothing was changed. Through the server only program cycle OBs (such as Main) are changed; change this one in TIA Portal itself, " +
+                        "or put its logic into an FC or FB and call that from the OB.");
+                }
+
                 throw new PortalException(PortalErrorCode.NotSupported,
                     $"Block '{block.Name}' has settings the text form of a block does not carry, and the change would reset them: {string.Join("; ", lost)}. " +
                     "These are the memory reserve of 'Download without reinitialization' and the user-defined attributes; the server can read but not set them. " +
