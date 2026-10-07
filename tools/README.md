@@ -16,6 +16,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\<script>.ps1 <argument
 | `smoke.ps1` | `-Write`: calls the tools that change the project and undoes it; without: calls the read-only tools and checks that the project is not changed | yes |
 | `finish.ps1` | Line endings, build, unit tests; with `-Install` updates `Install\TiaMcpServer` | no |
 | `lad-instruction-probe.ps1` | Asks TIA Portal how it writes LAD instructions in a document: name, pins, what the compile wants | yes - a temporary block `MCPT_Ins`, deleted at the end |
+| `focus-probe.ps1` | Counts how often TIA Portal takes the keyboard focus during Openness calls | yes - the screen flickers; a temporary tag table |
 | `start-tia.ps1` | Starts TIA Portal with the test project and waits for it | starts it |
 
 ## The order they are used in
