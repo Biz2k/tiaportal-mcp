@@ -125,8 +125,8 @@ it did before.
 | --------------------- | -------------------------------------------------------------------------- |
 | `tia_read`            | everything that only reads, in every area, and `tia_help`: the parameters of a tool |
 | `project_write`       | open, create, save, close a project; import objects; take a master copy    |
-| `plc_write`           | create and change them; compile                                            |
-| `plc_delete`          | delete them                                                                |
+| `plc_write`           | create and change blocks, code, types, tags, tables, sources; compile      |
+| `plc_delete`          | delete blocks, types, tags, tables, sources                                |
 | `hw_write`            | create devices, plug modules, set parameters, connect                      |
 | `hw_delete`           | delete devices, subnets, connections                                       |
 | `hmi_write`           | create, change and delete in WinCC Unified                                 |
