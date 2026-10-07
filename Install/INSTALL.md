@@ -1,6 +1,6 @@
 # Installing and Integrating TiaMcpServer
 
-This guide walks you through installing and integrating the precompiled `TiaMcpServer` into your preferred AI assistants (Claude Code, Antigravity 2.0, Claude Desktop, or Codex).
+This guide walks you through installing and integrating the precompiled `TiaMcpServer` into your preferred AI assistants (Claude Code, Claude Desktop, Codex, or Antigravity 2.0).
 
 ## 1. Installation
 
@@ -26,35 +26,7 @@ This will automatically configure Claude Code to launch and communicate with `Ti
 
 ---
 
-## 3. Integration with Antigravity 2.0 (IDE)
-
-Antigravity 2.0 configures MCP servers using an `mcp.json` file. You can configure it either **Globally** (for all your projects) or **Per-Workspace**.
-
-### Option A: Global Configuration
-1. Open or create the file `C:\Users\<YourUsername>\.gemini\config\mcp.json`.
-2. Add the following JSON configuration, adjusting the path if you placed the folder elsewhere:
-
-```json
-{
-  "servers": {
-    "tia-mcp-server": {
-      "type": "stdio",
-      "command": "C:\\Users\\<YourUsername>\\AppData\\Local\\TiaMcpServer\\TiaMcpServer.exe",
-      "args": []
-    }
-  }
-}
-```
-
-### Option B: Workspace Configuration (VS Code / Antigravity)
-1. In your project root, open or create `.vscode/mcp.json`.
-2. Add the same JSON snippet as above.
-
-Restart the Antigravity agent or IDE, and you will see the `tia-mcp-server` tools available in your context!
-
----
-
-## 4. Integration with Claude Desktop
+## 3. Integration with Claude Desktop
 
 To use `TiaMcpServer` directly in the Claude Desktop app:
 
@@ -73,9 +45,10 @@ To use `TiaMcpServer` directly in the Claude Desktop app:
 }
 ```
 3. Fully quit and restart Claude Desktop.
+
 ---
 
-## 5. Integration with Codex
+## 4. Integration with Codex
 
 [Codex](https://developers.openai.com/codex) (the desktop app and the CLI) keeps its MCP servers in one file,
 `C:\Users\<YourUsername>\.codex\config.toml`. All three ways below write the same entry there.
@@ -120,6 +93,34 @@ into `args`, for example `args = ["--read-only"]`.
 
 Start a new Codex session after any of the three, and test it by asking
 `"Use tiamcpserver: run doctor and show the result"`.
+
+---
+
+## 5. Integration with Antigravity 2.0 (IDE)
+
+Antigravity 2.0 configures MCP servers using an `mcp.json` file. You can configure it either **Globally** (for all your projects) or **Per-Workspace**.
+
+### Option A: Global Configuration
+1. Open or create the file `C:\Users\<YourUsername>\.gemini\config\mcp.json`.
+2. Add the following JSON configuration, adjusting the path if you placed the folder elsewhere:
+
+```json
+{
+  "servers": {
+    "tia-mcp-server": {
+      "type": "stdio",
+      "command": "C:\\Users\\<YourUsername>\\AppData\\Local\\TiaMcpServer\\TiaMcpServer.exe",
+      "args": []
+    }
+  }
+}
+```
+
+### Option B: Workspace Configuration (VS Code / Antigravity)
+1. In your project root, open or create `.vscode/mcp.json`.
+2. Add the same JSON snippet as above.
+
+Restart the Antigravity agent or IDE, and you will see the `tia-mcp-server` tools available in your context!
 
 ---
 
