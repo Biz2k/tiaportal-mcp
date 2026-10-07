@@ -60,21 +60,13 @@ name, and the change lands there.
   `plc_get_cross_references`) and tell the user what depends on it.
 - A write shows its tool and step in a TIA Portal window; Cancel there stops it with nothing
   changed. Do not repeat a cancelled call without asking.
-- The tools named here are called through group tools (tia_read for all reading, plc_write, ...) as
-  `{"tool": "<name>", "arguments": {...}}`; 'tia_help' (in tia_read) gives the parameters. `--full` shows them singly.
-- **Download to PLCSIM or a PLC in another subnet**: `get_accessible_devices` shows the device and
-  the addresses of the PC interface. If the device (or the address the project gives the PLC) is
-  outside them, say so and offer: the user adds an address to the PC interface, or - after their
-  yes - you set a port of the PLC (an unconfigured one, 0.0.0.0, else the first) to an address in
-  a subnet of the PC interface (`hw_set_device_item_attributes`, `Node.Address`), keep the old
-  value, load, and put the old address back when the simulation is over. A port with connections
-  to partners in its subnet cannot be moved: the hardware stops compiling - put it back and say so.
-- `trustDevice` of `download_to_plc`: only after the user confirmed the device is theirs.
+- The tools named here are called through group tools (`tia_read` for all reading, `plc_write`, ...) as
+  `{"tool": "<name>", "arguments": {...}}`; `tia_help` in `tia_read` gives the parameters.
 - If the write tools are missing from the session, the server runs with `--read-only`
   (`get_state` shows `allowWrite: false`). Say so; do not look for a way around it.
 - **Protection, passwords, users (`sec_*`)**: before each call say what will change on which PLC,
   user, role or block and wait for the user's yes. Use only a password the user gave; never invent,
-  guess or repeat one. A know-how protected block or a protected project is opened only with what the user gave.
+  guess or repeat one.
   `sec_protect_project` cannot be undone: call it only on an explicit request, after a clear yes.
 
 ## 4. When a call fails
@@ -102,6 +94,10 @@ A download changes a running controller. Do it only when the user asked for this
    explanation. A hardware download normally needs the stop - say so before the call and ask
    the user before stopping a CPU.
 4. Report every step and message from the answer, including steps that kept TIA Portal's preset.
+5. `trustDevice` only after the user confirmed the device is theirs; `passwords` only what the user gave.
+6. A device in a subnet the PC interface has no address in cannot be loaded. Offer: the user adds
+   an address to the PC, or - after their yes - you move a port of the PLC there and put the old
+   address back afterwards. Scenario and refusals: `docs/recipes/download-to-plcsim.md`.
 
 ## 6. Know the limits before promising
 

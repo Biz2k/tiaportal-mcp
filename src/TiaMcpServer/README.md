@@ -59,7 +59,7 @@ The TIA Portal interfacing API is implemented in the `Siemens` directory. This A
 
 ## 4. Functionality
 
-The server publishes 139 tools (70 in `--read-only` mode); `docs/tools/` has one page per area, generated from the descriptions in the code.
+The server has 172 tools (87 in `--read-only` mode), shown to a client as eleven group tools unless started with `--full`; `docs/tools/` has one page per area, generated from the descriptions in the code.
 
 *   **Connection and state:** `connect` (the first running TIA Portal, or the one chosen with `processId` / `projectPath`; `get_tia_instances` lists them), `disconnect`, `get_state`, `doctor`.
 *   **Projects and sessions:** `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project`, `get_project_tree` (`depth`, `filter`, `structured`).

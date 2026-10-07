@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-07
+
+172 tools (87 with `--read-only`), of which a client sees eleven group tools by default; TESTS unit tests that need no TIA
+Portal; a smoke run of 288 calls against a live project that covers every writing tool except the download and the project
+protection. New since 0.5.0: LAD blocks written as text, hardware parameters, compile of a device, the hardware catalog, the
+areas `security` (protection of PLCs, users and roles of the project, block protection) and `drive` (SINAMICS through
+Startdrive), technology objects, and a download that finds the device, answers its certificate and its passwords.
+
+### Upgrading from 0.5.0
+
+No tool was renamed or removed. Behaviour a caller notices:
+
+- **The client sees eleven tools instead of one per operation.** `tia_read` holds everything that only reads, ten group
+  tools hold the rest; each takes `{"tool": "<name>", "arguments": {...}}`, and `tia_help` in `tia_read` gives the
+  parameters of a tool. A client configuration or a prompt that calls the single tools needs the start flag `--full`.
+- **`plc_compile_software` is a write tool**: `--read-only` leaves it out.
+- **`plc_manage_tag_table_entries` takes typed actions** (`action`, `name`, `newName`, `dataType`, `logicalAddress`,
+  `comment`); an unknown field is refused, and the batch is all or nothing.
+- **Data type and address of a PLC tag are checked** by `plc_create_tag`, `plc_update_tag` and
+  `plc_manage_tag_table_entries`; what TIA Portal stored without a word is refused now.
+- **`plc_replace_source` refuses** a block with a memory reserve or user-defined attributes changed from the defaults, and
+  a LAD organization block that is not a program cycle OB.
+- **A protected project** is opened with `userName` and `password` of `open_project` / `open_tia_project`.
+- **`download_to_plc`** refuses a device whose certificate TIA Portal cannot verify unless `trustDevice` is true, and
+  refuses a `targetAddress` nothing answers at.
+- **New areas for `--tools`:** `security`, `drive`.
+
 ### Added
 
 - Technology objects of a PLC: `plc_get_technology_objects` (list, and the parameters of one), `plc_create_technology_object`
@@ -68,7 +95,7 @@
   parameters of a CPU are attributes of its device item (cycle time, clock and system memory, startup, time of day,
   web server, PUT/GET; 58 of 74 are writable on a CPU 1512SP); the IP address is on the node of the interface and is
   reached as `Node.Address`. `hw_get_device_item_info` now lists the node attributes too. Passwords and the
-  protection of the PLC configuration stay out of reach of the server.
+  protection of a PLC are the `sec_*` tools.
 - `unified_manage_tags` reaches the members of a structured HMI tag: `"tagName": "Tag.Member"` with `update` sets
   what a member takes (Comment, AcquisitionMode); `unified_get_tags` lists the members with `withMembers`.
 - `unified_manage_items`: the value converter of a tag or expression dynamization takes a bitmask table,

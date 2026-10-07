@@ -645,7 +645,6 @@ and says in `meta` how long the list is: `total`, `offset`, `truncated` and, whe
   refused: the text form of a block does not carry those values, and the change would lose them. FBD, STL, GRAPH
   and CEM blocks are read only (`plc_get_block_source`).
 - **Watch table entries** cannot be created or deleted through this server yet.
-- **A subnet cannot be deleted** through this server; `net_connect_subnet` creates one when needed.
 - **HMI tools are WinCC Unified only.** For WinCC Comfort, Advanced and Professional the Openness
   API has no object model for screens: a screen cannot be created and its items cannot be read or
   changed, only exported and imported as XML. The `unified_*` tools refuse such an HMI with that
@@ -681,7 +680,7 @@ Limits imposed by the Openness API itself - no input makes these work:
 - **Safety programs.** F-blocks and safety tags reject most edits, sometimes requiring the safety
   password. The underlying error is passed through with its original message.
 - **Know-how protected** blocks and types are rejected before any edit, with a message asking you
-  to remove the protection in TIA Portal first.
+  to remove the protection first (`sec_set_block_protection` with the password, or in TIA Portal).
 - **No download preview.** The configuration steps of a download can only be seen by answering
   them, and answering them is what starts the load.
 
