@@ -20,7 +20,7 @@ namespace TiaMcpServer.Siemens
         {
             if (string.IsNullOrWhiteSpace(path))
             {
-                throw new PortalException(PortalErrorCode.InvalidParams, "newProjectPath is empty. Pass the folder of the new project, e.g. 'C:\\Projects\\NewPlant'.");
+                throw new PortalException(PortalErrorCode.InvalidParams, "The path of the new project is empty. Pass the folder of the new project, e.g. 'C:\\Projects\\NewPlant'.");
             }
 
             var trimmed = path!.Trim().TrimEnd('\\', '/');
@@ -37,7 +37,7 @@ namespace TiaMcpServer.Siemens
                 var corrected = Path.Combine(Path.GetDirectoryName(trimmed) ?? string.Empty, ProjectExtension.Replace(name, string.Empty));
 
                 throw new PortalException(PortalErrorCode.InvalidParams,
-                    $"'{path}' ends in a project extension, but save_as_project takes the FOLDER of the new project: TIA Portal creates the project file '{name}' in it by itself. " +
+                    $"'{path}' ends in a project extension, but the path is the FOLDER of the new project: TIA Portal creates the project file '{name}' in it by itself. " +
                     $"Use '{corrected}'; the project file will then be '{Path.Combine(corrected, name)}'.");
             }
 

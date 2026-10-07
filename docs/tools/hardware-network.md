@@ -12,6 +12,7 @@ Devices, modules, subnets, IO systems and communication connections.
 | [`hw_get_topology`](#hw_get_topology) | read |
 | [`hw_plug_module`](#hw_plug_module) | write |
 | [`hw_search_catalog`](#hw_search_catalog) | read |
+| [`hw_set_device_item_attributes`](#hw_set_device_item_attributes) | write |
 | [`net_connect_subnet`](#net_connect_subnet) | write |
 | [`net_connect_to_io_system`](#net_connect_to_io_system) | write |
 | [`net_create_connection`](#net_create_connection) | write |
@@ -49,7 +50,7 @@ Get info from a device from the current project/session
 
 ## hw_get_device_item_info
 
-Get info from a device item from the current project/session
+Get a device item - a CPU, a module, an interface, a port - with all its attributes: name, value and accessMode. The parameters of a CPU are attributes of its item (cycle time, clock memory, startup, time of day, web server, PUT/GET ...); those with accessMode ReadWrite are set with 'hw_set_device_item_attributes'. For a network interface the attributes of its node are added as 'Node.Address', 'Node.SubnetMask', 'Node.RouterAddress' ...
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -91,6 +92,15 @@ Search the installed hardware catalog by article number or product name and get 
 |---|---|---|---|
 | `query` | string | yes | query: at least three characters of an article number or product name, e.g. '6ES7 155-6AU01' or 'IM 155-6 PN' |
 | `maxResults` | integer | no (default `20`) | maxResults: stop after this many entries (default 20) |
+
+## hw_set_device_item_attributes
+
+Set parameters of hardware: attributes of a CPU, a module, a network interface or a port, several at once and all or nothing. The parameters of a CPU are attributes of its device item - e.g. CycleMaximumCycleTime, CycleMinimumCycleTime, ClockMemoryByte, ClockMemoryByteAddress, SystemMemoryByte, StartupActionAfterPowerOn, WebserverActivate, ProtectionEnablePutGetCommunication, TimeOfDayLocalTimeZone; 'OPC UA_1' below the CPU has OpcUaServer; the IP address is on the interface item as 'Node.Address', 'Node.SubnetMask', 'Node.RouterAddress', 'Node.UseRouter'. Read the names, present values and which are writable with 'hw_get_device_item_info' first: names differ by CPU and firmware. A value is a boolean, a number or a string, as the attribute holds now; where the dialog of TIA Portal offers a choice, many attributes hold the number of the entry. Openness does not check the range of a value (a cycle time of 7 000 000 ms is stored): a value outside it shows only when the hardware is compiled in TIA Portal. Passwords and the protection of the PLC configuration are not set by the server. The change needs a hardware compile and download to take effect
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `deviceItemPath` | string | yes | deviceItemPath: device path followed by the item names, e.g. 'Station_1/PLC_1' for the CPU or 'Station_1/PLC_1/PROFINET interface_1' for its interface. A '/' inside a name is written '%2F' |
+| `attributes` | object | yes | attributes: the attributes to set, by name, e.g. {"CycleMaximumCycleTime": 200, "ClockMemoryByte": true} or {"Node.Address": "192.168.0.10"} |
 
 ## net_connect_subnet
 

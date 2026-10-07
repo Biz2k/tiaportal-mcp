@@ -157,7 +157,7 @@ running the server and never modify the project.
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. 144 tools are registered by default (73 with `--read-only`). A short
+when the registered tools and that file disagree. 146 tools are registered by default (75 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Always available (71):
@@ -179,10 +179,11 @@ Always available (71):
 | WinCC Unified           | `unified_get_screens`, `unified_get_screen_groups`, `unified_get_scripts`, `unified_get_tag_table_groups`, `unified_get_logs`, `unified_get_logging_tags`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists`, `unified_get_runtime_settings`, `unified_get_system_tags` |
 | Download                | `get_download_targets` |
 
-Left out with `--read-only` (73):
+Left out with `--read-only` (75):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
+| Project                 | `create_project` |
 | Import                  | `import_objects`, `instantiate_master_copy` |
 | Block and type groups   | `plc_create_block_group`, `plc_delete_block_group`, `plc_create_type_group`, `plc_delete_type_group` |
 | Blocks                  | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_replace_source`, `plc_create_lad_block`, `plc_manage_lad_networks`, `plc_manage_lad_interface`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block`, `plc_compile_software` |
@@ -191,7 +192,7 @@ Left out with `--read-only` (73):
 | Tags and constants      | `plc_create_tag`, `plc_update_tag`, `plc_delete_tag`, `plc_create_user_constant`, `plc_update_user_constant`, `plc_delete_user_constant`, `plc_manage_tag_table_entries` |
 | Watch tables            | `plc_create_watch_table`, `plc_rename_watch_table`, `plc_delete_watch_table`, `plc_create_watch_table_group`, `plc_delete_watch_table_group` |
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
-| Hardware                | `hw_create_device`, `hw_plug_module`, `hw_delete_device` |
+| Hardware                | `hw_create_device`, `hw_plug_module`, `hw_set_device_item_attributes`, `hw_delete_device` |
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_delete_subnet`, `net_create_io_system`, `net_connect_to_io_system`, `net_create_connection`, `net_delete_connection` |
 | WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_compile`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_tag_table_groups`, `unified_manage_logs`, `unified_manage_logging_tags`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists`, `unified_set_runtime_settings` |
 | Download                | `download_to_plc` |

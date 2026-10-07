@@ -567,6 +567,43 @@ namespace TiaMcpServer.Siemens
                 ("path", path));
         }
 
+        /// <summary>
+        /// Creates a new, empty project and makes it the open one; returns the path of its project file. The path is the
+        /// folder of the new project, as for <see cref="SaveAsProject"/>: 'C:\Projects\Plant' gives
+        /// 'C:\Projects\Plant\Plant.apXX'. Found on V21 (probe of 2026-10-07 on an instance without user interface):
+        /// Projects.Create(directory, name) is the only form - author and comment cannot be given, and a project has no
+        /// writable attributes afterwards; it creates missing folders; it refuses while another project is open
+        /// ("Another project is already open"); a name with spaces or Cyrillic letters is taken.
+        /// </summary>
+        public string CreateProject(string path)
+        {
+            _logger?.LogInformation($"Creating project: {path}");
+
+            return Operation.Run(_logger, nameof(CreateProject), PortalErrorCode.CreateFailed,
+                () =>
+                {
+                    RequirePortal();
+
+                    var open = _project?.Name ?? _portal!.Projects.FirstOrDefault()?.Name ?? _portal.LocalSessions.FirstOrDefault()?.Project?.Name;
+
+                    if (open != null)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidState,
+                            $"Project '{open}' is open in this TIA Portal, and TIA Portal holds one project at a time. Save it if needed ('save_project'), close it " +
+                            "('close_project'), then create the new one. Nothing was created.");
+                    }
+
+                    var folder = ProjectPathRules.CheckNewProjectFolder(path, Directory.Exists, d => !Directory.EnumerateFileSystemEntries(d).Any());
+                    var directory = new DirectoryInfo(folder);
+
+                    _session = null;
+                    _project = _portal!.Projects.Create(new DirectoryInfo(directory.Parent!.FullName), directory.Name);
+
+                    return _project.Path.FullName;
+                },
+                ("path", path));
+        }
+
         public bool CloseProject()
         {
             _logger?.LogInformation("Closing project...");

@@ -1,5 +1,6 @@
 close_project
 connect
+create_project
 disconnect
 doctor
 download_to_plc
@@ -20,6 +21,7 @@ hw_get_devices
 hw_get_topology
 hw_plug_module
 hw_search_catalog
+hw_set_device_item_attributes
 import_objects
 instantiate_master_copy
 net_connect_subnet

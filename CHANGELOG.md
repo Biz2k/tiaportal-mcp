@@ -4,6 +4,14 @@
 
 ### Added
 
+- `create_project`: a new, empty project. The path is the folder of the project, as for `save_as_project`; while
+  another project is open the call is refused (TIA Portal holds one project at a time).
+- `hw_set_device_item_attributes`: the parameters of hardware can be changed - attributes of a CPU, a module, a
+  network interface or a port, several at once, all or nothing, with the value before and after in the answer. The
+  parameters of a CPU are attributes of its device item (cycle time, clock and system memory, startup, time of day,
+  web server, PUT/GET; 58 of 74 are writable on a CPU 1512SP); the IP address is on the node of the interface and is
+  reached as `Node.Address`. `hw_get_device_item_info` now lists the node attributes too. Passwords and the
+  protection of the PLC configuration stay out of reach of the server.
 - `unified_manage_tags` reaches the members of a structured HMI tag: `"tagName": "Tag.Member"` with `update` sets
   what a member takes (Comment, AcquisitionMode); `unified_get_tags` lists the members with `withMembers`.
 - `unified_manage_items`: the value converter of a tag or expression dynamization takes a bitmask table,

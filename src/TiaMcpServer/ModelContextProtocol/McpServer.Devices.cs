@@ -52,7 +52,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "hw_get_device_item_info", Title = "Get device item info", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get info from a device item from the current project/session")]
+        [McpServerTool(Name = "hw_get_device_item_info", Title = "Get device item info", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get a device item - a CPU, a module, an interface, a port - with all its attributes: name, value and accessMode. The parameters of a CPU are attributes of its item (cycle time, clock memory, startup, time of day, web server, PUT/GET ...); those with accessMode ReadWrite are set with 'hw_set_device_item_attributes'. For a network interface the attributes of its node are added as 'Node.Address', 'Node.SubnetMask', 'Node.RouterAddress' ...")]
         public static ResponseDeviceItemInfo GetDeviceItemInfo(
             [Description("deviceItemPath: device path followed by the item names, e.g. 'PC-System_1/Software PLC_1' or 'PLC_1/PROFINET interface_1'. The device name may be left out ('PLC_1'). A '/' inside a name is written '%2F'")] string deviceItemPath)
         {
@@ -63,6 +63,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (deviceItem != null)
                 {
                     var attributes = Helper.GetAttributeList(deviceItem);
+
+                    attributes.AddRange(Portal.GetNodeAttributes(deviceItem));
 
                     return new ResponseDeviceItemInfo
                     {
@@ -86,6 +88,32 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 throw Failure($"retrieving device item info from '{deviceItemPath}'", ex);
             }
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "hw_set_device_item_attributes", Title = "Set attributes of a device item", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Set parameters of hardware: attributes of a CPU, a module, a network interface or a port, several at once and all or nothing. The parameters of a CPU are attributes of its device item - e.g. CycleMaximumCycleTime, CycleMinimumCycleTime, ClockMemoryByte, ClockMemoryByteAddress, SystemMemoryByte, StartupActionAfterPowerOn, WebserverActivate, ProtectionEnablePutGetCommunication, TimeOfDayLocalTimeZone; 'OPC UA_1' below the CPU has OpcUaServer; the IP address is on the interface item as 'Node.Address', 'Node.SubnetMask', 'Node.RouterAddress', 'Node.UseRouter'. Read the names, present values and which are writable with 'hw_get_device_item_info' first: names differ by CPU and firmware. A value is a boolean, a number or a string, as the attribute holds now; where the dialog of TIA Portal offers a choice, many attributes hold the number of the entry. Openness does not check the range of a value (a cycle time of 7 000 000 ms is stored): a value outside it shows only when the hardware is compiled in TIA Portal. Passwords and the protection of the PLC configuration are not set by the server. The change needs a hardware compile and download to take effect")]
+        public static ResponseAttributesSet SetDeviceItemAttributes(
+            [Description("deviceItemPath: device path followed by the item names, e.g. 'Station_1/PLC_1' for the CPU or 'Station_1/PLC_1/PROFINET interface_1' for its interface. A '/' inside a name is written '%2F'")] string deviceItemPath,
+            [Description("attributes: the attributes to set, by name, e.g. {\"CycleMaximumCycleTime\": 200, \"ClockMemoryByte\": true} or {\"Node.Address\": \"192.168.0.10\"}")] Dictionary<string, System.Text.Json.JsonElement> attributes)
+        {
+            return Guarded(nameof(SetDeviceItemAttributes), () =>
+            {
+                var changes = Portal.SetDeviceItemAttributes(deviceItemPath, attributes);
+
+                return new ResponseAttributesSet
+                {
+                    Path = deviceItemPath,
+                    Changes = changes,
+                    Message = $"{changes.Count} attribute(s) of '{deviceItemPath}' set. The change is in memory; call 'save_project' to persist it. It takes effect in the PLC after a hardware compile and download.",
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = true,
+                        ["pendingSave"] = true
+                    }
+                };
+            });
         }
 
         [McpServerTool(Name = "hw_get_devices", Title = "Get devices", ReadOnly = true, OpenWorld = false, UseStructuredContent = true), Description("Get a list of all devices in the project/session: path, name, type and the names of the top-level items. 'includeAttributes' adds every attribute of each device (long); 'hw_get_device_info' gives them for one device")]

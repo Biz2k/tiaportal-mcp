@@ -6,6 +6,7 @@ Connection, project and session tools.
 |---|---|
 | [`close_project`](#close_project) | write |
 | [`connect`](#connect) | session |
+| [`create_project`](#create_project) | session |
 | [`disconnect`](#disconnect) | session |
 | [`doctor`](#doctor) | read |
 | [`get_project`](#get_project) | read |
@@ -32,6 +33,14 @@ Connect to a running TIA Portal; the first one unless processId or projectPath p
 | `startIfNotRunning` | boolean | no (default `False`) | startIfNotRunning: start a new TIA Portal window when none is running (default false) |
 | `processId` | integer | no (default `0`) | processId: attach to the instance with this process id (see 'get_tia_instances'); 0 means not set |
 | `projectPath` | string | no (default ``) | projectPath: attach to the instance that has this project open, by full path or file name; empty means not set |
+
+## create_project
+
+Create a new, empty TIA Portal project and open it. The path is the FOLDER of the new project, without an extension: 'C:\Projects\Plant' gives 'C:\Projects\Plant\Plant.apXX', and the answer has the full path of that file. TIA Portal holds one project at a time: while a project is open the call is refused - save and close it first ('save_project', 'close_project'). A folder that exists and is not empty is refused. The project is empty: add a PLC or an HMI with 'hw_create_device'. Author and comment of a project cannot be set through Openness
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `projectPath` | string | yes | projectPath: absolute path of the folder of the new project, without an extension, e.g. 'C:\Projects\Plant'; its last part becomes the name of the project. The folder must not exist or must be empty |
 
 ## disconnect
 

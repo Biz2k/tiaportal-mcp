@@ -427,6 +427,32 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [WriteTool]
+        [McpServerTool(Name = "create_project", Title = "Create project", Destructive = false, Idempotent = false, OpenWorld = false, UseStructuredContent = true), Description("Create a new, empty TIA Portal project and open it. The path is the FOLDER of the new project, without an extension: 'C:\\Projects\\Plant' gives 'C:\\Projects\\Plant\\Plant.apXX', and the answer has the full path of that file. TIA Portal holds one project at a time: while a project is open the call is refused - save and close it first ('save_project', 'close_project'). A folder that exists and is not empty is refused. The project is empty: add a PLC or an HMI with 'hw_create_device'. Author and comment of a project cannot be set through Openness")]
+        public static ResponseSaveAsProject CreateProject(
+            [Description("projectPath: absolute path of the folder of the new project, without an extension, e.g. 'C:\\Projects\\Plant'; its last part becomes the name of the project. The folder must not exist or must be empty")] string projectPath)
+        {
+            try
+            {
+                var projectFile = Portal.CreateProject(projectPath);
+
+                return new ResponseSaveAsProject
+                {
+                    Message = $"Project created and opened: '{projectFile}'. It is empty; 'hw_create_device' adds a PLC or an HMI",
+                    Path = projectFile,
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = true
+                    }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw ToolError(ex, ex is PortalException ? null : $"Unexpected error creating the project '{projectPath}'");
+            }
+        }
+
         [McpServerTool(Name = "close_project", Title = "Close project", Destructive = true, Idempotent = true, OpenWorld = false), Description("Close the current TIA-Portal project/session")]
         public static ResponseCloseProject CloseProject()
         {

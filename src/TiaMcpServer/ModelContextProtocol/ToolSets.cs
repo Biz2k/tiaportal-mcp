@@ -25,7 +25,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly HashSet<string> Always = new HashSet<string>(StringComparer.Ordinal)
         {
             "connect", "disconnect", "get_state", "get_tia_instances", "doctor",
-            "open_tia_project", "open_project", "get_project", "save_project", "save_as_project", "close_project",
+            "open_tia_project", "open_project", "create_project", "get_project", "save_project", "save_as_project", "close_project",
             "get_project_tree"
         };
 

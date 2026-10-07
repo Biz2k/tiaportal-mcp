@@ -882,6 +882,14 @@ namespace TiaMcpServer.ModelContextProtocol
         public List<string> Notes { get; set; } = new List<string>();
     }
 
+    public class ResponseAttributesSet : ResponseMessage
+    {
+        public string? Path { get; set; }
+
+        /// <summary>Every attribute that was set, with its value before and after.</summary>
+        public IEnumerable<TiaMcpServer.Siemens.AttributeChange>? Changes { get; set; }
+    }
+
     public class ResponseSourceEdit : ResponseMessage
     {
         public string? Name { get; set; }
