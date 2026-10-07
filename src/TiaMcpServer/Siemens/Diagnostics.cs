@@ -29,6 +29,9 @@ namespace TiaMcpServer.Siemens
 
         /// <summary>Whether the project-mutating tools are available (false when started with --read-only).</summary>
         public bool AllowWrite { get; set; }
+
+        /// <summary>The tool areas registered ('--tools'): 'all' or a comma separated list.</summary>
+        public string ToolAreas { get; set; } = "all";
         public IReadOnlyList<TiaInstallation> Installations { get; set; } = new List<TiaInstallation>();
         public string? Text { get; set; }
     }
@@ -58,7 +61,7 @@ namespace TiaMcpServer.Siemens
             "Portal.exe"
         };
 
-        public static DiagnosticsReport Run(Portal portal, bool allowWrite = false)
+        public static DiagnosticsReport Run(Portal portal, bool allowWrite = false, string toolAreas = "all")
         {
             if (portal == null)
             {
@@ -104,7 +107,8 @@ namespace TiaMcpServer.Siemens
             }
 
             status += $"\n├─ User in 'Siemens TIA Openness' user group: {userInGroup}";
-            status += $"\n└─ Write mode: {(allowWrite ? "enabled" : "disabled by --read-only, read-only tools only")}";
+            status += $"\n├─ Write mode: {(allowWrite ? "enabled" : "disabled by --read-only, read-only tools only")}";
+            status += $"\n└─ Tool areas: {toolAreas}";
 
             return new DiagnosticsReport
             {
@@ -114,6 +118,7 @@ namespace TiaMcpServer.Siemens
                 ProjectPath = projectPath,
                 IsUserInGroup = userInGroup,
                 AllowWrite = allowWrite,
+                ToolAreas = toolAreas,
                 Installations = installations,
                 Text = status
             };

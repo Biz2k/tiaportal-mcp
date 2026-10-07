@@ -247,6 +247,9 @@ namespace TiaMcpServer.ModelContextProtocol
         /// </summary>
         public bool? AllowWrite { get; set; }
 
+        /// <summary>The tool areas registered with '--tools': 'all' or a comma separated list (plc, hw, unified, library, transfer, download).</summary>
+        public string? ToolAreas { get; set; }
+
         /// <summary>Set when the server is not connected: what to call, and which TIA Portal instances run.</summary>
         [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
         public string? Note { get; set; }
@@ -269,6 +272,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? ProjectPath { get; set; }
         public bool? IsUserInGroup { get; set; }
         public bool? AllowWrite { get; set; }
+        public string? ToolAreas { get; set; }
         public IEnumerable<ResponseTiaInstallation>? Installations { get; set; }
     }
 

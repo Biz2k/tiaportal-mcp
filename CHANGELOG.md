@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### Added (tool areas)
+
+- `--tools plc,unified` registers only the named tool areas (`plc`, `hw` with `net_*`, `unified`, `library`, `transfer`,
+  `download`); the tools of connection, project and diagnostics stay. No flag or `all` registers everything. An unknown
+  area stops the start with the valid ones on stderr (exit code 2). The server instructions name the registered areas;
+  `get_state` and `doctor` report them as `toolAreas`.
+
+### Fixed
+
+- `plc_compile_software` was defined twice (a leftover write-tool version beside the current one); the leftover is
+  removed, the tool list is unchanged.
+
 ### Changed (long lists)
 
 - Every list tool that can return hundreds of records pages the same way: `limit` and `offset` with one wording, and `total`,

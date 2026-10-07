@@ -19,11 +19,19 @@ namespace TiaMcpServer
         {
             var options = CliOptions.ParseArgs(args);
 
+            if (options.ToolsError != null)
+            {
+                Console.Error.WriteLine(options.ToolsError);
+                Environment.ExitCode = 2;
+                return;
+            }
+
             Engineering.TiaMajorVersion = options.TiaMajorVersion ?? 21;
 
             // Set before the --doctor branch below, which reports the write mode, and before the
             // host registers its tool types.
             WritePolicy.AllowWrite = options.AllowWrite;
+            ToolSets.Enabled = options.ToolAreas;
 
             if (Engineering.TiaMajorVersion >= 20)
             {
@@ -61,7 +69,7 @@ namespace TiaMcpServer
             try
             {
                 // Fully qualified: 'Diagnostics' alone would collide with the System.Diagnostics namespace.
-                var report = TiaMcpServer.Siemens.Diagnostics.Run(new Portal(), WritePolicy.AllowWrite);
+                var report = TiaMcpServer.Siemens.Diagnostics.Run(new Portal(), WritePolicy.AllowWrite, ToolSets.Describe(ToolSets.Enabled));
 
                 Console.WriteLine(report.Text);
             }
@@ -79,9 +87,10 @@ namespace TiaMcpServer
         /// which is what keeps them out of 'tools/list' rather than merely refusing them when
         /// called. Tools are created one by one (the SDK's type-based registration would take
         /// every [McpServerTool] method of the class). The [DebugTool] methods are left out the same
-        /// way unless '--debug-tools' was passed.
+        /// way unless '--debug-tools' was passed. '--tools' limits the tools to the named areas
+        /// (<see cref="ToolSets"/>); the tools of connection, project and diagnostics stay.
         /// </summary>
-        public static IEnumerable<global::ModelContextProtocol.Server.McpServerTool> BuildTools(bool allowWrite, bool debugTools = false)
+        public static IEnumerable<global::ModelContextProtocol.Server.McpServerTool> BuildTools(bool allowWrite, bool debugTools = false, IReadOnlyCollection<string>? areas = null)
         {
             return typeof(McpServer)
                 .GetMethods(BindingFlags.Public | BindingFlags.Static)
@@ -89,6 +98,7 @@ namespace TiaMcpServer
                 .Where(m => allowWrite || m.GetCustomAttribute<WriteToolAttribute>() == null)
                 .Where(m => debugTools || m.GetCustomAttribute<DebugToolAttribute>() == null)
                 .Select(m => global::ModelContextProtocol.Server.McpServerTool.Create(m))
+                .Where(t => ToolSets.IsRegistered(t.ProtocolTool.Name, areas))
                 .ToList();
         }
 
@@ -150,10 +160,14 @@ namespace TiaMcpServer
                             (WritePolicy.AllowWrite
                                 ? " Tools that create, rename or delete project objects are available. Their " +
                                   "changes stay in memory until 'save_project'."
-                                : " The server runs read-only: tools that change the project are not available.");
+                                : " The server runs read-only: tools that change the project are not available.") +
+                            (options?.ToolAreas == null
+                                ? string.Empty
+                                : $" Only these tool areas are registered: {ToolSets.Describe(options.ToolAreas)} (and the tools for connection, " +
+                                  "project and diagnostics); the other areas exist but were left out with '--tools'.");
                     })
                     .WithStdioServerTransport()
-                    .WithTools(BuildTools(WritePolicy.AllowWrite, options?.DebugTools ?? false))
+                    .WithTools(BuildTools(WritePolicy.AllowWrite, options?.DebugTools ?? false, options?.ToolAreas))
                     .WithRequestFilters(filters => filters.AddCallToolFilter(ToolCallGate.Filter));
 
                 // Register the Portal service for dependency injection

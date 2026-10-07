@@ -10,6 +10,12 @@ namespace TiaMcpServer
         public bool AllowWrite { get; set; } = true;
         public bool DebugTools { get; set; } // register the server-development tools ([DebugTool])
 
+        // '--tools plc,unified': the areas to register; null registers all of them.
+        public System.Collections.Generic.IReadOnlyList<string>? ToolAreas { get; set; }
+
+        // Set when '--tools' names something that is not an area, or names nothing.
+        public string? ToolsError { get; set; }
+
         public static CliOptions ParseArgs(string[] args)
         {
             var options = new CliOptions();
@@ -44,6 +50,23 @@ namespace TiaMcpServer
                     case "-debug-tools":
                     case "--debug-tools":
                         options.DebugTools = true;
+                        break;
+
+                    case "-tools":
+                    case "--tools":
+                        if (i + 1 < args.Length)
+                        {
+                            options.ToolAreas = ModelContextProtocol.ToolSets.Parse(args[i + 1], out var unknown);
+                            if (unknown.Count > 0)
+                            {
+                                options.ToolsError = ModelContextProtocol.ToolSets.UnknownText(unknown);
+                            }
+                            i++;
+                        }
+                        else
+                        {
+                            options.ToolsError = ModelContextProtocol.ToolSets.UnknownText(new[] { "(nothing)" });
+                        }
                         break;
 
                     case "-logging":

@@ -4,7 +4,9 @@
       "command": "<path-to>\\TiaMcpServer.exe",
       "args": [
           "--tia-major-version",
-          "18"
+          "18",
+          "--tools",
+          "plc,unified"
       ],
       "env": {}
     },

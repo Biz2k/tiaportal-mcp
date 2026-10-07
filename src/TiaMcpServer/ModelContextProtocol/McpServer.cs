@@ -178,6 +178,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Project = state.Project,
                         Session = state.Session,
                         AllowWrite = WritePolicy.AllowWrite,
+                        ToolAreas = ToolSets.Describe(ToolSets.Enabled),
                         Note = state.IsConnected == true ? null : NotConnectedNote(),
                         Meta = new JsonObject
                         {
@@ -207,7 +208,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 // Fully qualified: 'Diagnostics' alone would collide with the System.Diagnostics namespace.
-                var report = TiaMcpServer.Siemens.Diagnostics.Run(Portal, WritePolicy.AllowWrite);
+                var report = TiaMcpServer.Siemens.Diagnostics.Run(Portal, WritePolicy.AllowWrite, ToolSets.Describe(ToolSets.Enabled));
 
                 return new ResponseDoctor
                 {
@@ -219,6 +220,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ProjectPath = report.ProjectPath,
                     IsUserInGroup = report.IsUserInGroup,
                     AllowWrite = report.AllowWrite,
+                    ToolAreas = report.ToolAreas,
                     Installations = report.Installations
                         .Select(i => new ResponseTiaInstallation
                         {

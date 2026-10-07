@@ -718,19 +718,6 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
-        [WriteTool]
-        [McpServerTool(Name = "plc_compile_software", Title = "Compile software", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Compile the entire PLC software. Returns the compiler result with any errors or warnings")]
-        public static ResponseCompilerResult CompileSoftware(
-            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
-        {
-            return GuardedNoTransaction(nameof(CompileSoftware), () =>
-            {
-                var result = Portal.CompileSoftware(softwarePath);
-                return MapCompilerResult(result, $"Software '{softwarePath}' compilation completed.");
-            });
-        }
-
         private static ResponseCompilerResult MapCompilerResult(CompilerResult? result, string message)
         {
             if (result == null)

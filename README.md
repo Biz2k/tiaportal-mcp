@@ -95,7 +95,30 @@ access. Confirm it in the TIA Portal window.
 | `--logging <1\|2\|3>`     | `1` stderr, `2` debug output, `3` Windows event log. Omit for no logging.      |
 | `--doctor`                | Print the environment report and exit without starting the MCP server.         |
 | `--debug-tools`           | Register the server-development tools (`unified_debug_*`).                      |
+| `--tools <areas>`         | Register only the named tool areas, e.g. `--tools plc,unified`. See below.     |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
+
+## Tool areas
+
+The server registers about 140 tools, and a client puts the description of every one into the context of its model.
+`--tools plc,unified` registers only the areas named, separated by commas without blanks; without the flag, or with
+`--tools all`, every area is registered. An unknown area stops the start with the list of valid ones on stderr (exit
+code 2).
+
+| Area       | Tools of the area                                                                              | Count |
+| ---------- | ---------------------------------------------------------------------------------------------- | ----- |
+| `plc`      | `plc_*`                                                                                        | 66    |
+| `hw`       | `hw_*` and `net_*`: devices, hardware, subnets, connections                                    | 16    |
+| `unified`  | `unified_*`                                                                                    | 35    |
+| `library`  | `get_libraries`, `get_library_types`, `get_master_copies`, `instantiate_master_copy`, `open_global_library` | 5 |
+| `transfer` | `export_objects`, `import_objects`, `preview_import`                                           | 3     |
+| `download` | `download_to_plc`, `get_download_targets`                                                      | 2     |
+
+Always registered, whatever `--tools` says (12): `connect`, `disconnect`, `get_state`, `get_tia_instances`, `doctor`,
+`open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project`,
+`get_project_tree`. The counts include the write tools; `--read-only` takes some of them out of every area. The
+server instructions name the registered areas when not all are, and `get_state` and `doctor` report them as
+`toolAreas`. See `samples/` for a configuration.
 
 ## Write mode
 
