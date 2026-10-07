@@ -43,7 +43,10 @@ namespace TiaMcpServer.Siemens
     //     selected kind are meant. A range row is a MappingTableEntryRange made with Create<T>() (RangeType is
     //     read-only, so From-only and To-only rows cannot be made). A single-bit table has its two rows
     //     (bit 0 and 1, MappingTableEntryBitmask) from the moment it is selected; more cannot be created.
-    //     A multi-bit row cannot choose its mask (Relevant is read-only). DANGER: creating a
+    //     A bitmask table (probe of 2026-10-07): rows are made with Entries.Create(MultiBit); Condition takes one
+    //     single bit only (1, 2, 65536 pass; 0, 3, 5, 255 are "invalid value"), and the mask - Relevant, read-only,
+    //     the same on every row - is the union of the bits the rows name. So through Openness a bitmask table is
+    //     "one row per bit": combinations of bits in one row cannot be written. DANGER: creating a
     //     MappingTableEntrySimple (the Expression table) throws NonRecoverableException and closes TIA Portal.
     //   - ExpressionDynamization has a ValueConverter and nothing else; FlashingDynamization takes
     //     FlashingCondition, FlashingRate, Color and AlternateColor, and only on color properties
@@ -399,6 +402,35 @@ namespace TiaMcpServer.Siemens
 
                     SetObjectProperty(row, "From", spec.From);
                     SetObjectProperty(row, "To", spec.To);
+                    ApplyMappingRow(row, spec, valueType);
+                }
+
+                return;
+            }
+
+            if (mapping.Type == "bitmask")
+            {
+                SetEnumProperty(table, "ConditionType", "Bitmask");
+
+                bool IsMultiBit(object e) => e.GetType().Name == "MappingTableEntryBitmask" && e.GetType().GetProperty("BitDynamizationType")?.GetValue(e)?.ToString() == "MultiBit";
+
+                foreach (var old in EntriesOf(entries).Where(IsMultiBit).ToList())
+                {
+                    ((dynamic)old).Delete();
+                }
+
+                var createBit = entries.GetType().GetMethods().FirstOrDefault(m => m.Name == "Create" && !m.IsGenericMethod && m.GetParameters().Length == 1)
+                    ?? throw new PortalException(PortalErrorCode.NotSupported, "Rows of a bitmask table cannot be created through Openness here.");
+                var multiBit = Enum.Parse(createBit.GetParameters()[0].ParameterType, "MultiBit");
+
+                foreach (var spec in mapping.Entries)
+                {
+                    // Create(MultiBit) answers with a list that holds the new row.
+                    var made = createBit.Invoke(entries, new[] { multiBit });
+                    var row = (made is IEnumerable list ? list.Cast<object>().LastOrDefault() : made)
+                        ?? throw new PortalException(PortalErrorCode.CreateFailed, "Creating a row of the table returned nothing.");
+
+                    SetObjectProperty(row, "Condition", 1UL << spec.Bit!.Value);
                     ApplyMappingRow(row, spec, valueType);
                 }
 

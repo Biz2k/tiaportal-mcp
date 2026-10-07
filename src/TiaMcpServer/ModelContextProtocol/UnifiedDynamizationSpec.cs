@@ -43,7 +43,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? Rate { get; set; }
     }
 
-    /// <summary>The table of a value converter. Type: 'range', 'singlebit' or 'none' (which switches the table off).</summary>
+    /// <summary>The table of a value converter. Type: 'range', 'singlebit', 'bitmask' or 'none' (which switches the table off).</summary>
     public class UnifiedMappingSpec
     {
         public string Type { get; set; } = string.Empty;
@@ -270,10 +270,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
             }
 
-            if (type != "range" && type != "singlebit" && type != "none")
+            if (type != "range" && type != "singlebit" && type != "bitmask" && type != "none")
             {
-                throw Invalid($"mapping.type '{type}' is not supported. Use 'range' (rows with from, to, value), 'singlebit' (rows for bit 0 and 1) or 'none'. " +
-                              "The bitmask and expression tables are not offered: creating an expression row closes TIA Portal, and a bitmask row cannot choose its mask.");
+                throw Invalid($"mapping.type '{type}' is not supported. Use 'range' (rows with from, to, value), 'singlebit' (rows for bit 0 and 1), " +
+                              "'bitmask' (one row per bit of the tag) or 'none'. The expression table is not offered: creating one of its rows closes TIA Portal.");
             }
 
             spec.Type = type;
@@ -298,13 +298,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 spec.Entries.Add(ParseEntry(row, type));
             }
 
-            if (type == "singlebit")
+            if (type == "singlebit" || type == "bitmask")
             {
                 var bits = spec.Entries.Select(e => e.Bit).ToList();
 
                 if (bits.Distinct().Count() != bits.Count)
                 {
-                    throw Invalid("The 'singlebit' table has one row per bit value (0 and 1); a bit is named twice.");
+                    throw Invalid(type == "singlebit"
+                        ? "The 'singlebit' table has one row per bit value (0 and 1); a bit is named twice."
+                        : "The 'bitmask' table has one row per bit; a bit is named twice.");
                 }
             }
 
@@ -328,7 +330,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     case "to":
                         if (type != "range")
                         {
-                            throw Invalid($"'{part.Name}' belongs to the rows of a 'range' table; a 'singlebit' row names its 'bit'.");
+                            throw Invalid($"'{part.Name}' belongs to the rows of a 'range' table; a 'singlebit' or 'bitmask' row names its 'bit'.");
                         }
 
                         var number = ReadNumber(part.Value, part.Name);
@@ -345,14 +347,16 @@ namespace TiaMcpServer.ModelContextProtocol
                         break;
 
                     case "bit":
-                        if (type != "singlebit")
+                        if (type != "singlebit" && type != "bitmask")
                         {
-                            throw Invalid("'bit' belongs to the rows of a 'singlebit' table; a 'range' row has 'from' and 'to'.");
+                            throw Invalid("'bit' belongs to the rows of a 'singlebit' or 'bitmask' table; a 'range' row has 'from' and 'to'.");
                         }
 
-                        if (part.Value.ValueKind != JsonValueKind.Number || !part.Value.TryGetInt32(out var bit) || (bit != 0 && bit != 1))
+                        if (part.Value.ValueKind != JsonValueKind.Number || !part.Value.TryGetInt32(out var bit) || bit < 0 || bit > (type == "singlebit" ? 1 : 63))
                         {
-                            throw Invalid($"'bit' is 0 or 1; got {part.Value.GetRawText()}.");
+                            throw Invalid(type == "singlebit"
+                                ? $"'bit' is 0 or 1; got {part.Value.GetRawText()}."
+                                : $"'bit' is the number of a bit, 0 to 63; got {part.Value.GetRawText()}.");
                         }
 
                         entry.Bit = bit;
@@ -415,7 +419,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             else if (entry.Bit == null)
             {
-                throw Invalid($"A 'singlebit' row needs 'bit' (0 or 1). Row: {row.GetRawText()}.");
+                throw Invalid(type == "bitmask"
+                    ? $"A 'bitmask' row needs 'bit' (the number of the bit, 0 to 63). Row: {row.GetRawText()}."
+                    : $"A 'singlebit' row needs 'bit' (0 or 1). Row: {row.GetRawText()}.");
             }
 
             return entry;

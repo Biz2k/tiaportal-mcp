@@ -231,7 +231,7 @@ List the tag tables of a WinCC Unified HMI with the number of tags in each
 
 ## unified_get_tags
 
-List the HMI tags of a WinCC Unified HMI with tag table, data type, connection and PLC tag; a tag without a connection is an internal tag. A large HMI has thousands of tags: narrow the list with nameFilter or tagTable
+List the HMI tags of a WinCC Unified HMI with tag table, data type, connection and PLC tag; a tag without a connection is an internal tag. With withMembers the members of structured tags are listed as well, by the path 'Tag.Member' that 'unified_manage_tags' takes. A large HMI has thousands of tags: narrow the list with nameFilter or tagTable
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -240,6 +240,7 @@ List the HMI tags of a WinCC Unified HMI with tag table, data type, connection a
 | `tagTable` | string | no (default ``) | tagTable: return only the tags of this tag table; 'unified_get_tag_tables' lists the tables |
 | `limit` | integer | no (default `200`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
 | `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
+| `withMembers` | boolean | no (default `False`) | withMembers: true adds the members of structured tags, all levels, with data type, comment and acquisition mode (default false: a structured tag can have dozens) |
 
 ## unified_get_text_lists
 
@@ -368,7 +369,7 @@ Create, rename or delete tag tables of a WinCC Unified HMI, several at once. Del
 
 ## unified_manage_tags
 
-Create, update, upsert or delete HMI tags of a WinCC Unified HMI, several at once. A new tag is an internal Int tag in the default tag table unless tagTable and properties say otherwise. For a PLC tag set Connection and PlcTag (symbolic; the data type follows the PLC tag) or Connection, AccessMode 'AbsoluteAccess', DataType and Address. A call applies all of its actions or none. A tag that screens still use is deleted without warning
+Create, update, upsert or delete HMI tags of a WinCC Unified HMI, several at once. A new tag is an internal Int tag in the default tag table unless tagTable and properties say otherwise. For a PLC tag set Connection and PlcTag (symbolic; the data type follows the PLC tag) or Connection, AccessMode 'AbsoluteAccess', DataType and Address. A member of a structured tag is addressed as 'Tag.Member' ('unified_get_tags' with withMembers lists them) and can only be updated: it takes Comment and AcquisitionMode. A call applies all of its actions or none. A tag that screens still use is deleted without warning
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|

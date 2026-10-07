@@ -124,6 +124,22 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
+        public void Test_2312_ParseMapping_ReadsBitmaskRows()
+        {
+            var mapping = UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"bitmask\", \"entries\": [{\"bit\": 0, \"value\": \"Red\"}, {\"bit\": 16, \"value\": \"Green\", \"flashing\": true}]}"));
+
+            Assert.AreEqual("bitmask", mapping.Type);
+            Assert.AreEqual(16, mapping.Entries[1].Bit);
+
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"bitmask\", \"entries\": [{\"bit\": 64, \"value\": \"Red\"}]}"))).Message, "0 to 63");
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"bitmask\", \"entries\": [{\"bit\": 3, \"value\": \"Red\"}, {\"bit\": 3, \"value\": \"Blue\"}]}"))).Message, "named twice");
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() =>
+                UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"bitmask\", \"entries\": [{\"value\": \"Red\"}]}"))).Message, "needs 'bit'");
+        }
+
+        [TestMethod]
         public void Test_2305_ParseMapping_ReadsSingleBitRowsAndRefusesDuplicates()
         {
             var mapping = UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"singlebit\", \"entries\": [{\"bit\": 0, \"value\": \"Red\"}, {\"bit\": 1, \"value\": \"Green\"}]}"));
@@ -144,7 +160,7 @@ namespace TiaMcpServer.Test
 
             StringAssert.Contains(expression.Message, "closes TIA Portal");
 
-            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"bitmask\"}"))).Message, "not supported");
+            StringAssert.Contains(Assert.ThrowsException<PortalException>(() => UnifiedDynamizationSpec.ParseMapping(Json("{\"type\": \"lookup\"}"))).Message, "not supported");
         }
 
         [TestMethod]

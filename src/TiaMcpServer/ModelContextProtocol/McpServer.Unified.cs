@@ -104,17 +104,18 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "unified_get_tags", Title = "Get WinCC Unified tags", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
-         Description("List the HMI tags of a WinCC Unified HMI with tag table, data type, connection and PLC tag; a tag without a connection is an internal tag. A large HMI has thousands of tags: narrow the list with nameFilter or tagTable")]
+         Description("List the HMI tags of a WinCC Unified HMI with tag table, data type, connection and PLC tag; a tag without a connection is an internal tag. With withMembers the members of structured tags are listed as well, by the path 'Tag.Member' that 'unified_manage_tags' takes. A large HMI has thousands of tags: narrow the list with nameFilter or tagTable")]
         public static ResponseHmiTags GetUnifiedTags(
             [Description(UnifiedPath)] string softwarePath,
             [Description("nameFilter: regular expression on the tag name, case-insensitive; empty (default) returns every tag")] string nameFilter = "",
             [Description("tagTable: return only the tags of this tag table; 'unified_get_tag_tables' lists the tables")] string tagTable = "",
             [Description(Paging.LimitText)] int limit = 200,
-            [Description(Paging.OffsetText)] int offset = 0)
+            [Description(Paging.OffsetText)] int offset = 0,
+            [Description("withMembers: true adds the members of structured tags, all levels, with data type, comment and acquisition mode (default false: a structured tag can have dozens)")] bool withMembers = false)
         {
             try
             {
-                var page = ListPage<HmiTagInfo>.Of(Portal.GetUnifiedTags(softwarePath, nameFilter, tagTable), limit, offset);
+                var page = ListPage<HmiTagInfo>.Of(Portal.GetUnifiedTags(softwarePath, nameFilter, tagTable, withMembers), limit, offset);
 
                 return new ResponseHmiTags
                 {
@@ -536,7 +537,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "unified_manage_tags", Title = "Manage WinCC Unified tags", Destructive = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Create, update, upsert or delete HMI tags of a WinCC Unified HMI, several at once. A new tag is an internal Int tag in the default tag table unless tagTable and properties say otherwise. For a PLC tag set Connection and PlcTag (symbolic; the data type follows the PLC tag) or Connection, AccessMode 'AbsoluteAccess', DataType and Address. A call applies all of its actions or none. A tag that screens still use is deleted without warning")]
+         Description("Create, update, upsert or delete HMI tags of a WinCC Unified HMI, several at once. A new tag is an internal Int tag in the default tag table unless tagTable and properties say otherwise. For a PLC tag set Connection and PlcTag (symbolic; the data type follows the PLC tag) or Connection, AccessMode 'AbsoluteAccess', DataType and Address. A member of a structured tag is addressed as 'Tag.Member' ('unified_get_tags' with withMembers lists them) and can only be updated: it takes Comment and AcquisitionMode. A call applies all of its actions or none. A tag that screens still use is deleted without warning")]
         public static ResponseUnifiedActions ManageUnifiedTags(
             [Description(UnifiedPath)] string softwarePath,
             [Description("actions: the changes to make, applied in order")] List<UnifiedTagAction> actions)

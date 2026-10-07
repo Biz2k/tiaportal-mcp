@@ -196,6 +196,47 @@ namespace TiaMcpServer.Siemens
                     var name = RequireName(action.TagName, "tagName");
                     var tag = software.Tags.Find(name);
 
+                    // 'Tag.Member': a member of a structured tag. It comes and goes with the data type of the tag, so
+                    // it can only be changed; it is an HmiTag itself and takes what Openness lets a member take.
+                    if (tag == null && UnifiedTagPath.Split(name).Count > 1 && software.Tags.Find(UnifiedTagPath.Split(name)[0]) != null)
+                    {
+                        var member = ResolveTagPath(software, name, "tagName");
+
+                        if (verb != "update" && verb != "upsert")
+                        {
+                            throw new PortalException(PortalErrorCode.NotSupported,
+                                $"'{name}' is a member of the structured tag '{UnifiedTagPath.Split(name)[0]}'. A member exists as long as the data type of the tag has it: it can be " +
+                                "updated, not created or deleted.");
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(action.TagTable))
+                        {
+                            throw new PortalException(PortalErrorCode.InvalidParams, $"'{name}' is a member of a structured tag; it has no tag table of its own.");
+                        }
+
+                        if (action.Properties == null || action.Properties.Count == 0)
+                        {
+                            throw new PortalException(PortalErrorCode.InvalidParams,
+                                $"No properties given for the member '{name}'. A member takes Comment and AcquisitionMode (None, OnDemand, CyclicOnUse, CyclicContinuous).");
+                        }
+
+                        if (action.Properties.Keys.Any(k => k.Equals("DisplayName", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            throw new PortalException(PortalErrorCode.NotSupported,
+                                "DisplayName of an HMI tag cannot be set through Openness: the attempt closes TIA Portal. Comment can be set here.");
+                        }
+
+                        var (memberPlain, memberNested) = SplitNestedTagProperties(action.Properties);
+
+                        WithUnifiedValidation(member, result.Notes, () =>
+                        {
+                            SetUnifiedAttributes(member, "A member of a structured HMI tag", memberPlain, TagPropertyOrder, result);
+                            SetNestedTagProperties(software, member, memberNested, result);
+                        });
+
+                        return;
+                    }
+
                     switch (verb)
                     {
                         case "delete":

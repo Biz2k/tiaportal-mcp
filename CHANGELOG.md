@@ -4,6 +4,12 @@
 
 ### Added
 
+- `unified_manage_tags` reaches the members of a structured HMI tag: `"tagName": "Tag.Member"` with `update` sets
+  what a member takes (Comment, AcquisitionMode); `unified_get_tags` lists the members with `withMembers`.
+- `unified_manage_items`: the value converter of a tag or expression dynamization takes a bitmask table,
+  `"mapping": {"type": "bitmask", "entries": [{"bit": 0, "value": "Red"}, {"bit": 4, "value": "Yellow"}]}` - one row
+  per bit. Openness accepts single bits only as the condition of a row and derives the mask from the rows, so a row
+  for a combination of bits cannot be written.
 - `plc_get_lad_networks` and `plc_manage_lad_networks`: the networks of a LAD block are read and changed as text.
   TIA Portal V21 gives a LAD block as a document in which a network is `RUNG wire#powerrail ... END_RUNG` with one
   instruction per line; the tools take it apart, so a caller works on single networks: `replace`, `insert`,

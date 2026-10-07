@@ -34,8 +34,21 @@ namespace TiaMcpServer.Siemens
         public List<string> Events { get; set; } = new List<string>();
     }
 
+    /// <summary>One member of a structured HMI tag.</summary>
+    public class HmiTagMemberInfo
+    {
+        /// <summary>The path 'unified_manage_tags' takes as tagName: Tag.Member, Tag.Member.Member.</summary>
+        public string Path { get; set; } = string.Empty;
+        public string? DataType { get; set; }
+        public string? Comment { get; set; }
+        public string? AcquisitionMode { get; set; }
+    }
+
     public class HmiTagInfo
     {
+        /// <summary>The members of a structured tag, all levels; only when they were asked for.</summary>
+        public List<HmiTagMemberInfo>? Members { get; set; }
+
         public string Name { get; set; } = string.Empty;
         public string? TagTable { get; set; }
         public string? DataType { get; set; }
@@ -303,7 +316,7 @@ namespace TiaMcpServer.Siemens
 
         /// <param name="nameFilter">Regular expression on the tag name; empty returns every tag.</param>
         /// <param name="tagTable">Name of a tag table; empty returns the tags of every table.</param>
-        public List<HmiTagInfo> GetUnifiedTags(string softwarePath, string nameFilter = "", string tagTable = "")
+        public List<HmiTagInfo> GetUnifiedTags(string softwarePath, string nameFilter = "", string tagTable = "", bool withMembers = false)
         {
             return Operation.Run(_logger, nameof(GetUnifiedTags), PortalErrorCode.InvalidState,
                 () =>
@@ -361,13 +374,55 @@ namespace TiaMcpServer.Siemens
                                 ? null
                                 : $"{tag.SubstituteValue.SubstituteValueUsage}: {tag.SubstituteValue.Value}",
                             InitialMaxValue = DescribeTagLimit(tag.InitialMaxValue.ValueType, tag.InitialMaxValue.Value),
-                            InitialMinValue = DescribeTagLimit(tag.InitialMinValue.ValueType, tag.InitialMinValue.Value)
+                            InitialMinValue = DescribeTagLimit(tag.InitialMinValue.ValueType, tag.InitialMinValue.Value),
+                            Members = withMembers ? DescribeTagMembers(tag, tag.Name) : null
                         });
                     }
 
                     return tags;
                 },
                 ("softwarePath", softwarePath), ("nameFilter", nameFilter), ("tagTable", tagTable));
+        }
+
+        /// <summary>The members of a structured tag, depth first; null for a tag that has none.</summary>
+        private static List<HmiTagMemberInfo>? DescribeTagMembers(HmiTag tag, string path)
+        {
+            List<HmiTagMemberInfo>? members = null;
+
+            foreach (var member in tag.Members)
+            {
+                var memberPath = path + "." + (member.Name.IndexOf('.') >= 0 ? "\"" + member.Name + "\"" : member.Name);
+
+                members ??= new List<HmiTagMemberInfo>();
+                members.Add(new HmiTagMemberInfo
+                {
+                    Path = memberPath,
+                    DataType = TryRead(() => member.DataType),
+                    Comment = TryRead(() => member.Comment.Items.Select(i => i.Text).FirstOrDefault(text => !string.IsNullOrWhiteSpace(text))),
+                    AcquisitionMode = TryRead(() => member.AcquisitionMode.ToString())
+                });
+
+                var deeper = DescribeTagMembers(member, memberPath);
+
+                if (deeper != null)
+                {
+                    members.AddRange(deeper);
+                }
+            }
+
+            return members;
+        }
+
+        private static string? TryRead(Func<string?> read)
+        {
+            try
+            {
+                return read();
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         private static string? DescribeTagLimit(HmiLimitValueType type, object? value)
