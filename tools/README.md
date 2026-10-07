@@ -12,7 +12,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\<script>.ps1 <argument
 | `openness-reflect.ps1` | Lists the classes, properties, methods and enums Openness has in a namespace | no - reads the assemblies only |
 | `openness-probe.ps1` | Helpers to try Openness calls one at a time, writes rolled back | yes - attaches to the running instance |
 | `make-tool-docs.ps1` | Writes `docs/tools/*.md` from the tool definitions of the built server | no - only `tools/list` |
-| `mcp-call.ps1` | Runs tool calls against a built server over stdio, as an MCP client would | yes - through the server |
+| `mcp-call.ps1` | Runs tool calls against a built server over stdio, as an MCP client would (`-Grouped -Wrap`: through the group tools) | yes - through the server |
 | `smoke.ps1` | `-Write`: calls the tools that change the project and undoes it; without: calls the read-only tools and checks that the project is not changed | yes |
 | `finish.ps1` | Line endings, build, unit tests; with `-Install` updates `Install\TiaMcpServer` | no |
 | `lad-instruction-probe.ps1` | Asks TIA Portal how it writes LAD instructions in a document: name, pins, what the compile wants | yes - a temporary block `MCPT_Ins`, deleted at the end |
@@ -82,6 +82,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\mcp-call.ps1 -Calls "$
 Two runs of the built server against the running TIA Portal with the test project open. Both need a saved project: with
 unsaved changes at the start they print that and exit with code 2; neither saves by itself. Exit code 1 when a call
 fails. Run **both** after every change of the `Siemens\ layer, before `finish.ps1 -Install`.
+
+Both take `-Grouped`: the server starts without `--full`, as for a client, and every call of the file goes through the group
+tool the server lists it under (`mcp-call.ps1 -Grouped -Wrap`; the group is read from the schema of the group tools, not
+counted in the script; a tool in no group is an error of the run). Besides, four checks of the group tools: `tia_help` answers
+with the group and the parameters of every tool of the server, a tool that changes the project called through `tia_read` is
+refused naming its group, so is one called through another group, an unknown name is refused with the list. Run it with the
+installed build when the server code did not change: no new question of Openness access.
 
 - `smoke.ps1` (reading) - the 50 calls of `tools\smoke\read.json`: the project tree, the PLC `PLC (A0)`, the panel
   `HMI Unified/HMI_RT_3` and the PC station `АРМ Unified/HMI_RT_1`. After every call it reads the `isModified` flag of

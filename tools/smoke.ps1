@@ -20,20 +20,30 @@
 #   save_as_project, close_project, open_project (tools\smoke\project.json, by hand, on a copy).
 #   {WORK} in the calls file stands for a temporary folder that the run makes and removes.
 #
+# -Grouped (with or without -Write): the server starts without '--full', as for a client, and every call of the file goes
+#   through the group tool the server lists it under ({"tool": "<name>", "arguments": {...}}); a tool in no group is an error
+#   of the run. Besides, four checks of the group tools: 'tia_help' answers with the group and the parameters of every tool,
+#   a tool that changes the project called through 'tia_read' is refused naming its group, so is one called through another
+#   group, and an unknown name is refused with the list of the tools.
+#
 # Run both after every change of the Siemens\ layer. Exit code: 0 all well, 1 a call failed or the inventory differs,
 # 2 the project was not ready (unsaved changes, objects left by an earlier run).
 param(
     [string]$Calls = '',
     [string]$Exe = (Join-Path $PSScriptRoot '..\src\TiaMcpServer\bin\Release\net48\TiaMcpServer.exe'),
-    [switch]$Write
+    [switch]$Write,
+    [switch]$Grouped
 )
 
 $mcp = Join-Path $PSScriptRoot 'mcp-call.ps1'
 $smokeDir = Join-Path $PSScriptRoot 'smoke'
 if (-not $Calls) { $Calls = Join-Path $smokeDir $(if ($Write) { 'write.json' } else { 'read.json' }) }
 
-function Invoke-Mcp([string]$callsPath, [int]$max, [string]$exeArgs = '', [string]$toolsOut = '') {
+# -Plain: the server with '--full' (one tool per operation) even in a -Grouped run; for lists of the tools.
+function Invoke-Mcp([string]$callsPath, [int]$max, [string]$exeArgs = '', [string]$toolsOut = '', [switch]$Plain, [string]$groupsOut = '') {
     $p = @{ Calls = $callsPath; Exe = $Exe; Max = $max }
+    if ($Grouped -and -not $Plain) { $p.Grouped = $true; $p.Wrap = $true }
+    if ($groupsOut) { $p.Grouped = $true; $p.GroupsOut = $groupsOut }
     if ($exeArgs) { $p.ExeArgs = $exeArgs }
     if ($toolsOut) { $p.ToolsOut = $toolsOut }
     @(& $mcp @p 2>&1 | ForEach-Object { "$_" })
@@ -77,6 +87,35 @@ try {
 
     $parsed = Get-Content $Calls -Raw -Encoding UTF8 | ConvertFrom-Json
 
+    # --- -Grouped: the checks of the group tools ------------------------------------------------------
+    $groupBad = 0
+    if ($Grouped) {
+        $allNames = Join-Path $temp 'names.txt'; $groupsFile = Join-Path $temp 'groups.txt'
+        Invoke-Mcp '[]' 100 '' $allNames -Plain | Out-Null
+        Invoke-Mcp '[]' 100 '' '' -groupsOut $groupsFile | Out-Null
+        # [string]: a line read by Get-Content carries the provider (PSPath, PSDrive ...) and ConvertTo-Json would walk into it for good
+        $names = @(Get-Content $allNames | Where-Object { $_ } | ForEach-Object { [string]$_ })
+        $groupOf = @{}; Get-Content $groupsFile | Where-Object { $_ } | ForEach-Object { $x = $_ -split ' '; $groupOf[$x[0]] = $x[1] }
+        $orphans = @($names | Where-Object { -not $groupOf.ContainsKey($_) })
+        if ($orphans.Count -gt 0) { "tools that no group lists: $($orphans -join ', ')"; $groupBad += $orphans.Count }
+        $gc = @()
+        foreach ($n in $names) {
+            if ($groupOf.ContainsKey($n)) { $gc += @{ name = 'tia_read'; raw = $true; args = @{ tool = 'tia_help'; arguments = @{ tools = @($n) } }; expect = '"callWith":"' + $groupOf[$n] + '"' } }
+        }
+        $w1 = [string]($groupOf.Keys | Where-Object { $groupOf[$_] -eq 'plc_write' } | Sort-Object | Select-Object -First 1)
+        $gc += @{ name = 'tia_read'; raw = $true; args = @{ tool = $w1 }; expectError = $true; expect = "is a tool of 'plc_write', not of 'tia_read'" }
+        $gc += @{ name = 'hw_write'; raw = $true; args = @{ tool = $w1 }; expectError = $true; expect = "is a tool of 'plc_write', not of 'hw_write'" }
+        $gc += @{ name = 'tia_read'; raw = $true; args = @{ tool = 'no_such_tool_xyz' }; expectError = $true; expect = "has no tool 'no_such_tool_xyz'" }
+        $gcFile = Join-Path $temp 'groupchecks.json'
+        Save-Calls $gc $gcFile
+        $gAnswers = ConvertTo-Answers (Invoke-Mcp $gcFile 300 '' '' -groupsOut $groupsFile)
+        $gBad = @($gAnswers | Where-Object { -not (Test-Good $_.Verdict) })
+        if ($gAnswers.Count -lt $gc.Count) { "the group checks stopped early: $($gAnswers.Count) of $($gc.Count)"; $groupBad++ }
+        foreach ($a in $gBad) { "[$($a.N) $($a.Tool)] $($a.Verdict)"; "   $($a.Text.Substring(0, [Math]::Min(300, $a.Text.Length)))" }
+        $groupBad += $gBad.Count
+        "group checks: $($gAnswers.Count) of $($gc.Count) answered ($($names.Count) tia_help, 3 refusals), $groupBad failed"
+    }
+
     if (-not $Write) {
         # --- reading: a probe after every call ----------------------------------------------------
         $withProbes = @()
@@ -102,15 +141,15 @@ try {
         foreach ($a in $bad) { "[$($a.N) $($a.Tool)] $($a.Verdict)"; "   $($a.Text.Substring(0, [Math]::Min(300, $a.Text.Length)))" }
         if ($culprit) { "the project became modified by a read: [$($culprit.N) $($culprit.Tool)]"; $bad += $culprit }
         "smoke: $answered of $total calls answered, $($bad.Count) with an error; project modified by the run: $(if ($culprit) { 'YES' } else { 'no' })"
-        if ($bad.Count -gt 0 -or $answered -lt $total) { exit 1 }
+        if ($bad.Count -gt 0 -or $answered -lt $total -or $groupBad -gt 0) { exit 1 }
         exit 0
     }
 
     # --- writing ----------------------------------------------------------------------------------
     # 1. every tool that changes the project has a call in the file
     $all = Join-Path $temp 'all.txt'; $readOnly = Join-Path $temp 'ro.txt'
-    Invoke-Mcp '[]' 100 '' $all | Out-Null
-    Invoke-Mcp '[]' 100 '--read-only' $readOnly | Out-Null
+    Invoke-Mcp '[]' 100 '' $all -Plain | Out-Null
+    Invoke-Mcp '[]' 100 '--read-only' $readOnly -Plain | Out-Null
     $skip = @('download_to_plc', 'sec_protect_project', 'retrieve_project')
     $writeTools = @(Compare-Object (Get-Content $all) (Get-Content $readOnly) | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject }) | Where-Object { $skip -notcontains $_ }
     $called = @($parsed | ForEach-Object { $_.name })
@@ -156,8 +195,8 @@ try {
     if ($after.Count -lt $before.Count) { $differs += "the inventory after the run stopped early: $($after.Count) of $($before.Count)" }
     $differs
 
-    $failed = $bad.Count + $missing.Count + $differs.Count
-    "smoke -Write: $($answers.Count) of $($parsed.Count) calls answered, $($bad.Count) failed, $($known.Count) known defect(s), $($missing.Count) tool(s) without a call, inventory: $(if ($differs.Count -eq 0) { 'identical' } else { "$($differs.Count) difference(s)" })"
+    $failed = $bad.Count + $missing.Count + $differs.Count + $groupBad
+    "smoke -Write$(if ($Grouped) { ' -Grouped' }): $($answers.Count) of $($parsed.Count) calls answered, $($bad.Count) failed, $($known.Count) known defect(s), $($missing.Count) tool(s) without a call, inventory: $(if ($differs.Count -eq 0) { 'identical' } else { "$($differs.Count) difference(s)" })"
     if ($failed -eq 0) { 'The project is not saved and is marked modified; the inventory is identical, so saving it is harmless.' }
     else { 'The project is not saved. Look for objects named MCPT_ before saving.' }
     if ($failed -gt 0) { exit 1 }

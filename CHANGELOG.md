@@ -2,7 +2,12 @@
 
 ## [Unreleased]
 
+### Fixed
+- `net_get_connections` returned the fields of a connection in a different order on identical calls.
+
 ### Added
+- `tools/smoke.ps1 -Grouped` (with or without `-Write`) runs through the group tools a client sees, with checks of `tia_help`
+  and of the refusals of the group tools; `tools/mcp-call.ps1 -Grouped -Wrap` sends a calls file that way.
 - `archive_project` writes a backup of the open project to one `.zapXX` file (modes `compressed`, `discardRestorableDataAndCompressed`,
   `none`, `discardRestorableData`); `retrieve_project` unpacks an archive into a new folder and opens the project in it. TIA Portal
   adds no extension to the archive name, so the server adds `.zapXX` of the project's version; a project with unsaved changes, an

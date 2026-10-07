@@ -21,6 +21,12 @@ param(
     # the calls files name the tools themselves, not the group tools a client sees by default.
     [string]$ExeArgs = '',
     [switch]$Grouped,
+    # With -Grouped: send each call of the file through the group tool the server lists it under, as a client does:
+    # {"tool": "<name>", "arguments": {...}}. The header of the answer keeps the name of the tool. A tool that no group
+    # lists is an error ('NOT-IN-ANY-GROUP'). A call with "raw": true is sent as it stands (to test the group tools themselves).
+    [switch]$Wrap,
+    # With -Grouped: write 'tool group' lines (the group of each tool, from the schema of the group tools) to this file.
+    [string]$GroupsOut = '',
     # Longest result text printed per call.
     [int]$Max = 1500,
     [int]$TimeoutSec = 300,
@@ -85,6 +91,15 @@ try {
     if ($DumpTools) { ($tools.result.tools | Sort-Object name | ForEach-Object { $_ | ConvertTo-Json -Depth 30 -Compress }) | Set-Content $DumpTools -Encoding UTF8 }
     if ($ToolsOut) { [IO.File]::WriteAllText($ToolsOut, (($names -join "`r`n") + "`r`n"), (New-Object Text.UTF8Encoding $false)) }
 
+    # the group of a tool is what the server says: the 'tool' enum of the schema of each group tool
+    $groupOf = @{}
+    if ($Grouped) {
+        foreach ($t in $tools.result.tools) {
+            if ($t.inputSchema.properties.tool.enum) { foreach ($n in $t.inputSchema.properties.tool.enum) { $groupOf[[string]$n] = $t.name } }
+        }
+        if ($GroupsOut) { [IO.File]::WriteAllText($GroupsOut, ((($groupOf.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Name) $($_.Value)" }) -join "`r`n") + "`r`n"), (New-Object Text.UTF8Encoding $false)) }
+    }
+
     if ($SchemaFilter) {
         $tools.result.tools | Where-Object { $_.name -match $SchemaFilter } | ForEach-Object {
             $required = @($_.inputSchema.required)
@@ -101,7 +116,18 @@ try {
         $arguments = @{}
         if ($call.args) { $call.args.PSObject.Properties | ForEach-Object { $arguments[$_.Name] = $_.Value } }
 
-        Send @{ jsonrpc = '2.0'; id = $id; method = 'tools/call'; params = @{ name = $call.name; arguments = $arguments } }
+        $sendName = $call.name
+        if ($Grouped -and $Wrap -and $call.raw -ne $true) {
+            if (-not $groupOf.ContainsKey([string]$call.name)) {
+                "[$number $($call.name)] isError=True NOT-IN-ANY-GROUP"
+                "   no group tool of the server lists '$($call.name)'"
+                continue
+            }
+            $sendName = $groupOf[[string]$call.name]
+            $arguments = @{ tool = [string]$call.name; arguments = $arguments }
+        }
+
+        Send @{ jsonrpc = '2.0'; id = $id; method = 'tools/call'; params = @{ name = $sendName; arguments = $arguments } }
         $r = Receive $id
         if ($null -eq $r) { "[$number $($call.name)] TIMEOUT after $TimeoutSec s"; break }
 

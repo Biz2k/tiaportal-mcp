@@ -64,7 +64,8 @@ namespace TiaMcpServer.Siemens
                                     ["subnet"] = connection.LocalSubnetName
                                 };
 
-                                foreach (var property in connection.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                                // reflection does not promise an order, and the order of two identical calls differed (found by the grouped smoke run, 2026-10-08)
+                                foreach (var property in connection.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance).OrderBy(p => p.Name, StringComparer.Ordinal))
                                 {
                                     if (ConnectionSkippedProperties.Contains(property.Name) || row.ContainsKey(ToCamel(property.Name)))
                                     {

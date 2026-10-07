@@ -27,7 +27,7 @@ See `Settings.cs` for configuration options such as project paths and timeouts.
 
 ## Live checks
 
-`tools/smoke.ps1` calls the read-only tools on the owner's test project through the built server and counts the errors;
+`tools/smoke.ps1` calls the read-only tools on the owner's test project through the built server and counts the errors (`-Grouped`: through the group tools, as a client calls them);
 `tools/mcp-call.ps1` runs any calls file. They replace the old live tests (see `tools/README.md`).
 
 To run an old class anyway: remove its `[Ignore]` line, point `Settings.cs` at your projects (retrieve
