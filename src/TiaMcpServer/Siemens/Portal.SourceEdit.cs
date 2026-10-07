@@ -64,6 +64,17 @@ namespace TiaMcpServer.Siemens
                     var kind = block != null ? SourceDeclarations.KindOfBlockClass(block.GetType().Name) : "TYPE";
                     string extension;
 
+                    // A LAD block has no external source; its text form is the SIMATIC SD document (Portal.Lad.cs).
+                    if (block != null && block.ProgrammingLanguage == ProgrammingLanguage.LAD)
+                    {
+                        if (block.IsKnowHowProtected)
+                        {
+                            throw new PortalException(PortalErrorCode.NotSupported, $"'{name}' is know-how protected; its code cannot be replaced.");
+                        }
+
+                        return ReplaceLadDocument(softwarePath, objectPath, block, source, compileMode, restoreWanted);
+                    }
+
                     if (block != null)
                     {
                         var (blockExtension, reason) = BlockSourceExtension(block);
@@ -72,7 +83,7 @@ namespace TiaMcpServer.Siemens
                         {
                             throw new PortalException(PortalErrorCode.NotSupported,
                                 $"Block '{name}' is written in {block.ProgrammingLanguage}. Its code cannot be replaced by a source text here: " +
-                                (reason ?? "STL sources were not tested") + ". SCL blocks, data blocks and PLC data types can.");
+                                (reason ?? "STL sources were not tested") + ". SCL blocks, LAD blocks, data blocks and PLC data types can.");
                         }
 
                         extension = blockExtension;

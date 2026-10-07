@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Added
+
+- `plc_get_lad_networks` and `plc_manage_lad_networks`: the networks of a LAD block are read and changed as text.
+  TIA Portal V21 gives a LAD block as a document in which a network is `RUNG wire#powerrail ... END_RUNG` with one
+  instruction per line; the tools take it apart, so a caller works on single networks: `replace`, `insert`,
+  `delete`, `move`, `set_title`, several in one call, numbered as the block is before the call. Titles and
+  comments are plain text, written for every language of the project. A call is all or nothing; the block is
+  compiled, and when the new code does not compile the previous block is put back. SCL networks inside a LAD block
+  are handled too. FBD, STL, GRAPH and CEM blocks are refused.
+- `plc_replace_source` takes a LAD block as its whole document (format `document` of `plc_get_block_source`, both
+  parts). This is the way to change the interface of a LAD block.
+- What the tools make up for, found by probes on TIA Portal V21: an import of a document without a block number
+  gives the block a new number - it is set back; the import replaces a block only through the group it is in; the
+  resource file TIA Portal itself writes for networks that were copied repeats an id and cannot be imported back
+  - the repeats are renamed; a local tag with a non-ASCII name is exported without quotes and refused that way on
+  the import - it is quoted; the start values of an embedded technology object (`PID_Compact`) are not carried by
+  the document - such a change is detected, rolled back and refused.
+
 ### Fixed
 
 - Non-ASCII text in code written through the server arrived in TIA Portal garbled: `plc_replace_source`,

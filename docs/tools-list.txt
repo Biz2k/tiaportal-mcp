@@ -75,6 +75,7 @@ plc_get_cross_references
 plc_get_external_source_info
 plc_get_external_sources
 plc_get_force_tables
+plc_get_lad_networks
 plc_get_software_info
 plc_get_software_tree
 plc_get_summary
@@ -87,6 +88,7 @@ plc_get_type_source
 plc_get_types
 plc_get_watch_table_info
 plc_get_watch_tables
+plc_manage_lad_networks
 plc_manage_tag_table_entries
 plc_move_block
 plc_move_type

@@ -143,10 +143,10 @@ running the server and never modify the project.
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. 139 tools are registered by default (70 with `--read-only`). A short
+when the registered tools and that file disagree. 141 tools are registered by default (71 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
-Always available (69):
+Always available (70):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
@@ -154,7 +154,7 @@ Always available (69):
 | Project and session     | `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
 | Project structure       | `get_project_tree`, `hw_get_devices`, `hw_get_device_info`, `hw_get_device_item_info`, `hw_get_topology`, `hw_search_catalog`, `net_get_connections` |
 | PLC software            | `plc_get_summary`, `plc_get_software_info`, `plc_get_software_tree` |
-| Blocks                  | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source` |
+| Blocks                  | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source`, `plc_get_lad_networks` |
 | Types                   | `plc_get_types`, `plc_get_type_info`, `plc_get_type_source` |
 | Tags and constants      | `plc_get_tag_tables`, `plc_get_tag_table_info`, `plc_get_tags`, `plc_get_tag_info`, `plc_get_constants` |
 | Watch and force tables  | `plc_get_watch_tables`, `plc_get_watch_table_info`, `plc_get_force_tables` |
@@ -165,13 +165,13 @@ Always available (69):
 | WinCC Unified           | `unified_get_screens`, `unified_get_screen_groups`, `unified_get_scripts`, `unified_get_tag_table_groups`, `unified_get_logs`, `unified_get_logging_tags`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists`, `unified_get_runtime_settings`, `unified_get_system_tags` |
 | Download                | `get_download_targets` |
 
-Left out with `--read-only` (70):
+Left out with `--read-only` (71):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
 | Import                  | `import_objects`, `instantiate_master_copy` |
 | Block and type groups   | `plc_create_block_group`, `plc_delete_block_group`, `plc_create_type_group`, `plc_delete_type_group` |
-| Blocks                  | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_replace_source`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block`, `plc_compile_software` |
+| Blocks                  | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_replace_source`, `plc_manage_lad_networks`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block`, `plc_compile_software` |
 | Types                   | `plc_rename_type`, `plc_delete_type`, `plc_copy_type`, `plc_move_type` |
 | Tag tables              | `plc_create_tag_table`, `plc_rename_tag_table`, `plc_delete_tag_table`, `plc_create_tag_table_group`, `plc_delete_tag_table_group` |
 | Tags and constants      | `plc_create_tag`, `plc_update_tag`, `plc_delete_tag`, `plc_create_user_constant`, `plc_update_user_constant`, `plc_delete_user_constant`, `plc_manage_tag_table_entries` |
@@ -567,7 +567,11 @@ and says in `meta` how long the list is: `total`, `offset`, `truncated` and, whe
 
 - Importing ladder (LAD) blocks from source documents requires the companion `.s7res` file to
   contain en-US entries for all items; otherwise the import may fail. This is a limitation of TIA
-  Portal Openness (observed 2025-09-02).
+  Portal Openness (observed 2025-09-02). `plc_manage_lad_networks` writes that file itself.
+- **LAD networks** are read and changed as text (`plc_get_lad_networks`, `plc_manage_lad_networks`, TIA Portal
+  V21). A LAD block that embeds a technology object with changed start values (a `PID_Compact` instance) is
+  refused: the text form of a block does not carry those values, and the change would lose them. FBD, STL, GRAPH
+  and CEM blocks are read only (`plc_get_block_source`).
 - **Watch table entries** cannot be created or deleted through this server yet.
 - **A subnet cannot be deleted** through this server; `net_connect_subnet` creates one when needed.
 - **HMI tools are WinCC Unified only.** For WinCC Comfort, Advanced and Professional the Openness

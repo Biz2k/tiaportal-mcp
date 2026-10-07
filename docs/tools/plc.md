@@ -46,6 +46,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 | [`plc_get_external_source_info`](#plc_get_external_source_info) | read |
 | [`plc_get_external_sources`](#plc_get_external_sources) | read |
 | [`plc_get_force_tables`](#plc_get_force_tables) | read |
+| [`plc_get_lad_networks`](#plc_get_lad_networks) | read |
 | [`plc_get_software_info`](#plc_get_software_info) | read |
 | [`plc_get_software_tree`](#plc_get_software_tree) | read |
 | [`plc_get_summary`](#plc_get_summary) | read |
@@ -58,6 +59,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 | [`plc_get_types`](#plc_get_types) | read |
 | [`plc_get_watch_table_info`](#plc_get_watch_table_info) | read |
 | [`plc_get_watch_tables`](#plc_get_watch_tables) | read |
+| [`plc_manage_lad_networks`](#plc_manage_lad_networks) | write |
 | [`plc_manage_tag_table_entries`](#plc_manage_tag_table_entries) | write |
 | [`plc_move_block`](#plc_move_block) | write |
 | [`plc_move_type`](#plc_move_type) | write |
@@ -497,6 +499,19 @@ List the PLC force tables of a plc software including their entries. A force tab
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 
+## plc_get_lad_networks
+
+Read the networks of a LAD block (FB, FC, OB written in ladder logic): for each its number, title and comment as plain text, and its code as text - 'RUNG wire#powerrail ... END_RUNG' with one instruction per line, e.g. Contact( #Start ), Coil( "Motor_On" ). A LAD block may hold SCL networks; they are listed with language SCL. This is what 'plc_manage_lad_networks' takes back. Blocks in other languages are refused: use 'plc_get_block_source'
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `blockPath` | string | yes | blockPath: root-relative path of the block, e.g. 'Valves/Valve_Control'. Use 'plc_resolve_object_path' if you only know the name |
+| `network` | integer | no (default `0`) | network: number of the one network to return, 1-based; 0 (default) returns all |
+| `withCode` | boolean | no (default `True`) | withCode: false returns numbers, titles and comments only - the table of contents of a long block (default true) |
+| `withDeclaration` | boolean | no (default `False`) | withDeclaration: true adds the declaration of the block - its attributes and interface with the local tags the code uses (default false) |
+| `maxChars` | integer | no (default `40000`) | maxChars: the most code to return; the networks beyond it come without code and the answer says so (default 40000) |
+
 ## plc_get_software_info
 
 Get plc software info
@@ -610,6 +625,18 @@ List the PLC watch tables of a plc software, optionally filtered by a regular ex
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `regexName` | string | no (default ``) | regexName: optional regular expression to filter the watch table names |
 
+## plc_manage_lad_networks
+
+Replace, insert, delete or move networks of an EXISTING LAD block, or set their titles and comments, several at once; then compile the block. Every number in a call means the block as it is BEFORE the call, so one action never shifts the target of another. All or nothing: a call that TIA Portal refuses changes nothing and the error names the instruction and the line; if the new code does not compile (a tag that does not exist, a wrong operand type), the previous block is put back by default. The block keeps its number, its place and its instance DBs; the interface is not changed here - for that pass the whole document to 'plc_replace_source'. Write code after the pattern of an existing network from 'plc_get_lad_networks': instruction names cannot be guessed. Fields of an action: action, network, after, code, language, title, comment
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `blockPath` | string | yes | blockPath: root-relative path of the LAD block, e.g. 'Valves/Valve_Control' |
+| `actions` | array of object | yes | actions: the changes to make; numbers mean the block as it is before the call |
+| `compile` | string | no (default `object`) | compile: 'object' (default) compiles the block itself, 'software' then compiles the whole PLC as well, 'none' compiles nothing |
+| `onCompileError` | string | no (default `restore`) | onCompileError: 'restore' (default) puts the previous block back when the new code does not compile, 'keep' leaves the new code in place |
+
 ## plc_manage_tag_table_entries
 
 Create, update, upsert or delete PLC tags of one tag table, several at once. The actions are applied in order and all or nothing: if one cannot be applied, none is, and the error names every action that is wrong. Fields of an action: action, name, newName (renames), dataType, logicalAddress, comment. A new tag takes dataType and logicalAddress together. User constants are not handled here: 'plc_create_user_constant', 'plc_update_user_constant'
@@ -682,7 +709,7 @@ Rename a PLC watch table
 
 ## plc_replace_source
 
-Replace the code of an EXISTING SCL block (FB, FC, OB), data block or PLC data type by a new source text, then compile it. The cycle is: read the present code with 'plc_get_block_source' / 'plc_get_type_source' and format 'source', change it, pass the WHOLE text here. The object keeps its place in the project, its block number and its instance DBs. The source must declare exactly this object (same kind and name). With compile='object' (default) the object is compiled right away; if the new code does not compile, the previous code is put back and the call fails with the compile errors (onCompileError='restore', default) or the new code stays and the errors are returned (onCompileError='keep'). Changing the interface of a block or the members of a type leaves its callers, instance DBs and users inconsistent: they are listed in nowInconsistent and need 'plc_compile_software', or pass compile='software'. LAD, FBD, STL and GRAPH blocks have no source text and are refused. To create a new block use 'plc_create_scl_block'
+Replace the code of an EXISTING SCL block (FB, FC, OB), LAD block, data block or PLC data type by a new source text, then compile it. The cycle is: read the present code with 'plc_get_block_source' / 'plc_get_type_source' and format 'source', change it, pass the WHOLE text here. A LAD block is read with format 'document' instead and takes that text back, both parts of it ('===== Name.s7dcl =====' and, when it has titles, '===== Name.s7res ====='); this is the way to change the interface of a LAD block, while single networks are changed with 'plc_manage_lad_networks'. The object keeps its place in the project, its block number and its instance DBs. The source must declare exactly this object (same kind and name). With compile='object' (default) the object is compiled right away; if the new code does not compile, the previous code is put back and the call fails with the compile errors (onCompileError='restore', default) or the new code stays and the errors are returned (onCompileError='keep'). Changing the interface of a block or the members of a type leaves its callers, instance DBs and users inconsistent: they are listed in nowInconsistent and need 'plc_compile_software', or pass compile='software'. LAD, FBD, STL and GRAPH blocks have no source text and are refused. To create a new block use 'plc_create_scl_block'
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|

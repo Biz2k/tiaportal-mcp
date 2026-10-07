@@ -90,7 +90,8 @@ A download changes a running controller. Do it only when the user asked for this
 
 - HMI tools work on **WinCC Unified** only. Comfort, Advanced and Professional panels are refused.
 - Blocks are created from SCL source, from a minimal template (LAD, FBD, STL) or by import.
-  Editing LAD networks is not supported.
+  LAD networks are changed with `plc_manage_lad_networks` after reading them with
+  `plc_get_lad_networks`; FBD, STL, GRAPH and CEM code can only be read.
 - Safety (F) blocks and know-how protected objects reject most edits.
 - Block names, block numbers and data type names are unique within a PLC: a copy inside one PLC
   needs a new name.
