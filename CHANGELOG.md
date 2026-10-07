@@ -4,6 +4,10 @@
 
 ### Added
 
+- `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
+  project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
+  `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
+  catalog. Installing a GSD file or a support package stays with TIA Portal: Openness has no call for it.
 - `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
   software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
   count. `download_to_plc` says only that the hardware does not compile; this says why.
@@ -18,7 +22,7 @@
   "Connect to module ... failed".
 - `download_to_plc` takes `passwords`: the passwords the PLC asks for during the download, by the type of the step
   (`ModuleWriteAccessPassword`, `PlcMasterSecretPassword`, ...). A step that asked and got none is named in the answer.
-- **Changed default:** the client sees ten tools instead of 160 - `tia_read` for everything that only reads (with
+- **Changed default:** the client sees ten tools instead of 162 - `tia_read` for everything that only reads (with
   `tia_help`, the parameters of a tool) and nine group tools for what changes something (`project_write`, `plc_write`,
   `plc_delete`, `hw_write`, `hw_delete`, `hmi_write`, `plc_download`, `security_protection`, `security_users`); each
   takes the name of a tool and its arguments. For clients with a permission per tool, and to keep the descriptions of
@@ -371,6 +375,10 @@ below):
 
 ### Added
 
+- `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
+  project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
+  `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
+  catalog. Installing a GSD file or a support package stays with TIA Portal: Openness has no call for it.
 - `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
   software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
   count. `download_to_plc` says only that the hardware does not compile; this says why.
@@ -465,6 +473,10 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
 
 ### Added
 
+- `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
+  project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
+  `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
+  catalog. Installing a GSD file or a support package stays with TIA Portal: Openness has no call for it.
 - `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
   software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
   count. `download_to_plc` says only that the hardware does not compile; this says why.
@@ -833,6 +845,10 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
   counterpart; each links to the other at the top.
 ### Added
 
+- `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
+  project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
+  `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
+  catalog. Installing a GSD file or a support package stays with TIA Portal: Openness has no call for it.
 - `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
   software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
   count. `download_to_plc` says only that the hardware does not compile; this says why.
@@ -907,6 +923,10 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
 
 ### Added
 
+- `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
+  project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
+  `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
+  catalog. Installing a GSD file or a support package stays with TIA Portal: Openness has no call for it.
 - `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
   software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
   count. `download_to_plc` says only that the hardware does not compile; this says why.
@@ -928,6 +948,10 @@ PLC data types. The read tool surface grows from 56 to 59.
 
 ### Added
 
+- `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
+  project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
+  `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
+  catalog. Installing a GSD file or a support package stays with TIA Portal: Openness has no call for it.
 - `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
   software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
   count. `download_to_plc` says only that the hardware does not compile; this says why.
@@ -1003,6 +1027,10 @@ surface grows from 31 tools to 44 read tools plus 37 project-mutating tools.
 
 ### Added
 
+- `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
+  project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
+  `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
+  catalog. Installing a GSD file or a support package stays with TIA Portal: Openness has no call for it.
 - `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
   software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
   count. `download_to_plc` says only that the hardware does not compile; this says why.
@@ -1153,6 +1181,10 @@ Upgrade to the current MCP .NET SDK and adopt the newer protocol surface.
 
 ### Added
 
+- `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
+  project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
+  `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
+  catalog. Installing a GSD file or a support package stays with TIA Portal: Openness has no call for it.
 - `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
   software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
   count. `download_to_plc` says only that the hardware does not compile; this says why.
@@ -1196,6 +1228,10 @@ Upgrade to the current MCP .NET SDK and adopt the newer protocol surface.
 
 ### Added
 
+- `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
+  project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
+  `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
+  catalog. Installing a GSD file or a support package stays with TIA Portal: Openness has no call for it.
 - `hw_compile`: compiles a device as "Compile" on the device does in TIA Portal - the hardware configuration and the
   software on it - and returns the errors and warnings with the object each belongs to, the same message once with a
   count. `download_to_plc` says only that the hardware does not compile; this says why.

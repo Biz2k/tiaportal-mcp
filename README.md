@@ -110,12 +110,12 @@ access. Confirm it in the TIA Portal window.
 | `--doctor`                | Print the environment report and exit without starting the MCP server.         |
 | `--debug-tools`           | Register the server-development tools (`unified_debug_*`).                      |
 | `--tools <areas>`         | Register only the named tool areas, e.g. `--tools plc,unified`. See below.     |
-| `--full`                  | Show one tool per operation (160) instead of the ten group tools. See below. |
+| `--full`                  | Show one tool per operation (162) instead of the ten group tools. See below. |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
 
 ## Ten group tools, and `--full`
 
-A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 160 rows are no
+A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 162 rows are no
 choice at all. So the server shows ten tools: one for everything that only reads - there is nothing to decide about reading, set it
 to "Always allow" once - and nine groups cut along what a user does want to decide (changing, deleting, downloading,
 protection). Started with `--full` it shows every tool by itself, as
@@ -138,7 +138,7 @@ A group tool takes the name of a tool and its parameters, `{"tool": "plc_get_blo
 its tools with a line each; the tool `tia_help` of `tia_read` gives the full description and the parameters of the tools named. The tools
 behind the groups are the same ones, with the same names, so the rest of this document and the skill apply as they
 are. `--read-only` and `--tools` work as before: a group with no tool left is not shown. The price is one more
-call - the model reads the help of a tool before it first uses it - and in return the descriptions of 160 tools stay
+call - the model reads the help of a tool before it first uses it - and in return the descriptions of 162 tools stay
 out of its context.
 
 ## Tool areas
@@ -151,16 +151,16 @@ code 2).
 | Area       | Tools of the area                                                                              | Count |
 | ---------- | ---------------------------------------------------------------------------------------------- | ----- |
 | `plc`      | `plc_*`                                                                                        | 71    |
-| `hw`       | `hw_*` and `net_*`: devices, hardware, subnets, connections                                    | 18    |
+| `hw`       | `hw_*` and `net_*`: devices, hardware, subnets, connections                                    | 19    |
 | `unified`  | `unified_*`                                                                                    | 35    |
 | `library`  | `get_libraries`, `get_library_types`, `get_master_copies`, `instantiate_master_copy`, `open_global_library` | 5 |
 | `transfer` | `export_objects`, `import_objects`, `preview_import`                                           | 3     |
 | `download` | `download_to_plc`, `get_download_targets`, `get_accessible_devices`                            | 3     |
 | `security` | `sec_*`: protection, passwords, users and roles of a PLC and of the project, protection of blocks | 12    |
 
-Always registered, whatever `--tools` says (12): `connect`, `disconnect`, `get_state`, `get_tia_instances`, `doctor`,
-`open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project`,
-`get_project_tree`. The counts include the write tools; `--read-only` takes some of them out of every area. The
+Always registered, whatever `--tools` says (14): `connect`, `disconnect`, `get_state`, `get_tia_instances`, `doctor`,
+`open_tia_project`, `open_project`, `create_project`, `get_project`, `save_project`, `save_as_project`, `close_project`,
+`get_project_tree`, `get_installed_software`. The counts include the write tools; `--read-only` takes some of them out of every area. The
 server instructions name the registered areas when not all are, and `get_state` and `doctor` report them as
 `toolAreas`. See `samples/` for a configuration.
 
@@ -204,15 +204,15 @@ have no such setting ask (or do not ask) by their own rules. To leave the tools 
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 160 tools (82 with `--read-only`). A short
+when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 162 tools (84 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
-Always available (74):
+Always available (76):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
 | Portal and state        | `connect`, `disconnect`, `get_state`, `get_tia_instances`, `doctor` |
-| Project and session     | `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
+| Project and session     | `open_tia_project`, `open_project`, `create_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
 | Project structure       | `get_project_tree`, `hw_get_devices`, `hw_get_device_info`, `hw_get_device_item_info`, `hw_get_topology`, `hw_search_catalog`, `net_get_connections` |
 | PLC software            | `plc_get_summary`, `plc_get_software_info`, `plc_get_software_tree` |
 | Blocks                  | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source`, `plc_get_lad_networks`, `plc_get_lad_instructions` |

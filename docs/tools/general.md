@@ -10,6 +10,7 @@ Connection, project and session tools.
 | [`disconnect`](#disconnect) | session |
 | [`doctor`](#doctor) | read |
 | [`get_accessible_devices`](#get_accessible_devices) | read |
+| [`get_installed_software`](#get_installed_software) | read |
 | [`get_project`](#get_project) | read |
 | [`get_project_tree`](#get_project_tree) | read |
 | [`get_state`](#get_state) | read |
@@ -76,6 +77,15 @@ Search the network behind a PC interface for devices, as 'Online access > Update
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `pcInterfaceName` | string | yes | pcInterfaceName: PC interface, second part of a target of 'get_download_targets' (e.g. 'Siemens PLCSIM Virtual Ethernet Adapter') |
 | `modeName` | string | no (default `PN/IE`) | modeName: first part of a target (default 'PN/IE') |
+
+## get_installed_software
+
+What is installed in the TIA Portal this server is connected to: the products with their versions and options (STEP 7, Safety, WinCC, Startdrive with its drive families), the size of the hardware catalog, and the GSD files whose devices are in the catalog - file name, where its devices sit in the catalog, how many devices and modules it describes, and examples with their type identifiers. Tells which kinds of device a project can get at all. A GSD file or a support package that is missing has to be installed in TIA Portal by the user (Options menu): Openness has no call for it. Needs a connection to TIA Portal, not an open project
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `withGsdFiles` | boolean | no (default `True`) | withGsdFiles: list the GSD files too (default true) |
+| `gsdFilter` | string | no (default ``) | gsdFilter: only the GSD files whose file name, catalog path or device name contains this text, e.g. 'SINAMICS', 'KUKA', 'PROFIBUS'; a list of up to 30 files carries example devices with their type identifiers. Empty (default) lists all files without examples |
 
 ## get_project
 

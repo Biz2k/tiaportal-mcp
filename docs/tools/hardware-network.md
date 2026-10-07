@@ -7,6 +7,7 @@ Devices, modules, subnets, IO systems and communication connections.
 | [`hw_compile`](#hw_compile) | session |
 | [`hw_create_device`](#hw_create_device) | write |
 | [`hw_delete_device`](#hw_delete_device) | write |
+| [`hw_get_catalog`](#hw_get_catalog) | read |
 | [`hw_get_device_info`](#hw_get_device_info) | read |
 | [`hw_get_device_item_info`](#hw_get_device_item_info) | read |
 | [`hw_get_devices`](#hw_get_devices) | read |
@@ -48,6 +49,16 @@ Delete a hardware device (PLC, HMI, IO station) and everything in it from the pr
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `deviceName` | string | yes | deviceName: path or name of the device, as 'hw_get_devices' returns it |
+
+## hw_get_catalog
+
+Browse the hardware catalog of the installed TIA Portal as a tree, the way its catalog pane shows it: everything that can be added to a project - controllers, IO, HMI, drives, network components, and the devices from installed GSD files under 'Other field devices'. Returns the folders below 'path' with the number of entries in each and, in a folder that holds entries itself (usually the firmware versions of one article), their type identifiers for 'hw_create_device' and 'hw_plug_module'. Start with an empty path and go down. To find a known article use 'hw_search_catalog'. Needs a connection to TIA Portal, not an open project
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `path` | string | no (default ``) | path: catalog folder, names joined with '\' (a '/' is part of a name, as in 'Distributed I/O'), e.g. 'Controllers\SIMATIC S7-1500\CPU'; empty (default) is the top |
+| `limit` | integer | no (default `100`) | limit: the most entries of the folder itself to return (default 100); 0 returns all |
+| `offset` | integer | no (default `0`) | offset: entries to skip (default 0) |
 
 ## hw_get_device_info
 

@@ -7,6 +7,7 @@ download_to_plc
 export_objects
 get_accessible_devices
 get_download_targets
+get_installed_software
 get_libraries
 get_library_types
 get_master_copies
@@ -17,6 +18,7 @@ get_tia_instances
 hw_compile
 hw_create_device
 hw_delete_device
+hw_get_catalog
 hw_get_device_info
 hw_get_device_item_info
 hw_get_devices

@@ -29,7 +29,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             "connect", "disconnect", "get_state", "get_tia_instances", "doctor",
             "open_tia_project", "open_project", "create_project", "get_project", "save_project", "save_as_project", "close_project",
-            "get_project_tree"
+            "get_project_tree", "get_installed_software"
         };
 
         private static readonly Dictionary<string, string> Named = new Dictionary<string, string>(StringComparer.Ordinal)

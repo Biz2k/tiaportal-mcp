@@ -115,13 +115,13 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | `--doctor`                | Вывести отчёт об окружении и завершиться, не запуская MCP-сервер.               |
 | `--debug-tools`           | Зарегистрировать инструменты разработки сервера (`unified_debug_*`).                    |
 | `--tools <области>`       | Зарегистрировать только названные области инструментов, например `--tools plc,unified`. См. ниже. |
-| `--full`                  | Показывать инструмент на каждую операцию (160) вместо десяти групповых. См. ниже. |
+| `--full`                  | Показывать инструмент на каждую операцию (162) вместо десяти групповых. См. ниже. |
 | `--allow-write`           | Принимается для старых конфигураций; запись включена по умолчанию, параметр ничего не меняет. |
 
 ## Десять групповых инструментов и `--full`
 
 Клиент, который даёт решать по каждому инструменту — разрешать всегда, спрашивать, запретить, — показывает по строке
-на инструмент, а 160 строк — это уже не выбор. Поэтому сервер показывает десять инструментов:
+на инструмент, а 162 строк — это уже не выбор. Поэтому сервер показывает десять инструментов:
 один на всё, что только читает (решать про чтение нечего — один раз поставьте ему «Always allow»), и девять групп,
 разрезанных по тому, что пользователь действительно хочет решать (изменение, удаление, загрузка, защита). С флагом `--full` он показывает каждый инструмент отдельно, как раньше.
 
@@ -143,7 +143,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 инструментов. За группами стоят те же инструменты с теми же именами, поэтому остальной документ и навык агента
 действуют как есть. `--read-only` и `--tools` работают как раньше: группа, в которой не осталось инструментов, не
 показывается. Цена — один лишний вызов: модель читает справку по инструменту перед первым использованием; взамен
-описания 160 инструментов не занимают её контекст.
+описания 162 инструментов не занимают её контекст.
 
 ## Области инструментов
 
@@ -155,16 +155,16 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Область    | Инструменты области                                                                            | Число |
 | ---------- | ---------------------------------------------------------------------------------------------- | ----- |
 | `plc`      | `plc_*`                                                                                        | 71    |
-| `hw`       | `hw_*` и `net_*`: устройства, оборудование, подсети, соединения                                | 18    |
+| `hw`       | `hw_*` и `net_*`: устройства, оборудование, подсети, соединения                                | 19    |
 | `unified`  | `unified_*`                                                                                    | 35    |
 | `library`  | `get_libraries`, `get_library_types`, `get_master_copies`, `instantiate_master_copy`, `open_global_library` | 5 |
 | `transfer` | `export_objects`, `import_objects`, `preview_import`                                           | 3     |
 | `download` | `download_to_plc`, `get_download_targets`                                                      | 2     |
 | `security` | `sec_*`: защита, пароли, пользователи и роли ПЛК и проекта, защита блоков                      | 12    |
 
-Всегда регистрируются, что бы ни стояло в `--tools` (12): `connect`, `disconnect`, `get_state`, `get_tia_instances`,
-`doctor`, `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project`,
-`get_project_tree`. В числах учтены инструменты записи; `--read-only` убирает часть из них из любой области.
+Всегда регистрируются, что бы ни стояло в `--tools` (14): `connect`, `disconnect`, `get_state`, `get_tia_instances`,
+`doctor`, `open_tia_project`, `open_project`, `create_project`, `get_project`, `save_project`, `save_as_project`, `close_project`,
+`get_project_tree`, `get_installed_software`. В числах учтены инструменты записи; `--read-only` убирает часть из них из любой области.
 Инструкция сервера называет зарегистрированные области, когда это не все, а `get_state` и `doctor` сообщают их как
 `toolAreas`. Пример настройки — в `samples/`.
 
@@ -207,14 +207,14 @@ allow», «Needs approval» или «Blocked». Задать этот выбор
 
 Точный список имён инструментов — в [`docs/tools-list.txt`](docs/tools-list.txt); тест падает,
 если зарегистрированные инструменты расходятся с этим файлом. По умолчанию регистрируется
-За групповыми инструментами (или отдельно, с `--full`) стоят 160 инструментов (82 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
+За групповыми инструментами (или отдельно, с `--full`) стоят 162 инструментов (84 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
 
-Доступны всегда (74):
+Доступны всегда (76):
 
 | Область                          | Инструменты |
 | -------------------------------- | ----------- |
 | Подключение и состояние          | `connect`, `disconnect`, `get_state`, `get_tia_instances`, `doctor` |
-| Проект и сессия                  | `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
+| Проект и сессия                  | `open_tia_project`, `open_project`, `create_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
 | Структура проекта                | `get_project_tree`, `hw_get_devices`, `hw_get_device_info`, `hw_get_device_item_info`, `hw_get_topology`, `hw_search_catalog`, `net_get_connections` |
 | Программа ПЛК                    | `plc_get_summary`, `plc_get_software_info`, `plc_get_software_tree` |
 | Блоки                            | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source`, `plc_get_lad_networks`, `plc_get_lad_instructions` |
