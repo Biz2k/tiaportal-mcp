@@ -37,7 +37,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             return async (request, cancellationToken) =>
             {
-                if (!IsGated(request.Params?.Name))
+                if (!IsGated(ToolGroups.InnerToolName(request.Params) ?? request.Params?.Name))
                 {
                     return await next(request, cancellationToken).ConfigureAwait(false);
                 }

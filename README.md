@@ -110,7 +110,39 @@ access. Confirm it in the TIA Portal window.
 | `--doctor`                | Print the environment report and exit without starting the MCP server.         |
 | `--debug-tools`           | Register the server-development tools (`unified_debug_*`).                      |
 | `--tools <areas>`         | Register only the named tool areas, e.g. `--tools plc,unified`. See below.     |
+| `--compact`               | Show fifteen group tools instead of one tool per operation. See below.         |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
+
+## Compact mode: fifteen tools instead of 157
+
+A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 157 rows are no
+choice at all. Started with `--compact`, the server shows fifteen tools instead: fourteen groups cut along what a
+user wants to decide (reading, changing, deleting, downloading, protection) and `tia_help`.
+
+| Group tool            | What it holds                                                              |
+| --------------------- | -------------------------------------------------------------------------- |
+| `tia_help`            | the parameters of any tool; reads nothing from TIA Portal                  |
+| `project_read`        | connection, state, the open project and its tree, libraries, export        |
+| `project_write`       | open, create, save, close a project; import objects; take a master copy    |
+| `plc_read`            | read blocks, code, types, tags, tables, sources, references                |
+| `plc_write`           | create and change them; compile                                            |
+| `plc_delete`          | delete them                                                                |
+| `hw_read`             | read devices, modules, parameters, catalog, subnets, connections           |
+| `hw_write`            | create devices, plug modules, set parameters, connect                      |
+| `hw_delete`           | delete devices, subnets, connections                                       |
+| `hmi_read`            | read WinCC Unified                                                         |
+| `hmi_write`           | create, change and delete in WinCC Unified                                 |
+| `plc_download`        | load into a PLC                                                            |
+| `security_read`       | read the protection of PLCs and the users and roles of the project        |
+| `security_protection` | passwords of PLCs and blocks: configuration, access level, display, know-how |
+| `security_users`      | users, groups, roles and their rights, password policy                     |
+
+A group tool takes the name of a tool and its parameters, `{"tool": "plc_get_blocks", "arguments": {...}}`, and lists
+its tools with a line each; `tia_help` gives the full description and the parameters of the tools named. The tools
+behind the groups are the same ones, with the same names, so the rest of this document and the skill apply as they
+are. `--read-only` and `--tools` work as before: a group with no tool left is not shown. The price is one more
+call - the model reads the help of a tool before it first uses it - and in return the descriptions of 157 tools stay
+out of its context.
 
 ## Tool areas
 
@@ -168,7 +200,8 @@ model and through the logs of the client.
 
 Each kind of change is a tool of its own, marked as changing and destructive, so that a client which lets you decide
 per tool can treat them apart: in Claude open the settings of the connector and set each tool to "Always allow",
-"Needs approval" or "Blocked". The server cannot set that choice for you - it belongs to the client; clients that
+"Needs approval" or "Blocked" (with `--compact` these are three rows: `security_read`, `security_protection`,
+`security_users`). The server cannot set that choice for you - it belongs to the client; clients that
 have no such setting ask (or do not ask) by their own rules. To leave the tools out altogether, start the server with
 `--tools` naming the areas you want without `security`; `--read-only` leaves out every tool that changes the project.
 

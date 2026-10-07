@@ -102,6 +102,22 @@ namespace TiaMcpServer
                 .ToList();
         }
 
+        /// <summary>
+        /// The tools as '--compact' shows them: <see cref="BuildTools"/> wrapped into the group tools of
+        /// <see cref="ToolGroups"/> and 'tia_help'.
+        /// </summary>
+        public static IEnumerable<global::ModelContextProtocol.Server.McpServerTool> BuildCompactTools(bool allowWrite, bool debugTools = false, IReadOnlyCollection<string>? areas = null)
+        {
+            var writes = new HashSet<string>(typeof(McpServer)
+                .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Where(m => m.GetCustomAttribute<WriteToolAttribute>() != null)
+                .Select(m => m.GetCustomAttribute<global::ModelContextProtocol.Server.McpServerToolAttribute>()?.Name)
+                .Where(n => n != null)
+                .Select(n => n!));
+
+            return ToolGroups.Build(BuildTools(allowWrite, debugTools, areas).Select(t => (t, writes.Contains(t.ProtocolTool.Name))).ToList());
+        }
+
         public static async Task RunStdioHost(CliOptions? options)
         {
             var builder = Host.CreateEmptyApplicationBuilder(settings: null);
@@ -164,10 +180,16 @@ namespace TiaMcpServer
                             (options?.ToolAreas == null
                                 ? string.Empty
                                 : $" Only these tool areas are registered: {ToolSets.Describe(options.ToolAreas)} (and the tools for connection, " +
-                                  "project and diagnostics); the other areas exist but were left out with '--tools'.");
+                                  "project and diagnostics); the other areas exist but were left out with '--tools'.") +
+                            (options?.Compact == true
+                                ? " The server runs compact: the tools named here and in the answers are called through the group tools (project_read, plc_read, " +
+                                  "plc_write, ...) as {\"tool\": \"<name>\", \"arguments\": {...}}; each group tool lists its tools, and 'tia_help' gives the parameters of a tool."
+                                : string.Empty);
                     })
                     .WithStdioServerTransport()
-                    .WithTools(BuildTools(WritePolicy.AllowWrite, options?.DebugTools ?? false, options?.ToolAreas))
+                    .WithTools(options?.Compact == true
+                        ? BuildCompactTools(WritePolicy.AllowWrite, options.DebugTools, options.ToolAreas)
+                        : BuildTools(WritePolicy.AllowWrite, options?.DebugTools ?? false, options?.ToolAreas))
                     .WithRequestFilters(filters => filters.AddCallToolFilter(ToolCallGate.Filter));
 
                 // Register the Portal service for dependency injection

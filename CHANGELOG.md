@@ -4,6 +4,11 @@
 
 ### Added
 
+- `--compact`: the client sees fifteen tools instead of 157 - fourteen group tools (`project_read`, `project_write`,
+  `plc_read`, `plc_write`, `plc_delete`, `hw_read`, `hw_write`, `hw_delete`, `hmi_read`, `hmi_write`, `plc_download`,
+  `security_read`, `security_protection`, `security_users`) that take the name of a tool and its arguments, and
+  `tia_help` with the parameters of a tool. For clients with a permission per tool, and to keep the descriptions of
+  all tools out of the context of the model. The tools behind the groups and their names are unchanged.
 - A new area of tools, `security` (`sec_*`), registered by default: `sec_get_plc_security` reads how a PLC is
   protected; `sec_set_plc_configuration_protection`, `sec_set_plc_access_level`, `sec_manage_webserver_users`,
   `sec_manage_opcua_users` and `sec_set_display_password` change it. Passwords are plain arguments, handed to TIA
