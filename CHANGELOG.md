@@ -25,7 +25,7 @@
   happening. Its text was the name of the C# method (`MCP: ManageUnifiedLogs`); it is the title of the tool and the
   name the client calls it by - `Manage WinCC Unified logs (unified_manage_logs)` - and the same text is the entry in
   the undo list of TIA Portal. The batch tools (`unified_manage_*`, `plc_manage_tag_table_entries`) add the running
-  step below it: `HMI Unified/HMI_RT_3: 3 / 12: update 'Tag_5'`. `plc_replace_source` names the block, and says
+  step below it: `3 / 12: HMI Unified/HMI_RT_3: update 'Tag_5'`. `plc_replace_source` names the block, and says
   when it is putting the previous code back.
 - The `Cancel` button of that window works for the batch tools: pressed during a batch, it stops the batch before the
   next step, the transaction is rolled back and the call answers that the user cancelled it. It did nothing before.
