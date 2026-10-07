@@ -635,7 +635,12 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex)
             {
                 // One unreadable step must not hide the others; say what happened and go on.
-                step.Note = $"Could not handle this step: {ErrorText.Describe(ex)}";
+                // Seen on V21 with a device that has no user management data yet (an empty PLCSIM instance): the
+                // step 'UserManagementDownload' takes none of its options ("The configuration provided is invalid").
+                step.Note = type.Name == "UserManagementDownload"
+                    ? $"TIA Portal did not take the answer for this step ({ErrorText.Describe(ex).Replace("\r", " ").Replace("\n", " ")}) - seen where the device holds no user management data yet, so there is nothing to keep. " +
+                      $"Its own preset stayed: {step.Selection}."
+                    : $"Could not handle this step: {ErrorText.Describe(ex)}";
                 _logger?.LogWarning(ex, "Download step {Step} could not be handled", type.Name);
             }
 

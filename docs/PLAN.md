@@ -232,6 +232,10 @@ Portal, «дымовые» прогоны чтения и записи (`tools/s
     возвращён. Нужен `hw_compile` с сообщениями (п. 4.2): загрузка говорит только «Compilation
     of hardware configuration was completed with error». Вход пользователем при подключении
     (`OnlineAuthenticationConfiguration`, CPU с прошивкой V4) не сделан.
+  - Загрузка `PLC (A5)` в пустой инстанс PLCSIM типа ET 200SP (07.10.2026): первый проход на
+    192.168.10.1 (`targetAddress`, `trustDevice`) — оборудование загружено, инстанс взял адрес
+    проекта; второй проход без `targetAddress` — `Success`, CPU запущен. Инстанс типа S7-1500
+    для CPU ET 200SP TIA Portal отклоняет («not compatible with the module configured offline»).
   - [ ] **Осталось:** F-пароль Safety; пользователи UMC-сервера
     (`UmcServerConfigurator`) и свои права устройств (`CustomDeviceFunctionRights`);
     политика паролей ПЛК (`PlcPasswordPolicyService`).
