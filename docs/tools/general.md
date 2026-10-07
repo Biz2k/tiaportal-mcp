@@ -23,6 +23,7 @@ Connection, project and session tools.
 | [`sec_manage_project_roles`](#sec_manage_project_roles) | write |
 | [`sec_manage_project_users`](#sec_manage_project_users) | write |
 | [`sec_manage_webserver_users`](#sec_manage_webserver_users) | write |
+| [`sec_protect_project`](#sec_protect_project) | write |
 | [`sec_set_block_protection`](#sec_set_block_protection) | write |
 | [`sec_set_display_password`](#sec_set_display_password) | write |
 | [`sec_set_password_policy`](#sec_set_password_policy) | write |
@@ -95,19 +96,23 @@ No parameters.
 
 ## open_project
 
-Open a TIA-Portal local project/session
+Open a TIA-Portal local project/session. A protected project opens only with the name and password of one of its users: pass userName and password as the user of this conversation gave them - never make them up, never repeat the password in your answer
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `path` | string | yes | path: defines the path where to the project/session |
+| `userName` | string | no (default ``) | userName: a user of a protected project; empty for a project without protection |
+| `password` | string | no (default ``) | password: the password of that user |
 
 ## open_tia_project
 
-Connect to the running TIA Portal if not already connected, open the given project or session, and return the device and PLC software paths the other tools need. Replaces the connect, open_project, get_project_tree sequence. TIA Portal must already be running
+Connect to the running TIA Portal if not already connected, open the given project or session, and return the device and PLC software paths the other tools need. Replaces the connect, open_project, get_project_tree sequence. TIA Portal must already be running. A protected project opens only with the name and password of one of its users (userName, password), as the user of this conversation gave them
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `path` | string | yes | path: full path of the .apXX project or .alsXX session file on the machine running this server |
+| `userName` | string | no (default ``) | userName: a user of a protected project; empty for a project without protection |
+| `password` | string | no (default ``) | password: the password of that user |
 
 ## save_as_project
 
@@ -141,7 +146,7 @@ Read the users and roles of the project ('Security settings > Users and roles' i
 
 ## sec_manage_opcua_users
 
-Create or delete users of the OPC UA server of a CPU, or set their password ('update'), several at once, all or nothing. The OPC UA server and its authentication by user name have to be on first ('hw_set_device_item_attributes' on the item 'OPC UA_1'); otherwise TIA Portal refuses a new user. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+Create or delete users of the OPC UA server of a CPU, or set their password ('update'), several at once, all or nothing. The OPC UA server and its authentication by user name have to be on first: 'hw_set_device_item_attributes' on the item '<CPU path>/OPC UA_1' with {"OpcUaServer": true} and then, in a second call, {"OpcUaPasswordAuthentication": true}; otherwise TIA Portal refuses a new user. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -158,7 +163,7 @@ Create, update or delete roles of the project and give them function rights of a
 
 ## sec_manage_project_users
 
-Create, update or delete users and user groups of the project, several at once, all or nothing: name, password, roles (roles = exactly these, addRoles / removeRoles = change the present ones), active, comment, session timeout, alias, authentication. A user gets rights only through roles; 'sec_get_project_users' lists the roles. The user 'Anonymous' with active: true lets everybody in without login, with the roles it has. The role 'Engineering administrator' decides who may open and change the project itself: give or take it only on an explicit request. The devices have to be loaded again for a change to reach them. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+Create, update or delete users and user groups of the project, several at once, all or nothing: name, password, roles (roles = exactly these, addRoles / removeRoles = change the present ones), active, comment, session timeout, alias, authentication. A user gets rights only through roles; 'sec_get_project_users' lists the roles. The user 'Anonymous' with active: true lets everybody in without login, with the roles it has. The role 'Engineering administrator' decides who administers a protected project: give or take it only on an explicit request. The devices have to be loaded again for a change to reach them. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -172,6 +177,15 @@ Create, update or delete users of the web server of a CPU that has its own web s
 |---|---|---|---|
 | `deviceItemPath` | string | yes | deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1' |
 | `actions` | array of object | yes | actions: the changes, applied in order; fields: action (create, update, delete), userName, password, permissions |
+
+## sec_protect_project
+
+Protect the open project: a user with the role 'Engineering administrator' is made, and from then on the project opens - in TIA Portal and through 'open_project' - only with the name and password of one of its users. THIS CANNOT BE UNDONE: TIA Portal has no way to remove the protection of a project, and with the password lost the project cannot be opened any more. Call it only when the user asked for exactly this, after telling them it is final and getting a clear yes; suggest a copy of the project first ('save_as_project'). SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `administratorName` | string | yes | administratorName: name of the user that becomes the administrator of the project |
+| `password` | string | yes | password: the password of that user; TIA Portal asks for at least 10 characters here |
 
 ## sec_set_block_protection
 
@@ -187,7 +201,7 @@ Change the protection of a block with a password: 'protect' / 'unprotect' is the
 
 ## sec_set_display_password
 
-Set the password that protects the display of an S7-1500 CPU. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+Set the password that protects the display of an S7-1500 CPU: 3 to 8 letters and digits, no special characters. The protection has to be on first: 'hw_set_device_item_attributes' on the item '<CPU path>/CPU display_1' with {"DisplayProtection": true}. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|

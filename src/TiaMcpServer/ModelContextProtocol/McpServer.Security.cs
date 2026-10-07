@@ -130,7 +130,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "sec_manage_opcua_users", Title = "Manage the OPC UA users of a PLC", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
-         Description("Create or delete users of the OPC UA server of a CPU, or set their password ('update'), several at once, all or nothing. The OPC UA server and its authentication by user name have to be on first ('hw_set_device_item_attributes' on the item 'OPC UA_1'); otherwise TIA Portal refuses a new user." + SecurityRule)]
+         Description("Create or delete users of the OPC UA server of a CPU, or set their password ('update'), several at once, all or nothing. The OPC UA server and its authentication by user name have to be on first: 'hw_set_device_item_attributes' on the item '<CPU path>/OPC UA_1' with {\"OpcUaServer\": true} and then, in a second call, {\"OpcUaPasswordAuthentication\": true}; otherwise TIA Portal refuses a new user." + SecurityRule)]
         public static ResponseSecurityChange ManageOpcUaUsers(
             [Description("deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1'")] string deviceItemPath,
             [Description("actions: the changes, applied in order; fields: action (create, update, delete), userName, password")] List<PlcUserAction> actions)
@@ -145,7 +145,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "sec_set_display_password", Title = "Set the display password of a PLC", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Set the password that protects the display of an S7-1500 CPU." + SecurityRule)]
+         Description("Set the password that protects the display of an S7-1500 CPU: 3 to 8 letters and digits, no special characters. The protection has to be on first: 'hw_set_device_item_attributes' on the item '<CPU path>/CPU display_1' with {\"DisplayProtection\": true}." + SecurityRule)]
         public static ResponseSecurityChange SetDisplayPassword(
             [Description("deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1'")] string deviceItemPath,
             [Description("password: the password of the display")] string password)

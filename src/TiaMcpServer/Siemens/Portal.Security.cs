@@ -69,6 +69,9 @@ namespace TiaMcpServer.Siemens
     //     downloadable configuration data is not supported" on this CPU; reset on an unprotected CPU "is not
     //     configured"; a short password is refused with the rule of TIA Portal (8 to 120 characters). Access level and
     //     its passwords work. Web server users need WebserverActivate first.
+    //   - Switching on (probe of 2026-10-07, CPU 1511-1 PN V2.9): attribute OpcUaServer on 'OPC UA_1' brings the further
+    //     attributes of the server into being, among them OpcUaPasswordAuthentication; with it true OPC UA users can be
+    //     made. Attribute DisplayProtection on 'CPU display_1' lets the display take a password of 3 to 8 characters without special ones.
     //   - Openness never returns a password. The server takes passwords as arguments, hands them to Openness as
     //     SecureString and keeps them nowhere: not in a log, not in an answer.
     public partial class Portal
@@ -127,9 +130,9 @@ namespace TiaMcpServer.Siemens
                 if (text.IndexOf("authentication is disabled", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     throw new PortalException(PortalErrorCode.InvalidState,
-                        $"TIA Portal refuses this on '{cpu}' while the protection it belongs to is off (\"authentication is disabled\"). Switch it on first: for OPC UA users the server and its " +
-                        "authentication by user name on the item 'OPC UA_1', for the display its password protection on the item 'CPU display_1' - 'hw_get_device_item_info' shows the " +
-                        "attributes of the item, 'hw_set_device_item_attributes' sets them. Nothing was changed.", null, ex);
+                        $"TIA Portal refuses this on '{cpu}' while the protection it belongs to is off (\"authentication is disabled\"). Switch it on first with 'hw_set_device_item_attributes': " +
+                        "for OPC UA users on the item '<CPU path>/OPC UA_1' {\"OpcUaServer\": true} and then, in a second call, {\"OpcUaPasswordAuthentication\": true}; " +
+                        "for the display on the item '<CPU path>/CPU display_1' {\"DisplayProtection\": true}. Nothing was changed.", null, ex);
                 }
 
                 throw;

@@ -23,6 +23,9 @@
   deletes users and user groups (password, roles, active, the user `Anonymous`); `sec_manage_project_roles` does the
   same for roles and gives them function rights of a device; `sec_set_password_policy` sets the policy. These users
   decide the access to CPUs with firmware V4 and newer, to Unified panels and to network devices.
+- OPC UA users and the display password now work end to end: the refusal of TIA Portal ("authentication is disabled")
+  names what to switch on - `OpcUaServer` and `OpcUaPasswordAuthentication` on the item `OPC UA_1`, `DisplayProtection` on
+  `CPU display_1` - with `hw_set_device_item_attributes`. A display password has 3 to 8 letters and digits.
 - Protected projects: `open_project` and `open_tia_project` take `userName` and `password` and log on with them;
   without them a protected project is refused with the reason. `sec_protect_project` protects the open project -
   TIA Portal cannot undo that, and the description of the tool says so.
