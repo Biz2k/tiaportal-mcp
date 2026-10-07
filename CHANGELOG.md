@@ -4,10 +4,10 @@
 
 ### Added
 
-- **Changed default:** the client sees fifteen tools instead of 158 - fourteen group tools (`project_read`, `project_write`,
-  `plc_read`, `plc_write`, `plc_delete`, `hw_read`, `hw_write`, `hw_delete`, `hmi_read`, `hmi_write`, `plc_download`,
-  `security_read`, `security_protection`, `security_users`) that take the name of a tool and its arguments, and
-  `tia_help` with the parameters of a tool. For clients with a permission per tool, and to keep the descriptions of
+- **Changed default:** the client sees ten tools instead of 158 - `tia_read` for everything that only reads (with
+  `tia_help`, the parameters of a tool) and nine group tools for what changes something (`project_write`, `plc_write`,
+  `plc_delete`, `hw_write`, `hw_delete`, `hmi_write`, `plc_download`, `security_protection`, `security_users`); each
+  takes the name of a tool and its arguments. For clients with a permission per tool, and to keep the descriptions of
   all tools out of the context of the model. The tools behind the groups and their names are unchanged; `--full`
   shows them one by one as before - a client configuration that relies on the single tools needs that flag now.
 - A new area of tools, `security` (`sec_*`), registered by default: `sec_get_plc_security` reads how a PLC is

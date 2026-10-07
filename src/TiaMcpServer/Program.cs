@@ -104,7 +104,7 @@ namespace TiaMcpServer
 
         /// <summary>
         /// The tools as a client sees them without '--full': <see cref="BuildTools"/> wrapped into the group tools of
-        /// <see cref="ToolGroups"/> and 'tia_help'.
+        /// <see cref="ToolGroups"/>.
         /// </summary>
         public static IEnumerable<global::ModelContextProtocol.Server.McpServerTool> BuildCompactTools(bool allowWrite, bool debugTools = false, IReadOnlyCollection<string>? areas = null)
         {
@@ -182,8 +182,8 @@ namespace TiaMcpServer
                                 : $" Only these tool areas are registered: {ToolSets.Describe(options.ToolAreas)} (and the tools for connection, " +
                                   "project and diagnostics); the other areas exist but were left out with '--tools'.") +
                             (options?.Full != true
-                                ? " The tools named here and in the answers are called through the group tools (project_read, plc_read, " +
-                                  "plc_write, ...) as {\"tool\": \"<name>\", \"arguments\": {...}}; each group tool lists its tools, and 'tia_help' gives the parameters of a tool."
+                                ? " The tools named here and in the answers are called through the group tools - everything that only reads through 'tia_read', the rest through " +
+                                  "plc_write, plc_delete, hw_write, ... - as {\"tool\": \"<name>\", \"arguments\": {...}}; each group tool lists its tools, and the tool 'tia_help' of 'tia_read' gives the parameters of a tool."
                                 : string.Empty);
                     })
                     .WithStdioServerTransport()

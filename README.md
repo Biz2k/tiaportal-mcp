@@ -110,36 +110,32 @@ access. Confirm it in the TIA Portal window.
 | `--doctor`                | Print the environment report and exit without starting the MCP server.         |
 | `--debug-tools`           | Register the server-development tools (`unified_debug_*`).                      |
 | `--tools <areas>`         | Register only the named tool areas, e.g. `--tools plc,unified`. See below.     |
-| `--full`                  | Show one tool per operation (158) instead of the fifteen group tools. See below. |
+| `--full`                  | Show one tool per operation (158) instead of the ten group tools. See below. |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
 
-## Fifteen group tools, and `--full`
+## Ten group tools, and `--full`
 
 A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 158 rows are no
-choice at all. So the server shows fifteen tools: fourteen groups cut along what a user wants to decide (reading,
-changing, deleting, downloading, protection) and `tia_help`. Started with `--full` it shows every tool by itself, as
+choice at all. So the server shows ten tools: one for everything that only reads - there is nothing to decide about reading, set it
+to "Always allow" once - and nine groups cut along what a user does want to decide (changing, deleting, downloading,
+protection). Started with `--full` it shows every tool by itself, as
 it did before.
 
 | Group tool            | What it holds                                                              |
 | --------------------- | -------------------------------------------------------------------------- |
-| `tia_help`            | the parameters of any tool; reads nothing from TIA Portal                  |
-| `project_read`        | connection, state, the open project and its tree, libraries, export        |
+| `tia_read`            | everything that only reads, in every area, and `tia_help`: the parameters of a tool |
 | `project_write`       | open, create, save, close a project; import objects; take a master copy    |
-| `plc_read`            | read blocks, code, types, tags, tables, sources, references                |
 | `plc_write`           | create and change them; compile                                            |
 | `plc_delete`          | delete them                                                                |
-| `hw_read`             | read devices, modules, parameters, catalog, subnets, connections           |
 | `hw_write`            | create devices, plug modules, set parameters, connect                      |
 | `hw_delete`           | delete devices, subnets, connections                                       |
-| `hmi_read`            | read WinCC Unified                                                         |
 | `hmi_write`           | create, change and delete in WinCC Unified                                 |
 | `plc_download`        | load into a PLC                                                            |
-| `security_read`       | read the protection of PLCs and the users and roles of the project        |
 | `security_protection` | passwords of PLCs and blocks: configuration, access level, display, know-how |
 | `security_users`      | users, groups, roles and their rights, password policy                     |
 
 A group tool takes the name of a tool and its parameters, `{"tool": "plc_get_blocks", "arguments": {...}}`, and lists
-its tools with a line each; `tia_help` gives the full description and the parameters of the tools named. The tools
+its tools with a line each; the tool `tia_help` of `tia_read` gives the full description and the parameters of the tools named. The tools
 behind the groups are the same ones, with the same names, so the rest of this document and the skill apply as they
 are. `--read-only` and `--tools` work as before: a group with no tool left is not shown. The price is one more
 call - the model reads the help of a tool before it first uses it - and in return the descriptions of 158 tools stay
@@ -201,8 +197,7 @@ model and through the logs of the client.
 
 Each kind of change is a tool of its own, marked as changing and destructive, so that a client which lets you decide
 per tool can treat them apart: in Claude open the settings of the connector and set each tool to "Always allow",
-"Needs approval" or "Blocked" (three rows: `security_read`, `security_protection`,
-`security_users`). The server cannot set that choice for you - it belongs to the client; clients that
+"Needs approval" or "Blocked" (two rows: `security_protection`, `security_users`). The server cannot set that choice for you - it belongs to the client; clients that
 have no such setting ask (or do not ask) by their own rules. To leave the tools out altogether, start the server with
 `--tools` naming the areas you want without `security`; `--read-only` leaves out every tool that changes the project.
 

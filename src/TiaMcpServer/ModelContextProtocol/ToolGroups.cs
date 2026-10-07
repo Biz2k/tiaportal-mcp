@@ -13,7 +13,8 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     /// <summary>
     /// The face of the server unless it is started with '--full': instead of one MCP tool per operation the client sees a handful of
-    /// group tools, each taking the name of an operation and its arguments, and 'tia_help' that gives the parameters of
+    /// group tools, each taking the name of an operation and its arguments. Everything that only reads is one group,
+    /// 'tia_read' - a user has nothing to decide about reading - and it also holds 'tia_help', which gives the parameters of
     /// an operation. Why: a client that lets the user decide per tool (always allow / ask / block) shows one row per
     /// tool, and 150 rows are no choice at all; fifteen groups cut along what a user wants to decide - reading, changing,
     /// deleting, downloading, protection - are. It also keeps 150 parameter lists out of the context of the model.
@@ -22,6 +23,12 @@ namespace TiaMcpServer.ModelContextProtocol
     public static class ToolGroups
     {
         public const string Help = "tia_help";
+
+        /// <summary>The one group of everything that only reads.</summary>
+        public const string Read = "tia_read";
+
+        /// <summary>How a description tells the model to get the parameters of a tool.</summary>
+        private const string HelpCall = "'tia_read' with {\"tool\": \"tia_help\", \"arguments\": {\"tools\": [\"<name>\"]}}";
 
         public sealed class Group
         {
@@ -42,21 +49,17 @@ namespace TiaMcpServer.ModelContextProtocol
             public string Summary { get; }
         }
 
-        /// <summary>The groups, in the order a client lists them. With 'tia_help' they are fifteen; a test keeps it so.</summary>
+        /// <summary>The groups, in the order a client lists them. Ten; a test keeps them at fifteen or fewer.</summary>
         public static readonly IReadOnlyList<Group> All = new[]
         {
-            new Group("project_read", "Project: connect and read", true, "Connection to TIA Portal, state and diagnostics, the open project and its tree, libraries, export to files"),
+            new Group(Read, "Read: project, PLC, hardware, HMI, protection", true, "Everything that only reads: connection to TIA Portal and its state, the project and its tree, PLC blocks, code, tags and references, hardware and networks, WinCC Unified, libraries, protection settings and users, export to files; and 'tia_help' - the description and parameters of any tool of the server"),
             new Group("project_write", "Project: open, save, close, create, import", false, "Open, create, save and close a project, open a global library, import objects from files, take a master copy"),
-            new Group("plc_read", "PLC program: read", true, "Read the PLC software: blocks and their code, types, tags, constants, watch tables, sources, references"),
             new Group("plc_write", "PLC program: create and change", false, "Create and change blocks, code, types, tags, constants, tables and sources; compile"),
             new Group("plc_delete", "PLC program: delete", false, "Delete blocks, types, tags, constants, tables, sources and their groups"),
-            new Group("hw_read", "Hardware and network: read", true, "Read devices, modules, their parameters, the catalog, subnets and connections"),
             new Group("hw_write", "Hardware and network: create and change", false, "Create devices, plug modules, set parameters of hardware, connect to subnets and IO systems, create connections"),
             new Group("hw_delete", "Hardware and network: delete", false, "Delete devices, subnets and connections; take an interface off its subnet"),
-            new Group("hmi_read", "WinCC Unified: read", true, "Read screens, screen items, tags, alarms, logs, scripts, lists, connections and runtime settings of a Unified device"),
             new Group("hmi_write", "WinCC Unified: create, change and delete", false, "Create, change and delete screens, screen items, tags, alarms, logs, scripts, lists and connections; compile"),
             new Group("plc_download", "Download to the PLC", false, "Load the project into a PLC"),
-            new Group("security_read", "Protection and users: read", true, "Read how PLCs are protected and the users, groups, roles and password policy of the project"),
             new Group("security_protection", "Protection: passwords of PLCs and blocks", false, "Protection of the PLC configuration data, access level and its passwords, display password, know-how and write protection of blocks"),
             new Group("security_users", "Protection: users, roles, password policy", false, "Users of the project, of the web server and of the OPC UA server, user groups, roles and their rights, password policy")
         };
@@ -72,24 +75,29 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             bool Has(string part) => toolName.IndexOf(part, StringComparison.Ordinal) >= 0;
 
+            if (toolName == Help || (!writes && !ProjectWrite.Contains(toolName)))
+            {
+                return Read;
+            }
+
             if (toolName.StartsWith("sec_", StringComparison.Ordinal))
             {
-                return !writes ? "security_read" : Has("user") || Has("role") || Has("password_policy") ? "security_users" : "security_protection";
+                return Has("user") || Has("role") || Has("password_policy") ? "security_users" : "security_protection";
             }
 
             if (toolName.StartsWith("plc_", StringComparison.Ordinal))
             {
-                return !writes ? "plc_read" : Has("_delete_") ? "plc_delete" : "plc_write";
+                return Has("_delete_") ? "plc_delete" : "plc_write";
             }
 
             if (toolName.StartsWith("hw_", StringComparison.Ordinal) || toolName.StartsWith("net_", StringComparison.Ordinal))
             {
-                return !writes ? "hw_read" : Has("_delete_") || Has("_disconnect_") ? "hw_delete" : "hw_write";
+                return Has("_delete_") || Has("_disconnect_") ? "hw_delete" : "hw_write";
             }
 
             if (toolName.StartsWith("unified_", StringComparison.Ordinal))
             {
-                return writes ? "hmi_write" : "hmi_read";
+                return "hmi_write";
             }
 
             if (toolName == "download_to_plc")
@@ -97,7 +105,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return "plc_download";
             }
 
-            return ProjectWrite.Contains(toolName) ? "project_write" : "project_read";
+            return "project_write";
         }
 
         /// <summary>
@@ -108,7 +116,17 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var byGroup = tools.GroupBy(t => GroupOf(t.Tool.ProtocolTool.Name, t.Writes)).ToDictionary(g => g.Key, g => g.Select(t => t.Tool).ToList());
             var groupOfTool = tools.ToDictionary(t => t.Tool.ProtocolTool.Name, t => GroupOf(t.Tool.ProtocolTool.Name, t.Writes), StringComparer.Ordinal);
-            var result = new List<McpServerTool> { new HelpTool(tools.Select(t => t.Tool).ToList(), groupOfTool) };
+            var result = new List<McpServerTool>();
+
+            // the help is a tool of the reading group: one row less for the user to decide about
+            groupOfTool[Help] = Read;
+
+            if (!byGroup.ContainsKey(Read))
+            {
+                byGroup[Read] = new List<McpServerTool>();
+            }
+
+            byGroup[Read].Insert(0, new HelpTool(tools.Select(t => t.Tool).ToList(), groupOfTool));
 
             foreach (var group in All)
             {
@@ -165,7 +183,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var description = new StringBuilder();
 
                 description.Append(group.Summary).Append(". Give 'tool' (one of the names below) and 'arguments' (the parameters of that tool). ")
-                    .Append("Before the first call of a tool get its parameters with '").Append(Help).Append("'. Tools:");
+                    .Append("Before the first call of a tool get its parameters: ").Append(HelpCall).Append(". Tools:");
 
                 foreach (var member in members)
                 {
@@ -178,7 +196,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ["properties"] = new JsonObject
                     {
                         ["tool"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray(members.Select(m => (JsonNode)m.ProtocolTool.Name).ToArray()), ["description"] = "Name of the tool to call" },
-                        ["arguments"] = new JsonObject { ["type"] = "object", ["description"] = $"The parameters of that tool, by name, as '{Help}' lists them", ["additionalProperties"] = true }
+                        ["arguments"] = new JsonObject { ["type"] = "object", ["description"] = "The parameters of that tool, by name, as 'tia_help' lists them", ["additionalProperties"] = true }
                     },
                     ["required"] = new JsonArray("tool")
                 };
@@ -289,7 +307,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Name = Help,
                     Title = "Help: parameters of the tools",
-                    Description = "The full description and the parameters of tools of this server, several at once. The tools are called through the group tools (project_read, plc_read, plc_write, ...): " +
+                    Description = "The full description and the parameters of tools of this server, several at once. The tools are called through the group tools (tia_read, plc_write, plc_delete, ...): " +
                                   "each lists its tools by name and takes {\"tool\": \"<name>\", \"arguments\": {...}}. Read the help of a tool before its first call. Reads nothing from TIA Portal",
                     InputSchema = JsonSerializer.SerializeToElement(schema),
                     Annotations = new ToolAnnotations { Title = "Help: parameters of the tools", ReadOnlyHint = true, DestructiveHint = false, IdempotentHint = true, OpenWorldHint = false }
@@ -318,7 +336,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 if (names.Count == 0)
                 {
-                    return new ValueTask<CallToolResult>(Error("'tools' is missing: give the names of the tools, e.g. {\"tools\": [\"plc_get_blocks\"]}. The group tools list the names."));
+                    return new ValueTask<CallToolResult>(Error("'tools' is missing: give the names of the tools, e.g. {\"tool\": \"tia_help\", \"arguments\": {\"tools\": [\"plc_get_blocks\"]}}. The group tools list the names."));
                 }
 
                 var result = new JsonArray();

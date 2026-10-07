@@ -60,8 +60,8 @@ name, and the change lands there.
   `plc_get_cross_references`) and tell the user what depends on it.
 - A write shows its tool and step in a TIA Portal window; Cancel there stops it with nothing
   changed. Do not repeat a cancelled call without asking.
-- The tools named here are called through group tools (plc_read, plc_write, ...) as
-  `{"tool": "<name>", "arguments": {...}}`; 'tia_help' gives the parameters. `--full` shows them singly.
+- The tools named here are called through group tools (tia_read for all reading, plc_write, ...) as
+  `{"tool": "<name>", "arguments": {...}}`; 'tia_help' (in tia_read) gives the parameters. `--full` shows them singly.
 - If the write tools are missing from the session, the server runs with `--read-only`
   (`get_state` shows `allowWrite: false`). Say so; do not look for a way around it.
 - **Protection, passwords, users (`sec_*`)**: before each call say what will change on which PLC,
