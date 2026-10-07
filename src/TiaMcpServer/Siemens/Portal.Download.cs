@@ -501,6 +501,16 @@ namespace TiaMcpServer.Siemens
                         seen = string.Join(" ", outcome.Connection);
                     }
 
+                    // The reasons TIA Portal names itself are not a matter of reachability.
+                    if (reason.IndexOf("is not compatible with the module configured offline", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        seen = "The device was reached, but it is another kind of CPU than the project has: a PLCSIM instance has to be created for the family of the CPU (an ET 200SP CPU needs an ET 200SP instance, not an S7-1500 one). Nothing was loaded.";
+                    }
+                    else if (reason.IndexOf("Compilation of hardware configuration", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        seen = "The device was reached, but the hardware configuration of the project does not compile, so nothing was loaded. Compile the hardware in TIA Portal to see the errors - a common one after changing an address: a connection whose two ends are now in different subnets.";
+                    }
+
                     throw new PortalException(PortalErrorCode.InvalidState,
                         $"Download to '{outcome.Target}' failed while {stage}: {reason}. {(refused == null ? string.Empty : refused + " ")}{seen}", null, ex);
                 }
