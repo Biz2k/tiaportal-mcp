@@ -4,6 +4,12 @@
 
 ### Added
 
+- A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
+  drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
+  the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
+  name or description; `drive_set_parameters` writes them, all or nothing, with a read-back; `drive_manage_telegrams`
+  changes, inserts, erases and resizes telegrams. A drive itself is created with `hw_create_device`. In a client the
+  two writing tools are the group `drive_write`. Without Startdrive installed the tools answer that it is missing.
 - `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
   project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
   `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
@@ -22,9 +28,9 @@
   "Connect to module ... failed".
 - `download_to_plc` takes `passwords`: the passwords the PLC asks for during the download, by the type of the step
   (`ModuleWriteAccessPassword`, `PlcMasterSecretPassword`, ...). A step that asked and got none is named in the answer.
-- **Changed default:** the client sees ten tools instead of 162 - `tia_read` for everything that only reads (with
-  `tia_help`, the parameters of a tool) and nine group tools for what changes something (`project_write`, `plc_write`,
-  `plc_delete`, `hw_write`, `hw_delete`, `hmi_write`, `plc_download`, `security_protection`, `security_users`); each
+- **Changed default:** the client sees eleven tools instead of 166 - `tia_read` for everything that only reads (with
+  `tia_help`, the parameters of a tool) and ten group tools for what changes something (`project_write`, `plc_write`,
+  `plc_delete`, `hw_write`, `hw_delete`, `hmi_write`, `drive_write`, `plc_download`, `security_protection`, `security_users`); each
   takes the name of a tool and its arguments. For clients with a permission per tool, and to keep the descriptions of
   all tools out of the context of the model. The tools behind the groups and their names are unchanged; `--full`
   shows them one by one as before - a client configuration that relies on the single tools needs that flag now.
@@ -375,6 +381,12 @@ below):
 
 ### Added
 
+- A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
+  drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
+  the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
+  name or description; `drive_set_parameters` writes them, all or nothing, with a read-back; `drive_manage_telegrams`
+  changes, inserts, erases and resizes telegrams. A drive itself is created with `hw_create_device`. In a client the
+  two writing tools are the group `drive_write`. Without Startdrive installed the tools answer that it is missing.
 - `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
   project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
   `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
@@ -473,6 +485,12 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
 
 ### Added
 
+- A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
+  drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
+  the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
+  name or description; `drive_set_parameters` writes them, all or nothing, with a read-back; `drive_manage_telegrams`
+  changes, inserts, erases and resizes telegrams. A drive itself is created with `hw_create_device`. In a client the
+  two writing tools are the group `drive_write`. Without Startdrive installed the tools answer that it is missing.
 - `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
   project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
   `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
@@ -845,6 +863,12 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
   counterpart; each links to the other at the top.
 ### Added
 
+- A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
+  drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
+  the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
+  name or description; `drive_set_parameters` writes them, all or nothing, with a read-back; `drive_manage_telegrams`
+  changes, inserts, erases and resizes telegrams. A drive itself is created with `hw_create_device`. In a client the
+  two writing tools are the group `drive_write`. Without Startdrive installed the tools answer that it is missing.
 - `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
   project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
   `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
@@ -923,6 +947,12 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
 
 ### Added
 
+- A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
+  drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
+  the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
+  name or description; `drive_set_parameters` writes them, all or nothing, with a read-back; `drive_manage_telegrams`
+  changes, inserts, erases and resizes telegrams. A drive itself is created with `hw_create_device`. In a client the
+  two writing tools are the group `drive_write`. Without Startdrive installed the tools answer that it is missing.
 - `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
   project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
   `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
@@ -948,6 +978,12 @@ PLC data types. The read tool surface grows from 56 to 59.
 
 ### Added
 
+- A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
+  drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
+  the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
+  name or description; `drive_set_parameters` writes them, all or nothing, with a read-back; `drive_manage_telegrams`
+  changes, inserts, erases and resizes telegrams. A drive itself is created with `hw_create_device`. In a client the
+  two writing tools are the group `drive_write`. Without Startdrive installed the tools answer that it is missing.
 - `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
   project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
   `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
@@ -1027,6 +1063,12 @@ surface grows from 31 tools to 44 read tools plus 37 project-mutating tools.
 
 ### Added
 
+- A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
+  drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
+  the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
+  name or description; `drive_set_parameters` writes them, all or nothing, with a read-back; `drive_manage_telegrams`
+  changes, inserts, erases and resizes telegrams. A drive itself is created with `hw_create_device`. In a client the
+  two writing tools are the group `drive_write`. Without Startdrive installed the tools answer that it is missing.
 - `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
   project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
   `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
@@ -1181,6 +1223,12 @@ Upgrade to the current MCP .NET SDK and adopt the newer protocol surface.
 
 ### Added
 
+- A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
+  drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
+  the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
+  name or description; `drive_set_parameters` writes them, all or nothing, with a read-back; `drive_manage_telegrams`
+  changes, inserts, erases and resizes telegrams. A drive itself is created with `hw_create_device`. In a client the
+  two writing tools are the group `drive_write`. Without Startdrive installed the tools answer that it is missing.
 - `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
   project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
   `get_installed_software`: the installed products with their options and the GSD files whose devices are in the
@@ -1228,6 +1276,12 @@ Upgrade to the current MCP .NET SDK and adopt the newer protocol surface.
 
 ### Added
 
+- A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
+  drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
+  the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
+  name or description; `drive_set_parameters` writes them, all or nothing, with a read-back; `drive_manage_telegrams`
+  changes, inserts, erases and resizes telegrams. A drive itself is created with `hw_create_device`. In a client the
+  two writing tools are the group `drive_write`. Without Startdrive installed the tools answer that it is missing.
 - `hw_get_catalog`: the hardware catalog of the installed TIA Portal as a tree - everything that can be added to a
   project, the devices from GSD files included - with the type identifiers in the folders that hold entries.
   `get_installed_software`: the installed products with their options and the GSD files whose devices are in the

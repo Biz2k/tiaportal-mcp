@@ -45,7 +45,7 @@ namespace TiaMcpServer.Test
             ToolSets.Parse("plc,pcl,x", out var unknown);
 
             CollectionAssert.AreEqual(new[] { "pcl", "x" }, unknown.ToList());
-            StringAssert.Contains(ToolSets.UnknownText(unknown), "Valid areas: plc, hw, unified, library, transfer, download, security, all");
+            StringAssert.Contains(ToolSets.UnknownText(unknown), "Valid areas: plc, hw, unified, library, transfer, download, security, drive, all");
         }
 
         [TestMethod]

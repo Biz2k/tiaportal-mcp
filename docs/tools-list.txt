@@ -4,6 +4,10 @@ create_project
 disconnect
 doctor
 download_to_plc
+drive_get_objects
+drive_get_parameters
+drive_manage_telegrams
+drive_set_parameters
 export_objects
 get_accessible_devices
 get_download_targets

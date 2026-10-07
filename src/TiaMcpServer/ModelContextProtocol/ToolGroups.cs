@@ -49,7 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
             public string Summary { get; }
         }
 
-        /// <summary>The groups, in the order a client lists them. Ten; a test keeps them at fifteen or fewer.</summary>
+        /// <summary>The groups, in the order a client lists them. Eleven; a test keeps them at fifteen or fewer.</summary>
         public static readonly IReadOnlyList<Group> All = new[]
         {
             new Group(Read, "Read: project, PLC, hardware, HMI, protection", true, "Everything that only reads: connection to TIA Portal and its state, the project and its tree, PLC blocks, code, tags and references, hardware and networks, WinCC Unified, libraries, protection settings and users, export to files; and 'tia_help' - the description and parameters of any tool of the server"),
@@ -59,6 +59,7 @@ namespace TiaMcpServer.ModelContextProtocol
             new Group("hw_write", "Hardware and network: create and change", false, "Create devices, plug modules, set parameters of hardware, connect to subnets and IO systems, create connections"),
             new Group("hw_delete", "Hardware and network: delete", false, "Delete devices, subnets and connections; take an interface off its subnet"),
             new Group("hmi_write", "WinCC Unified: create, change and delete", false, "Create, change and delete screens, screen items, tags, alarms, logs, scripts, lists and connections; compile"),
+            new Group("drive_write", "Drives: parameters and telegrams", false, "Set parameters of SINAMICS drives and change their telegrams"),
             new Group("plc_download", "Download to the PLC", false, "Load the project into a PLC"),
             new Group("security_protection", "Protection: passwords of PLCs and blocks", false, "Protection of the PLC configuration data, access level and its passwords, display password, know-how and write protection of blocks"),
             new Group("security_users", "Protection: users, roles, password policy", false, "Users of the project, of the web server and of the OPC UA server, user groups, roles and their rights, password policy")
@@ -93,6 +94,11 @@ namespace TiaMcpServer.ModelContextProtocol
             if (toolName.StartsWith("hw_", StringComparison.Ordinal) || toolName.StartsWith("net_", StringComparison.Ordinal))
             {
                 return Has("_delete_") || Has("_disconnect_") ? "hw_delete" : "hw_write";
+            }
+
+            if (toolName.StartsWith("drive_", StringComparison.Ordinal))
+            {
+                return "drive_write";
             }
 
             if (toolName.StartsWith("unified_", StringComparison.Ordinal))

@@ -21,8 +21,11 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>Protection, passwords and users: the sec_* tools.</summary>
         public const string Security = "security";
 
+        /// <summary>SINAMICS drives through Startdrive: the drive_* tools.</summary>
+        public const string Drive = "drive";
+
         /// <summary>The areas that can be named after '--tools', in the order the documentation lists them.</summary>
-        public static readonly IReadOnlyList<string> Areas = new[] { Plc, Hw, Unified, Library, Transfer, Download, Security };
+        public static readonly IReadOnlyList<string> Areas = new[] { Plc, Hw, Unified, Library, Transfer, Download, Security, Drive };
 
         /// <summary>Connection, project and diagnostics: registered whatever '--tools' says.</summary>
         private static readonly HashSet<string> Always = new HashSet<string>(StringComparer.Ordinal)
@@ -66,6 +69,11 @@ namespace TiaMcpServer.ModelContextProtocol
             if (toolName.StartsWith("hw_", StringComparison.Ordinal) || toolName.StartsWith("net_", StringComparison.Ordinal))
             {
                 return Hw;
+            }
+
+            if (toolName.StartsWith("drive_", StringComparison.Ordinal))
+            {
+                return Drive;
             }
 
             if (toolName.StartsWith("sec_", StringComparison.Ordinal))

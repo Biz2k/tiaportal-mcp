@@ -9,6 +9,10 @@ Connection, project and session tools.
 | [`create_project`](#create_project) | session |
 | [`disconnect`](#disconnect) | session |
 | [`doctor`](#doctor) | read |
+| [`drive_get_objects`](#drive_get_objects) | read |
+| [`drive_get_parameters`](#drive_get_parameters) | read |
+| [`drive_manage_telegrams`](#drive_manage_telegrams) | write |
+| [`drive_set_parameters`](#drive_set_parameters) | write |
 | [`get_accessible_devices`](#get_accessible_devices) | read |
 | [`get_installed_software`](#get_installed_software) | read |
 | [`get_project`](#get_project) | read |
@@ -67,6 +71,45 @@ No parameters.
 Diagnose the TIA-Portal environment: connection, open project, active and installed TIA-Portal versions, Openness user group membership
 
 No parameters.
+
+## drive_get_objects
+
+List the SINAMICS drives of the project that Startdrive knows: for each drive object its path (what the other drive tools take), device and device type, drive object number, number of parameters and its telegrams with number and size. A drive is created with 'hw_create_device' and an identifier from the catalog ('hw_get_catalog', folder 'Drives & starters'). Needs SINAMICS Startdrive installed
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `devicePath` | string | no (default ``) | devicePath: only the drives of this device; empty (default) lists all of the project |
+
+## drive_get_parameters
+
+Read the offline parameters of a drive object: by name ('names', with the list of values of an enumerated parameter, the bits of a bit-coded one and the elements of an indexed one) or by a text found in the name or in the description ('filter', paged). A drive has thousands of parameters - ask for what you need. 'p' parameters are settings, 'r' parameters display values; an indexed parameter is 'p1120' with elements 'p1120[0]' ..., and only the elements carry values. These are the values of the project, not of a running drive
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `drivePath` | string | yes | drivePath: path of the drive from 'drive_get_objects', or the device path when the device has one drive object |
+| `names` | array of string null | no (default ``) | names: the parameters to read in full, e.g. ["p1082", "p1120", "r46"]; empty uses filter |
+| `filter` | string | no (default ``) | filter: text looked for in the name and in the description, e.g. 'ramp', 'speed', 'p13'; empty (default) lists all |
+| `onlyWritable` | boolean | no (default `False`) | onlyWritable: leave the 'r' parameters out (default false) |
+| `limit` | integer | no (default `60`) | limit: the most parameters to return in one page (default 60); 0 returns all |
+| `offset` | integer | no (default `0`) | offset: parameters to skip, to read the next page (default 0) |
+
+## drive_manage_telegrams
+
+Change the PROFIdrive telegrams of a drive object, several actions at once, all or nothing: 'change' gives the telegram of a type another number (e.g. main telegram 105 -> 3), 'insert' adds a supplementary, additional, safety or torque telegram, 'erase' removes one, 'resize' sets the size of an additional telegram. A number the drive does not offer is refused before anything changes. Returns the telegrams afterwards with their sizes. The PLC side - the technology object or the blocks that use the telegram - has to match
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `drivePath` | string | yes | drivePath: path of the drive from 'drive_get_objects', or the device path when the device has one drive object |
+| `actions` | array of object | yes | actions: applied in order; fields: action (change, insert, erase, resize), type (main, supplementary, additional, safety, torque), number, inputSize, outputSize |
+
+## drive_set_parameters
+
+Set offline parameters of a drive object, several at once, all or nothing; every value is read back and returned as before/after, since TIA Portal may round or limit it. Write an element of an indexed parameter ('p1120[0]'), not the parameter itself. 'r' parameters cannot be written. A G120 control unit without a power module takes no parameters. The change is in the project; the drive gets it with a download. Wrong drive parameters can damage a machine: change what the user asked for, with the values they gave
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `drivePath` | string | yes | drivePath: path of the drive from 'drive_get_objects', or the device path when the device has one drive object |
+| `parameters` | object | yes | parameters: name -> value, e.g. {"p1082[0]": 3000, "p1121[0]": 2.5} |
 
 ## get_accessible_devices
 
