@@ -224,7 +224,7 @@ exception is thrown». Следствия:
 | `docs/handoff/recipes.md` | Как добавить инструмент: образцы кода и чек-лист |
 | `docs/handoff/tasks/*.md` | Задачи Sonnet, по одной на файл |
 | `docs/handoff/findings.md` | Что выяснено в закрытых задачах первой и второй передачи |
-| `docs/handoff/decisions.md`, `deferred.md`, `lad.md` | Решения Biz; отложенное; заметки к LAD |
+| `docs/handoff/decisions.md`, `deferred.md`, `lad.md` | Решения Biz; отложенное; как сделаны инструменты LAD |
 | `docs/handoff/api/*.txt` | Справочники по классам Openness, сняты отражением с V21 |
 | `docs/PLAN.md` | План: что осталось сделать, и что через Openness невозможно |
 | `docs/error-model.md` | Коды ошибок и как их поднимать |

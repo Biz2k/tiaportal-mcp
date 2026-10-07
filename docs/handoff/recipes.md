@@ -5,8 +5,13 @@
 
 ## Имена
 
-- Инструменты: `snake_case` с префиксом области — `plc_`, `hw_`, `net_`, `unified_`; общие для
-  проекта и библиотеки без префикса (`get_library_types`).
+- Инструменты: `snake_case` с префиксом области — `plc_`, `hw_`, `net_`, `unified_`, `drive_`,
+  `sec_`; общие для проекта и библиотеки без префикса (`get_library_types`, `save_project`).
+- По имени сервер относит инструмент к области (`ToolSets.cs`, флаг `--tools`) и к групповому
+  инструменту (`ToolGroups.cs`, `GroupOf`): `plc_` с `_delete_` в имени — группа `plc_delete`,
+  остальные изменяющие `plc_` — `plc_write`; `hw_` и `net_` с `_delete_` или `_disconnect_` —
+  `hw_delete`; всё читающее — `tia_read`. Имя выбирать так, чтобы группа вышла верной.
+- Инструмент для одного языка несёт язык в имени: `plc_get_lad_networks`, `plc_create_scl_block`.
 - Чтение: `<область>_get_<что>`. Запись: `<область>_manage_<что>` для пакетных инструментов
   (create / update / upsert / delete в одном вызове), иначе `<область>_<глагол>_<что>`.
 - Переименование или удаление инструмента ломает клиентов. Оно допустимо, но должно быть видно:
@@ -15,16 +20,26 @@
 ## Чек-лист нового инструмента
 
 1. Отражение и проба (см. «Рабочий цикл» в `context.md`).
-2. Типы запроса и ответа — `ModelContextProtocol/Unified<Что>.cs`. У каждого свойства запроса
-   `[Description("...")]`: это единственная документация, которую видит модель-клиент.
-3. Операция — `Siemens/Portal.Unified.<Что>.cs`, в `Operation.Run`.
-4. Инструмент — `ModelContextProtocol/McpServer.Unified.cs`.
+2. Типы запроса и ответа — в `ModelContextProtocol/` рядом с типами той же области. У каждого
+   свойства запроса `[Description("...")]`: это единственная документация, которую видит
+   модель-клиент (в виде по умолчанию — через `tia_help`).
+3. Операция — `Siemens/Portal.<Область>.cs`, в `Operation.Run`.
+4. Инструмент — `ModelContextProtocol/McpServer.<Область>.cs`.
 5. Модульные тесты на всё, что не требует TIA (разбор, преобразования, проверки входа) —
-   `tests/TiaMcpServer.Test/Test<N><Что>.cs`.
+   `tests/TiaMcpServer.Test/Test<N><Что>.cs`, с `[TestCategory("NoTia")]`.
 6. Имя в `docs/tools-list.txt` (по алфавиту, порядок `Ordinal`); изменяющий инструмент — ещё и
-   в список `edits` теста `Test_703` в `Test7ToolRegistration.cs`.
-7. Живая проверка через `tools/mcp-call.ps1`.
-8. Документация и коммит (шаги 7–8 рабочего цикла).
+   в список `edits` теста `Test_703` в `Test7ToolRegistration.cs`. Область и группа — см.
+   «Имена»; `Test28ToolSets` и `Test33ToolGroups` назовут инструмент, который никуда не попал.
+7. Живая проверка: при разработке — `tools/inproc-call.ps1`, в конце задачи — установленный
+   сервер (`tools/mcp-call.ps1 -Grouped`). См. «Живая проверка» ниже.
+8. Вызов в `tools/smoke/read.json` (читающий) или `tools/smoke/write.json` (изменяющий, с
+   уборкой за собой) — прогон называет изменяющий инструмент без вызова.
+9. Документация и коммит (шаги 7–8 рабочего цикла): `CHANGELOG.md`, оба README (и числа
+   инструментов в них), `Implemented_Tools.md`, `tools/make-tool-docs.ps1`.
+
+Чувствительное (пароли, защита, пользователи) — только отдельными инструментами области
+`security`, по одному на вид изменения: владелец решает в клиенте, что разрешить. Эту область
+ведёт Opus.
 
 ## Заголовок файла
 
@@ -81,7 +96,10 @@ public static ResponseUnifiedActions ManageUnifiedTags(
 
 - `[WriteTool]` — инструмент не регистрируется при `--read-only`.
 - `Guarded` — проверка режима записи, транзакция TIA Portal, перевод ошибок. Без транзакции —
-  `GuardedNoTransaction` (нужно редко; пример — загрузка в ПЛК).
+  `GuardedNoTransaction`: загрузка в ПЛК, компиляция, операции с проектом, а также случаи, когда
+  нужно несколько попыток — после исключения Openness транзакция уже не фиксируется, поэтому
+  каждая попытка идёт в своей `Portal.InTransaction` (образец — `plc_create_technology_object`,
+  перебор версий в `Portal.TechnologyObjects.cs`).
 - `UnifiedActions(results)` собирает ответ пакетного инструмента.
 
 ## Пакетная операция «всё или ничего»
@@ -183,8 +201,21 @@ $calls = @(
   @{ name = 'unified_manage_tag_tables'; args = @{ softwarePath = $h; actions = @(,@{ action = 'delete'; tableName = 'MCPT_Tbl' }) } },
   @{ name = 'disconnect' })
 $calls | ConvertTo-Json -Depth 10 | Set-Content "$scratch\calls.json" -Encoding UTF8
-powershell -NoProfile -ExecutionPolicy Bypass -File tools\mcp-call.ps1 -Calls "$scratch\calls.json"
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\inproc-call.ps1 -Calls "$scratch\calls.json"
 ```
+
+Один файл вызовов годится трём скриптам:
+
+| Скрипт | Что это | Запрос «Openness access» |
+|---|---|---|
+| `tools\inproc-call.ps1` | методы инструментов сборки внутри PowerShell | нет — им и вести разработку |
+| `tools\mcp-call.ps1` | настоящий сервер по stdio, инструменты по одному (`--full`) | да, на каждую новую сборку |
+| `tools\mcp-call.ps1 -Grouped` | то же в виде по умолчанию: вызовы идут через групповые инструменты | да |
+
+`inproc-call` не проверяет то, что делает сам сервер: схему параметров, очередь вызовов,
+регистрацию, группы. Поэтому в конце задачи — один прогон настоящим сервером, предупредив Biz:
+запрос доступа подтверждает только он, а при свёрнутом TIA Portal запроса не видно и вызов
+просто ждёт.
 
 Набор для каждого нового инструмента: удачный путь → чтение результата → каждая ветка ошибки →
 повторный вызов (идемпотентность `upsert`) → удаление своих объектов → чтение, что чисто.
