@@ -150,14 +150,14 @@ Openness. Подтвердите запрос в окне TIA Portal.
 если зарегистрированные инструменты расходятся с этим файлом. По умолчанию регистрируется
 139 инструментов (70 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
 
-Доступны всегда (70):
+Доступны всегда (69):
 
 | Область                          | Инструменты |
 | -------------------------------- | ----------- |
 | Подключение и состояние          | `connect`, `disconnect`, `get_state`, `get_tia_instances`, `doctor` |
 | Проект и сессия                  | `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project` |
 | Структура проекта                | `get_project_tree`, `hw_get_devices`, `hw_get_device_info`, `hw_get_device_item_info`, `hw_get_topology`, `hw_search_catalog`, `net_get_connections` |
-| Программа ПЛК                    | `plc_get_summary`, `plc_get_software_info`, `plc_get_software_tree`, `plc_compile_software` |
+| Программа ПЛК                    | `plc_get_summary`, `plc_get_software_info`, `plc_get_software_tree` |
 | Блоки                            | `plc_get_blocks`, `plc_get_blocks_hierarchy`, `plc_get_block_info`, `plc_get_block_data`, `plc_get_block_interface`, `plc_get_block_source` |
 | Типы данных                      | `plc_get_types`, `plc_get_type_info`, `plc_get_type_source` |
 | Теги и константы                 | `plc_get_tag_tables`, `plc_get_tag_table_info`, `plc_get_tags`, `plc_get_tag_info`, `plc_get_constants` |
@@ -169,13 +169,13 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | WinCC Unified                    | `unified_get_screens`, `unified_get_screen_groups`, `unified_get_scripts`, `unified_get_tag_table_groups`, `unified_get_logs`, `unified_get_logging_tags`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists`, `unified_get_runtime_settings`, `unified_get_system_tags` |
 | Загрузка                         | `get_download_targets` |
 
-Не регистрируются с `--read-only` (69):
+Не регистрируются с `--read-only` (70):
 
 | Область                          | Инструменты |
 | -------------------------------- | ----------- |
 | Импорт                           | `import_objects`, `instantiate_master_copy` |
 | Группы блоков и типов            | `plc_create_block_group`, `plc_delete_block_group`, `plc_create_type_group`, `plc_delete_type_group` |
-| Блоки                            | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_replace_source`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block` |
+| Блоки                            | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_replace_source`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block`, `plc_compile_software` |
 | Типы данных                      | `plc_rename_type`, `plc_delete_type`, `plc_copy_type`, `plc_move_type` |
 | Таблицы тегов                    | `plc_create_tag_table`, `plc_rename_tag_table`, `plc_delete_tag_table`, `plc_create_tag_table_group`, `plc_delete_tag_table_group` |
 | Теги и константы                 | `plc_create_tag`, `plc_update_tag`, `plc_delete_tag`, `plc_create_user_constant`, `plc_update_user_constant`, `plc_delete_user_constant`, `plc_manage_tag_table_entries` |

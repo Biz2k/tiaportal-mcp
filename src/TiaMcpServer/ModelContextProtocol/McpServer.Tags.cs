@@ -792,49 +792,14 @@ namespace TiaMcpServer.ModelContextProtocol
         #endregion
 
         [WriteTool]
-        [McpServerTool(Name = "plc_manage_tag_table_entries", Title = "Manage Tag Table Entries", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
-         Description("Batch CRUD for tags/constants. Provide an array of actions (create/update/delete) with name, dataType, logicalAddress, comment.")]
-        public static object ManageTagTableEntries(string softwarePath, string tagTablePath, System.Text.Json.Nodes.JsonArray actions)
+        [McpServerTool(Name = "plc_manage_tag_table_entries", Title = "Manage the tags of a tag table", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, update, upsert or delete PLC tags of one tag table, several at once. The actions are applied in order and all or nothing: if one cannot be applied, none is, and the error names every action that is wrong. Fields of an action: action, name, newName (renames), dataType, logicalAddress, comment. A new tag takes dataType and logicalAddress together. User constants are not handled here: 'plc_create_user_constant', 'plc_update_user_constant'")]
+        public static ResponseUnifiedActions ManageTagTableEntries(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("tagTablePath: root-relative path of the tag table, e.g. TagGroup1/Table1")] string tagTablePath,
+            [Description("actions: the changes to make, applied in order")] List<PlcTagAction> actions)
         {
-            return Guarded(nameof(ManageTagTableEntries), () =>
-            {
-                var results = new List<object>();
-                int successCount = 0;
-                foreach (var node in actions)
-                {
-                    if (node == null) continue;
-                    var actionObj = node.AsObject();
-                    string action = actionObj["action"]?.GetValue<string>() ?? "";
-                    string name = actionObj["name"]?.GetValue<string>() ?? "";
-                    string dataType = actionObj["dataType"]?.GetValue<string>() ?? "";
-                    string logicalAddress = actionObj["logicalAddress"]?.GetValue<string>() ?? "";
-                    string comment = actionObj["comment"]?.GetValue<string>() ?? "";
-                    
-                    try {
-                        if (action == "create") {
-                            var tag = Portal.CreateTag(softwarePath, tagTablePath, name, dataType, logicalAddress);
-                            if (!string.IsNullOrEmpty(comment)) Portal.UpdateTag(softwarePath, JoinPath(tagTablePath, name), null, null, comment);
-                            successCount++;
-                            results.Add(new { name = name, status = "success", action = "create" });
-                        } else if (action == "update") {
-                            string tagPath = string.IsNullOrEmpty(tagTablePath) ? name : JoinPath(tagTablePath, name);
-                            Portal.UpdateTag(softwarePath, tagPath, string.IsNullOrEmpty(dataType)?null:dataType, string.IsNullOrEmpty(logicalAddress)?null:logicalAddress, string.IsNullOrEmpty(comment)?null:comment);
-                            successCount++;
-                            results.Add(new { name = name, status = "success", action = "update" });
-                        } else if (action == "delete") {
-                            string tagPath = string.IsNullOrEmpty(tagTablePath) ? name : JoinPath(tagTablePath, name);
-                            Portal.DeleteTag(softwarePath, tagPath);
-                            successCount++;
-                            results.Add(new { name = name, status = "success", action = "delete" });
-                        } else {
-                            results.Add(new { name = name, status = "error", error = "Unknown action: " + action });
-                        }
-                    } catch (Exception ex) {
-                        results.Add(new { name = name, status = "error", error = Why(ex) });
-                    }
-                }
-                return new { successCount = successCount, results = results };
-            });
+            return Guarded(nameof(ManageTagTableEntries), () => UnifiedActions(Portal.ManagePlcTags(softwarePath, tagTablePath, actions)));
         }
     }
 }

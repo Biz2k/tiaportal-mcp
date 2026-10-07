@@ -51,6 +51,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        // A compile changes no code, but it marks the project as modified and rewrites the compiled state of the
+        // blocks; it is a write tool like 'plc_compile_block' and 'unified_compile', and '--read-only' leaves it out.
+        [WriteTool]
         [McpServerTool(Name = "plc_compile_software", Title = "Compile software", Destructive = false, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
          Description("Compile the plc software and report every compiler message with the object it belongs to, so errors can be fixed without re-reading the whole PLC. Warnings are reported as a successful compile with detail; only errors fail the call")]
         public static ResponseCompileSoftware CompileSoftware(

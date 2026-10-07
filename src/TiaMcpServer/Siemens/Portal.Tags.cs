@@ -5,6 +5,8 @@ using Siemens.Engineering.SW.WatchAndForceTables;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using TiaMcpServer.ModelContextProtocol;
 using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.Siemens
@@ -574,12 +576,119 @@ namespace TiaMcpServer.Siemens
 
                     var table = RequireTagTable(softwarePath, tagTablePath);
 
+                    if (!string.IsNullOrWhiteSpace(dataTypeName))
+                    {
+                        RequireSoundTag(softwarePath, name, dataTypeName, logicalAddress, true);
+                    }
+
                     return string.IsNullOrWhiteSpace(dataTypeName)
                         ? table.Tags.Create(name)
                         : table.Tags.Create(name, dataTypeName, logicalAddress);
                 },
                 ("softwarePath", softwarePath), ("tagTablePath", tagTablePath), ("name", name),
                 ("dataTypeName", dataTypeName), ("logicalAddress", logicalAddress));
+        }
+
+        /// <summary>
+        /// Applies a batch of changes to the tags of one table. The batch is checked as a whole first
+        /// (PlcTagActions.Check): the caller runs this in a transaction, and after an exception of Openness that
+        /// transaction cannot be committed, so a batch is applied completely or not at all.
+        /// </summary>
+        public List<UnifiedActionResult> ManagePlcTags(string softwarePath, string tagTablePath, IList<PlcTagAction>? actions)
+        {
+            return Operation.Run(_logger, nameof(ManagePlcTags), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    var table = RequireTagTable(softwarePath, tagTablePath);
+                    var problems = PlcTagActions.Check(actions, table.Tags.Select(t => t.Name));
+
+                    if (problems.Count > 0)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"{problems.Count} problem(s) in the actions; nothing was changed. " + string.Join(" | ", problems));
+                    }
+
+                    var results = new List<UnifiedActionResult>();
+
+                    foreach (var action in actions!)
+                    {
+                        var verb = PlcTagActions.Verb(action)!;
+                        var name = action.Name!.Trim();
+                        var result = new UnifiedActionResult { Action = verb, Name = name, Status = "success" };
+                        var tag = table.Tags.Find(name);
+
+                        results.Add(result);
+
+                        if (verb == "delete")
+                        {
+                            tag!.Delete();
+
+                            continue;
+                        }
+
+                        // The type and the address as the tag will have them, checked as a pair before the write.
+                        if (action.Type != null || action.Address != null)
+                        {
+                            RequireSoundTag(softwarePath, name, action.Type ?? tag?.DataTypeName, action.Address ?? tag?.LogicalAddress, action.Type != null);
+                        }
+
+                        if (tag == null)
+                        {
+                            tag = action.Type == null ? table.Tags.Create(name) : table.Tags.Create(name, action.Type, action.Address);
+                            result.Notes.Add("Created.");
+                        }
+                        else
+                        {
+                            if (action.Type != null)
+                            {
+                                tag.DataTypeName = action.Type;
+                                result.Applied.Add("dataType");
+                            }
+
+                            if (action.Address != null)
+                            {
+                                tag.LogicalAddress = action.Address;
+                                result.Applied.Add("logicalAddress");
+                            }
+                        }
+
+                        if (action.Comment != null)
+                        {
+                            foreach (var item in tag.Comment.Items)
+                            {
+                                item.Text = action.Comment;
+                            }
+
+                            result.Applied.Add("comment");
+                        }
+
+                        var newName = (action.NewName ?? string.Empty).Trim();
+
+                        if (newName.Length > 0 && !string.Equals(newName, name, StringComparison.Ordinal))
+                        {
+                            EnsureValidName(newName);
+                            tag.Name = newName;
+                            result.Applied.Add("newName");
+                            result.Name = newName;
+                        }
+                    }
+
+                    return results;
+                },
+                ("softwarePath", softwarePath), ("tagTablePath", tagTablePath));
+        }
+
+        /// <summary>Refuses a data type or an address TIA Portal would store without a word (PlcTagRules).</summary>
+        /// <param name="typeIsNew">False when the type is the one the tag already has: then only the address is judged against it.</param>
+        private void RequireSoundTag(string softwarePath, string name, string? dataType, string? address, bool typeIsNew)
+        {
+            var problem = PlcTagRules.Problem(dataType, address,
+                typeName => !typeIsNew || GetTypes(softwarePath).Any(t => string.Equals(t.Name, typeName, StringComparison.OrdinalIgnoreCase)));
+
+            if (problem != null)
+            {
+                throw new PortalException(PortalErrorCode.InvalidParams, $"Tag '{name}': {problem}");
+            }
         }
 
         /// <summary>Every optional argument left null keeps the tag's current value.</summary>
@@ -599,6 +708,12 @@ namespace TiaMcpServer.Siemens
                     var tag = GetTag(softwarePath, tagPath)
                         ?? throw new PortalException(PortalErrorCode.NotFound,
                             $"Tag not found at '{tagPath}'. Use 'plc_get_tags' to list the available tags.");
+
+                    if (!string.IsNullOrWhiteSpace(dataTypeName) || logicalAddress != null)
+                    RequireSoundTag(softwarePath, tag.Name,
+                        string.IsNullOrWhiteSpace(dataTypeName) ? tag.DataTypeName : dataTypeName,
+                        logicalAddress == null ? tag.LogicalAddress : logicalAddress,
+                        !string.IsNullOrWhiteSpace(dataTypeName));
 
                     // Applied before the rename so a later lookup by the new name is not needed.
                     if (dataTypeName != null) tag.DataTypeName = dataTypeName;

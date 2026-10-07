@@ -612,13 +612,13 @@ List the PLC watch tables of a plc software, optionally filtered by a regular ex
 
 ## plc_manage_tag_table_entries
 
-Batch CRUD for tags/constants. Provide an array of actions (create/update/delete) with name, dataType, logicalAddress, comment.
+Create, update, upsert or delete PLC tags of one tag table, several at once. The actions are applied in order and all or nothing: if one cannot be applied, none is, and the error names every action that is wrong. Fields of an action: action, name, newName (renames), dataType, logicalAddress, comment. A new tag takes dataType and logicalAddress together. User constants are not handled here: 'plc_create_user_constant', 'plc_update_user_constant'
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `softwarePath` | string | yes |  |
-| `tagTablePath` | string | yes |  |
-| `actions` | array | yes |  |
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `tagTablePath` | string | yes | tagTablePath: root-relative path of the tag table, e.g. TagGroup1/Table1 |
+| `actions` | array of object | yes | actions: the changes to make, applied in order |
 
 ## plc_move_block
 

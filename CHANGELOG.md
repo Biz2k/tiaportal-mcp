@@ -2,6 +2,28 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `plc_manage_tag_table_entries` is rewritten; three defects are gone. An `update` passed its fields one place off:
+  the data type became the new NAME of the tag, the address its data type, the comment its address (and the comment
+  of a `create` landed in the address). Fields the tool did not know were dropped without a word. An action that
+  failed did not fail the call. Now the actions are a typed list (`action`, `name`, `newName`, `dataType` or
+  `dataTypeName`, `logicalAddress`, `comment`), an unknown field is refused, the whole batch is checked against
+  the names of the table before TIA Portal is touched and the error names every wrong action, and the batch is applied
+  all or nothing. `upsert` is new; the comment is set for every project language. User constants were never handled
+  by the tool, and its description no longer says so.
+- `plc_create_tag`, `plc_update_tag`, `plc_manage_tag_table_entries`: the data type and the address of a tag are
+  checked. Openness stores any text in both - `NoSuchType`, `garbage`, a Bool at `%MW4` - and a PLC tag has no
+  validation of its own, so the mistake showed only at the next compile. Refused now: a type that is neither an
+  elementary type nor a PLC data type of the PLC, a text that is not an absolute address, and an address whose width
+  does not fit the type (bit, byte, word, double word). The rules accept all 2764 tags of the three PLCs of the test
+  project.
+
+### Changed
+
+- `plc_compile_software` is a write tool, like `plc_compile_block` and `unified_compile`: a compile marks the
+  project as modified, and `--read-only` now leaves it out (69 tools are always available, 70 are write tools).
+
 ## [0.5.0] - 2026-10-07
 
 139 tools (70 with `--read-only`), 154 unit tests that need no TIA Portal, two smoke runs against a live project. This release
