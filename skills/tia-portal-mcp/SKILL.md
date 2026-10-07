@@ -67,7 +67,9 @@ name, and the change lands there.
   outside them, say so and offer: the user adds an address to the PC interface, or - after their
   yes - you set a port of the PLC (an unconfigured one, 0.0.0.0, else the first) to an address in
   a subnet of the PC interface (`hw_set_device_item_attributes`, `Node.Address`), keep the old
-  value, load, and put the old address back when the simulation is over.
+  value, load, and put the old address back when the simulation is over. A port with connections
+  to partners in its subnet cannot be moved: the hardware stops compiling - put it back and say so.
+- `trustDevice` of `download_to_plc`: only after the user confirmed the device is theirs.
 - If the write tools are missing from the session, the server runs with `--read-only`
   (`get_state` shows `allowWrite: false`). Say so; do not look for a way around it.
 - **Protection, passwords, users (`sec_*`)**: before each call say what will change on which PLC,

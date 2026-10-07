@@ -9,6 +9,10 @@
   subnet. `download_to_plc` takes `targetAddress`, the address the device answers at now when it is not the one of the
   project; an address nothing answers at is refused before the download starts. The search also returns the addresses
   of the PC interface and says when a device is outside their subnets.
+- `download_to_plc` takes `trustDevice`: a device whose certificate TIA Portal cannot verify (a PLCSIM instance, a
+  self-signed PLC on the first connection - the dialog "... might not be a trustworthy device") is refused by default
+  with what TIA Portal found, and accepted only with `trustDevice: true`. Before, such a download just answered
+  "Connect to module ... failed".
 - `download_to_plc` takes `passwords`: the passwords the PLC asks for during the download, by the type of the step
   (`ModuleWriteAccessPassword`, `PlcMasterSecretPassword`, ...). A step that asked and got none is named in the answer.
 - **Changed default:** the client sees ten tools instead of 159 - `tia_read` for everything that only reads (with

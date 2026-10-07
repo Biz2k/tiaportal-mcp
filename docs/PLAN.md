@@ -224,6 +224,14 @@ Portal, «дымовые» прогоны чтения и записи (`tools/s
     обратно: оборудование грузится, устройство берёт адрес проекта, остаток догружается
     повторным вызовом без `targetAddress`. Поиск `GetAccessibleDevices` отстаёт: старый адрес
     после смены, второй инстанс PLCSIM (192.168.10.1) не показан.
+  - **Сделано 07.10.2026** — сертификат устройства при подключении: событие
+    `ConnectionConfiguration.OnlineLegitimation` (`TlsVerificationConfiguration`), параметр
+    `trustDevice`. Без ответа на него новый инстанс PLCSIM отвечал «Connect to module failed».
+    Проба на `PLC (A5)`: с `trustDevice` подключение есть; смена адреса порта на подсеть ПК
+    ломает компиляцию оборудования (S7-соединение с `PLC (A0)` в другой подсети) — адрес
+    возвращён. Нужен `hw_compile` с сообщениями (п. 4.2): загрузка говорит только «Compilation
+    of hardware configuration was completed with error». Вход пользователем при подключении
+    (`OnlineAuthenticationConfiguration`, CPU с прошивкой V4) не сделан.
   - [ ] **Осталось:** F-пароль Safety; пользователи UMC-сервера
     (`UmcServerConfigurator`) и свои права устройств (`CustomDeviceFunctionRights`);
     политика паролей ПЛК (`PlcPasswordPolicyService`).

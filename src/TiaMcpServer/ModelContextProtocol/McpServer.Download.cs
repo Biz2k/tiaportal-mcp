@@ -71,13 +71,14 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("selections: optional answers that override the defaults, as 'StepType=Option' pairs separated by commas, e.g. 'OverwriteSystemData=Overwrite,StopModules=StopAll'. Step types and their options are listed under 'steps' in every response")] string selections = "",
             [Description("downloadUserManagement: what to do with the user management data (users, roles) when the CPU holds data that differs from the project: 'keep' (default) leaves the CPU's data as it is, 'update' takes the users of the project but keeps the CPU's passwords, 'overwrite' replaces all of it by the project's data and resets the passwords. The same answer can be given as 'UserManagementDownload=<option>' in selections, which wins")] string downloadUserManagement = "keep",
             [Description("targetAddress: the address the device answers at now, when it is not the address of the project - an empty PLCSIM instance, a new PLC, a PLC whose address the project changed. The device has to answer from this PC (see 'pcAddresses' of 'get_accessible_devices'). When hardware is loaded the device takes the address of the project and the rest of the download fails: repeat the call without targetAddress to finish. Empty (default) goes to the address of the project")] string targetAddress = "",
-            [Description("passwords: the passwords the PLC asks for during the download, by the type of the step that asks - e.g. {\"ModuleWriteAccessPassword\": \"...\"} for the access level, {\"PlcMasterSecretPassword\": \"...\"} for the protection of confidential PLC configuration data; the key \"*\" answers every step that asks. A step that asked and got none is named under 'steps'. Use only passwords the user of this conversation gave; never make one up, never repeat it in your answer")] Dictionary<string, string>? passwords = null)
+            [Description("passwords: the passwords the PLC asks for during the download, by the type of the step that asks - e.g. {\"ModuleWriteAccessPassword\": \"...\"} for the access level, {\"PlcMasterSecretPassword\": \"...\"} for the protection of confidential PLC configuration data; the key \"*\" answers every step that asks. A step that asked and got none is named under 'steps'. Use only passwords the user of this conversation gave; never make one up, never repeat it in your answer")] Dictionary<string, string>? passwords = null,
+            [Description("trustDevice: accept the certificate of the device when TIA Portal cannot verify it (its dialog '... might not be a trustworthy device'): a PLCSIM instance and a PLC with a self-signed certificate show one on the first connection. Default false: the download is then refused and the answer says what TIA Portal found. Set true only after the user confirmed that this is the device they mean")] bool trustDevice = false)
         {
             return GuardedNoTransaction(nameof(DownloadToPlc), () =>
             {
                 var outcome = Portal.DownloadToPlc(
                     softwarePath, modeName, pcInterfaceName, targetInterfaceName,
-                    hardware, software, stopPlc, startPlc, ParseSelections(selections), downloadUserManagement, targetAddress, passwords);
+                    hardware, software, stopPlc, startPlc, ParseSelections(selections), downloadUserManagement, targetAddress, passwords, trustDevice);
 
                 var unanswered = outcome.Steps.Where(s => !s.Answered).Select(s => s.Type).Distinct().ToList();
 
@@ -98,6 +99,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Hardware = hardware,
                     Software = software,
                     Steps = outcome.Steps,
+                    Connection = outcome.Connection.Count > 0 ? outcome.Connection : null,
                     Parts = outcome.Messages.Where(m => m.Depth == 0).ToList(),
                     Messages = LimitMessages(outcome.Messages, maxMessages)
                 };
@@ -191,6 +193,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>Every configuration step TIA Portal raised, with its options and the answer given.</summary>
         public IEnumerable<DownloadStep>? Steps { get; set; }
+
+        public IEnumerable<string>? Connection { get; set; }
 
         /// <summary>
         /// The top-level messages of the result with their own state, errors and warnings. TIA Portal reports the parts of a

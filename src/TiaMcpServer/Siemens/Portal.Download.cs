@@ -78,6 +78,9 @@ namespace TiaMcpServer.Siemens
 
         public List<DownloadStep> Steps { get; set; } = new List<DownloadStep>();
 
+        /// <summary>What the device asked while the connection was made - its certificate, a password - and what was answered.</summary>
+        public List<string> Connection { get; set; } = new List<string>();
+
         public List<DownloadMessage> Messages { get; set; } = new List<DownloadMessage>();
     }
 
@@ -301,7 +304,8 @@ namespace TiaMcpServer.Siemens
             IDictionary<string, string>? selections = null,
             string userManagement = "keep",
             string? targetAddress = null,
-            IDictionary<string, string>? passwords = null)
+            IDictionary<string, string>? passwords = null,
+            bool trustDevice = false)
         {
             return Operation.Run(_logger, nameof(DownloadToPlc), PortalErrorCode.InvalidState, () =>
             {
@@ -391,6 +395,56 @@ namespace TiaMcpServer.Siemens
                 // that aborted from the first callback did exactly that (2026-10-05). There is no
                 // way to preview a download: AnswerDownloadStep catches everything itself.
 
+                // What the device asks while TIA Portal connects to it: whether its certificate is trusted (the dialog
+                // "... might not be a trustworthy device"), a password for reading. Without an answer the connection is
+                // refused ("Connect to module ... failed"). Like every Openness callback this one must never throw.
+                global::Siemens.Engineering.Online.OnlineConfigurationDelegate legitimation = configuration =>
+                {
+                    try
+                    {
+                        if (configuration is global::Siemens.Engineering.Online.Configurations.TlsVerificationConfiguration tls)
+                        {
+                            var info = (tls.VerificationInfo ?? string.Empty).Replace("\r", " ").Replace("\n", " ").Trim();
+
+                            if (trustDevice)
+                            {
+                                tls.CurrentSelection = global::Siemens.Engineering.Online.Configurations.TlsVerificationConfigurationSelection.Trusted;
+                                outcome.Connection.Add($"The certificate of '{tls.PlcName}' was accepted as trusted, as trustDevice says. TIA Portal about it: {info}");
+                            }
+                            else
+                            {
+                                outcome.Connection.Add($"'{tls.PlcName}' shows a certificate TIA Portal cannot verify, and it was NOT accepted: {info} If the user confirms that this is the device they mean, repeat the call with trustDevice=true.");
+                            }
+                        }
+                        else if (configuration is global::Siemens.Engineering.Online.Configurations.OnlinePasswordConfiguration password)
+                        {
+                            var name = configuration.GetType().Name;
+                            var given = passwords?.FirstOrDefault(p => string.Equals(p.Key?.Trim(), name, StringComparison.OrdinalIgnoreCase)).Value
+                                        ?? passwords?.FirstOrDefault(p => p.Key?.Trim() == "*").Value;
+
+                            if (string.IsNullOrEmpty(given))
+                            {
+                                outcome.Connection.Add($"The device asks for a password to connect ({name}) and none was given: pass it in 'passwords' as {{\"{name}\": \"...\"}}.");
+                            }
+                            else
+                            {
+                                password.SetPassword(Secret(given, "password"));
+                                outcome.Connection.Add($"The password for {name} given in 'passwords' was supplied.");
+                            }
+                        }
+                        else
+                        {
+                            outcome.Connection.Add($"The device asks for '{configuration.GetType().Name}' to connect; the server has no answer for it.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        outcome.Connection.Add($"Could not answer '{configuration?.GetType().Name}': {ErrorText.Describe(ex)}");
+                    }
+                };
+
+                downloadProvider.Configuration.OnlineLegitimation += legitimation;
+
                 try
                 {
                     DownloadConfigurationDelegate before = configuration =>
@@ -442,8 +496,24 @@ namespace TiaMcpServer.Siemens
                             : $"TIA Portal needs a decision for '{s.Type}'; pass it in 'selections', e.g. {s.Type}={s.Options.LastOrDefault()}.")
                         .FirstOrDefault();
 
+                    if (outcome.Connection.Count > 0)
+                    {
+                        seen = string.Join(" ", outcome.Connection);
+                    }
+
                     throw new PortalException(PortalErrorCode.InvalidState,
                         $"Download to '{outcome.Target}' failed while {stage}: {reason}. {(refused == null ? string.Empty : refused + " ")}{seen}", null, ex);
+                }
+                finally
+                {
+                    try
+                    {
+                        downloadProvider.Configuration.OnlineLegitimation -= legitimation;
+                    }
+                    catch (Exception)
+                    {
+                        // the provider may be gone with the connection
+                    }
                 }
 
                 return outcome;
