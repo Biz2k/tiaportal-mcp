@@ -276,6 +276,10 @@ namespace TiaMcpServer.Siemens
             var directory = CreateTempExportDirectory();
             var sourceName = "MCP_Edit_" + Guid.NewGuid().ToString("N").Substring(0, 8);
 
+            // A source does not carry the memory reserve and the user-defined attributes of a block either (Portal.Lad.cs).
+            var present = isBlock ? GetBlock(softwarePath, objectPath) : null;
+            var settingsBefore = present != null ? ReadBlockSettings(present) : null;
+
             try
             {
                 var file = Path.Combine(directory, sourceName + extension);
@@ -309,6 +313,11 @@ namespace TiaMcpServer.Siemens
                 var block = GetBlock(softwarePath, objectPath)
                     ?? throw new PortalException(PortalErrorCode.ImportFailed,
                         $"After the generation there is no block at '{objectPath}': TIA Portal put the result elsewhere. The change was rolled back.");
+
+                if (settingsBefore != null)
+                {
+                    RequireBlockSettingsKept(block, settingsBefore);
+                }
 
                 if (number.HasValue && block.Number != number.Value)
                 {

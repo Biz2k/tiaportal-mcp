@@ -143,7 +143,7 @@ running the server and never modify the project.
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. 141 tools are registered by default (71 with `--read-only`). A short
+when the registered tools and that file disagree. 142 tools are registered by default (71 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Always available (70):
@@ -165,13 +165,13 @@ Always available (70):
 | WinCC Unified           | `unified_get_screens`, `unified_get_screen_groups`, `unified_get_scripts`, `unified_get_tag_table_groups`, `unified_get_logs`, `unified_get_logging_tags`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists`, `unified_get_runtime_settings`, `unified_get_system_tags` |
 | Download                | `get_download_targets` |
 
-Left out with `--read-only` (71):
+Left out with `--read-only` (72):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
 | Import                  | `import_objects`, `instantiate_master_copy` |
 | Block and type groups   | `plc_create_block_group`, `plc_delete_block_group`, `plc_create_type_group`, `plc_delete_type_group` |
-| Blocks                  | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_replace_source`, `plc_manage_lad_networks`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block`, `plc_compile_software` |
+| Blocks                  | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_replace_source`, `plc_create_lad_block`, `plc_manage_lad_networks`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block`, `plc_compile_software` |
 | Types                   | `plc_rename_type`, `plc_delete_type`, `plc_copy_type`, `plc_move_type` |
 | Tag tables              | `plc_create_tag_table`, `plc_rename_tag_table`, `plc_delete_tag_table`, `plc_create_tag_table_group`, `plc_delete_tag_table_group` |
 | Tags and constants      | `plc_create_tag`, `plc_update_tag`, `plc_delete_tag`, `plc_create_user_constant`, `plc_update_user_constant`, `plc_delete_user_constant`, `plc_manage_tag_table_entries` |

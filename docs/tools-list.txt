@@ -42,6 +42,7 @@ plc_create_external_source
 plc_create_external_source_group
 plc_create_fb
 plc_create_instance_db
+plc_create_lad_block
 plc_create_scl_block
 plc_create_tag
 plc_create_tag_table

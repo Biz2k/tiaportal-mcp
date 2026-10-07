@@ -439,6 +439,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 return;
             }
 
+            network.Attributes[attribute] = AddText(value, cultures);
+        }
+
+        /// <summary>Adds a text in every given language and returns the id the document refers to it by.</summary>
+        public string AddText(string text, IEnumerable<string> cultures)
+        {
+            var value = (text ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n').TrimEnd();
             var entry = new LadText { Id = NewId() };
 
             foreach (var culture in cultures)
@@ -457,7 +464,8 @@ namespace TiaMcpServer.ModelContextProtocol
             }
 
             Texts.Add(entry);
-            network.Attributes[attribute] = entry.Id;
+
+            return entry.Id;
         }
 
         private string NewId()
@@ -520,6 +528,71 @@ namespace TiaMcpServer.ModelContextProtocol
             var indent = lines.Where(l => l.Trim().Length > 0).Min(l => l.Length - l.TrimStart(' ', '\t').Length);
 
             return string.Join("\n", lines.Select(l => l.Trim().Length == 0 ? string.Empty : "        " + l.Substring(indent).TrimEnd()));
+        }
+
+        #endregion
+
+        #region a new block
+
+        /// <summary>The sections of an interface a caller may pass: VAR_INPUT ... END_VAR and the like, nothing else.</summary>
+        public static string? InterfaceProblem(string? declaration)
+        {
+            var text = declaration ?? string.Empty;
+
+            foreach (var word in new[] { "NETWORK", "FUNCTION", "FUNCTION_BLOCK", "ORGANIZATION_BLOCK", "END_FUNCTION", "END_FUNCTION_BLOCK", "BEGIN" })
+            {
+                if (Regex.IsMatch(text, @"(?m)^\s*" + word + @"\b"))
+                {
+                    return $"'interface' holds only the sections of the block interface (VAR_INPUT ... END_VAR, VAR_OUTPUT, VAR_IN_OUT, VAR, VAR_TEMP, VAR CONSTANT); it has a line starting with {word}.";
+                }
+            }
+
+            var opened = Regex.Matches(text, @"(?m)^\s*VAR(_[A-Z_]+)?\b").Count;
+            var closed = Regex.Matches(text, @"(?m)^\s*END_VAR\b").Count;
+
+            return opened != closed ? $"'interface' has {opened} VAR section(s) and {closed} END_VAR." : null;
+        }
+
+        /// <summary>A document for a block that does not exist yet.</summary>
+        /// <param name="kind">"FB" or "FC".</param>
+        public static LadDocument Create(string kind, string name, string? returnType, int number, string? declaration, string? title, IList<string> cultures)
+        {
+            var document = new LadDocument();
+            var attributes = new SortedDictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["S7_Optimized"] = "TRUE",
+                ["S7_PreferredLanguage"] = "LAD",
+                ["S7_Version"] = "0.1"
+            };
+
+            if (number > 0)
+            {
+                attributes["S7_BlockNumber"] = number.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
+
+            if (!string.IsNullOrWhiteSpace(title))
+            {
+                attributes["S7_BlockTitle"] = document.AddText(title!, cultures);
+            }
+
+            var head = new StringBuilder("{\n");
+
+            head.Append(string.Join(";\n", attributes.Select(a => $"    {a.Key} := \"{a.Value}\""))).Append("\n}\n");
+            head.Append(kind == "FC" ? $"FUNCTION \"{name}\" : {(string.IsNullOrWhiteSpace(returnType) ? "Void" : returnType!.Trim())}" : $"FUNCTION_BLOCK \"{name}\"");
+
+            var lines = (declaration ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n').Split('\n').Where(l => l.Trim().Length > 0).ToList();
+
+            if (lines.Count > 0)
+            {
+                var indent = lines.Min(l => l.Length - l.TrimStart(' ', '\t').Length);
+
+                head.Append('\n').Append(string.Join("\n", lines.Select(l => "    " + l.Substring(indent).TrimEnd())));
+            }
+
+            document.Head = head.ToString() + "\n";
+            document.Tail = kind == "FC" ? "END_FUNCTION" : "END_FUNCTION_BLOCK";
+
+            return document;
         }
 
         #endregion

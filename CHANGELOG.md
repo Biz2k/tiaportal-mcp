@@ -11,6 +11,8 @@
   comments are plain text, written for every language of the project. A call is all or nothing; the block is
   compiled, and when the new code does not compile the previous block is put back. SCL networks inside a LAD block
   are handled too. FBD, STL, GRAPH and CEM blocks are refused.
+- `plc_create_lad_block`: a new FB or FC in LAD with its interface and its networks in one call, compiled; a block
+  that does not compile is removed again by default.
 - `plc_replace_source` takes a LAD block as its whole document (format `document` of `plc_get_block_source`, both
   parts). This is the way to change the interface of a LAD block.
 - What the tools make up for, found by probes on TIA Portal V21: an import of a document without a block number
@@ -22,6 +24,10 @@
 
 ### Fixed
 
+- `plc_replace_source` reset settings of a block that a source text does not carry: the memory reserve of "Download
+  without reinitialization" (250 came back as 100), the retain memory reserve and the user-defined attributes. TIA
+  Portal lets a program read these but not set them, so they cannot be put back: a block that has them changed from
+  the defaults is now refused, and the change is rolled back. The LAD tools do the same.
 - Non-ASCII text in code written through the server arrived in TIA Portal garbled: `plc_replace_source`,
   `plc_create_scl_block`, `plc_create_external_source` and the source imports handed TIA Portal a UTF-8 file
   without a byte order mark, and TIA Portal reads such a file as ANSI. A Cyrillic comment or a tag named

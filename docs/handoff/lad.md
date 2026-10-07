@@ -195,3 +195,32 @@ SIMATIC SD format» описывает только `RUNG`/`wire#`), ни в ф�
 block calls», «Predefined actual parameter», свойства DB (только в загрузочной памяти, защита
 от записи, доступность из OPC UA и веб-сервера); супервизии и алармы не экспортируются; конструкция
 AT не поддерживается. Инструменты LAD это пока не проверяют и не восстанавливают.
+
+## 07.10.2026, вторая половина дня
+
+**Настройки блока, которые текст не несёт.** Проверено на временных блоках: атрибуты, которые
+Openness умеет писать (IEC Check, автор, семейство, имя заголовка, ENO, номер), V21 кладёт в
+документ, и они переживают правку. Доступность члена из HMI (`ExternalVisible`,
+`ExternalWritable`) тоже сохраняется. **Теряются**: резерв памяти «Download without
+reinitialization» (250 → 100), резерв retain-памяти, пользовательские атрибуты (UDA) и «UDA tag
+readback». Выставить их для пробы удалось только импортом SimaticML; Openness их читает, но не
+пишет, поэтому вернуть нельзя. Решение: `ReadBlockSettings` до и после записи, расхождение —
+отказ с откатом. То же было в выпущенном `plc_replace_source` для SCL — исправлено так же.
+Не проверено: «Visibility in block calls», «Predefined actual parameter», супервизии — Openness
+и SimaticML их не показывают.
+
+**`plc_create_lad_block`** — новый FB или FC с интерфейсом и сетями одним вызовом. OB не
+создаётся (нужно событие). Первый настоящий блок, созданный инструментами: `Demo_Pump_Control`
+в `PLC (A0)` — FC, 9 сетей (фиксация и сброс аварии, гистерезис по уровню, пуск с самоподхватом
+и параллельными ветвями, счётчик пусков, `Normalize` + `Mul`). Создан с первого вызова; два
+предупреждения компилятора (чтение выхода) убраны через `plc_manage_lad_networks`.
+
+**`Block_LAD`** владельца в `PLC (A0)` дал недостающие имена: `MoveBlockI` (MOVE_BLK),
+`MoveBlockU` (UMOVE_BLK), `FillBlockI` (FILL_BLK), `S_BitfieldCoil` (SET_BF),
+`R_BitfieldCoil` (RESET_BF), и образцы шаблонов: `Swap` — `SrcType := Word`; `Round`, `Ceil`,
+`Floor`, `Scale`, `Normalize`, `Convert` — `[SrcType := Real, DestType := Int]`. Добавлены в
+`lad-instructions.tsv` (303 инструкции).
+
+**Замечено:** `plc_get_block_source` с форматом `document` отказывает на несогласованном блоке,
+хотя документ экспортируется и с него (`plc_get_lad_networks` читает). Лишнее ограничение — снять.
+В установке есть Startdrive V21 Update 1 (видно в заголовке SimaticML) — к пункту 4.1 плана.

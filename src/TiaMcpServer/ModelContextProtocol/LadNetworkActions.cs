@@ -299,6 +299,25 @@ namespace TiaMcpServer.ModelContextProtocol
         }
     }
 
+    /// <summary>One network of a block that is being created.</summary>
+    public class LadNewNetwork
+    {
+        [Description("The code of the network: RUNG wire#powerrail ... END_RUNG with one instruction per line; SCL statements when language is SCL")]
+        public string? Code { get; set; }
+
+        [Description("Title of the network as plain text, written for every language of the project")]
+        public string? Title { get; set; }
+
+        [Description("Comment of the network as plain text, several lines allowed")]
+        public string? Comment { get; set; }
+
+        [Description("'LAD' (default) or 'SCL' for an SCL network inside the LAD block")]
+        public string? Language { get; set; }
+
+        [JsonExtensionData]
+        public Dictionary<string, JsonElement>? Unknown { get; set; }
+    }
+
     /// <summary>One network in an answer.</summary>
     public class LadNetworkInfo
     {

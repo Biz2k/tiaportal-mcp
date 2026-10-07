@@ -30,6 +30,11 @@ namespace TiaMcpServer.Siemens
     //     (PID_Compact: PhysicalUnit, "Retain".CtrlParams). The declaration is therefore read back and compared, and a
     //     loss rolls the change back.
     //   - The import runs inside a transaction and is rolled back with it; a compile is not permitted there.
+    //   - The document does not carry every setting of a block. The memory reserve of "Download without
+    //     reinitialization", the retain memory reserve and the user-defined attributes (UDA) come back as defaults
+    //     (250 became 100, "MCPT_UDA=1" became empty; probe of 2026-10-07 through a SimaticML import). Openness only
+    //     reads these, so they cannot be put back: a block whose settings the import changed is refused and rolled
+    //     back. The settings Openness can write (IEC check, header, ENO) are in the document on V21 and survive.
     public partial class Portal
     {
         private const string LadWriteHelp =
@@ -121,6 +126,161 @@ namespace TiaMcpServer.Siemens
                         $"Change {actions.Count} network(s) of {block.Name}");
                 },
                 ("softwarePath", softwarePath), ("blockPath", blockPath));
+        }
+
+        public LadEditResult CreateLadBlock(string softwarePath, string groupPath, string name, string kind, string returnType, int number, string declaration, string title,
+            List<LadNewNetwork> networks, string compile, string onCompileError)
+        {
+            return Operation.Run(_logger, nameof(CreateLadBlock), PortalErrorCode.CreateFailed,
+                () =>
+                {
+                    var compileMode = (compile ?? string.Empty).Trim().ToLowerInvariant();
+
+                    if (compileMode != "object" && compileMode != "software" && compileMode != "none")
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, $"compile takes 'object', 'software' or 'none'; got '{compile}'.");
+                    }
+
+                    var onError = (onCompileError ?? string.Empty).Trim().ToLowerInvariant();
+
+                    if (onError != "delete" && onError != "keep")
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, $"onCompileError takes 'delete' or 'keep'; got '{onCompileError}'.");
+                    }
+
+                    var blockKind = (kind ?? string.Empty).Trim().ToUpperInvariant();
+
+                    if (blockKind != "FB" && blockKind != "FC")
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"kind takes 'FB' or 'FC'; got '{kind}'. An organization block is created in TIA Portal (it needs its event) and then filled with 'plc_manage_lad_networks'.");
+                    }
+
+                    EnsureValidName(name);
+
+                    var group = GetPlcBlockGroupByPath(softwarePath, groupPath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound, $"Block group not found at '{groupPath}'. An empty path is the Program blocks root.");
+
+                    var taken = GetBlocks(softwarePath).FirstOrDefault(b => string.Equals(b.Name, name, StringComparison.OrdinalIgnoreCase));
+
+                    if (taken != null)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"A block named '{name}' exists already ('{GetBlockPath(taken)}'). Change its networks with 'plc_manage_lad_networks', or choose another name.");
+                    }
+
+                    var problems = new List<string>();
+                    var interfaceProblem = LadDocument.InterfaceProblem(declaration);
+
+                    if (interfaceProblem != null)
+                    {
+                        problems.Add(interfaceProblem);
+                    }
+
+                    if (networks == null || networks.Count == 0)
+                    {
+                        problems.Add("No networks given. A network is {\"code\": \"RUNG wire#powerrail\\n    Contact( #Start )\\n    Coil( #Run )\\nEND_RUNG\", \"title\": \"...\"}.");
+                    }
+
+                    var cultures = ProjectCultures();
+                    var document = LadDocument.Create(blockKind, name, returnType, number, declaration, title, cultures);
+                    var actions = (networks ?? new List<LadNewNetwork>()).Select(n => new LadNetworkAction
+                    {
+                        Action = "insert",
+                        Code = n?.Code,
+                        Title = n?.Title,
+                        Comment = n?.Comment,
+                        Language = n?.Language,
+                        Unknown = n?.Unknown
+                    }).ToList();
+
+                    if (actions.Count > 0)
+                    {
+                        problems.AddRange(LadNetworkActions.Check(document, actions).Select(p => p.Replace("Action ", "Network ").Replace(" (insert)", string.Empty)));
+                    }
+
+                    if (problems.Count > 0)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, $"Nothing was created. {string.Join(" ", problems)}");
+                    }
+
+                    LadNetworkActions.Apply(document, actions, cultures);
+
+                    var blockPath = string.IsNullOrWhiteSpace(groupPath) ? EscapeSegment(name) : groupPath.TrimEnd('/') + "/" + EscapeSegment(name);
+                    var result = new LadEditResult { Name = name, Path = blockPath, Kind = blockKind, Compile = compileMode };
+
+                    InTransaction($"Create {blockKind} '{name}' in LAD (plc_create_lad_block)", () =>
+                    {
+                        using (var scope = new SourceScope())
+                        {
+                            WriteLadFiles(scope.Directory, name, document);
+
+                            var imported = group.Blocks.ImportFromDocuments(new DirectoryInfo(scope.Directory), name, ImportDocumentOptions.None);
+
+                            if (!string.Equals(imported.State.ToString(), "Success", StringComparison.OrdinalIgnoreCase))
+                            {
+                                throw new PortalException(PortalErrorCode.InvalidParams,
+                                    $"TIA Portal refused the block and created nothing ({imported.State}). {string.Join(" ", ImportMessages(imported))} {LadWriteHelp}");
+                            }
+                        }
+
+                        return true;
+                    });
+
+                    var block = GetBlock(softwarePath, blockPath)
+                        ?? throw new PortalException(PortalErrorCode.CreateFailed, $"TIA Portal reported success, but there is no block at '{blockPath}'.");
+
+                    result.Number = block.Number;
+                    result.Replaced = true;
+                    result.Networks = document.Networks.Select((n, i) => DescribeNetwork(document, n, i + 1, cultures)).ToList();
+
+                    if (compileMode == "none")
+                    {
+                        result.Notes.Add("Not compiled: a tag that does not exist or a wrong operand type shows only at the compile ('plc_compile_block', 'plc_compile_software').");
+
+                        return result;
+                    }
+
+                    var compiled = CompileObject(softwarePath, blockPath, true);
+
+                    result.ObjectCompiles = compiled.ErrorCount == 0;
+                    result.State = compiled.State.ToString();
+                    result.ErrorCount = compiled.ErrorCount;
+                    result.WarningCount = compiled.WarningCount;
+                    result.Messages = FlattenCompile(compiled);
+
+                    if (compiled.ErrorCount > 0 && onError == "delete")
+                    {
+                        InTransaction($"Remove '{name}' again: it does not compile (plc_create_lad_block)", () => { GetBlock(softwarePath, blockPath)?.Delete(); return true; });
+                        result.Restored = true;
+
+                        return result;
+                    }
+
+                    if (compileMode == "software" && compiled.ErrorCount == 0)
+                    {
+                        var all = CompileSoftware(softwarePath);
+
+                        if (all != null)
+                        {
+                            result.State = all.State.ToString();
+                            result.ErrorCount = all.ErrorCount;
+                            result.WarningCount = all.WarningCount;
+                            result.Messages = FlattenCompile(all);
+                        }
+                    }
+
+                    return result;
+                },
+                ("softwarePath", softwarePath), ("groupPath", groupPath), ("name", name));
+        }
+
+        private static List<string> ImportMessages(DocumentImportResult imported)
+        {
+            return imported.Messages
+                .Select(m => Regex.Replace(m.Message ?? string.Empty, @"\s+", " ").Trim())
+                .Where(m => m.Length > 0 && !m.StartsWith("Importing from file", StringComparison.OrdinalIgnoreCase) && m.IndexOf("please check the s7dcl file", StringComparison.OrdinalIgnoreCase) < 0)
+                .ToList();
         }
 
         /// <summary>plc_replace_source for a LAD block: the whole document, with the texts of its titles when it refers to any.</summary>
@@ -259,6 +419,8 @@ namespace TiaMcpServer.Siemens
             var block = GetBlock(softwarePath, blockPath)
                 ?? throw new PortalException(PortalErrorCode.NotFound, $"No block at '{blockPath}'.");
 
+            var settingsBefore = ReadBlockSettings(block);
+
             // Only the composition of the block's own group replaces the block.
             var group = block.Parent as PlcBlockGroup
                 ?? throw new PortalException(PortalErrorCode.NotSupported, $"Block '{block.Name}' is not in a block group of the PLC; its networks cannot be written.");
@@ -291,6 +453,8 @@ namespace TiaMcpServer.Siemens
                 block.Number = number;
             }
 
+            RequireBlockSettingsKept(block, settingsBefore);
+
             if (notes == null)
             {
                 return true;
@@ -316,6 +480,51 @@ namespace TiaMcpServer.Siemens
 
             return true;
         }
+
+        /// <summary>The settings of a block that a document or a source does not carry and Openness cannot write.</summary>
+        private static readonly string[] UncarriedBlockSettings =
+        {
+            "DownloadWithoutReinit", "MemoryReserve", "IsRetainMemResEnabled", "RetainMemoryReserve", "UDABlockProperties", "UDAEnableTagReadback",
+            "IsWriteProtected", "HandleErrorsWithinBlock"
+        };
+
+        private static Dictionary<string, string> ReadBlockSettings(PlcBlock block)
+        {
+            var settings = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            foreach (var name in UncarriedBlockSettings)
+            {
+                try
+                {
+                    settings[name] = Convert.ToString(block.GetAttribute(name), System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+                }
+                catch (Exception)
+                {
+                    // This kind of block does not have the attribute.
+                }
+            }
+
+            return settings;
+        }
+
+        /// <summary>Throws - inside the transaction of the write, which rolls it back - when the write reset a setting it cannot carry.</summary>
+        private static void RequireBlockSettingsKept(PlcBlock block, Dictionary<string, string> before)
+        {
+            var lost = ReadBlockSettings(block)
+                .Where(now => before.TryGetValue(now.Key, out var was) && was != now.Value)
+                .Select(now => $"{now.Key}: {Shown(before[now.Key])} became {Shown(now.Value)}")
+                .ToList();
+
+            if (lost.Count > 0)
+            {
+                throw new PortalException(PortalErrorCode.NotSupported,
+                    $"Block '{block.Name}' has settings the text form of a block does not carry, and the change would reset them: {string.Join("; ", lost)}. " +
+                    "These are the memory reserve of 'Download without reinitialization' and the user-defined attributes; the server can read but not set them. " +
+                    "Nothing was changed. Change this block in TIA Portal itself.");
+            }
+        }
+
+        private static string Shown(string value) => value.Length == 0 ? "(empty)" : $"'{value}'";
 
         private static void WriteLadFiles(string directory, string baseName, LadDocument document)
         {

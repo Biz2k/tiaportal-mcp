@@ -72,6 +72,7 @@ FieldWrite		FieldWrite	FieldWrite( index := #i, member => #i, value := #i )		LAD
 FileDelete		FileDelete	FileDelete( REQ := #i, Name := #i, Done => #i, Busy => #i, Error => #i, Status => #i )		Extended | Delete file on the memory card
 FileReadC		FileReadC	FileReadC( REQ := #i, Name := #i, Offset := #i, Length := #i, Done => #i, Busy => #i, Error => #i, Status => #i, ResultLength => #i, Data := #i )		Extended | Read file from Memory Card
 FileWriteC		FileWriteC	FileWriteC( REQ := #i, Name := #i, Offset := #i, Length := #i, Done => #i, Busy => #i, Error => #i, Status => #i, ResultLength => #i, Data := #i )		Extended | Write file on the memory card
+FillBlockI	FILL_BLK		FillBlockI( IN := , COUNT := , OUT => )	from a block made in the editor	LAD | Fill block
 FIND			{ S7_GenerateENO := "TRUE" } FIND( in1 := #i, in2 := #i, out => #i )		Extended | Find characters in a character string
 Floor		Floor	Floor( in := #i, out => #i )	needs a data type: { S7_Templates := "..." } before it	
 Frac		Frac	Frac( in := #i, out => #i )	needs a data type: { S7_Templates := "..." } before it	
@@ -137,6 +138,8 @@ MIN			{ S7_GenerateENO := "TRUE" } MIN( out => #i )	takes in1, in2, ... as many 
 Mod		Mod	Mod( in1 := #i, in2 := #i, out => #i )		
 ModuleStates		ModuleStates	ModuleStates( LADDR := #i, MODE := #i, Ret_Val => #i, STATE := #i )		Extended | Read module status information of a module
 Move	MOVE	Move	Move( in := #i )		LAD | Move value
+MoveBlockI	MOVE_BLK		MoveBlockI( IN := , COUNT := , OUT => )	from a block made in the editor	LAD | Move block
+MoveBlockU	UMOVE_BLK		MoveBlockU( IN := , COUNT := , OUT => )	from a block made in the editor	LAD | Move block uninterruptible
 MoveBlockVariant	MOVE_BLK_VARIANT	MOVE_BLK_VARIANT	MoveBlockVariant( src := #i, count := #i, srcIndex := #i, dstIndex := #i, ret_val => #i, dst => #i )		LAD | Move block
 MoveResolvedSymbolsFromBuffer		MoveResolvedSymbolsFromBuffer	MoveResolvedSymbolsFromBuffer( firstIndex := #i, lastIndex := #i, mode := #i, src := #i, srcOffsets := #i, Ret_Val => #i, dst := #i, status := #i )		LAD | Read values from buffer and write them into resolved symbols
 MoveResolvedSymbolsToBuffer		MoveResolvedSymbolsToBuffer	MoveResolvedSymbolsToBuffer( firstIndex := #i, lastIndex := #i, src := #i, dstOffsets := #i, mode := #i, Ret_Val => #i, dst := #i, status := #i )		LAD | Read values from resolved symbols and write them into buffer
@@ -181,6 +184,7 @@ PT_Coil		PtCoil	PT_Coil( timer => #b, PT := #i )
 QRY_CINT		QRY_CINT	QRY_CINT( OB_NR := #i, RET_VAL => #i, CYCLE => #i, PHASE => #i, STATUS => #i )		Extended | Query cyclic interrupt parameters
 QRY_DINT		QRY_DINT	QRY_DINT( OB_NR := #i, RET_VAL => #i, STATUS => #i )		Extended | Query time-delay interrupt status
 QRY_TINT		QRY_TINT	QRY_TINT( OB_NR := #i, Ret_Val => #i, STATUS => #i )		Extended | Query status of time-of-day interrupt
+R_BitfieldCoil	RESET_BF		R_BitfieldCoil( operand => , n := )	from a block made in the editor	LAD | Reset bit field
 R_Coil			R_Coil( #b )		
 R_Trig	R_TRIG		R_Trig(  )	needs an instance: #Instance.R_Trig( ... )	LAD | Detect positive signal edge
 Random			Random( Ret_Val => )		Extended | Generate random number
@@ -214,6 +218,7 @@ RT_Coil			RT_Coil( #b )
 RT_INFO		RT_INFO	RT_INFO( MODE := #i, OB := #i, Ret_Val => #i, INFO := #i )		Extended | Read out runtime statistics
 RTM		RTM	RTM( NR := #i, MODE := #i, PV := #i, RET_VAL => #i, CQ => #i, CV => #i )		Extended | Runtime meters
 Runtime	RUNTIME	Runtime	Runtime( ret_val => #i, mem := #i )		LAD | Measure program runtime
+S_BitfieldCoil	SET_BF		S_BitfieldCoil( operand => , n := )	from a block made in the editor	LAD | Set bit field
 S_BlockMove	BLKMOV	BLKMOV	S_BlockMove( srcBlock := #i, ret_val => #i, dstBlock => #i )		LAD | Move block
 S_Coil			S_Coil( #b )		
 S_COMP			S_COMP( in1 := #i, in2 := #i, out => #i )		Extended | Compare character strings
@@ -296,4 +301,4 @@ WRIT_DBL		WRIT_DBL	WRIT_DBL( REQ := #i, SRCBLK := #i, RET_VAL => #i, BUSY => #i,
 WriteToArrayDB		WriteToArrayDB	WriteToArrayDB( db := #i, index := #i, value := #i, ret_val => #i )		LAD | Write to ARRAY data block
 WriteToArrayDBL		WriteToArrayDBL	WriteToArrayDBL( req := #i, db := #i, index := #i, value := #i, busy => #i, done => #i, error => #i )		LAD | Write to ARRAY data block in load memory
 WRREC		WRREC	WRREC( REQ := #i, ID := #i, INDEX := #i, LEN := #i, DONE => #i, BUSY => #i, ERROR => #i, STATUS => #i, RECORD := #i )		Extended | Write data record
-Xor		Xor	Xor( out => #i )	needs a data type: { S7_Templates := "..." } before it; takes in1, in2, ... as many as needed	
+Xor		Xor	Xor( out => #i )	needs a data type: { S7_Templates := "..." } before it; takes in1, in2, ... as many as needed

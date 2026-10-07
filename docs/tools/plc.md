@@ -13,6 +13,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 | [`plc_create_external_source_group`](#plc_create_external_source_group) | write |
 | [`plc_create_fb`](#plc_create_fb) | write |
 | [`plc_create_instance_db`](#plc_create_instance_db) | write |
+| [`plc_create_lad_block`](#plc_create_lad_block) | write |
 | [`plc_create_scl_block`](#plc_create_scl_block) | write |
 | [`plc_create_tag`](#plc_create_tag) | write |
 | [`plc_create_tag_table`](#plc_create_tag_table) | write |
@@ -173,6 +174,24 @@ Create an instance data block for an existing function block. The response carri
 | `instanceOfName` | string | yes | instanceOfName: name of the function block this instance DB belongs to |
 | `autoNumber` | boolean | no (default `True`) | autoNumber: let the server pick the first free DB number (default true) |
 | `number` | integer | no (default `0`) | number: explicit block number from 1, used only when autoNumber is false; must be free |
+
+## plc_create_lad_block
+
+Create a NEW function block (FB) or function (FC) in LAD with its interface and its networks in one call, then compile it. A network is the text 'plc_get_lad_networks' shows: 'RUNG wire#powerrail ... END_RUNG' with one instruction per line, e.g. Contact( #Start ), I_Contact( #Stop ), Coil( #Run ); a parallel branch is a further RUNG that ends with 'END_RUNG wire#w1', where 'wire#w1' stands in the first rung at the place the branches join. Instruction names cannot be guessed: take them from an existing network. If TIA Portal refuses the text nothing is created, and by default a block that does not compile is removed again. Existing blocks are changed with 'plc_manage_lad_networks'
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `name` | string | yes | name: name of the new block; must not exist in the PLC yet |
+| `networks` | array of object | yes | networks: the networks of the block, in order |
+| `kind` | string | no (default `FC`) | kind: 'FC' (default) or 'FB' |
+| `declaration` | string | no (default ``) | declaration: the interface of the block as text - VAR_INPUT ... END_VAR, VAR_OUTPUT, VAR_IN_OUT, VAR (FB only), VAR_TEMP - one tag per line, e.g. 'Start : Bool;'. Empty for a block without interface |
+| `groupPath` | string | no (default ``) | groupPath: root-relative block group that receives the block; empty uses the Program blocks root |
+| `title` | string | no (default ``) | title: title of the block as plain text (optional) |
+| `returnType` | string | no (default `Void`) | returnType: data type an FC returns (default Void) |
+| `number` | integer | no (default `0`) | number: block number; 0 (default) lets TIA Portal choose |
+| `compile` | string | no (default `object`) | compile: 'object' (default) compiles the block, 'software' then the whole PLC as well, 'none' compiles nothing |
+| `onCompileError` | string | no (default `delete`) | onCompileError: 'delete' (default) removes the block again when it does not compile, 'keep' leaves it for corrections |
 
 ## plc_create_scl_block
 

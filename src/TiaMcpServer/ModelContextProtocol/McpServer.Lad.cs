@@ -53,6 +53,62 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
+        [McpServerTool(Name = "plc_create_lad_block", Title = "Create a LAD block", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Create a NEW function block (FB) or function (FC) in LAD with its interface and its networks in one call, then compile it. A network is the text 'plc_get_lad_networks' shows: 'RUNG wire#powerrail ... END_RUNG' with one instruction per line, e.g. Contact( #Start ), I_Contact( #Stop ), Coil( #Run ); a parallel branch is a further RUNG that ends with 'END_RUNG wire#w1', where 'wire#w1' stands in the first rung at the place the branches join. Instruction names cannot be guessed: take them from an existing network. If TIA Portal refuses the text nothing is created, and by default a block that does not compile is removed again. Existing blocks are changed with 'plc_manage_lad_networks'")]
+        public static ResponseLadEdit CreateLadBlock(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("name: name of the new block; must not exist in the PLC yet")] string name,
+            [Description("networks: the networks of the block, in order")] List<LadNewNetwork> networks,
+            [Description("kind: 'FC' (default) or 'FB'")] string kind = "FC",
+            [Description("declaration: the interface of the block as text - VAR_INPUT ... END_VAR, VAR_OUTPUT, VAR_IN_OUT, VAR (FB only), VAR_TEMP - one tag per line, e.g. 'Start : Bool;'. Empty for a block without interface")] string declaration = "",
+            [Description("groupPath: root-relative block group that receives the block; empty uses the Program blocks root")] string groupPath = "",
+            [Description("title: title of the block as plain text (optional)")] string title = "",
+            [Description("returnType: data type an FC returns (default Void)")] string returnType = "Void",
+            [Description("number: block number; 0 (default) lets TIA Portal choose")] int number = 0,
+            [Description("compile: 'object' (default) compiles the block, 'software' then the whole PLC as well, 'none' compiles nothing")] string compile = "object",
+            [Description("onCompileError: 'delete' (default) removes the block again when it does not compile, 'keep' leaves it for corrections")] string onCompileError = "delete")
+        {
+            return GuardedNoTransaction(nameof(CreateLadBlock), () =>
+            {
+                var result = Portal.CreateLadBlock(softwarePath, groupPath, name, kind, returnType, number, declaration, title, networks, compile, onCompileError);
+
+                if (result.Restored)
+                {
+                    throw new PortalException(PortalErrorCode.InvalidParams,
+                        $"{result.Kind} '{result.Name}' does not compile ({result.ErrorCount} error(s)); it was removed again and nothing is left of it. " +
+                        $"Errors: {Portal.DescribeMessages(result.Messages)}");
+                }
+
+                var errors = result.ErrorCount ?? 0;
+
+                return new ResponseLadEdit
+                {
+                    Name = result.Name,
+                    Path = result.Path,
+                    Kind = result.Kind,
+                    Number = result.Number,
+                    State = result.State,
+                    ErrorCount = result.ErrorCount,
+                    WarningCount = result.WarningCount,
+                    Messages = result.Messages.Where(m => m.Severity == "Error" || m.Severity == "Warning").ToList(),
+                    NowInconsistent = result.NowInconsistent,
+                    Notes = result.Notes,
+                    Networks = result.Networks.Select(n => new LadNetworkInfo { Number = n.Number, Language = n.Language, Title = n.Title }).ToList(),
+                    Message = $"{result.Kind} '{result.Name}' created at '{result.Path}' as number {result.Number} with {result.Networks.Count} network(s)" +
+                              (result.State == null ? "; not compiled." : $"; compile ({result.Compile}): {result.State}, {errors} error(s), {result.WarningCount} warning(s).") +
+                              (errors > 0 ? " The block is in place with its errors (onCompileError='keep')." : string.Empty) +
+                              " " + SaveHint,
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = errors == 0,
+                        ["pendingSave"] = true
+                    }
+                };
+            });
+        }
+
+        [WriteTool]
         [McpServerTool(Name = "plc_manage_lad_networks", Title = "Change the networks of a LAD block", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
          Description("Replace, insert, delete or move networks of an EXISTING LAD block, or set their titles and comments, several at once; then compile the block. Every number in a call means the block as it is BEFORE the call, so one action never shifts the target of another. All or nothing: a call that TIA Portal refuses changes nothing and the error names the instruction and the line; if the new code does not compile (a tag that does not exist, a wrong operand type), the previous block is put back by default. The block keeps its number, its place and its instance DBs; the interface is not changed here - for that pass the whole document to 'plc_replace_source'. Write code after the pattern of an existing network from 'plc_get_lad_networks': instruction names cannot be guessed. Fields of an action: action, network, after, code, language, title, comment")]
         public static ResponseLadEdit ManageLadNetworks(
