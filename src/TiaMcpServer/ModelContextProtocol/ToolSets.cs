@@ -18,8 +18,11 @@ namespace TiaMcpServer.ModelContextProtocol
         public const string Transfer = "transfer";
         public const string Download = "download";
 
+        /// <summary>Protection, passwords and users: the sec_* tools.</summary>
+        public const string Security = "security";
+
         /// <summary>The areas that can be named after '--tools', in the order the documentation lists them.</summary>
-        public static readonly IReadOnlyList<string> Areas = new[] { Plc, Hw, Unified, Library, Transfer, Download };
+        public static readonly IReadOnlyList<string> Areas = new[] { Plc, Hw, Unified, Library, Transfer, Download, Security };
 
         /// <summary>Connection, project and diagnostics: registered whatever '--tools' says.</summary>
         private static readonly HashSet<string> Always = new HashSet<string>(StringComparer.Ordinal)
@@ -62,6 +65,11 @@ namespace TiaMcpServer.ModelContextProtocol
             if (toolName.StartsWith("hw_", StringComparison.Ordinal) || toolName.StartsWith("net_", StringComparison.Ordinal))
             {
                 return Hw;
+            }
+
+            if (toolName.StartsWith("sec_", StringComparison.Ordinal))
+            {
+                return Security;
             }
 
             if (toolName.StartsWith("unified_", StringComparison.Ordinal))

@@ -126,12 +126,13 @@ Openness. Подтвердите запрос в окне TIA Portal.
 
 | Область    | Инструменты области                                                                            | Число |
 | ---------- | ---------------------------------------------------------------------------------------------- | ----- |
-| `plc`      | `plc_*`                                                                                        | 66    |
-| `hw`       | `hw_*` и `net_*`: устройства, оборудование, подсети, соединения                                | 16    |
+| `plc`      | `plc_*`                                                                                        | 71    |
+| `hw`       | `hw_*` и `net_*`: устройства, оборудование, подсети, соединения                                | 17    |
 | `unified`  | `unified_*`                                                                                    | 35    |
 | `library`  | `get_libraries`, `get_library_types`, `get_master_copies`, `instantiate_master_copy`, `open_global_library` | 5 |
 | `transfer` | `export_objects`, `import_objects`, `preview_import`                                           | 3     |
 | `download` | `download_to_plc`, `get_download_targets`                                                      | 2     |
+| `security` | `sec_*`: защита, пароли и пользователи ПЛК                                                     | 6     |
 
 Всегда регистрируются, что бы ни стояло в `--tools` (12): `connect`, `disconnect`, `get_state`, `get_tia_instances`,
 `doctor`, `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project`,
@@ -158,13 +159,28 @@ Openness. Подтвердите запрос в окне TIA Portal.
 `export_objects` и `plc_generate_sources` доступны всегда: они только пишут файлы на машине, где
 работает сервер, и не изменяют проект.
 
+
+### Инструменты безопасности и кто решает
+
+Инструменты `sec_*` меняют то, что защищает установку: пароль защиты конфигурации ПЛК, уровень доступа CPU и его
+пароли, пользователей веб-сервера и OPC UA-сервера, пароль дисплея. Они регистрируются по умолчанию, как и
+остальные инструменты записи, и принимают пароли обычными аргументами: сервер передаёт их в TIA Portal защищённой
+строкой и нигде не хранит, но через диалог с моделью и журналы клиента они проходят.
+
+Каждый вид изменения — отдельный инструмент с пометкой «изменяет, разрушающий», чтобы клиент, который даёт решать
+по каждому инструменту, мог различать их: в Claude откройте настройки подключения и поставьте каждому «Always
+allow», «Needs approval» или «Blocked». Задать этот выбор за вас сервер не может — он принадлежит клиенту; клиенты
+без такой настройки спрашивают (или не спрашивают) по своим правилам. Чтобы не регистрировать эти инструменты
+вовсе, запустите сервер с `--tools`, перечислив нужные области без `security`; `--read-only` убирает все
+инструменты, меняющие проект.
+
 ## Инструменты
 
 Точный список имён инструментов — в [`docs/tools-list.txt`](docs/tools-list.txt); тест падает,
 если зарегистрированные инструменты расходятся с этим файлом. По умолчанию регистрируется
-146 инструментов (75 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
+152 инструментов (80 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
 
-Доступны всегда (71):
+Доступны всегда (72):
 
 | Область                          | Инструменты |
 | -------------------------------- | ----------- |
@@ -182,8 +198,9 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Библиотеки                       | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
 | WinCC Unified                    | `unified_get_screens`, `unified_get_screen_groups`, `unified_get_scripts`, `unified_get_tag_table_groups`, `unified_get_logs`, `unified_get_logging_tags`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists`, `unified_get_runtime_settings`, `unified_get_system_tags` |
 | Загрузка                         | `get_download_targets` |
+| Безопасность                     | `sec_get_plc_security` |
 
-Не регистрируются с `--read-only` (75):
+Не регистрируются с `--read-only` (80):
 
 | Область                          | Инструменты |
 | -------------------------------- | ----------- |
@@ -200,6 +217,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system`, `net_create_connection`, `net_delete_connection`, `net_delete_subnet` |
 | WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_compile`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_tag_table_groups`, `unified_manage_logs`, `unified_manage_logging_tags`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists`, `unified_set_runtime_settings` |
 | Загрузка                         | `download_to_plc` |
+| Безопасность                     | `sec_set_plc_configuration_protection`, `sec_set_plc_access_level`, `sec_manage_webserver_users`, `sec_manage_opcua_users`, `sec_set_display_password` |
 
 `plc_get_software_tree` принимает параметр `sections` — любое подмножество
 `blocks,types,tags,watch,sources` через запятую, по умолчанию `all`, — чтобы ответ оставался

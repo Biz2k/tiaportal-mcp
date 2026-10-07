@@ -58,10 +58,12 @@ name, and the change lands there.
   copied or moved, and the project is not ready to download.
 - **Before deleting or renaming**, look at who uses the object (`plc_where_used`,
   `plc_get_cross_references`) and tell the user what depends on it.
-- While a write runs, TIA Portal shows a window with the tool and the running step. Cancel there stops a batch
-  with nothing changed, and the call says so. Do not repeat a cancelled call without asking.
+- A write shows its tool and step in a TIA Portal window; Cancel there stops it with nothing
+  changed. Do not repeat a cancelled call without asking.
 - If the write tools are missing from the session, the server runs with `--read-only`
   (`get_state` shows `allowWrite: false`). Say so; do not look for a way around it.
+- **Protection and passwords (`sec_*`)**: before each call say what will change on which PLC and
+  wait for the user's yes. Use only a password the user gave; never invent or repeat one.
 
 ## 4. When a call fails
 

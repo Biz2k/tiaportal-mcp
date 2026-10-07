@@ -121,12 +121,13 @@ code 2).
 
 | Area       | Tools of the area                                                                              | Count |
 | ---------- | ---------------------------------------------------------------------------------------------- | ----- |
-| `plc`      | `plc_*`                                                                                        | 66    |
-| `hw`       | `hw_*` and `net_*`: devices, hardware, subnets, connections                                    | 16    |
+| `plc`      | `plc_*`                                                                                        | 71    |
+| `hw`       | `hw_*` and `net_*`: devices, hardware, subnets, connections                                    | 17    |
 | `unified`  | `unified_*`                                                                                    | 35    |
 | `library`  | `get_libraries`, `get_library_types`, `get_master_copies`, `instantiate_master_copy`, `open_global_library` | 5 |
 | `transfer` | `export_objects`, `import_objects`, `preview_import`                                           | 3     |
 | `download` | `download_to_plc`, `get_download_targets`                                                      | 2     |
+| `security` | `sec_*`: protection, passwords and users of a PLC                                               | 6     |
 
 Always registered, whatever `--tools` says (12): `connect`, `disconnect`, `get_state`, `get_tia_instances`, `doctor`,
 `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project`,
@@ -154,13 +155,28 @@ to leave them out.
 `export_objects` and `plc_generate_sources` are not gated: they only write files on the machine
 running the server and never modify the project.
 
+
+### Security tools and who decides
+
+The `sec_*` tools change what protects a plant: the password of the PLC configuration data, the access level of a
+CPU and its passwords, the users of the web server and of the OPC UA server, the display password. They are
+registered by default, like every other write tool, and they take passwords as plain arguments - the server passes
+them to TIA Portal as secure strings and keeps them nowhere, but they do pass through the conversation with the
+model and through the logs of the client.
+
+Each kind of change is a tool of its own, marked as changing and destructive, so that a client which lets you decide
+per tool can treat them apart: in Claude open the settings of the connector and set each tool to "Always allow",
+"Needs approval" or "Blocked". The server cannot set that choice for you - it belongs to the client; clients that
+have no such setting ask (or do not ask) by their own rules. To leave the tools out altogether, start the server with
+`--tools` naming the areas you want without `security`; `--read-only` leaves out every tool that changes the project.
+
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. 146 tools are registered by default (75 with `--read-only`). A short
+when the registered tools and that file disagree. 152 tools are registered by default (80 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
-Always available (71):
+Always available (72):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
@@ -178,8 +194,9 @@ Always available (71):
 | Libraries               | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
 | WinCC Unified           | `unified_get_screens`, `unified_get_screen_groups`, `unified_get_scripts`, `unified_get_tag_table_groups`, `unified_get_logs`, `unified_get_logging_tags`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists`, `unified_get_runtime_settings`, `unified_get_system_tags` |
 | Download                | `get_download_targets` |
+| Security                | `sec_get_plc_security` |
 
-Left out with `--read-only` (75):
+Left out with `--read-only` (80):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
@@ -196,6 +213,7 @@ Left out with `--read-only` (75):
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_delete_subnet`, `net_create_io_system`, `net_connect_to_io_system`, `net_create_connection`, `net_delete_connection` |
 | WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_compile`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_tag_table_groups`, `unified_manage_logs`, `unified_manage_logging_tags`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists`, `unified_set_runtime_settings` |
 | Download                | `download_to_plc` |
+| Security                | `sec_set_plc_configuration_protection`, `sec_set_plc_access_level`, `sec_manage_webserver_users`, `sec_manage_opcua_users`, `sec_set_display_password` |
 
 `plc_get_software_tree` accepts a `sections` argument - any comma separated subset of
 `blocks,types,tags,watch,sources`, default `all` - to keep the output small on a large PLC.

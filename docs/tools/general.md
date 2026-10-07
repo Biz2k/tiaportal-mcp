@@ -17,6 +17,12 @@ Connection, project and session tools.
 | [`open_tia_project`](#open_tia_project) | write |
 | [`save_as_project`](#save_as_project) | write |
 | [`save_project`](#save_project) | write |
+| [`sec_get_plc_security`](#sec_get_plc_security) | read |
+| [`sec_manage_opcua_users`](#sec_manage_opcua_users) | write |
+| [`sec_manage_webserver_users`](#sec_manage_webserver_users) | write |
+| [`sec_set_display_password`](#sec_set_display_password) | write |
+| [`sec_set_plc_access_level`](#sec_set_plc_access_level) | write |
+| [`sec_set_plc_configuration_protection`](#sec_set_plc_configuration_protection) | write |
 
 ## close_project
 
@@ -111,4 +117,62 @@ Save the open local project under a new folder and switch TIA Portal to it. The 
 Save the current TIA-Portal local project/session
 
 No parameters.
+
+## sec_get_plc_security
+
+Read how a PLC is protected: the protection of confidential PLC configuration data, the access level (CPUs with access levels) or the access control by users (CPUs with firmware V4 and newer), whether the web server is on, the users of the web server and of the OPC UA server, and whether the display takes a password. No password is ever returned: TIA Portal does not give them out
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `deviceItemPath` | string | yes | deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1' |
+
+## sec_manage_opcua_users
+
+Create or delete users of the OPC UA server of a CPU, or set their password ('update'), several at once, all or nothing. The OPC UA server and its authentication by user name have to be on first ('hw_set_device_item_attributes' on the item 'OPC UA_1'); otherwise TIA Portal refuses a new user. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `deviceItemPath` | string | yes | deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1' |
+| `actions` | array of object | yes | actions: the changes, applied in order; fields: action (create, update, delete), userName, password |
+
+## sec_manage_webserver_users
+
+Create, update or delete users of the web server of a CPU that has its own web server users (S7-1200, S7-1500 before firmware V4), several at once, all or nothing. A user has a name, a password and permissions; the user 'Everybody' is what anyone may do without logging in. The web server itself is switched on with 'hw_set_device_item_attributes' (WebserverActivate). SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `deviceItemPath` | string | yes | deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1' |
+| `actions` | array of object | yes | actions: the changes, applied in order; fields: action (create, update, delete), userName, password, permissions |
+
+## sec_set_display_password
+
+Set the password that protects the display of an S7-1500 CPU. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `deviceItemPath` | string | yes | deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1' |
+| `password` | string | yes | password: the password of the display |
+
+## sec_set_plc_access_level
+
+Set the access level of a CPU with access levels (S7-1200, S7-1500 before firmware V4) and the passwords of its levels: accessLevel is what is allowed WITHOUT a password - FullAccess, ReadAccess, HMIAccess or NoAccess (FullAccessIncludingFailsafe on F-CPUs); passwordFor with password sets the password that opens a level; resetPasswordFor removes one. A wrong level locks people out of the PLC until the project is loaded again. A CPU with firmware V4 or newer has no access levels and is refused. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `deviceItemPath` | string | yes | deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1' |
+| `accessLevel` | string | no (default ``) | accessLevel: the level granted without a password; empty leaves it as it is |
+| `passwordFor` | string | no (default ``) | passwordFor: the level the password opens, e.g. FullAccess; empty sets no password |
+| `password` | string | no (default ``) | password: the password for passwordFor |
+| `resetPasswordFor` | string | no (default ``) | resetPasswordFor: the level whose password is removed; empty removes none |
+
+## sec_set_plc_configuration_protection
+
+Change the protection of confidential PLC configuration data of a CPU: 'protect' sets a password, 'protect_all' protects all configuration data (with a password when one is given), 'unprotect' removes the protection (the present password is needed when one is set), 'unprotect_all', 'change_password' (password = the present one, newPassword), 'reset'. A password that is lost cannot be recovered from the project. The CPU has to be loaded again afterwards. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `deviceItemPath` | string | yes | deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1' |
+| `action` | string | yes | action: protect, protect_all, unprotect, unprotect_all, change_password or reset |
+| `password` | string | no (default ``) | password: the password to set, or the present one for unprotect and change_password |
+| `newPassword` | string | no (default ``) | newPassword: the new password, for change_password |
 

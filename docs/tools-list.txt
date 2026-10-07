@@ -109,6 +109,12 @@ plc_where_used
 preview_import
 save_as_project
 save_project
+sec_get_plc_security
+sec_manage_opcua_users
+sec_manage_webserver_users
+sec_set_display_password
+sec_set_plc_access_level
+sec_set_plc_configuration_protection
 unified_compile
 unified_configure_trend_control
 unified_create_screen

@@ -4,6 +4,14 @@
 
 ### Added
 
+- A new area of tools, `security` (`sec_*`), registered by default: `sec_get_plc_security` reads how a PLC is
+  protected; `sec_set_plc_configuration_protection`, `sec_set_plc_access_level`, `sec_manage_webserver_users`,
+  `sec_manage_opcua_users` and `sec_set_display_password` change it. Passwords are plain arguments, handed to TIA
+  Portal as secure strings and kept nowhere. Each kind of change is a tool of its own so that a client with a
+  permission per tool (Claude: always allow / needs approval / blocked) can treat them apart; `--tools` without
+  `security` leaves them out. Tried on S7-1500 V2.9 and V4.0, S7-1200 and on R/H systems (1513R V3.1, 1517H V3.0):
+  the two CPUs of a redundant pair share these settings, and whether a CPU has access levels or access control by
+  users follows its firmware.
 - `create_project`: a new, empty project. The path is the folder of the project, as for `save_as_project`; while
   another project is open the call is refused (TIA Portal holds one project at a time).
 - `hw_set_device_item_attributes`: the parameters of hardware can be changed - attributes of a CPU, a module, a
