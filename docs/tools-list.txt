@@ -115,6 +115,7 @@ sec_manage_opcua_users
 sec_manage_project_roles
 sec_manage_project_users
 sec_manage_webserver_users
+sec_protect_project
 sec_set_block_protection
 sec_set_display_password
 sec_set_password_policy

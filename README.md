@@ -110,12 +110,12 @@ access. Confirm it in the TIA Portal window.
 | `--doctor`                | Print the environment report and exit without starting the MCP server.         |
 | `--debug-tools`           | Register the server-development tools (`unified_debug_*`).                      |
 | `--tools <areas>`         | Register only the named tool areas, e.g. `--tools plc,unified`. See below.     |
-| `--full`                  | Show one tool per operation (157) instead of the fifteen group tools. See below. |
+| `--full`                  | Show one tool per operation (158) instead of the fifteen group tools. See below. |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
 
 ## Fifteen group tools, and `--full`
 
-A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 157 rows are no
+A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 158 rows are no
 choice at all. So the server shows fifteen tools: fourteen groups cut along what a user wants to decide (reading,
 changing, deleting, downloading, protection) and `tia_help`. Started with `--full` it shows every tool by itself, as
 it did before.
@@ -142,7 +142,7 @@ A group tool takes the name of a tool and its parameters, `{"tool": "plc_get_blo
 its tools with a line each; `tia_help` gives the full description and the parameters of the tools named. The tools
 behind the groups are the same ones, with the same names, so the rest of this document and the skill apply as they
 are. `--read-only` and `--tools` work as before: a group with no tool left is not shown. The price is one more
-call - the model reads the help of a tool before it first uses it - and in return the descriptions of 157 tools stay
+call - the model reads the help of a tool before it first uses it - and in return the descriptions of 158 tools stay
 out of its context.
 
 ## Tool areas
@@ -160,7 +160,7 @@ code 2).
 | `library`  | `get_libraries`, `get_library_types`, `get_master_copies`, `instantiate_master_copy`, `open_global_library` | 5 |
 | `transfer` | `export_objects`, `import_objects`, `preview_import`                                           | 3     |
 | `download` | `download_to_plc`, `get_download_targets`                                                      | 2     |
-| `security` | `sec_*`: protection, passwords, users and roles of a PLC and of the project, protection of blocks | 11    |
+| `security` | `sec_*`: protection, passwords, users and roles of a PLC and of the project, protection of blocks | 12    |
 
 Always registered, whatever `--tools` says (12): `connect`, `disconnect`, `get_state`, `get_tia_instances`, `doctor`,
 `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project`,
@@ -194,7 +194,7 @@ running the server and never modify the project.
 The `sec_*` tools change what protects a plant: the password of the PLC configuration data, the access level of a
 CPU and its passwords, the users of the web server and of the OPC UA server, the display password, the users, user
 groups and roles of the project with their rights on each device, the password policy, the know-how and write
-protection of blocks. They are
+protection of blocks, and the protection of the project itself (`sec_protect_project`, which cannot be undone). They are
 registered by default, like every other write tool, and they take passwords as plain arguments - the server passes
 them to TIA Portal as secure strings and keeps them nowhere, but they do pass through the conversation with the
 model and through the logs of the client.
@@ -209,7 +209,7 @@ have no such setting ask (or do not ask) by their own rules. To leave the tools 
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 157 tools (81 with `--read-only`). A short
+when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 158 tools (81 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Always available (73):
@@ -232,7 +232,7 @@ Always available (73):
 | Download                | `get_download_targets` |
 | Security                | `sec_get_plc_security`, `sec_get_project_users` |
 
-Left out with `--read-only` (84):
+Left out with `--read-only` (85):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
@@ -249,7 +249,7 @@ Left out with `--read-only` (84):
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_delete_subnet`, `net_create_io_system`, `net_connect_to_io_system`, `net_create_connection`, `net_delete_connection` |
 | WinCC Unified           | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_compile`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_tag_table_groups`, `unified_manage_logs`, `unified_manage_logging_tags`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists`, `unified_set_runtime_settings` |
 | Download                | `download_to_plc` |
-| Security                | `sec_set_plc_configuration_protection`, `sec_set_plc_access_level`, `sec_manage_webserver_users`, `sec_manage_opcua_users`, `sec_set_display_password`, `sec_manage_project_users`, `sec_manage_project_roles`, `sec_set_password_policy`, `sec_set_block_protection` |
+| Security                | `sec_set_plc_configuration_protection`, `sec_set_plc_access_level`, `sec_manage_webserver_users`, `sec_manage_opcua_users`, `sec_set_display_password`, `sec_manage_project_users`, `sec_manage_project_roles`, `sec_set_password_policy`, `sec_set_block_protection`, `sec_protect_project` |
 
 `plc_get_software_tree` accepts a `sections` argument - any comma separated subset of
 `blocks,types,tags,watch,sources`, default `all` - to keep the output small on a large PLC.

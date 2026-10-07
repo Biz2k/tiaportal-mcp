@@ -4,7 +4,7 @@
 
 ### Added
 
-- **Changed default:** the client sees fifteen tools instead of 157 - fourteen group tools (`project_read`, `project_write`,
+- **Changed default:** the client sees fifteen tools instead of 158 - fourteen group tools (`project_read`, `project_write`,
   `plc_read`, `plc_write`, `plc_delete`, `hw_read`, `hw_write`, `hw_delete`, `hmi_read`, `hmi_write`, `plc_download`,
   `security_read`, `security_protection`, `security_users`) that take the name of a tool and its arguments, and
   `tia_help` with the parameters of a tool. For clients with a permission per tool, and to keep the descriptions of
@@ -23,6 +23,9 @@
   deletes users and user groups (password, roles, active, the user `Anonymous`); `sec_manage_project_roles` does the
   same for roles and gives them function rights of a device; `sec_set_password_policy` sets the policy. These users
   decide the access to CPUs with firmware V4 and newer, to Unified panels and to network devices.
+- Protected projects: `open_project` and `open_tia_project` take `userName` and `password` and log on with them;
+  without them a protected project is refused with the reason. `sec_protect_project` protects the open project -
+  TIA Portal cannot undo that, and the description of the tool says so.
 - `sec_set_block_protection`: know-how protection and write protection of a block, with the password. The messages
   about a know-how protected block now name this tool.
 - `create_project`: a new, empty project. The path is the folder of the project, as for `save_as_project`; while

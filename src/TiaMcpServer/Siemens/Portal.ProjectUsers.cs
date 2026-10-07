@@ -188,8 +188,11 @@ namespace TiaMcpServer.Siemens
     //   - Function rights belong to a device: Device.GetService<UmacDevice>().AvailableDeviceFunctionRights (a PLC with
     //     firmware V4: 28 rights - access level, web server, OPC UA; a Unified panel: 13; a SCALANCE: 2).
     //     CustomRole.AssignDeviceFunctionRight(device, right) / UnAssignDeviceFunctionRight; a system role is read-only.
-    //   - A user with the role 'Engineering administrator' can be made and removed; what it does to the protection of
-    //     the project once saved was NOT tried (project protection cannot be undone).
+    //   - A user with the role 'Engineering administrator' alone does not protect a project: it still opens without a
+    //     login. Project.ProtectProject(administratorName, password) does - it makes that user with the role, and from
+    //     then on the project opens only with credentials (Projects.Open(file, UmacDelegate)). It cannot be undone and
+    //     not be done twice ("already know-how protected"). In a protected project the last holder of the role cannot
+    //     lose it, and the logged-in user cannot delete or deactivate itself (tried on a throwaway project).
     //   - ProjectUsers.Create checks the password policy ("The password must contain at least 8 characters").
     //   - Know-how protection: PlcBlock.GetService<PlcBlockProtectionProvider>() - Protect(password),
     //     Unprotect(password); the password has to have 8 to 120 characters, a digit, a special character, lower and
@@ -732,6 +735,26 @@ namespace TiaMcpServer.Siemens
                 });
         }
 
+        /// <summary>Protects the project: from then on it opens only with a user and password. Cannot be undone.</summary>
+        public List<string> ProtectProject(string? administratorName, string? password)
+        {
+            return Operation.Run(_logger, nameof(ProtectProject), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    var project = RequireProject();
+
+                    if (string.IsNullOrWhiteSpace(administratorName))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, "'administratorName' is missing: the name of the user that becomes the administrator of the project.");
+                    }
+
+                    project.ProtectProject(administratorName!.Trim(), Secret(password, "'password'"));
+
+                    return RequireUmac().ProjectUsers.Select(u => $"{u.Name}: {(u.Roles.Count == 0 ? "no roles" : string.Join(", ", u.Roles.Select(r => r.Name)))}").ToList();
+                },
+                ("administratorName", administratorName));
+        }
+
         public (PasswordPolicyInfo Before, PasswordPolicyInfo After) SetPasswordPolicy(int? minimumLength, int? minimumNumericCharacters, int? minimumSpecialCharacters, bool? upperAndLowerCase,
             bool? passwordAging, int? passwordValidity, int? prewarningTime, int? passwordsBlockedForReuse)
         {
@@ -809,7 +832,7 @@ namespace TiaMcpServer.Siemens
                     {
                         ChangeBlockProtection(block, verb, action, password, newPassword);
                     }
-                    catch (Exception ex) when (ex is not PortalException && ex.ToString().IndexOf("password used was rejected", StringComparison.OrdinalIgnoreCase) >= 0)
+                    catch (Exception ex) when (ex is not PortalException && ErrorText.Describe(ex).IndexOf("password used was rejected", StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         throw new PortalException(PortalErrorCode.InvalidParams,
                             $"TIA Portal rejected the password for block '{block.Name}'. Nothing was changed. Ask the user for the password; do not guess. Seen on V21: right after a rejected password " +

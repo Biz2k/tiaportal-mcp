@@ -294,9 +294,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "open_project", Title = "Open project/session", Destructive = false, Idempotent = true, OpenWorld = false), Description("Open a TIA-Portal local project/session")]
+        [McpServerTool(Name = "open_project", Title = "Open project/session", Destructive = false, Idempotent = true, OpenWorld = false), Description("Open a TIA-Portal local project/session. A protected project opens only with the name and password of one of its users: pass userName and password as the user of this conversation gave them - never make them up, never repeat the password in your answer")]
         public static ResponseOpenProject OpenProject(
-            [Description("path: defines the path where to the project/session")] string path)
+            [Description("path: defines the path where to the project/session")] string path,
+            [Description("userName: a user of a protected project; empty for a project without protection")] string userName = "",
+            [Description("password: the password of that user")] string password = "")
         {
             try
             {
@@ -315,7 +317,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 if (extension.StartsWith(".ap"))
                 {
-                    success = Portal.OpenProject(path);
+                    success = Portal.OpenProject(path, userName, password);
                 }
                 if (extension.StartsWith(".als"))
                 {
@@ -571,9 +573,11 @@ namespace TiaMcpServer.ModelContextProtocol
         #region lookup
 
         [McpServerTool(Name = "open_tia_project", Title = "Connect/open a project", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
-         Description("Connect to the running TIA Portal if not already connected, open the given project or session, and return the device and PLC software paths the other tools need. Replaces the connect, open_project, get_project_tree sequence. TIA Portal must already be running")]
+         Description("Connect to the running TIA Portal if not already connected, open the given project or session, and return the device and PLC software paths the other tools need. Replaces the connect, open_project, get_project_tree sequence. TIA Portal must already be running. A protected project opens only with the name and password of one of its users (userName, password), as the user of this conversation gave them")]
         public static ResponseOpenTiaProject OpenTiaProject(
-            [Description("path: full path of the .apXX project or .alsXX session file on the machine running this server")] string path)
+            [Description("path: full path of the .apXX project or .alsXX session file on the machine running this server")] string path,
+            [Description("userName: a user of a protected project; empty for a project without protection")] string userName = "",
+            [Description("password: the password of that user")] string password = "")
         {
             try
             {
@@ -587,7 +591,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 // Reuse the existing tool rather than duplicating its extension validation and
                 // project/session branching; it also closes whatever was open first.
-                var opened = OpenProject(path);
+                var opened = OpenProject(path, userName, password);
 
                 var softwarePaths = CollectSoftwarePaths();
 

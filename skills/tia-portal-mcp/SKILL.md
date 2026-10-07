@@ -66,7 +66,8 @@ name, and the change lands there.
   (`get_state` shows `allowWrite: false`). Say so; do not look for a way around it.
 - **Protection, passwords, users (`sec_*`)**: before each call say what will change on which PLC,
   user, role or block and wait for the user's yes. Use only a password the user gave; never invent,
-  guess or repeat one. A know-how protected block is read only after the user gave its password.
+  guess or repeat one. A know-how protected block or a protected project is opened only with what the user gave.
+  `sec_protect_project` cannot be undone: call it only on an explicit request, after a clear yes.
 
 ## 4. When a call fails
 

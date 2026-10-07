@@ -458,7 +458,16 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>Opens a project (or switches to it when it is already open). Throws when it cannot; the reason is in the message.</summary>
-        public bool OpenProject(string projectPath)
+        public bool OpenProject(string projectPath) => OpenProject(projectPath, null, null);
+
+        /// <summary>
+        /// Opens a project; <paramref name="userName"/> and <paramref name="password"/> log on to a protected one.
+        /// Found on V21 (probe of 2026-10-07 on a throwaway project): a protected project opened without credentials
+        /// answers "The project is protected. You are not authorized ..."; with a wrong password or a deactivated user
+        /// "login or authentication is failed"; with a user that has no right to open it "has none of the following
+        /// function rights". An unprotected project never calls the delegate, so credentials given for it do no harm.
+        /// </summary>
+        public bool OpenProject(string projectPath, string? userName, string? password)
         {
             _logger?.LogInformation($"Opening project: {projectPath}");
 
@@ -497,7 +506,45 @@ namespace TiaMcpServer.Siemens
                     }
 
                     // see [5.3.1 Projekt öffnen, S.113]
-                    _project = _portal?.Projects.OpenWithUpgrade(new FileInfo(projectPath));
+                    try
+                    {
+                        if (string.IsNullOrWhiteSpace(userName))
+                        {
+                            _project = _portal?.Projects.OpenWithUpgrade(new FileInfo(projectPath));
+                        }
+                        else
+                        {
+                            var name = userName!.Trim();
+                            var secret = Secret(password, "'password'");
+
+                            // Never throw from an Openness delegate: that closes TIA Portal.
+                            UmacDelegate credentials = c =>
+                            {
+                                try
+                                {
+                                    c.Type = UmacUserType.Project;
+                                    c.Name = name;
+                                    c.SetPassword(secret);
+                                }
+                                catch (Exception)
+                                {
+                                    // the open then fails with the reason of TIA Portal
+                                }
+                            };
+
+                            _project = _portal?.Projects.OpenWithUpgrade(new FileInfo(projectPath), credentials);
+                        }
+                    }
+                    catch (Exception ex) when (ex is not PortalException && ErrorText.Describe(ex).IndexOf("The project is protected", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        var reason = ErrorText.Describe(ex);
+
+                        throw new PortalException(PortalErrorCode.InvalidState,
+                            string.IsNullOrWhiteSpace(userName)
+                                ? $"Project '{projectPath}' is protected: it opens only with the name and password of one of its users. Ask the user for them and pass 'userName' and 'password'; do not guess. TIA Portal: {reason}"
+                                : $"Project '{projectPath}' is protected and did not open for user '{userName}': the password is wrong, the user is deactivated, or it has no right to open the project. Ask the user; do not guess. TIA Portal: {reason}",
+                            null, ex);
+                    }
 
                     return _project != null;
                 },

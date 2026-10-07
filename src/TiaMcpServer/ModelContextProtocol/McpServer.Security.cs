@@ -207,7 +207,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [WriteTool]
         [McpServerTool(Name = "sec_manage_project_users", Title = "Manage the users and user groups of the project", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
-         Description("Create, update or delete users and user groups of the project, several at once, all or nothing: name, password, roles (roles = exactly these, addRoles / removeRoles = change the present ones), active, comment, session timeout, alias, authentication. A user gets rights only through roles; 'sec_get_project_users' lists the roles. The user 'Anonymous' with active: true lets everybody in without login, with the roles it has. The role 'Engineering administrator' decides who may open and change the project itself: give or take it only on an explicit request. The devices have to be loaded again for a change to reach them." + SecurityRule)]
+         Description("Create, update or delete users and user groups of the project, several at once, all or nothing: name, password, roles (roles = exactly these, addRoles / removeRoles = change the present ones), active, comment, session timeout, alias, authentication. A user gets rights only through roles; 'sec_get_project_users' lists the roles. The user 'Anonymous' with active: true lets everybody in without login, with the roles it has. The role 'Engineering administrator' decides who administers a protected project: give or take it only on an explicit request. The devices have to be loaded again for a change to reach them." + SecurityRule)]
         public static ResponseSecurityChange ManageProjectUsers(
             [Description("actions: the changes, applied in order; fields: action (create, update, delete), kind (user, group), name, password, newName, comment, active, sessionTimeout, runtimeSessionTimeout, alias, authentication, roles, addRoles, removeRoles")] List<ProjectUserAction> actions)
         {
@@ -230,6 +230,26 @@ namespace TiaMcpServer.ModelContextProtocol
                 var done = Portal.ManageProjectRoles(actions);
 
                 return new ResponseSecurityChange { Done = done, Message = $"Roles of the project: {string.Join("; ", done)}. {SaveHint}", Meta = SecurityMeta() };
+            });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "sec_protect_project", Title = "Protect the project (cannot be undone)", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Protect the open project: a user with the role 'Engineering administrator' is made, and from then on the project opens - in TIA Portal and through 'open_project' - only with the name and password of one of its users. THIS CANNOT BE UNDONE: TIA Portal has no way to remove the protection of a project, and with the password lost the project cannot be opened any more. Call it only when the user asked for exactly this, after telling them it is final and getting a clear yes; suggest a copy of the project first ('save_as_project')." + SecurityRule)]
+        public static ResponseSecurityChange ProtectProject(
+            [Description("administratorName: name of the user that becomes the administrator of the project")] string administratorName,
+            [Description("password: the password of that user; TIA Portal asks for at least 10 characters here")] string password)
+        {
+            return Guarded(nameof(ProtectProject), () =>
+            {
+                var users = Portal.ProtectProject(administratorName, password);
+
+                return new ResponseSecurityChange
+                {
+                    Done = users,
+                    Message = $"The project is protected; its administrator is '{administratorName}'. Users: {string.Join("; ", users)}. This cannot be undone. {SaveHint}",
+                    Meta = SecurityMeta()
+                };
             });
         }
 

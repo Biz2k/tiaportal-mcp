@@ -71,7 +71,8 @@ foreach ($call in ($text | ConvertFrom-Json)) {
         $out = $serialize.Invoke($null, @($result, $result.GetType(), $options))
         "[$n $($call.name)] isError=False"
     } catch {
-        $e = $_.Exception; while ($e.InnerException) { $e = $e.InnerException }
+        # the message a client gets is the one of the tool (McpException), not of the cause below it
+        $e = $_.Exception; while ($e.InnerException -and $e.GetType().Name -notmatch '^(McpException|PortalException)$') { $e = $e.InnerException }
         $out = 'ERROR: ' + $e.Message
         "[$n $($call.name)] isError=True"
     }

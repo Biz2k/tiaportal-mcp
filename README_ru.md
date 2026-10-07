@@ -115,13 +115,13 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | `--doctor`                | Вывести отчёт об окружении и завершиться, не запуская MCP-сервер.               |
 | `--debug-tools`           | Зарегистрировать инструменты разработки сервера (`unified_debug_*`).                    |
 | `--tools <области>`       | Зарегистрировать только названные области инструментов, например `--tools plc,unified`. См. ниже. |
-| `--full`                  | Показывать инструмент на каждую операцию (157) вместо пятнадцати групповых. См. ниже. |
+| `--full`                  | Показывать инструмент на каждую операцию (158) вместо пятнадцати групповых. См. ниже. |
 | `--allow-write`           | Принимается для старых конфигураций; запись включена по умолчанию, параметр ничего не меняет. |
 
 ## Пятнадцать групповых инструментов и `--full`
 
 Клиент, который даёт решать по каждому инструменту — разрешать всегда, спрашивать, запретить, — показывает по строке
-на инструмент, а 157 строк — это уже не выбор. Поэтому сервер показывает пятнадцать инструментов:
+на инструмент, а 158 строк — это уже не выбор. Поэтому сервер показывает пятнадцать инструментов:
 четырнадцать групп, разрезанных по тому, что пользователь хочет решать (чтение, изменение, удаление, загрузка,
 защита), и `tia_help`. С флагом `--full` он показывает каждый инструмент отдельно, как раньше.
 
@@ -148,7 +148,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 инструментов. За группами стоят те же инструменты с теми же именами, поэтому остальной документ и навык агента
 действуют как есть. `--read-only` и `--tools` работают как раньше: группа, в которой не осталось инструментов, не
 показывается. Цена — один лишний вызов: модель читает справку по инструменту перед первым использованием; взамен
-описания 157 инструментов не занимают её контекст.
+описания 158 инструментов не занимают её контекст.
 
 ## Области инструментов
 
@@ -165,7 +165,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | `library`  | `get_libraries`, `get_library_types`, `get_master_copies`, `instantiate_master_copy`, `open_global_library` | 5 |
 | `transfer` | `export_objects`, `import_objects`, `preview_import`                                           | 3     |
 | `download` | `download_to_plc`, `get_download_targets`                                                      | 2     |
-| `security` | `sec_*`: защита, пароли, пользователи и роли ПЛК и проекта, защита блоков                      | 11    |
+| `security` | `sec_*`: защита, пароли, пользователи и роли ПЛК и проекта, защита блоков                      | 12    |
 
 Всегда регистрируются, что бы ни стояло в `--tools` (12): `connect`, `disconnect`, `get_state`, `get_tia_instances`,
 `doctor`, `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project`,
@@ -197,7 +197,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 
 Инструменты `sec_*` меняют то, что защищает установку: пароль защиты конфигурации ПЛК, уровень доступа CPU и его
 пароли, пользователей веб-сервера и OPC UA-сервера, пароль дисплея, пользователей, группы и роли проекта с их правами на
-каждом устройстве, политику паролей, know-how-защиту и защиту блоков от записи. Они регистрируются по умолчанию, как и
+каждом устройстве, политику паролей, know-how-защиту и защиту блоков от записи, защиту самого проекта (`sec_protect_project`, необратимо). Они регистрируются по умолчанию, как и
 остальные инструменты записи, и принимают пароли обычными аргументами: сервер передаёт их в TIA Portal защищённой
 строкой и нигде не хранит, но через диалог с моделью и журналы клиента они проходят.
 
@@ -212,7 +212,7 @@ allow», «Needs approval» или «Blocked». Задать этот выбор
 
 Точный список имён инструментов — в [`docs/tools-list.txt`](docs/tools-list.txt); тест падает,
 если зарегистрированные инструменты расходятся с этим файлом. По умолчанию регистрируется
-За групповыми инструментами (или отдельно, с `--full`) стоят 157 инструментов (81 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
+За групповыми инструментами (или отдельно, с `--full`) стоят 158 инструментов (81 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Доступны всегда (73):
 
@@ -234,7 +234,7 @@ allow», «Needs approval» или «Blocked». Задать этот выбор
 | Загрузка                         | `get_download_targets` |
 | Безопасность                     | `sec_get_plc_security`, `sec_get_project_users` |
 
-Не регистрируются с `--read-only` (84):
+Не регистрируются с `--read-only` (85):
 
 | Область                          | Инструменты |
 | -------------------------------- | ----------- |
@@ -251,7 +251,7 @@ allow», «Needs approval» или «Blocked». Задать этот выбор
 | Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system`, `net_create_connection`, `net_delete_connection`, `net_delete_subnet` |
 | WinCC Unified                    | `unified_create_screen`, `unified_delete_screen`, `unified_manage_items`, `unified_manage_faceplate`, `unified_compile`, `unified_configure_trend_control`, `unified_manage_tags`, `unified_manage_tag_tables`, `unified_manage_screen_groups`, `unified_manage_scripts`, `unified_manage_tag_table_groups`, `unified_manage_logs`, `unified_manage_logging_tags`, `unified_manage_connections`, `unified_manage_alarms`, `unified_manage_alarm_classes`, `unified_manage_lists`, `unified_set_runtime_settings` |
 | Загрузка                         | `download_to_plc` |
-| Безопасность                     | `sec_set_plc_configuration_protection`, `sec_set_plc_access_level`, `sec_manage_webserver_users`, `sec_manage_opcua_users`, `sec_set_display_password`, `sec_manage_project_users`, `sec_manage_project_roles`, `sec_set_password_policy`, `sec_set_block_protection` |
+| Безопасность                     | `sec_set_plc_configuration_protection`, `sec_set_plc_access_level`, `sec_manage_webserver_users`, `sec_manage_opcua_users`, `sec_set_display_password`, `sec_manage_project_users`, `sec_manage_project_roles`, `sec_set_password_policy`, `sec_set_block_protection`, `sec_protect_project` |
 
 `plc_get_software_tree` принимает параметр `sections` — любое подмножество
 `blocks,types,tags,watch,sources` через запятую, по умолчанию `all`, — чтобы ответ оставался
