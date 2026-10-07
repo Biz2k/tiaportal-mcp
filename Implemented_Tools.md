@@ -39,6 +39,11 @@
 - `sec_manage_webserver_users`: Пользователи веб-сервера CPU: создать, изменить права или пароль, удалить.
 - `sec_manage_opcua_users`: Пользователи OPC UA-сервера CPU: создать, задать пароль, удалить.
 - `sec_set_display_password`: Пароль дисплея CPU S7-1500.
+- `sec_get_project_users`: Пользователи, группы и роли проекта с правами по устройствам, политика паролей; `rightsOfDevice` — какие права даёт устройство.
+- `sec_manage_project_users`: Пользователи и группы проекта: создать, изменить (пароль, роли, активность, комментарий), удалить; пользователь `Anonymous` — доступ без входа.
+- `sec_manage_project_roles`: Роли проекта: создать, изменить, удалить; выдать или забрать права устройства (`device`, `addRights`, `removeRights`).
+- `sec_set_password_policy`: Политика паролей проекта.
+- `sec_set_block_protection`: Защита блока паролем: know-how (`protect`, `unprotect`) и от записи (`write_protect`, `write_unprotect`, `write_change_password`).
 - `hw_get_devices`: Список устройств проекта: путь, имя, тип и имена элементов верхнего уровня; `includeAttributes=true` добавляет все атрибуты.
 - `hw_get_topology`: Получить иерархию (топологию) оборудования проекта, включая устройства, модули и подсети.
 - `hw_plug_module`: Установить модуль в стойку на позицию. Пустой `parentItemName` — установка стойки в саму станцию.

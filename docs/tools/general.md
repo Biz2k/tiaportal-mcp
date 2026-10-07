@@ -18,9 +18,14 @@ Connection, project and session tools.
 | [`save_as_project`](#save_as_project) | write |
 | [`save_project`](#save_project) | write |
 | [`sec_get_plc_security`](#sec_get_plc_security) | read |
+| [`sec_get_project_users`](#sec_get_project_users) | read |
 | [`sec_manage_opcua_users`](#sec_manage_opcua_users) | write |
+| [`sec_manage_project_roles`](#sec_manage_project_roles) | write |
+| [`sec_manage_project_users`](#sec_manage_project_users) | write |
 | [`sec_manage_webserver_users`](#sec_manage_webserver_users) | write |
+| [`sec_set_block_protection`](#sec_set_block_protection) | write |
 | [`sec_set_display_password`](#sec_set_display_password) | write |
+| [`sec_set_password_policy`](#sec_set_password_policy) | write |
 | [`sec_set_plc_access_level`](#sec_set_plc_access_level) | write |
 | [`sec_set_plc_configuration_protection`](#sec_set_plc_configuration_protection) | write |
 
@@ -126,6 +131,14 @@ Read how a PLC is protected: the protection of confidential PLC configuration da
 |---|---|---|---|
 | `deviceItemPath` | string | yes | deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1' |
 
+## sec_get_project_users
+
+Read the users and roles of the project ('Security settings > Users and roles' in TIA Portal): the users with their roles and whether they are active (the user 'Anonymous' is access without login), the user groups, the roles - those of TIA Portal (system: true) and those of the project - with their function rights per device, the password policy, and which devices have function rights. These users decide the access to CPUs with firmware V4 and newer, to Unified panels and to network devices. rightsOfDevice lists the function rights a device offers. No password is ever returned
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `rightsOfDevice` | string | no (default ``) | rightsOfDevice: name of a device (or of its CPU / panel) whose available function rights are listed too; empty lists none |
+
 ## sec_manage_opcua_users
 
 Create or delete users of the OPC UA server of a CPU, or set their password ('update'), several at once, all or nothing. The OPC UA server and its authentication by user name have to be on first ('hw_set_device_item_attributes' on the item 'OPC UA_1'); otherwise TIA Portal refuses a new user. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
@@ -134,6 +147,22 @@ Create or delete users of the OPC UA server of a CPU, or set their password ('up
 |---|---|---|---|
 | `deviceItemPath` | string | yes | deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1' |
 | `actions` | array of object | yes | actions: the changes, applied in order; fields: action (create, update, delete), userName, password |
+
+## sec_manage_project_roles
+
+Create, update or delete roles of the project and give them function rights of a device (addRights / removeRights with device; one device per action), several at once, all or nothing. A function right is e.g. full access to a PLC, reading tags over its web server, operating a Unified panel; 'sec_get_project_users' with rightsOfDevice lists what a device offers. The roles TIA Portal brings along cannot be changed. Deleting a role takes it away from every user that has it. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `actions` | array of object | yes | actions: the changes, applied in order; fields: action (create, update, delete), name, newName, comment, sessionTimeout, device, addRights, removeRights |
+
+## sec_manage_project_users
+
+Create, update or delete users and user groups of the project, several at once, all or nothing: name, password, roles (roles = exactly these, addRoles / removeRoles = change the present ones), active, comment, session timeout, alias, authentication. A user gets rights only through roles; 'sec_get_project_users' lists the roles. The user 'Anonymous' with active: true lets everybody in without login, with the roles it has. The role 'Engineering administrator' decides who may open and change the project itself: give or take it only on an explicit request. The devices have to be loaded again for a change to reach them. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `actions` | array of object | yes | actions: the changes, applied in order; fields: action (create, update, delete), kind (user, group), name, password, newName, comment, active, sessionTimeout, runtimeSessionTimeout, alias, authentication, roles, addRoles, removeRoles |
 
 ## sec_manage_webserver_users
 
@@ -144,6 +173,18 @@ Create, update or delete users of the web server of a CPU that has its own web s
 | `deviceItemPath` | string | yes | deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1' |
 | `actions` | array of object | yes | actions: the changes, applied in order; fields: action (create, update, delete), userName, password, permissions |
 
+## sec_set_block_protection
+
+Change the protection of a block with a password: 'protect' / 'unprotect' is the know-how protection (the code cannot be read or changed without the password), 'write_protect' / 'write_unprotect' / 'write_change_password' is the write protection (readable, not changeable). A know-how password has to have 8 to 120 characters with a digit, a special character, upper and lower case. A know-how password that is lost cannot be recovered: the code of the block is then gone for good. While a block is know-how protected its code can be neither read nor changed by the plc_* tools. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: path of the PLC software, e.g. 'Station_1/PLC_1' |
+| `blockPath` | string | yes | blockPath: path of the block, e.g. 'Group/Block_1' |
+| `action` | string | yes | action: protect, unprotect, write_protect, write_unprotect or write_change_password |
+| `password` | string | no (default ``) | password: the password to set, or the present one for unprotect, write_unprotect and write_change_password |
+| `newPassword` | string | no (default ``) | newPassword: the new password, for write_change_password |
+
 ## sec_set_display_password
 
 Set the password that protects the display of an S7-1500 CPU. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
@@ -152,6 +193,21 @@ Set the password that protects the display of an S7-1500 CPU. SENSITIVE: before 
 |---|---|---|---|
 | `deviceItemPath` | string | yes | deviceItemPath: path of the CPU, e.g. 'Station_1/PLC_1' |
 | `password` | string | yes | password: the password of the display |
+
+## sec_set_password_policy
+
+Set the password policy for the users of the project; only the settings given are changed. TIA Portal checks the limits (minimum length 8 to 32). The policy applies to passwords set from now on. SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `minimumLength` | integer | no (default ``) | minimumLength: least number of characters, 8 to 32 |
+| `minimumNumericCharacters` | integer | no (default ``) | minimumNumericCharacters: least number of digits |
+| `minimumSpecialCharacters` | integer | no (default ``) | minimumSpecialCharacters: least number of special characters |
+| `upperAndLowerCase` | boolean | no (default ``) | upperAndLowerCase: whether upper and lower case letters are both required |
+| `passwordAging` | boolean | no (default ``) | passwordAging: whether passwords expire |
+| `passwordValidity` | integer | no (default ``) | passwordValidity: days a password is valid |
+| `prewarningTime` | integer | no (default ``) | prewarningTime: days of warning before a password expires |
+| `passwordsBlockedForReuse` | integer | no (default ``) | passwordsBlockedForReuse: how many former passwords cannot be used again |
 
 ## sec_set_plc_access_level
 

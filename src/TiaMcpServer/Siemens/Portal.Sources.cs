@@ -766,7 +766,7 @@ namespace TiaMcpServer.Siemens
             if (isKnowHowProtected)
             {
                 throw new PortalException(PortalErrorCode.NotSupported,
-                    $"{kind} '{name}' is know-how protected, and TIA Portal never writes the source of a protected object.");
+                    $"{kind} '{name}' is know-how protected, and TIA Portal never writes the source of a protected object. 'sec_set_block_protection' removes the protection with the password of the user.");
             }
         }
 

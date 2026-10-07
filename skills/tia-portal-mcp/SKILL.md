@@ -62,8 +62,9 @@ name, and the change lands there.
   changed. Do not repeat a cancelled call without asking.
 - If the write tools are missing from the session, the server runs with `--read-only`
   (`get_state` shows `allowWrite: false`). Say so; do not look for a way around it.
-- **Protection and passwords (`sec_*`)**: before each call say what will change on which PLC and
-  wait for the user's yes. Use only a password the user gave; never invent or repeat one.
+- **Protection, passwords, users (`sec_*`)**: before each call say what will change on which PLC,
+  user, role or block and wait for the user's yes. Use only a password the user gave; never invent,
+  guess or repeat one. A know-how protected block is read only after the user gave its password.
 
 ## 4. When a call fails
 

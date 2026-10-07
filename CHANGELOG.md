@@ -12,6 +12,13 @@
   `security` leaves them out. Tried on S7-1500 V2.9 and V4.0, S7-1200 and on R/H systems (1513R V3.1, 1517H V3.0):
   the two CPUs of a redundant pair share these settings, and whether a CPU has access levels or access control by
   users follows its firmware.
+- Users and roles of the project, in the area `security`: `sec_get_project_users` reads the users, user groups, roles
+  with their function rights per device, and the password policy; `sec_manage_project_users` creates, changes and
+  deletes users and user groups (password, roles, active, the user `Anonymous`); `sec_manage_project_roles` does the
+  same for roles and gives them function rights of a device; `sec_set_password_policy` sets the policy. These users
+  decide the access to CPUs with firmware V4 and newer, to Unified panels and to network devices.
+- `sec_set_block_protection`: know-how protection and write protection of a block, with the password. The messages
+  about a know-how protected block now name this tool.
 - `create_project`: a new, empty project. The path is the folder of the project, as for `save_as_project`; while
   another project is open the call is refused (TIA Portal holds one project at a time).
 - `hw_set_device_item_attributes`: the parameters of hardware can be changed - attributes of a CPU, a module, a

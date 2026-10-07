@@ -633,7 +633,7 @@ namespace TiaMcpServer.Siemens
 
             if (block.IsKnowHowProtected)
             {
-                throw new PortalException(PortalErrorCode.NotSupported, $"Block '{block.Name}' is know-how protected; its networks cannot be read or changed.");
+                throw new PortalException(PortalErrorCode.NotSupported, $"Block '{block.Name}' is know-how protected; its networks cannot be read or changed. 'sec_set_block_protection' removes the protection with the password of the user.");
             }
 
             return block;

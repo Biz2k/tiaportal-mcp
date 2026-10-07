@@ -3,6 +3,7 @@ using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Text.Json.Nodes;
 using TiaMcpServer.Siemens;
 
@@ -154,6 +155,127 @@ namespace TiaMcpServer.ModelContextProtocol
                 Portal.SetDisplayPassword(deviceItemPath, password);
 
                 return new ResponseSecurityChange { Cpu = deviceItemPath, Message = $"Display password of '{deviceItemPath}' set. {SaveHint}", Meta = SecurityMeta() };
+            });
+        }
+
+        public class ResponseProjectUsers : ResponseMessage
+        {
+            public ProjectUsersInfo? Security { get; set; }
+        }
+
+        public class ResponsePasswordPolicy : ResponseMessage
+        {
+            public PasswordPolicyInfo? Before { get; set; }
+
+            public PasswordPolicyInfo? After { get; set; }
+        }
+
+        public class ResponseBlockProtection : ResponseMessage
+        {
+            public string? Block { get; set; }
+
+            public string? Before { get; set; }
+
+            public string? After { get; set; }
+        }
+
+        [McpServerTool(Name = "sec_get_project_users", Title = "Get the users, groups and roles of the project", ReadOnly = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Read the users and roles of the project ('Security settings > Users and roles' in TIA Portal): the users with their roles and whether they are active (the user 'Anonymous' is access without login), the user groups, the roles - those of TIA Portal (system: true) and those of the project - with their function rights per device, the password policy, and which devices have function rights. These users decide the access to CPUs with firmware V4 and newer, to Unified panels and to network devices. rightsOfDevice lists the function rights a device offers. No password is ever returned")]
+        public static ResponseProjectUsers GetProjectUsers(
+            [Description("rightsOfDevice: name of a device (or of its CPU / panel) whose available function rights are listed too; empty lists none")] string rightsOfDevice = "")
+        {
+            try
+            {
+                var info = Portal.GetProjectUsers(rightsOfDevice);
+
+                return new ResponseProjectUsers
+                {
+                    Security = info,
+                    Message = $"{info.Users.Count} user(s), {info.Groups.Count} group(s), {info.Roles.Count(r => !r.System)} role(s) of the project and {info.Roles.Count(r => r.System)} of TIA Portal",
+                    Meta = Ok(new JsonObject())
+                };
+            }
+            catch (PortalException pex)
+            {
+                throw ToolError(pex);
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw Failure("reading the users and roles of the project", ex);
+            }
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "sec_manage_project_users", Title = "Manage the users and user groups of the project", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, update or delete users and user groups of the project, several at once, all or nothing: name, password, roles (roles = exactly these, addRoles / removeRoles = change the present ones), active, comment, session timeout, alias, authentication. A user gets rights only through roles; 'sec_get_project_users' lists the roles. The user 'Anonymous' with active: true lets everybody in without login, with the roles it has. The role 'Engineering administrator' decides who may open and change the project itself: give or take it only on an explicit request. The devices have to be loaded again for a change to reach them." + SecurityRule)]
+        public static ResponseSecurityChange ManageProjectUsers(
+            [Description("actions: the changes, applied in order; fields: action (create, update, delete), kind (user, group), name, password, newName, comment, active, sessionTimeout, runtimeSessionTimeout, alias, authentication, roles, addRoles, removeRoles")] List<ProjectUserAction> actions)
+        {
+            return Guarded(nameof(ManageProjectUsers), () =>
+            {
+                var done = Portal.ManageProjectUsers(actions);
+
+                return new ResponseSecurityChange { Done = done, Message = $"Users of the project: {string.Join("; ", done)}. {SaveHint}", Meta = SecurityMeta() };
+            });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "sec_manage_project_roles", Title = "Manage the roles of the project and their rights", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Create, update or delete roles of the project and give them function rights of a device (addRights / removeRights with device; one device per action), several at once, all or nothing. A function right is e.g. full access to a PLC, reading tags over its web server, operating a Unified panel; 'sec_get_project_users' with rightsOfDevice lists what a device offers. The roles TIA Portal brings along cannot be changed. Deleting a role takes it away from every user that has it." + SecurityRule)]
+        public static ResponseSecurityChange ManageProjectRoles(
+            [Description("actions: the changes, applied in order; fields: action (create, update, delete), name, newName, comment, sessionTimeout, device, addRights, removeRights")] List<ProjectRoleAction> actions)
+        {
+            return Guarded(nameof(ManageProjectRoles), () =>
+            {
+                var done = Portal.ManageProjectRoles(actions);
+
+                return new ResponseSecurityChange { Done = done, Message = $"Roles of the project: {string.Join("; ", done)}. {SaveHint}", Meta = SecurityMeta() };
+            });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "sec_set_password_policy", Title = "Set the password policy of the project", Destructive = true, Idempotent = true, OpenWorld = false, UseStructuredContent = true),
+         Description("Set the password policy for the users of the project; only the settings given are changed. TIA Portal checks the limits (minimum length 8 to 32). The policy applies to passwords set from now on." + SecurityRule)]
+        public static ResponsePasswordPolicy SetPasswordPolicy(
+            [Description("minimumLength: least number of characters, 8 to 32")] int? minimumLength = null,
+            [Description("minimumNumericCharacters: least number of digits")] int? minimumNumericCharacters = null,
+            [Description("minimumSpecialCharacters: least number of special characters")] int? minimumSpecialCharacters = null,
+            [Description("upperAndLowerCase: whether upper and lower case letters are both required")] bool? upperAndLowerCase = null,
+            [Description("passwordAging: whether passwords expire")] bool? passwordAging = null,
+            [Description("passwordValidity: days a password is valid")] int? passwordValidity = null,
+            [Description("prewarningTime: days of warning before a password expires")] int? prewarningTime = null,
+            [Description("passwordsBlockedForReuse: how many former passwords cannot be used again")] int? passwordsBlockedForReuse = null)
+        {
+            return Guarded(nameof(SetPasswordPolicy), () =>
+            {
+                var (before, after) = Portal.SetPasswordPolicy(minimumLength, minimumNumericCharacters, minimumSpecialCharacters, upperAndLowerCase, passwordAging, passwordValidity, prewarningTime, passwordsBlockedForReuse);
+
+                return new ResponsePasswordPolicy { Before = before, After = after, Message = $"Password policy of the project set. {SaveHint}", Meta = SecurityMeta() };
+            });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "sec_set_block_protection", Title = "Protect a block (know-how or write protection)", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Change the protection of a block with a password: 'protect' / 'unprotect' is the know-how protection (the code cannot be read or changed without the password), 'write_protect' / 'write_unprotect' / 'write_change_password' is the write protection (readable, not changeable). A know-how password has to have 8 to 120 characters with a digit, a special character, upper and lower case. A know-how password that is lost cannot be recovered: the code of the block is then gone for good. While a block is know-how protected its code can be neither read nor changed by the plc_* tools." + SecurityRule)]
+        public static ResponseBlockProtection SetBlockProtection(
+            [Description("softwarePath: path of the PLC software, e.g. 'Station_1/PLC_1'")] string softwarePath,
+            [Description("blockPath: path of the block, e.g. 'Group/Block_1'")] string blockPath,
+            [Description("action: protect, unprotect, write_protect, write_unprotect or write_change_password")] string action,
+            [Description("password: the password to set, or the present one for unprotect, write_unprotect and write_change_password")] string password = "",
+            [Description("newPassword: the new password, for write_change_password")] string newPassword = "")
+        {
+            return Guarded(nameof(SetBlockProtection), () =>
+            {
+                var (before, after) = Portal.SetBlockProtection(softwarePath, blockPath, action, password, newPassword);
+
+                return new ResponseBlockProtection
+                {
+                    Block = blockPath,
+                    Before = before,
+                    After = after,
+                    Message = $"Protection of block '{blockPath}' ({action}): {before} -> {after}. {SaveHint}",
+                    Meta = SecurityMeta()
+                };
             });
         }
     }

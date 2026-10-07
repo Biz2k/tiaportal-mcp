@@ -425,7 +425,7 @@ namespace TiaMcpServer.Siemens
             if (block.IsKnowHowProtected)
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    $"Block '{block.Name}' is know-how protected. Remove the protection in TIA Portal before modifying it.");
+                    $"Block '{block.Name}' is know-how protected. Remove the protection first: 'sec_set_block_protection' with the password of the user, or in TIA Portal.");
             }
         }
 
@@ -434,7 +434,7 @@ namespace TiaMcpServer.Siemens
             if (type.IsKnowHowProtected)
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
-                    $"Type '{type.Name}' is know-how protected. Remove the protection in TIA Portal before modifying it.");
+                    $"Type '{type.Name}' is know-how protected. Remove the protection first: 'sec_set_block_protection' with the password of the user, or in TIA Portal.");
             }
         }
 
