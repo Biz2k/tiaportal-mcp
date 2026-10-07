@@ -110,12 +110,12 @@ access. Confirm it in the TIA Portal window.
 | `--doctor`                | Print the environment report and exit without starting the MCP server.         |
 | `--debug-tools`           | Register the server-development tools (`unified_debug_*`).                      |
 | `--tools <areas>`         | Register only the named tool areas, e.g. `--tools plc,unified`. See below.     |
-| `--full`                  | Show one tool per operation (158) instead of the ten group tools. See below. |
+| `--full`                  | Show one tool per operation (159) instead of the ten group tools. See below. |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
 
 ## Ten group tools, and `--full`
 
-A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 158 rows are no
+A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 159 rows are no
 choice at all. So the server shows ten tools: one for everything that only reads - there is nothing to decide about reading, set it
 to "Always allow" once - and nine groups cut along what a user does want to decide (changing, deleting, downloading,
 protection). Started with `--full` it shows every tool by itself, as
@@ -138,7 +138,7 @@ A group tool takes the name of a tool and its parameters, `{"tool": "plc_get_blo
 its tools with a line each; the tool `tia_help` of `tia_read` gives the full description and the parameters of the tools named. The tools
 behind the groups are the same ones, with the same names, so the rest of this document and the skill apply as they
 are. `--read-only` and `--tools` work as before: a group with no tool left is not shown. The price is one more
-call - the model reads the help of a tool before it first uses it - and in return the descriptions of 158 tools stay
+call - the model reads the help of a tool before it first uses it - and in return the descriptions of 159 tools stay
 out of its context.
 
 ## Tool areas
@@ -155,7 +155,7 @@ code 2).
 | `unified`  | `unified_*`                                                                                    | 35    |
 | `library`  | `get_libraries`, `get_library_types`, `get_master_copies`, `instantiate_master_copy`, `open_global_library` | 5 |
 | `transfer` | `export_objects`, `import_objects`, `preview_import`                                           | 3     |
-| `download` | `download_to_plc`, `get_download_targets`                                                      | 2     |
+| `download` | `download_to_plc`, `get_download_targets`, `get_accessible_devices`                            | 3     |
 | `security` | `sec_*`: protection, passwords, users and roles of a PLC and of the project, protection of blocks | 12    |
 
 Always registered, whatever `--tools` says (12): `connect`, `disconnect`, `get_state`, `get_tia_instances`, `doctor`,
@@ -204,10 +204,10 @@ have no such setting ask (or do not ask) by their own rules. To leave the tools 
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 158 tools (81 with `--read-only`). A short
+when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 159 tools (82 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
-Always available (73):
+Always available (74):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
@@ -224,7 +224,7 @@ Always available (73):
 | Export and preview      | `export_objects`, `preview_import` |
 | Libraries               | `get_libraries`, `open_global_library`, `get_master_copies`, `get_library_types` |
 | WinCC Unified           | `unified_get_screens`, `unified_get_screen_groups`, `unified_get_scripts`, `unified_get_tag_table_groups`, `unified_get_logs`, `unified_get_logging_tags`, `unified_get_screen_items`, `unified_get_screen_item_properties`, `unified_get_tags`, `unified_get_tag_tables`, `unified_get_connections`, `unified_get_alarms`, `unified_get_alarm_classes`, `unified_get_text_lists`, `unified_get_graphic_lists`, `unified_get_runtime_settings`, `unified_get_system_tags` |
-| Download                | `get_download_targets` |
+| Download                | `get_download_targets`, `get_accessible_devices` |
 | Security                | `sec_get_plc_security`, `sec_get_project_users` |
 
 Left out with `--read-only` (85):

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering;
+using Siemens.Engineering.Connection;
 using Siemens.Engineering.Download;
 using Siemens.Engineering.HW;
 
@@ -80,8 +81,82 @@ namespace TiaMcpServer.Siemens
         public List<DownloadMessage> Messages { get; set; } = new List<DownloadMessage>();
     }
 
+    /// <summary>A device the search on a PC interface found ("Online access > Update accessible devices").</summary>
+    public class AccessibleDevice
+    {
+        public string? Name { get; set; }
+
+        public string? Address { get; set; }
+
+        public string? DeviceSeries { get; set; }
+
+        public string? MacAddress { get; set; }
+    }
+
+    public class AccessibleDevicesResult
+    {
+        public string? PcInterface { get; set; }
+
+        public List<AccessibleDevice> Devices { get; set; } = new List<AccessibleDevice>();
+
+        /// <summary>The addresses 'download_to_plc' takes as targetAddress: those TIA Portal knows on the subnets of this PC interface.</summary>
+        public List<string> DownloadAddresses { get; set; } = new List<string>();
+    }
+
     public partial class Portal
     {
+        /// <summary>
+        /// The search of "Online access": ConfigurationPcInterface.GetAccessibleDevices(). Found on V21 (2026-10-07):
+        /// it finds a PLCSIM instance whose address the PC cannot even ping (the adapter sat in another IP subnet),
+        /// within a second.
+        /// </summary>
+        public AccessibleDevicesResult GetAccessibleDevices(string softwarePath, string pcInterfaceName, string modeName)
+        {
+            return Operation.Run(_logger, nameof(GetAccessibleDevices), PortalErrorCode.InvalidState, () =>
+            {
+                var pcInterface = RequirePcInterface(RequireDownloadProvider(softwarePath), string.IsNullOrWhiteSpace(modeName) ? "PN/IE" : modeName, pcInterfaceName);
+                var result = new AccessibleDevicesResult { PcInterface = pcInterface.Name };
+
+                foreach (var device in pcInterface.GetAccessibleDevices())
+                {
+                    result.Devices.Add(new AccessibleDevice { Name = device.Name, Address = device.Address, DeviceSeries = string.IsNullOrEmpty(device.DeviceSeries) ? null : device.DeviceSeries, MacAddress = device.MACAddress });
+                }
+
+                result.DownloadAddresses = SubnetAddresses(pcInterface).Select(a => a.Address).Distinct().ToList();
+
+                return result;
+            },
+            ("softwarePath", softwarePath), ("pcInterfaceName", pcInterfaceName));
+        }
+
+        private static ConfigurationPcInterface RequirePcInterface(DownloadProvider provider, string modeName, string pcInterfaceName)
+        {
+            var modes = provider.Configuration.Modes.ToList();
+            var mode = modes.FirstOrDefault(m => string.Equals(m.Name, modeName, StringComparison.OrdinalIgnoreCase))
+                ?? throw new PortalException(PortalErrorCode.NotFound, $"Mode '{modeName}' not found. Available: {Quote(modes.Select(m => m.Name))}.");
+
+            return mode.PcInterfaces.FirstOrDefault(p => string.Equals(p.Name, pcInterfaceName, StringComparison.OrdinalIgnoreCase))
+                ?? throw new PortalException(PortalErrorCode.NotFound, $"PC interface '{pcInterfaceName}' not found in mode '{modeName}'. Available: {Quote(mode.PcInterfaces.Select(p => p.Name))}.");
+        }
+
+        /// <summary>The addresses TIA Portal itself offers on the subnets of a PC interface, gateways included.</summary>
+        private static List<ConfigurationAddress> SubnetAddresses(ConfigurationPcInterface pcInterface)
+        {
+            var addresses = new List<ConfigurationAddress>();
+
+            foreach (var subnet in pcInterface.Subnets)
+            {
+                addresses.AddRange(subnet.Addresses);
+
+                foreach (var gateway in subnet.Gateways)
+                {
+                    addresses.AddRange(gateway.Addresses);
+                }
+            }
+
+            return addresses;
+        }
+
         public List<string> GetDownloadTargets(string softwarePath)
         {
             return Operation.Run(_logger, nameof(GetDownloadTargets), PortalErrorCode.InvalidState, () =>
@@ -136,7 +211,8 @@ namespace TiaMcpServer.Siemens
             bool stopPlc = false,
             bool startPlc = false,
             IDictionary<string, string>? selections = null,
-            string userManagement = "keep")
+            string userManagement = "keep",
+            string? targetAddress = null)
         {
             return Operation.Run(_logger, nameof(DownloadToPlc), PortalErrorCode.InvalidState, () =>
             {
@@ -178,9 +254,23 @@ namespace TiaMcpServer.Siemens
                     }
                 }
 
+                // An address is taken only from those TIA Portal offers on the subnets of the PC interface. NEVER make one
+                // with target.Addresses.Create(...): a download to such an address closed TIA Portal (2026-10-07).
+                ConfigurationAddress? address = null;
+
+                if (!string.IsNullOrWhiteSpace(targetAddress))
+                {
+                    var known = SubnetAddresses(pcInterface);
+
+                    address = known.FirstOrDefault(a => string.Equals(a.Address, targetAddress!.Trim(), StringComparison.OrdinalIgnoreCase))
+                        ?? throw new PortalException(PortalErrorCode.NotFound,
+                            $"TIA Portal offers no address '{targetAddress}' on the subnets of PC interface '{pcInterface.Name}'. Offered: {(known.Count == 0 ? "none" : Quote(known.Select(a => a.Address).Distinct()))}. " +
+                            "'get_accessible_devices' searches the network. Nothing was loaded.");
+                }
+
                 var outcome = new DownloadOutcome
                 {
-                    Target = $"{mode.Name} / {pcInterface.Name} / {target.Name}"
+                    Target = $"{mode.Name} / {pcInterface.Name} / {target.Name}" + (address == null ? string.Empty : $" at {address.Address}")
                 };
 
                 var stage = "connecting to the target and preparing the download";
@@ -194,7 +284,7 @@ namespace TiaMcpServer.Siemens
                 try
                 {
                     var result = downloadProvider.Download(
-                        target,
+                        address != null ? (IConfiguration)address : target,
                         configuration =>
                         {
                             stage = "answering the configuration steps before loading";

@@ -5,6 +5,7 @@ disconnect
 doctor
 download_to_plc
 export_objects
+get_accessible_devices
 get_download_targets
 get_libraries
 get_library_types

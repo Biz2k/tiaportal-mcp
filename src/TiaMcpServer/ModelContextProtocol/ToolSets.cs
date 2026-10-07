@@ -43,7 +43,8 @@ namespace TiaMcpServer.ModelContextProtocol
             ["import_objects"] = Transfer,
             ["preview_import"] = Transfer,
             ["download_to_plc"] = Download,
-            ["get_download_targets"] = Download
+            ["get_download_targets"] = Download,
+            ["get_accessible_devices"] = Download
         };
 
         /// <summary>The areas switched on, or null when every area is (no '--tools', or 'all').</summary>

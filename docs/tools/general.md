@@ -9,6 +9,7 @@ Connection, project and session tools.
 | [`create_project`](#create_project) | session |
 | [`disconnect`](#disconnect) | session |
 | [`doctor`](#doctor) | read |
+| [`get_accessible_devices`](#get_accessible_devices) | read |
 | [`get_project`](#get_project) | read |
 | [`get_project_tree`](#get_project_tree) | read |
 | [`get_state`](#get_state) | read |
@@ -65,6 +66,16 @@ No parameters.
 Diagnose the TIA-Portal environment: connection, open project, active and installed TIA-Portal versions, Openness user group membership
 
 No parameters.
+
+## get_accessible_devices
+
+Search the network behind a PC interface for devices, as 'Online access > Update accessible devices' in TIA Portal does: name, address, MAC address of each device found - a PLC, a PLCSIM instance. Also returns 'downloadAddresses': the addresses 'download_to_plc' takes as targetAddress. softwarePath names a PLC of the project, whose download settings give the PC interfaces
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `pcInterfaceName` | string | yes | pcInterfaceName: PC interface, second part of a target of 'get_download_targets' (e.g. 'Siemens PLCSIM Virtual Ethernet Adapter') |
+| `modeName` | string | no (default `PN/IE`) | modeName: first part of a target (default 'PN/IE') |
 
 ## get_project
 

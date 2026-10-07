@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text.Json.Nodes;
 using TiaMcpServer.Siemens;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
@@ -25,6 +26,35 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        public class ResponseAccessibleDevices : ResponseMessage
+        {
+            public AccessibleDevicesResult? Result { get; set; }
+        }
+
+        [McpServerTool(Name = "get_accessible_devices", Title = "Search the network for accessible devices", ReadOnly = true, OpenWorld = false, UseStructuredContent = true)]
+        [Description("Search the network behind a PC interface for devices, as 'Online access > Update accessible devices' in TIA Portal does: name, address, MAC address of each device found - a PLC, a PLCSIM instance. Also returns 'downloadAddresses': the addresses 'download_to_plc' takes as targetAddress. softwarePath names a PLC of the project, whose download settings give the PC interfaces")]
+        public static ResponseAccessibleDevices GetAccessibleDevices(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("pcInterfaceName: PC interface, second part of a target of 'get_download_targets' (e.g. 'Siemens PLCSIM Virtual Ethernet Adapter')")] string pcInterfaceName,
+            [Description("modeName: first part of a target (default 'PN/IE')")] string modeName = "PN/IE")
+        {
+            try
+            {
+                var result = Portal.GetAccessibleDevices(softwarePath, pcInterfaceName, modeName);
+
+                return new ResponseAccessibleDevices
+                {
+                    Result = result,
+                    Message = $"{result.Devices.Count} device(s) found on '{result.PcInterface}'" + (result.Devices.Count > 0 ? ": " + string.Join(", ", result.Devices.Select(d => $"{d.Name} ({d.Address})")) : string.Empty),
+                    Meta = Ok(new JsonObject())
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw ToolError(ex);
+            }
+        }
+
         [WriteTool]
         [McpServerTool(Name = "download_to_plc", Title = "Download to PLC", Destructive = true, OpenWorld = false, UseStructuredContent = true)]
         [Description("Download hardware configuration and/or software to a PLC or a simulated PLC. The target must already be running and reachable: this server does not start PLCSIM. Take the three interface values from 'get_download_targets'. There is no preview: a call loads. The CPU is neither stopped nor started unless stopPlc / startPlc say so; a hardware download normally needs stopPlc. The response lists every step, its answer and the messages of the result")]
@@ -39,13 +69,14 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("startPlc: start the CPU after the download (default false)")] bool startPlc = false,
             [Description("maxMessages: how many informational result messages to return (default 40); errors and warnings are always returned in full")] int maxMessages = 40,
             [Description("selections: optional answers that override the defaults, as 'StepType=Option' pairs separated by commas, e.g. 'OverwriteSystemData=Overwrite,StopModules=StopAll'. Step types and their options are listed under 'steps' in every response")] string selections = "",
-            [Description("downloadUserManagement: what to do with the user management data (users, roles) when the CPU holds data that differs from the project: 'keep' (default) leaves the CPU's data as it is, 'update' takes the users of the project but keeps the CPU's passwords, 'overwrite' replaces all of it by the project's data and resets the passwords. The same answer can be given as 'UserManagementDownload=<option>' in selections, which wins")] string downloadUserManagement = "keep")
+            [Description("downloadUserManagement: what to do with the user management data (users, roles) when the CPU holds data that differs from the project: 'keep' (default) leaves the CPU's data as it is, 'update' takes the users of the project but keeps the CPU's passwords, 'overwrite' replaces all of it by the project's data and resets the passwords. The same answer can be given as 'UserManagementDownload=<option>' in selections, which wins")] string downloadUserManagement = "keep",
+            [Description("targetAddress: one of the 'downloadAddresses' of 'get_accessible_devices', to load through the subnet instead of the target interface - for a device the target interface does not reach; empty (default) goes through the target interface")] string targetAddress = "")
         {
             return GuardedNoTransaction(nameof(DownloadToPlc), () =>
             {
                 var outcome = Portal.DownloadToPlc(
                     softwarePath, modeName, pcInterfaceName, targetInterfaceName,
-                    hardware, software, stopPlc, startPlc, ParseSelections(selections), downloadUserManagement);
+                    hardware, software, stopPlc, startPlc, ParseSelections(selections), downloadUserManagement, targetAddress);
 
                 var unanswered = outcome.Steps.Where(s => !s.Answered).Select(s => s.Type).Distinct().ToList();
 

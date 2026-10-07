@@ -4,7 +4,11 @@
 
 ### Added
 
-- **Changed default:** the client sees ten tools instead of 158 - `tia_read` for everything that only reads (with
+- `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
+  interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
+  subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
+  interface; any other address is refused before the download starts.
+- **Changed default:** the client sees ten tools instead of 159 - `tia_read` for everything that only reads (with
   `tia_help`, the parameters of a tool) and nine group tools for what changes something (`project_write`, `plc_write`,
   `plc_delete`, `hw_write`, `hw_delete`, `hmi_write`, `plc_download`, `security_protection`, `security_users`); each
   takes the name of a tool and its arguments. For clients with a permission per tool, and to keep the descriptions of
@@ -357,6 +361,10 @@ below):
 
 ### Added
 
+- `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
+  interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
+  subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
+  interface; any other address is refused before the download starts.
 - `plc_replace_source`: replaces the code of an existing SCL block (FB, FC, OB), data block or PLC data type by a
   new source text and compiles it - the cycle "read, change, compile" that so far needed an export and an import by
   hand. The object keeps its group, its block number and its instance DBs. The source has to declare exactly that
@@ -444,6 +452,10 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
 
 ### Added
 
+- `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
+  interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
+  subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
+  interface; any other address is refused before the download starts.
 - `unified_get_runtime_settings`, `unified_set_runtime_settings` (runtime settings of a WinCC Unified HMI by name, groups with a dot,
   languages by name) and `unified_get_system_tags`. A screen window is made with `unified_manage_items` (`HmiScreenWindow`, `Screen`).
 - `net_get_connections`, `net_create_connection`, `net_delete_connection`: communication connections between PLCs (S7, TCP, ISO-on-TCP,
@@ -805,6 +817,10 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
   counterpart; each links to the other at the top.
 ### Added
 
+- `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
+  interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
+  subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
+  interface; any other address is refused before the download starts.
 - __`hmi_manage_items`__: create, update, upsert and delete items on WinCC Unified screens, several per
   call, each with any number of properties. A property takes a static value of its own type (number,
   boolean, string, enum member by name, color) or a dynamization: `{"tag": ...}`, `{"script": ...}`,
@@ -872,6 +888,10 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
 
 ### Added
 
+- `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
+  interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
+  subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
+  interface; any other address is refused before the download starts.
 - __`ExportXmlTagTable` prompt__: a prompt template for exporting a PLC tag table to XML through the
   `ExportXmlTagTable` tool, next to the existing block and type export prompts. Likewise prompts for the source
   file tools: `ExportSourceBlock`, `ExportSourceType`, `ImportSources` and `ImportSourceBlocks`, plus the
@@ -886,6 +906,10 @@ PLC data types. The read tool surface grows from 56 to 59.
 
 ### Added
 
+- `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
+  interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
+  subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
+  interface; any other address is refused before the download starts.
 - __`GenerateBlockSource`__: writes one program block as an external source file. The extension
   is dictated by the object, not chosen by the caller: `.db` for data blocks, `.awl` for STL
   blocks, `.scl` for SCL blocks. Openness throws on a mismatch, so the mapping is derived rather
@@ -954,6 +978,10 @@ surface grows from 31 tools to 44 read tools plus 37 project-mutating tools.
 
 ### Added
 
+- `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
+  interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
+  subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
+  interface; any other address is refused before the download starts.
 - __Write mode__, opt-in through the new `--allow-write` command line argument. The 37
   project-mutating tools live in a separate `McpServerWrite` tool type that is only registered
   when the flag is present, so without it they are absent from `tools/list` rather than merely
@@ -1097,6 +1125,10 @@ Upgrade to the current MCP .NET SDK and adopt the newer protocol surface.
 
 ### Added
 
+- `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
+  interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
+  subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
+  interface; any other address is refused before the download starts.
 - Environment diagnostics ('doctor'), available two ways: the `--doctor` command line argument
   prints a report and exits without starting the MCP server, and the new `Doctor` tool returns the
   same report plus structured content to MCP clients. Both report the connection state, the open
@@ -1133,6 +1165,10 @@ Upgrade to the current MCP .NET SDK and adopt the newer protocol surface.
 
 ### Added
 
+- `get_accessible_devices`: the search of "Online access > Update accessible devices" - the devices behind a PC
+  interface with name, address and MAC address; it finds a PLCSIM instance even where the PC has no address in its
+  subnet. `download_to_plc` takes `targetAddress`, one of the addresses TIA Portal offers on the subnets of the PC
+  interface; any other address is refused before the download starts.
 - All 30 tools carry a `title` and behaviour annotations: 13 read-only `Get*` tools are
   `readOnlyHint: true`; project mutations (`SaveProject`, `SaveAsProject`, `CloseProject`),
   all export tools (they overwrite files already present at the target path) and all import tools
