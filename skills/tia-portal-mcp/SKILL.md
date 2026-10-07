@@ -1,6 +1,6 @@
 ---
 name: tia-portal-mcp
-description: How to work on a Siemens TIA Portal project through the tia-mcp-server MCP server - connect, find objects, change PLC software, hardware, networks and WinCC Unified screens, save, and download to a PLC without losing the user's work. Use whenever the tia-mcp-server tools (open_tia_project, plc_*, hw_*, net_*, unified_*, download_to_plc) are available and the task touches a TIA Portal project.
+description: How to work on a Siemens TIA Portal project through the tia-mcp-server MCP server without losing the user's work - connect, find objects, read and change PLC software (blocks, SCL code, data types, tags), hardware and PROFINET networks, WinCC Unified screens, tags and alarms, compile, save, and download to a PLC or PLCSIM. Use this skill whenever the tia-mcp-server tools (open_tia_project, plc_*, hw_*, net_*, unified_*, download_to_plc) are available and the request touches a TIA Portal project, a Siemens PLC program or an HMI - also for read-only questions about the project, and even when the user does not name the server.
 ---
 
 # Working with TIA Portal through tia-mcp-server
@@ -28,6 +28,9 @@ and look in `CHANGELOG.md` of the repository for the new name.
 
 ## 2. Find objects, do not guess paths
 
+A guessed path costs a failed call at best; at worst it matches a different object with a similar
+name, and the change lands there.
+
 - Paths are relative to the root of their tree: `1_Tests/FC_Block_1`, not
   `Program blocks/1_Tests/FC_Block_1`.
 - Discover them: `get_project_tree` for the project, `plc_get_software_tree` for one PLC,
@@ -45,7 +48,7 @@ and look in `CHANGELOG.md` of the repository for the new name.
 - A write runs in a transaction: it either happens completely or not at all. The `*_manage_*`
   tools take a list of actions and apply the list all or nothing - put related changes in one call.
 - **Read back after writing.** Use the matching `get` tool to confirm the result instead of
-  trusting the write answer alone.
+  trusting the write answer alone: TIA Portal can accept a value and store it differently.
 - **Compile after changing code or types** (`plc_compile_block`, `plc_compile_software`,
   `unified_compile`) and read the messages. An object that is not consistent cannot be exported,
   copied or moved, and the project is not ready to download.
@@ -76,7 +79,8 @@ A download changes a running controller. Do it only when the user asked for this
 2. `get_download_targets` lists the targets; pick the one the user confirmed, not the first one.
 3. `download_to_plc`. There is no preview: the call loads. The CPU is not stopped or started
    unless asked through the arguments, and a download that needs a stop is refused with that
-   explanation - ask the user before stopping a CPU.
+   explanation. A hardware download normally needs the stop - say so before the call and ask
+   the user before stopping a CPU.
 4. Report every step and message from the answer, including steps that kept TIA Portal's preset.
 
 ## 6. Know the limits before promising
@@ -90,7 +94,17 @@ A download changes a running controller. Do it only when the user asked for this
 
 The full list is under "Known limitations" in `README.md` of the repository.
 
-## 7. Where the details are
+## 7. Finish with a report
+
+The user cannot see what happened inside TIA Portal from the chat, so end every task that
+changed something with these four lines:
+
+- **Changed:** the objects created, changed or deleted, with their paths.
+- **Compiled:** yes with the error and warning counts, or no.
+- **Saved:** yes, or "not saved - the changes are in memory only".
+- **Open points:** what failed, what was skipped, what the user has to do in TIA Portal.
+
+## 8. Where the details are
 
 | Need | Place in the repository |
 |---|---|
