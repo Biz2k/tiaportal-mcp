@@ -284,6 +284,43 @@ namespace TiaMcpServer.Siemens
                 .ToList();
         }
 
+        public LadEditResult ManageLadInterface(string softwarePath, string blockPath, List<LadInterfaceAction> actions, string compile, string onCompileError)
+        {
+            return Operation.Run(_logger, nameof(ManageLadInterface), PortalErrorCode.ImportFailed,
+                () =>
+                {
+                    var (compileMode, restoreWanted) = ReadCompileOptions(compile, onCompileError);
+                    var block = RequireLadBlock(softwarePath, blockPath);
+                    var (previous, baseName) = ReadLadDocument(block);
+                    var (next, _) = ReadLadDocument(block);
+                    var problems = LadInterface.Check(next, actions);
+
+                    if (problems.Count > 0)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"Nothing was changed: {problems.Count} of the {actions?.Count ?? 0} action(s) cannot be applied. {string.Join(" ", problems)}");
+                    }
+
+                    LadInterface.Apply(next, actions, ProjectCultures());
+
+                    var result = WriteLadDocument(softwarePath, blockPath, block, previous, next, baseName, compileMode, restoreWanted, "plc_manage_lad_interface",
+                        $"Change the interface of {block.Name}");
+
+                    if (!result.Restored)
+                    {
+                        var now = GetBlock(softwarePath, blockPath);
+
+                        if (now != null)
+                        {
+                            result.Declaration = ReadLadDocument(now).Document.HeadWithComments(ProjectCultures()).Replace("\n", "\r\n");
+                        }
+                    }
+
+                    return result;
+                },
+                ("softwarePath", softwarePath), ("blockPath", blockPath));
+        }
+
         /// <summary>plc_replace_source for a LAD block: the whole document, with the texts of its titles when it refers to any.</summary>
         private LadEditResult ReplaceLadDocument(string softwarePath, string blockPath, PlcBlock block, string source, string compileMode, bool restoreWanted)
         {

@@ -13,7 +13,7 @@ ATTACH		ATTACH	ATTACH( OB_NR := #i, EVENT := #i, ADD := #i, RET_VAL => #i )		Ext
 ATTR_DB		ATTR_DB	ATTR_DB( REQ := #i, DB_NUMBER := #i, RET_VAL => #i, DB_LENGTH => #i, ATTRIB => #i )		Extended | Read data block attribute	
 BCDCPL		BCDCPL	BCDCPL( IN := #i, ERR_CODE => #i )		LAD | Create tens complement	
 BITSUM		BITSUM	BITSUM( IN := #i, Ret_Val => #i )		LAD | Count number of set bits	
-Calculate	CALCULATE	Calc	Calculate( out => #i )	the expression of the box has no known text form: build the calculation from Add, Mul and the like instead	LAD | Calculate	
+Calculate	CALCULATE	Calc	Calculate( in1 := #r, in2 := #r, in3 := 2.0, out => #r )	the expression is written in S7_Expression with IN1, IN2, ... for the inputs; as many inputs as the expression uses	LAD | Calculate	{ S7_Templates := "SrcType := Real"; S7_Expression := "(IN1 + IN2) * IN3" }
 CAN_DINT		CAN_DINT	CAN_DINT( OB_NR := #i, RET_VAL => #i )		Extended | Cancel time-delay interrupt	
 CAN_TINT		CAN_TINT	CAN_TINT( OB_NR := #i, Ret_Val => #i )		Extended | Cancel time-of-day interrupt	
 CD_Coil			CD_Coil( #b )		Basic | Count down (SIMATIC counter)	
@@ -112,6 +112,7 @@ Inc	INC		Inc(  )		LAD | Increment
 INIT_RD		INIT_RD	INIT_RD( REQ := #i, Ret_Val => #i )		LAD | Initialize all retain data	
 InRange		InRange	InRange( min := #i, in := #i, max := #i )	the data type of the operands: Int, DInt, Real, ...	LAD | Value within range	{ S7_Templates := "SrcType := Int" }
 INSERT			{ S7_GenerateENO := "TRUE" } INSERT( in1 := #i, in2 := #i, p := #i, out => #i )		Extended | Insert characters in a character string	
+Inv	INV INVERT		Inv( in := #w, out => #w )	a bit string or integer type	LAD | Create ones complement	{ S7_Templates := "SrcType := Word" }
 IO2MOD		IO2MOD	IO2MOD( ADDR := #i, RET_VAL => #i, LADDR => #i )		Extended | Determine hardware identifier from an IO address	
 IS_ARRAY			IS_ARRAY(  )		LAD | Check for ARRAY	
 IS_NULL			IS_NULL(  )		LAD | Check for EQUALS NULL pointer	
@@ -225,7 +226,10 @@ S_CONV			{ S7_GenerateENO := "TRUE" } S_CONV( in := #i, out => #i )		Extended | 
 S_Fill	FILL	FILL	S_Fill( BVAL := #i, RET_VAL => #i, BLK => #i )		LAD | Fill block	
 S_MOVE			S_MOVE( in := #i, out => #i )		Extended | Move character string	
 S_Normalize	UNSCALE	UNSCALE	S_Normalize( in := #i, hiLim := #i, loLim := #i, bipolar := #i, ret_val => #i, out => #i )		LAD | Unscale	
-S_Pulse	S_PULSE		S_Pulse(  )	needs an instance: #Instance.S_Pulse( ... )	LAD | Assign pulse timer parameters and start	
+S_OffDelay	S_OFFDT		S_OffDelay(  )	SIMATIC timer of S7-1500: the name is known to TIA Portal, its pins were not found out - take them from a block made in the editor	LAD | Assign off-delay timer parameters and start	
+S_OnDelay	S_ODT		S_OnDelay(  )	SIMATIC timer of S7-1500: the name is known to TIA Portal, its pins were not found out - take them from a block made in the editor	LAD | Assign on-delay timer parameters and start	
+S_Pulse	S_PULSE		S_Pulse(  )	SIMATIC timer of S7-1500: the name is known to TIA Portal, its pins were not found out - take them from a block made in the editor	LAD | Assign pulse timer parameters and start	
+S_PulseExt	S_PEXT		S_PulseExt(  )	SIMATIC timer of S7-1500: the name is known to TIA Portal, its pins were not found out - take them from a block made in the editor	LAD | Assign extended pulse timer parameters and start	
 S_RS	RS	Rs	S_RS( operand := #i, s1 := #i )		LAD | Reset/set flip-flop	
 S_Scale	SCALE		S_Scale( in := #i, hiLim := #i, loLim := #i, bipolar := #i, ret_val => #i, out => #i )		LAD | Scale	
 S_SR	SR	Sr	S_SR( operand := #i, r1 := #i )		LAD | Set/reset flip-flop	

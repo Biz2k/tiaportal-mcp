@@ -15,6 +15,12 @@
   instructions with their exact names, pins and the data type line they need. No such list exists in the help or in
   the installation of TIA Portal; this one was asked of TIA Portal itself, name by name
   (`tools/lad-instruction-probe.ps1`), and is shipped inside the server.
+- `plc_manage_lad_interface`: the interface of an existing LAD block changed tag by tag - add, update (data type,
+  start value, comment, name; a rename follows the uses inside the block), delete - without sending the whole block.
+- The text form of the expression of `Calculate` is found: `{ S7_Templates := "SrcType := Real"; S7_Expression :=
+  "(IN1 + IN2) * IN3" }` before the instruction; it is in `plc_get_lad_instructions`.
+- `tools/inproc-call.ps1` calls the tools of a build inside PowerShell, for development: TIA Portal asks for
+  Openness access for every new build of the server, and PowerShell is granted once.
 - `plc_create_lad_block`: a new FB or FC in LAD with its interface and its networks in one call, compiled; a block
   that does not compile is removed again by default.
 - Comments of interface members of a LAD block: `Start : Bool;   // text` in the declaration passed to

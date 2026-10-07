@@ -362,6 +362,9 @@ namespace TiaMcpServer.ModelContextProtocol
     /// <summary>What a change of a LAD block did: the result of the compile and the networks as they are now.</summary>
     public class LadEditResult : SourceEditResult
     {
+        /// <summary>The declaration of the block after a change of its interface.</summary>
+        public string? Declaration { get; set; }
+
         public List<LadNetworkInfo> Networks { get; set; } = new List<LadNetworkInfo>();
     }
 
@@ -388,6 +391,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseLadEdit : ResponseSourceEdit
     {
+        /// <summary>The declaration of the block after a change of its interface.</summary>
+        public string? Declaration { get; set; }
+
         /// <summary>The networks of the block after the call: number and title.</summary>
         public IEnumerable<LadNetworkInfo>? Networks { get; set; }
     }

@@ -153,6 +153,58 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [WriteTool]
+        [McpServerTool(Name = "plc_manage_lad_interface", Title = "Change the interface of a LAD block", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Add, change or delete tags in the interface of an EXISTING LAD block - inputs, outputs, in-outs, static, temp, constants - several at once, without sending the whole block; then compile it. An update changes data type, start value, comment or name; a rename also renames the uses of the tag inside the block (#Name), but not the callers. All or nothing; if the block does not compile afterwards (a network still uses a deleted tag), the previous block is put back by default. Callers and instance DBs of the block wait for a compile after a change of its interface: the answer lists them. Members inside a structure are not reached here - pass the whole document to 'plc_replace_source' for those. Read the present interface with 'plc_get_lad_networks' and withDeclaration. Fields of an action: action, name, section, dataType, startValue, comment, newName")]
+        public static ResponseLadEdit ManageLadInterface(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("blockPath: root-relative path of the LAD block, e.g. 'Valves/Valve_Control'")] string blockPath,
+            [Description("actions: the changes to make, applied in order")] List<LadInterfaceAction> actions,
+            [Description("compile: 'object' (default) compiles the block itself, 'software' then compiles the whole PLC as well, 'none' compiles nothing")] string compile = "object",
+            [Description("onCompileError: 'restore' (default) puts the previous block back when it does not compile, 'keep' leaves the change in place")] string onCompileError = "restore")
+        {
+            return GuardedNoTransaction(nameof(ManageLadInterface), () =>
+            {
+                var result = Portal.ManageLadInterface(softwarePath, blockPath, actions, compile, onCompileError);
+
+                if (result.Restored)
+                {
+                    throw new PortalException(PortalErrorCode.InvalidParams,
+                        $"With the new interface {result.Kind} '{result.Name}' does not compile ({result.ErrorCount} error(s)); the previous block was put back and compiled. " +
+                        $"Nothing else changed. Errors: {Portal.DescribeMessages(result.Messages)}");
+                }
+
+                var errors = result.ErrorCount ?? 0;
+
+                return new ResponseLadEdit
+                {
+                    Name = result.Name,
+                    Path = result.Path,
+                    Kind = result.Kind,
+                    Number = result.Number,
+                    State = result.State,
+                    ErrorCount = result.ErrorCount,
+                    WarningCount = result.WarningCount,
+                    Messages = result.Messages.Where(m => m.Severity == "Error" || m.Severity == "Warning").ToList(),
+                    NowInconsistent = result.NowInconsistent,
+                    Notes = result.Notes,
+                    Declaration = result.Declaration,
+                    Message = $"{actions.Count} action(s) applied to the interface of {result.Kind} '{result.Name}'" +
+                              (result.State == null ? "; not compiled." : $"; compile ({result.Compile}): {result.State}, {errors} error(s), {result.WarningCount} warning(s).") +
+                              (errors > 0 && !result.ObjectCompiles ? " The change is in place with its errors (onCompileError='keep')." : string.Empty) +
+                              (errors > 0 && result.ObjectCompiles ? " The block itself compiles; the errors are in objects that use it." : string.Empty) +
+                              (result.NowInconsistent.Count > 0 ? $" {result.NowInconsistent.Count} object(s) that use it now wait for a compile." : string.Empty) +
+                              " " + SaveHint,
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = errors == 0,
+                        ["pendingSave"] = true
+                    }
+                };
+            });
+        }
+
+        [WriteTool]
         [McpServerTool(Name = "plc_manage_lad_networks", Title = "Change the networks of a LAD block", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
          Description("Replace, insert, delete or move networks of an EXISTING LAD block, or set their titles and comments, several at once; then compile the block. Every number in a call means the block as it is BEFORE the call, so one action never shifts the target of another. All or nothing: a call that TIA Portal refuses changes nothing and the error names the instruction and the line; if the new code does not compile (a tag that does not exist, a wrong operand type), the previous block is put back by default. The block keeps its number, its place and its instance DBs; the interface is not changed here - for that pass the whole document to 'plc_replace_source'. Instruction names and pins cannot be guessed: look them up with 'plc_get_lad_instructions', or follow an existing network from 'plc_get_lad_networks'. Fields of an action: action, network, after, code, language, title, comment")]
         public static ResponseLadEdit ManageLadNetworks(

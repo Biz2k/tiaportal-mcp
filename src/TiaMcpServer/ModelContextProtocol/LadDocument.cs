@@ -659,6 +659,18 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #endregion
 
+        /// <summary>Renames a tag of the block where the networks use it: #Old and #"Old", as a whole name only.</summary>
+        public void RenameLocal(string oldName, string newName)
+        {
+            var written = Regex.IsMatch(newName, @"^[A-Za-z_][A-Za-z0-9_]*$") ? newName : "\"" + newName + "\"";
+            var pattern = new Regex(@"#(?:""" + Regex.Escape(oldName) + @"""|" + Regex.Escape(oldName) + @"(?![\p{L}\p{N}_]))", RegexOptions.IgnoreCase);
+
+            foreach (var network in Networks)
+            {
+                network.Code = pattern.Replace(network.Code, "#" + written);
+            }
+        }
+
         #region a new block
 
         /// <summary>The sections of an interface a caller may pass: VAR_INPUT ... END_VAR and the like, nothing else.</summary>

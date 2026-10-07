@@ -61,6 +61,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 | [`plc_get_types`](#plc_get_types) | read |
 | [`plc_get_watch_table_info`](#plc_get_watch_table_info) | read |
 | [`plc_get_watch_tables`](#plc_get_watch_tables) | read |
+| [`plc_manage_lad_interface`](#plc_manage_lad_interface) | write |
 | [`plc_manage_lad_networks`](#plc_manage_lad_networks) | write |
 | [`plc_manage_tag_table_entries`](#plc_manage_tag_table_entries) | write |
 | [`plc_move_block`](#plc_move_block) | write |
@@ -653,6 +654,18 @@ List the PLC watch tables of a plc software, optionally filtered by a regular ex
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `regexName` | string | no (default ``) | regexName: optional regular expression to filter the watch table names |
+
+## plc_manage_lad_interface
+
+Add, change or delete tags in the interface of an EXISTING LAD block - inputs, outputs, in-outs, static, temp, constants - several at once, without sending the whole block; then compile it. An update changes data type, start value, comment or name; a rename also renames the uses of the tag inside the block (#Name), but not the callers. All or nothing; if the block does not compile afterwards (a network still uses a deleted tag), the previous block is put back by default. Callers and instance DBs of the block wait for a compile after a change of its interface: the answer lists them. Members inside a structure are not reached here - pass the whole document to 'plc_replace_source' for those. Read the present interface with 'plc_get_lad_networks' and withDeclaration. Fields of an action: action, name, section, dataType, startValue, comment, newName
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `blockPath` | string | yes | blockPath: root-relative path of the LAD block, e.g. 'Valves/Valve_Control' |
+| `actions` | array of object | yes | actions: the changes to make, applied in order |
+| `compile` | string | no (default `object`) | compile: 'object' (default) compiles the block itself, 'software' then compiles the whole PLC as well, 'none' compiles nothing |
+| `onCompileError` | string | no (default `restore`) | onCompileError: 'restore' (default) puts the previous block back when it does not compile, 'keep' leaves the change in place |
 
 ## plc_manage_lad_networks
 

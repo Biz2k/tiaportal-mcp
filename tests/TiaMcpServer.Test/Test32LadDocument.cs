@@ -197,6 +197,71 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
+        public void Test_3210_Interface_AddsChangesRenamesAndDeletesTags()
+        {
+            var document = Read();
+            var actions = new List<LadInterfaceAction>
+            {
+                new LadInterfaceAction { Action = "add", Section = "input", Name = "Enable", DataType = "Bool", Comment = "enable it" },
+                new LadInterfaceAction { Action = "add", Section = "output", Name = "Count", DataType = "Int", StartValue = "5" },
+                new LadInterfaceAction { Action = "add", Section = "temp", Name = "Врем", DataType = "Real" },
+                new LadInterfaceAction { Action = "update", Name = "A", NewName = "Start", Comment = "start" },
+                new LadInterfaceAction { Action = "update", Name = "T1", DataType = "TOF_TIME" },
+                new LadInterfaceAction { Action = "update", Name = "Count", StartValue = "", DataType = "DInt" }
+            };
+
+            Assert.AreEqual(0, LadInterface.Check(document, actions).Count, string.Join(" | ", LadInterface.Check(document, actions)));
+
+            LadInterface.Apply(document, actions, Cultures);
+
+            var shown = document.HeadWithComments(Cultures);
+
+            StringAssert.Contains(shown, "Start : Bool;   // start");
+            StringAssert.Contains(shown, "Enable : Bool;   // enable it");
+            StringAssert.Contains(shown, "    VAR_OUTPUT\n        Count : DInt;\n    END_VAR");
+            StringAssert.Contains(shown, "    VAR_TEMP\n        \"Врем\" : Real;\n    END_VAR");
+            StringAssert.Contains(shown, "T1 : TOF_TIME;");
+            StringAssert.Contains(shown, "S7_Setpoint := \"False\"", "the attributes of the member stay");
+            Assert.IsTrue(shown.IndexOf("VAR_OUTPUT") < shown.IndexOf("\n    VAR\n") && shown.IndexOf("\n    VAR\n") < shown.IndexOf("VAR_TEMP"), shown);
+            StringAssert.Contains(document.Networks[0].Code, "Contact( #Start )");
+            StringAssert.Contains(document.Networks[1].Code, ":= #Start;");
+
+            var delete = new List<LadInterfaceAction> { new LadInterfaceAction { Action = "delete", Name = "T1" }, new LadInterfaceAction { Action = "update", Name = "Start", Comment = "" } };
+
+            Assert.AreEqual(0, LadInterface.Check(document, delete).Count);
+            LadInterface.Apply(document, delete, Cultures);
+            shown = document.HeadWithComments(Cultures);
+            Assert.IsFalse(shown.Contains("T1") || shown.Contains("S7_Setpoint"), shown);
+            StringAssert.Contains(shown, "Start : Bool;\n");
+        }
+
+        [TestMethod]
+        public void Test_3211_Interface_NamesEveryWrongAction()
+        {
+            var actions = new List<LadInterfaceAction>
+            {
+                new LadInterfaceAction { Action = "add", Section = "input", Name = "A", DataType = "Bool" },
+                new LadInterfaceAction { Action = "add", Section = "nowhere", Name = "B", DataType = "Bool" },
+                new LadInterfaceAction { Action = "add", Section = "input", Name = "C" },
+                new LadInterfaceAction { Action = "update", Name = "Nope", Comment = "x" },
+                new LadInterfaceAction { Action = "update", Name = "A" },
+                new LadInterfaceAction { Action = "update", Name = "A", NewName = "T1" },
+                new LadInterfaceAction { Action = "move", Name = "A" }
+            };
+
+            var problems = LadInterface.Check(Read(), actions);
+
+            Assert.AreEqual(7, problems.Count, string.Join(" | ", problems));
+            StringAssert.Contains(problems[0], "already has a tag");
+            StringAssert.Contains(problems[1], "'section' takes");
+            StringAssert.Contains(problems[2], "'dataType' is missing");
+            StringAssert.Contains(problems[3], "no tag of that name");
+            StringAssert.Contains(problems[4], "nothing to change");
+            StringAssert.Contains(problems[5], "already has a tag named 'T1'");
+            StringAssert.Contains(problems[6], "not known");
+        }
+
+        [TestMethod]
         public void Test_3207_LinesMissing_FindsWhatTheImportDropped()
         {
             var sent = "PID : PID_Compact := (\n  PhysicalUnit := 2,\n  Config := (\n    X := FALSE\n  )\n);\nT : Time := T#5000ms;";
