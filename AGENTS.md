@@ -20,8 +20,12 @@ project the standing permissions are written down in `docs/handoff/context.md`.
 ### Standard Commands
 
 ```powershell
-dotnet test
+dotnet test --filter TestCategory=NoTia
 ```
+
+or `tools/finish.ps1` (line endings, build, these tests). The classes marked `NeedsTia` need TIA Portal and the original
+author's projects; they are ignored, so a plain `dotnet test` skips them. Live checks are `tools/smoke.ps1` and
+`tools/mcp-call.ps1`; see `tests/TiaMcpServer.Test/README.md`.
 
 If tests need to write to temporary locations or access external resources, note these requirements up front.
 
@@ -29,7 +33,7 @@ If tests need to write to temporary locations or access external resources, note
 
 Use clear, actionable language. For example:
 
-- "I can run `dotnet test` to validate the changes. Some tests require TIA Portal and project assets on this machine. Do you want me to run them now?"
+- "I can run `dotnet test --filter TestCategory=NoTia` to validate the changes. It needs no TIA Portal. Do you want me to run it now?"
 - If approved: proceed and summarize results. If not approved: provide steps the user can run.
 
 ## Environment Considerations

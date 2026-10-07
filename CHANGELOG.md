@@ -9,6 +9,12 @@
   area stops the start with the valid ones on stderr (exit code 2). The server instructions name the registered areas;
   `get_state` and `doctor` report them as `toolAreas`.
 
+### Changed (tests)
+
+- The eight old test classes that need TIA Portal and the original author's projects (`Test1Portal` .. `Test6Diagnostics`,
+  `Test21Project`, `Test22Session`) carry `NeedsTia` and `[Ignore]`: `dotnet test` without a filter no longer fails on paths of
+  another machine. `tests/TiaMcpServer.Test/README.md` and `AGENTS.md` name the command `dotnet test --filter TestCategory=NoTia`.
+
 ### Fixed
 
 - `plc_compile_software` was defined twice (a leftover write-tool version beside the current one); the leftover is

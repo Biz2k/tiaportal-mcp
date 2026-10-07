@@ -10,6 +10,8 @@ using TiaMcpServer.Siemens;
 namespace TiaMcpServer.Test
 {
     [TestClass]
+    [TestCategory("NeedsTia")]
+    [Ignore("Needs TIA Portal and the original author's projects; not maintained. Live checks: tools/smoke.ps1.")]
     [DoNotParallelize]
     public class Test4Software
     {
