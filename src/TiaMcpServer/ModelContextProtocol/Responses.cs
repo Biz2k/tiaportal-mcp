@@ -301,6 +301,15 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? Path { get; set; }
     }
 
+    public class ResponseArchiveProject : ResponseMessage
+    {
+        /// <summary>Full path of the archive (a file, or a folder for the modes that write one).</summary>
+        public string? Path { get; set; }
+
+        /// <summary>Size of the archive in bytes.</summary>
+        public long SizeBytes { get; set; }
+    }
+
     public class ResponseCloseProject : ResponseMessage
     {
     }

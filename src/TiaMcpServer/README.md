@@ -59,10 +59,10 @@ The TIA Portal interfacing API is implemented in the `Siemens` directory. This A
 
 ## 4. Functionality
 
-The server has 172 tools (87 in `--read-only` mode), shown to a client as eleven group tools unless started with `--full`; `docs/tools/` has one page per area, generated from the descriptions in the code.
+The server has 174 tools (79 in `--read-only` mode), shown to a client as eleven group tools unless started with `--full`; `docs/tools/` has one page per area, generated from the descriptions in the code.
 
 *   **Connection and state:** `connect` (the first running TIA Portal, or the one chosen with `processId` / `projectPath`; `get_tia_instances` lists them), `disconnect`, `get_state`, `doctor`.
-*   **Projects and sessions:** `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `close_project`, `get_project_tree` (`depth`, `filter`, `structured`).
+*   **Projects and sessions:** `open_tia_project`, `open_project`, `get_project`, `save_project`, `save_as_project`, `archive_project`, `retrieve_project`, `close_project`, `get_project_tree` (`depth`, `filter`, `structured`).
 *   **Devices:** `hw_get_devices`, `hw_get_device_info`, `hw_get_device_item_info`, `hw_get_topology`, `hw_search_catalog`, and the write tools `hw_create_device`, `hw_plug_module`, `hw_delete_device`.
 *   **Network:** `net_connect_subnet`, `net_disconnect_subnet`, `net_delete_subnet`, `net_create_io_system`, `net_connect_to_io_system`, `net_get_connections`, `net_create_connection`, `net_delete_connection`.
 *   **PLC software:** `plc_get_software_info`, `plc_get_software_tree` (with `sections`), `plc_get_summary`, `plc_resolve_object_path`, `plc_find_in_code`, `plc_compile_software`, `plc_compile_block`, `plc_get_cross_references` (with `maxDepth`) and `plc_where_used`.

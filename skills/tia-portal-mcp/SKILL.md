@@ -48,11 +48,11 @@ name, and the change lands there.
 - **Every write is in memory until `save_project`.** Nothing is lost by a wrong write that was
   not saved; everything is lost if TIA Portal closes before the save.
 - **Saving is the user's decision.** Save when the user asked for the change to be kept or agreed
-  to it. Otherwise finish by saying what was changed and that it is not saved yet.
+  to it; otherwise say what was changed and that it is not saved. Offer `archive_project` (a
+  backup file; save first) before a large change.
 - A write runs in a transaction: it either happens completely or not at all. The `*_manage_*`
   tools take a list of actions and apply the list all or nothing - put related changes in one call.
-- **Read back after writing.** Use the matching `get` tool to confirm the result instead of
-  trusting the write answer alone: TIA Portal can accept a value and store it differently.
+- **Read back after writing** with the matching `get` tool: TIA Portal may store a value differently.
 - **Compile after changing code or types** (`plc_compile_block`, `plc_compile_software`,
   `unified_compile`) and read the messages. An object that is not consistent cannot be exported,
   copied or moved, and the project is not ready to download.

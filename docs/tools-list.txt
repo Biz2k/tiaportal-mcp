@@ -1,3 +1,4 @@
+archive_project
 close_project
 connect
 create_project
@@ -121,6 +122,7 @@ plc_update_tag
 plc_update_user_constant
 plc_where_used
 preview_import
+retrieve_project
 save_as_project
 save_project
 sec_get_plc_security

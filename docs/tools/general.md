@@ -4,6 +4,7 @@ Connection, project and session tools.
 
 | Tool | Kind |
 |---|---|
+| [`archive_project`](#archive_project) | session |
 | [`close_project`](#close_project) | write |
 | [`connect`](#connect) | session |
 | [`create_project`](#create_project) | session |
@@ -22,6 +23,7 @@ Connection, project and session tools.
 | [`get_tia_instances`](#get_tia_instances) | read |
 | [`open_project`](#open_project) | session |
 | [`open_tia_project`](#open_tia_project) | write |
+| [`retrieve_project`](#retrieve_project) | session |
 | [`save_as_project`](#save_as_project) | write |
 | [`save_project`](#save_project) | write |
 | [`sec_get_plc_security`](#sec_get_plc_security) | read |
@@ -36,6 +38,16 @@ Connection, project and session tools.
 | [`sec_set_password_policy`](#sec_set_password_policy) | write |
 | [`sec_set_plc_access_level`](#sec_set_plc_access_level) | write |
 | [`sec_set_plc_configuration_protection`](#sec_set_plc_configuration_protection) | write |
+
+## archive_project
+
+Write a backup of the open project to one archive file (.zapXX), which TIA Portal unpacks by itself ('retrieve_project'). Offer it to the user before a large change. The project stays open and unchanged. It takes time: about 30 seconds for 100 MB of archive. A project with unsaved changes is refused - call 'save_project' first, an archive holds only what is saved. An existing archive of that name and a folder that does not exist are refused; nothing is overwritten
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `targetDirectory` | string | yes | targetDirectory: absolute path of the existing folder to put the archive in, e.g. 'C:\Backups' |
+| `name` | string | yes | name: file name of the archive without a folder. TIA Portal adds no extension; the server adds .zapXX (the project's version) unless the name has it |
+| `mode` | string | no (default ``) | mode: 'compressed' (default), 'discardRestorableDataAndCompressed' (smaller: without the data that restores the state of the project after a crash), 'none' or 'discardRestorableData' (these two write a folder, not a file) |
 
 ## close_project
 
@@ -189,6 +201,15 @@ Connect to the running TIA Portal if not already connected, open the given proje
 | `path` | string | yes | path: full path of the .apXX project or .alsXX session file on the machine running this server |
 | `userName` | string | no (default ``) | userName: a user of a protected project; empty for a project without protection |
 | `password` | string | no (default ``) | password: the password of that user |
+
+## retrieve_project
+
+Unpack a project archive (.zapXX) into a new folder and open the project in it; the answer has the path of the project file. TIA Portal holds one project at a time: while a project is open the call is refused - save and close it first ('save_project', 'close_project'); to return to the earlier project afterwards use 'close_project' and 'open_project'. A target folder that is not empty is refused. An archive of an older TIA Portal version is not upgraded: TIA Portal's reason is returned. It takes time, as long as an archive does
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `archivePath` | string | yes | archivePath: absolute path of the archive file, e.g. 'C:\Backups\Plant.zap21' |
+| `targetDirectory` | string | yes | targetDirectory: absolute path of the folder to unpack into; its parent must exist; the folder must not exist or must be empty |
 
 ## save_as_project
 

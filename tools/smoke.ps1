@@ -16,7 +16,7 @@
 #   (tools\smoke\inventory.json: devices, subnets, connections, PLC counts, screens, tags, lists, alarms, logs, scripts)
 #   is read and compared. The project is NOT saved: if an undo failed, nothing reaches the disk. Afterwards the
 #   project is marked modified; when the inventory is identical, saving it is harmless.
-#   Not in the run: download_to_plc (needs PLCSIM, which the owner starts), sec_protect_project (cannot be undone) and the project operations
+#   Not in the run: download_to_plc (needs PLCSIM, which the owner starts), sec_protect_project (cannot be undone), retrieve_project (needs no open project) and the project operations
 #   save_as_project, close_project, open_project (tools\smoke\project.json, by hand, on a copy).
 #   {WORK} in the calls file stands for a temporary folder that the run makes and removes.
 #
@@ -111,7 +111,7 @@ try {
     $all = Join-Path $temp 'all.txt'; $readOnly = Join-Path $temp 'ro.txt'
     Invoke-Mcp '[]' 100 '' $all | Out-Null
     Invoke-Mcp '[]' 100 '--read-only' $readOnly | Out-Null
-    $skip = @('download_to_plc', 'sec_protect_project')
+    $skip = @('download_to_plc', 'sec_protect_project', 'retrieve_project')
     $writeTools = @(Compare-Object (Get-Content $all) (Get-Content $readOnly) | Where-Object { $_.SideIndicator -eq '<=' } | ForEach-Object { $_.InputObject }) | Where-Object { $skip -notcontains $_ }
     $called = @($parsed | ForEach-Object { $_.name })
     $missing = @($writeTools | Where-Object { $called -notcontains $_ })

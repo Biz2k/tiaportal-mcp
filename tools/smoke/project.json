@@ -8,5 +8,8 @@
 {"name":"get_project","expect":"\"items\":[]"},
 {"name":"open_project","args":{"path":"{PROJECT}"}},
 {"name":"get_project","expect":"\"isModified\":false"},
+{"name":"archive_project","args":{"targetDirectory":"{FOLDER}","name":"MCPT_Backup"},"expect":"MCPT_Backup.zap"},
+{"name":"close_project"},
+{"name":"retrieve_project","args":{"archivePath":"{FOLDER}/MCPT_Backup.zap21","targetDirectory":"{FOLDER}/MCPT_Retrieved"},"expect":"MCPT_Retrieved"},
 {"name":"close_project"}
 ]

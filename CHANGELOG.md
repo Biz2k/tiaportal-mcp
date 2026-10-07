@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Added
+- `archive_project` writes a backup of the open project to one `.zapXX` file (modes `compressed`, `discardRestorableDataAndCompressed`,
+  `none`, `discardRestorableData`); `retrieve_project` unpacks an archive into a new folder and opens the project in it. TIA Portal
+  adds no extension to the archive name, so the server adds `.zapXX` of the project's version; a project with unsaved changes, an
+  existing archive and a missing folder are refused before TIA Portal is asked (it would make the folder). About 30 s for 100 MB.
+
 ## [0.6.0] - 2026-10-07
 
 172 tools (87 with `--read-only`), of which a client sees eleven group tools by default; TESTS unit tests that need no TIA

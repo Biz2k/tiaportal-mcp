@@ -1,5 +1,7 @@
 [
 {"name": "connect"},
+{"name": "archive_project", "args": {"targetDirectory": "{WORK}", "name": "MCPT_Archive"}, "expect": "MCPT_Archive.zap"},
+{"name": "archive_project", "args": {"targetDirectory": "{WORK}", "name": "MCPT_Archive"}, "expect": "exists already", "expectError": true},
 {"name": "hw_create_device", "args": {"typeIdentifier": "OrderNumber:6ES7 511-1AK02-0AB0/V2.9", "name": "MCPT_PLC1", "stationName": "MCPT_St1"}, "expect": "MCPT_PLC1"},
 {"name": "hw_create_device", "args": {"typeIdentifier": "OrderNumber:6ES7 511-1AK02-0AB0/V2.9", "name": "MCPT_PLC2", "stationName": "MCPT_St2"}, "expect": "MCPT_PLC2"},
 {"name": "hw_create_device", "args": {"typeIdentifier": "System:Device.ET200SP", "name": "MCPT_IO"}, "expect": "Empty station"},
@@ -73,6 +75,7 @@
 {"name":"sec_set_password_policy","args":{"minimumLength":2},"expect":"between 8 and 32","expectError":true},
 {"name":"sec_set_block_protection","args":{"softwarePath":"MCPT_St1/MCPT_PLC1","blockPath":"MCPT_G/MCPT_FB1","action":"protect","password":"Mcpt-Smoke-2026!x"},"expect":"\"after\":\"know-how protected: True"},
 {"name":"sec_set_block_protection","args":{"softwarePath":"MCPT_St1/MCPT_PLC1","blockPath":"MCPT_G/MCPT_FB1","action":"unprotect","password":"Mcpt-Smoke-2026!x"},"expect":"\"after\":\"know-how protected: False"},
+{"name": "archive_project", "args": {"targetDirectory": "{WORK}", "name": "MCPT_Unsaved"}, "expect": "unsaved changes", "expectError": true},
 {"name": "create_project", "args": {"projectPath": "{WORK}/MCPT_NewProject"}, "expect": "holds one project at a time", "expectError": true},
 {"name": "hw_set_device_item_attributes", "args": {"deviceItemPath": "MCPT_St1/MCPT_PLC1", "attributes": {"CycleMaximumCycleTime": 200, "ClockMemoryByte": true}}, "expect": "\"name\":\"CycleMaximumCycleTime\",\"before\":\"150\",\"after\":\"200\""},
 {"name": "hw_set_device_item_attributes", "args": {"deviceItemPath": "MCPT_St1/MCPT_PLC1", "attributes": {"CycleMaximumCycleTime": "fast", "NoSuchAttribute": 1}}, "expect": "2 of 2 attribute(s) cannot be set", "expectError": true},

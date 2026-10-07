@@ -455,6 +455,54 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
+        [WriteTool]
+        [McpServerTool(Name = "archive_project", Title = "Archive project", Destructive = false, Idempotent = false, OpenWorld = false, UseStructuredContent = true), Description("Write a backup of the open project to one archive file (.zapXX), which TIA Portal unpacks by itself ('retrieve_project'). Offer it to the user before a large change. The project stays open and unchanged. It takes time: about 30 seconds for 100 MB of archive. A project with unsaved changes is refused - call 'save_project' first, an archive holds only what is saved. An existing archive of that name and a folder that does not exist are refused; nothing is overwritten")]
+        public static ResponseArchiveProject ArchiveProject(
+            [Description("targetDirectory: absolute path of the existing folder to put the archive in, e.g. 'C:\\Backups'")] string targetDirectory,
+            [Description("name: file name of the archive without a folder. TIA Portal adds no extension; the server adds .zapXX (the project's version) unless the name has it")] string name,
+            [Description("mode: 'compressed' (default), 'discardRestorableDataAndCompressed' (smaller: without the data that restores the state of the project after a crash), 'none' or 'discardRestorableData' (these two write a folder, not a file)")] string? mode = null)
+        {
+            return GuardedNoTransaction(nameof(ArchiveProject), () =>
+            {
+                var archive = Portal.ArchiveProject(targetDirectory, name, mode);
+
+                return new ResponseArchiveProject
+                {
+                    Message = $"Project archived to '{archive.Path}' ({archive.Size / 1048576.0:0.#} MB). The project is still open",
+                    Path = archive.Path,
+                    SizeBytes = archive.Size,
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = true
+                    }
+                };
+            });
+        }
+
+        [WriteTool]
+        [McpServerTool(Name = "retrieve_project", Title = "Retrieve project from archive", Destructive = false, Idempotent = false, OpenWorld = false, UseStructuredContent = true), Description("Unpack a project archive (.zapXX) into a new folder and open the project in it; the answer has the path of the project file. TIA Portal holds one project at a time: while a project is open the call is refused - save and close it first ('save_project', 'close_project'); to return to the earlier project afterwards use 'close_project' and 'open_project'. A target folder that is not empty is refused. An archive of an older TIA Portal version is not upgraded: TIA Portal's reason is returned. It takes time, as long as an archive does")]
+        public static ResponseSaveAsProject RetrieveProject(
+            [Description("archivePath: absolute path of the archive file, e.g. 'C:\\Backups\\Plant.zap21'")] string archivePath,
+            [Description("targetDirectory: absolute path of the folder to unpack into; its parent must exist; the folder must not exist or must be empty")] string targetDirectory)
+        {
+            return GuardedNoTransaction(nameof(RetrieveProject), () =>
+            {
+                var projectFile = Portal.RetrieveProject(archivePath, targetDirectory);
+
+                return new ResponseSaveAsProject
+                {
+                    Message = $"Archive unpacked and the project opened: '{projectFile}'. This is a copy: it is not the project the archive was made from",
+                    Path = projectFile,
+                    Meta = new JsonObject
+                    {
+                        ["timestamp"] = DateTime.Now,
+                        ["success"] = true
+                    }
+                };
+            });
+        }
+
         [McpServerTool(Name = "close_project", Title = "Close project", Destructive = true, Idempotent = true, OpenWorld = false), Description("Close the current TIA-Portal project/session")]
         public static ResponseCloseProject CloseProject()
         {

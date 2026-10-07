@@ -651,6 +651,73 @@ namespace TiaMcpServer.Siemens
                 ("path", path));
         }
 
+        /// <summary>
+        /// Writes an archive of the open project (a copy for backup; the project stays open and its state does not change)
+        /// and returns the full path and the size in bytes. What TIA Portal does is in <see cref="ProjectArchiveRules"/>.
+        /// A project with unsaved changes is refused here: TIA Portal refuses it too, and an archive of the saved state
+        /// next to a modified project would pass for a backup of the work.
+        /// </summary>
+        public (string Path, long Size) ArchiveProject(string targetDirectory, string name, string? mode)
+        {
+            _logger?.LogInformation($"Archiving project to: {targetDirectory}/{name}");
+
+            return Operation.Run(_logger, nameof(ArchiveProject), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    var project = RequireProject();
+                    var parsed = ProjectArchiveRules.ParseMode(mode);
+                    var target = ProjectArchiveRules.CheckArchiveTarget(targetDirectory, name, parsed, project.Path.FullName, Directory.Exists, p => File.Exists(p) || Directory.Exists(p));
+
+                    if (project.IsModified)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidState,
+                            $"Project '{project.Name}' has unsaved changes, and an archive holds only what is saved. Call 'save_project' first (or discard the changes by closing the project), then archive. Nothing was written.");
+                    }
+
+                    project.Archive(new DirectoryInfo(target.Directory), target.Name, (ProjectArchivationMode)Enum.Parse(typeof(ProjectArchivationMode), parsed));
+
+                    var size = File.Exists(target.FullPath)
+                        ? new FileInfo(target.FullPath).Length
+                        : Directory.Exists(target.FullPath) ? new DirectoryInfo(target.FullPath).EnumerateFiles("*", SearchOption.AllDirectories).Sum(f => f.Length) : 0;
+
+                    return (target.FullPath, size);
+                },
+                ("targetDirectory", targetDirectory), ("name", name));
+        }
+
+        /// <summary>
+        /// Unpacks an archive into a new folder and makes the project in it the open one; returns the path of its project
+        /// file. TIA Portal holds one project at a time, so an open project is refused here (as in <see cref="CreateProject"/>).
+        /// No upgrade: an archive of an older version fails with the reason TIA Portal gives.
+        /// </summary>
+        public string RetrieveProject(string archivePath, string targetDirectory)
+        {
+            _logger?.LogInformation($"Retrieving project: {archivePath} -> {targetDirectory}");
+
+            return Operation.Run(_logger, nameof(RetrieveProject), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    RequirePortal();
+
+                    var open = _project?.Name ?? _portal!.Projects.FirstOrDefault()?.Name ?? _portal.LocalSessions.FirstOrDefault()?.Project?.Name;
+
+                    if (open != null)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidState,
+                            $"Project '{open}' is open in this TIA Portal, and TIA Portal holds one project at a time. Save it if needed ('save_project'), close it " +
+                            "('close_project'), then retrieve the archive. Nothing was written.");
+                    }
+
+                    var check = ProjectArchiveRules.CheckRetrieve(archivePath, targetDirectory, File.Exists, Directory.Exists, d => !Directory.EnumerateFileSystemEntries(d).Any());
+
+                    _session = null;
+                    _project = _portal!.Projects.Retrieve(new FileInfo(check.Archive), new DirectoryInfo(check.Directory));
+
+                    return _project.Path.FullName;
+                },
+                ("archivePath", archivePath), ("targetDirectory", targetDirectory));
+        }
+
         public bool CloseProject()
         {
             _logger?.LogInformation("Closing project...");

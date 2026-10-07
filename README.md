@@ -110,12 +110,12 @@ access. Confirm it in the TIA Portal window.
 | `--doctor`                | Print the environment report and exit without starting the MCP server.         |
 | `--debug-tools`           | Register the server-development tools (`unified_debug_*`).                      |
 | `--tools <areas>`         | Register only the named tool areas, e.g. `--tools plc,unified`. See below.     |
-| `--full`                  | Show one tool per operation (172) instead of the eleven group tools. See below. |
+| `--full`                  | Show one tool per operation (174) instead of the eleven group tools. See below. |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
 
 ## Eleven group tools, and `--full`
 
-A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 172 rows are no
+A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 174 rows are no
 choice at all. So the server shows eleven tools: one for everything that only reads - there is nothing to decide about reading, set it
 to "Always allow" once - and ten groups cut along what a user does want to decide (changing, deleting, downloading,
 protection). Started with `--full` it shows every tool by itself, as
@@ -139,7 +139,7 @@ A group tool takes the name of a tool and its parameters, `{"tool": "plc_get_blo
 its tools with a line each; the tool `tia_help` of `tia_read` gives the full description and the parameters of the tools named. The tools
 behind the groups are the same ones, with the same names, so the rest of this document and the skill apply as they
 are. `--read-only` and `--tools` work as before: a group with no tool left is not shown. The price is one more
-call - the model reads the help of a tool before it first uses it - and in return the descriptions of 172 tools stay
+call - the model reads the help of a tool before it first uses it - and in return the descriptions of 174 tools stay
 out of its context.
 
 ## Tool areas
@@ -206,7 +206,7 @@ have no such setting ask (or do not ask) by their own rules. To leave the tools 
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 172 tools (87 with `--read-only`). A short
+when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 174 tools (79 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Always available (79):
@@ -231,11 +231,11 @@ Always available (79):
 | Technology objects      | `plc_get_technology_objects` |
 | Security                | `sec_get_plc_security`, `sec_get_project_users` |
 
-Left out with `--read-only` (93):
+Left out with `--read-only` (95):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
-| Project                 | `create_project` |
+| Project                 | `create_project`, `archive_project`, `retrieve_project` |
 | Import                  | `import_objects`, `instantiate_master_copy` |
 | Block and type groups   | `plc_create_block_group`, `plc_delete_block_group`, `plc_create_type_group`, `plc_delete_type_group` |
 | Blocks                  | `plc_create_fb`, `plc_create_instance_db`, `plc_create_scl_block`, `plc_replace_source`, `plc_create_lad_block`, `plc_manage_lad_networks`, `plc_manage_lad_interface`, `plc_rename_block`, `plc_delete_block`, `plc_copy_block`, `plc_move_block`, `plc_compile_block`, `plc_compile_software` |
