@@ -158,7 +158,10 @@ exception is thrown». Следствия:
 5. `tools/finish.ps1` — окончания строк, сборка, модульные тесты.
 6. Проверить вживую собранный сервер: `tools/mcp-call.ps1`. Обязательно: удачный путь, ошибочные
    случаи, уборка за собой. На панели `HMI Unified/HMI_RT_3` и, где важно, на ПК-станции
-   `АРМ Unified/HMI_RT_1`.
+   `АРМ Unified/HMI_RT_1`. После изменения слоя `Siemens\` прогнать оба «дымовых» прогона:
+   `tools/smoke.ps1` (чтение не меняет проект) и `tools/smoke.ps1 -Write` (каждый изменяющий
+   инструмент, с уборкой; 6–7 минут; проект должен быть сохранён). Новому изменяющему инструменту
+   нужен вызов в `tools/smoke/write.json`, иначе прогон его назовёт.
 7. Документация: `README.md`, `README_ru.md`, `Implemented_Tools.md`, `CHANGELOG.md`
    (раздел `[Unreleased]`), `docs/tools-list.txt`, список в `Test_703`, файл задачи и индекс
    `docs/handoff/README.md`.

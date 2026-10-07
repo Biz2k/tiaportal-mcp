@@ -1,0 +1,12 @@
+[
+{"name":"connect"},
+{"name":"get_project","expect":"\"isModified\":false"},
+{"name":"save_as_project","args":{"newProjectPath":"{FOLDER}"},"expect":"{FOLDER}"},
+{"name":"get_project","expect":"\"isModified\":false"},
+{"name":"save_project"},
+{"name":"close_project"},
+{"name":"get_project","expect":"\"items\":[]"},
+{"name":"open_project","args":{"path":"{PROJECT}"}},
+{"name":"get_project","expect":"\"isModified\":false"},
+{"name":"close_project"}
+]

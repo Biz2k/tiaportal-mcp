@@ -266,6 +266,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         responseList.Add(new ResponseProjectInfo
                         {
                             Name = project.Name,
+                            IsModified = Helper.IsModified(attributes),
                             Attributes = attributes
                         });
                     }

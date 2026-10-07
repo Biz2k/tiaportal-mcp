@@ -85,6 +85,9 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>Full path of the project or session file on the server machine.</summary>
         public string? Path { get; set; }
         public string? Name { get; set; }
+
+        /// <summary>True when the project has changes that are not saved; null when TIA Portal does not say.</summary>
+        public bool? IsModified { get; set; }
     }
 
     #region PLC tags, constants

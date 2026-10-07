@@ -13,7 +13,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\<script>.ps1 <argument
 | `openness-probe.ps1` | Helpers to try Openness calls one at a time, writes rolled back | yes - attaches to the running instance |
 | `make-tool-docs.ps1` | Writes `docs/tools/*.md` from the tool definitions of the built server | no - only `tools/list` |
 | `mcp-call.ps1` | Runs tool calls against a built server over stdio, as an MCP client would | yes - through the server |
-| `smoke.ps1` | Calls the read-only tools (`tools\smokeead.json`) on the test project and counts the errors | yes - reads only |
+| `smoke.ps1` | `-Write`: calls the tools that change the project and undoes it; without: calls the read-only tools and checks that the project is not changed | yes |
 | `finish.ps1` | Line endings, build, unit tests; with `-Install` updates `Install\TiaMcpServer` | no |
 | `start-tia.ps1` | Starts TIA Portal with the test project and waits for it | starts it |
 
@@ -76,11 +76,39 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\mcp-call.ps1 -Calls "$
 
 ## smoke.ps1
 
-Runs 48 read-only calls of the built server on the test project (the project tree, the PLC `PLC (A0)`, the panel
-`HMI Unified/HMI_RT_3` and the PC station `АРМ Unified/HMI_RT_1`) and prints `smoke: N of N calls answered, M with an error`.
-Exit code 1 when a call fails or the server stops answering. Run it after every build that changed the `Siemens\` layer,
-before `finish.ps1 -Install`. The calls file is UTF-8 (the station name is Cyrillic); a new read tool gets a line in
-`tools\smokeead.json`. TIA Portal has to be running with the test project (`start-tia.ps1`).
+Two runs of the built server against the running TIA Portal with the test project open. Both need a saved project: with
+unsaved changes at the start they print that and exit with code 2; neither saves by itself. Exit code 1 when a call
+fails. Run **both** after every change of the `Siemens\ layer, before `finish.ps1 -Install`.
+
+- `smoke.ps1` (reading) - the 50 calls of `tools\smoke\read.json`: the project tree, the PLC `PLC (A0)`, the panel
+  `HMI Unified/HMI_RT_3` and the PC station `АРМ Unified/HMI_RT_1`. After every call it reads the `isModified` flag of
+  `get_project`: a read must not change the project, and the first call that does is named. Prints
+  `smoke: N of N calls answered, M with an error; project modified by the run: no`. A new read tool gets a line in
+  `read.json`.
+- `smoke.ps1 -Write` - `tools\smoke\write.json` (about 210 calls, 6-7 minutes): a successful call of every tool that changes the
+  project (the list is computed from the built server: the tools that `--read-only` leaves out; a tool without a call is
+  named, so a new tool cannot stay unchecked), on objects named `MCPT_...`, with the undo of all of it. It makes a
+  temporary PLC station with a second one and an ET 200SP (hardware, subnet, IO system, connection) and works on the
+  PLC in it, never on the working PLCs; then WinCC Unified on the panel and on the PC station. What Openness may alter
+  silently (a script, a formula, a list, a tag address) is read back and compared. Before and after, `inventory.json`
+  (devices, topology, connections, PLC counts, screens, tags, lists, alarms, logs, scripts, runtime settings) is read and
+  compared; a difference is printed. The project is **not saved**, so a failed undo does not reach the disk; afterwards it
+  is marked modified, and with an identical inventory saving it is harmless. Objects of an earlier run that did not finish
+  stop the next one (exit code 2). Not in the run: `download_to_plc` (PLCSIM, which the owner starts) and
+  `save_as_project`, `close_project`, `open_project` - those are `tools\smoke\project.json`, run by hand on a copy of the project.
+  Known limits of the platform it respects: a PC station refuses formulas and mappings of tag dynamizations; script
+  modules cannot be deleted, so `MCPT_Mod` stays in both HMIs (empty).
+
+`smoke/project.json` (not run by `smoke.ps1`; written in task 27, not yet run): `save_as_project` into a new folder, `save_project`,
+`close_project`, `open_project` of the copy. Open a COPY of the test project in TIA Portal, then
+`$f = 'C:/Temp/MCPT_SaveAs'; (Get-Content tools\smoke\project.json -Raw).Replace('{FOLDER}', $f).Replace('{PROJECT}', "$f/<name>.ap21") | Set-Content $env:TEMP\project-run.json -Encoding UTF8`
+and `mcp-call.ps1 -Calls $env:TEMP\project-run.json`; it ends with no project open, and the copy stays on disk.
+
+The calls file is UTF-8 JSON (station names are Cyrillic: write them as `\u` escapes). `{WORK}` in it is a temporary folder
+that the run makes and removes. Besides `name` and `args`, a call may carry (see `mcp-call.ps1`): `expect` - text the
+answer must contain (a failed check shows as `EXPECT-FAILED` in the header), `expectError` - the call must be refused,
+`known` - a written-down defect: the failed check is reported apart and does not fail the run, and when it passes again
+the run says to remove the mark. TIA Portal has to be running with the test project (`start-tia.ps1`).
 
 ## finish.ps1
 

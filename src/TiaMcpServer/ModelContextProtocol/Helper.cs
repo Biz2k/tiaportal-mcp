@@ -5,11 +5,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
     public class Helper
     {
+        /// <summary>The 'IsModified' attribute of a project as a flag; null when the list has none.</summary>
+        public static bool? IsModified(IEnumerable<Attribute>? attributes) =>
+            attributes?.FirstOrDefault(a => a.Name == "IsModified")?.Value as bool?;
+
         public static List<Attribute> GetAttributeList(IEngineeringObject obj)
         {
             var attributes = new List<Attribute>();

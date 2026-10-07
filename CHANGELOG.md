@@ -9,6 +9,15 @@
   area stops the start with the valid ones on stderr (exit code 2). The server instructions name the registered areas;
   `get_state` and `doctor` report them as `toolAreas`.
 
+### Added (smoke runs)
+
+- `tools/smoke.ps1` reads the `isModified` flag after every call and names a read that changes the project; it refuses a
+  project with unsaved changes. `tools/smoke.ps1 -Write` calls every project-changing tool (68; the list comes from the built
+  server) on `MCPT_` objects in a temporary PLC station and in WinCC Unified of a panel and a PC station, reads back what
+  Openness may alter silently, undoes everything and compares an inventory before and after.
+- `get_project` returns `isModified` for each project: whether it has unsaved changes.
+- `tools/mcp-call.ps1`: a call may carry `expect`, `expectError` and `known` (checks of the answer).
+
 ### Changed (tests)
 
 - The eight old test classes that need TIA Portal and the original author's projects (`Test1Portal` .. `Test6Diagnostics`,

@@ -11,6 +11,8 @@
 # show an access prompt once, which the user has to confirm.
 #
 # Output per call:  [n tool] isError=False|True   followed by the result text.
+# A call may carry "expect": "text" (the answer must contain it), "expectError": true (the call must be refused) and
+# "known": "note" (the check is a defect that is written down, see tools\smoke\README in tools\README.md).
 param(
     # JSON file with the calls, or a JSON string.
     [string]$Calls = '[]',
@@ -103,9 +105,26 @@ try {
 
         $text = if ($r.error) { "JSONRPC ERROR: $($r.error.message)" } else { ($r.result.content | ForEach-Object { $_.text }) -join ' ' }
         $text = Shorten $text
+        $isError = [bool]$r.result.isError -or ($null -ne $r.error)
+
+        # Optional checks in the calls file: "expect" is a text the answer has to contain, "expectError": true says the
+        # call has to be refused (the header then reads 'isError=True (expected)'). A failed check shows in the header.
+        $verdict = "isError=$isError"
+        if ($call.expectError -eq $true) {
+            $verdict = if ($isError) { 'isError=True (expected)' } else { 'isError=False EXPECTED-ERROR-NOT-RAISED' }
+        }
+        elseif ($isError) { $verdict = 'isError=True' }
+        if ($call.expect) {
+            $missing = -not $text.Contains([string]$call.expect)
+            # "known": a defect that is written down; the failed check is reported apart, and a check that passes again says so
+            if ($call.known -and $missing) { $verdict += " KNOWN-DEFECT: $($call.known)" }
+            elseif ($call.known) { $verdict += ' KNOWN-DEFECT-GONE: remove "known" from this call' }
+            elseif ($missing) { $verdict += " EXPECT-FAILED: the answer lacks '$($call.expect)'" }
+        }
+
         if ($text.Length -gt $Max) { $text = $text.Substring(0, $Max) + ' ...' }
 
-        "[$number $($call.name)] isError=$([bool]$r.result.isError)"
+        "[$number $($call.name)] $verdict"
         "   $text"
     }
 }
