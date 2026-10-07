@@ -82,11 +82,19 @@ To use `TiaMcpServer` directly in the Claude Desktop app:
 
 ### Option A: Settings of the desktop app
 
-1. Open **Settings → Plugins** and switch to the **MCP** tab.
-2. Press **Add**, give the server a name (for example `tiamcpserver`) and enter the full path to
-   `TiaMcpServer.exe` as the command. Start-up options, if you need any, go into the arguments.
-3. The server appears in the **Servers** list with a switch. The switch turns it off without
-   removing it - use it before updating the server files.
+The names below are translated from the Russian interface of the app; yours may read slightly differently.
+
+1. Open **Settings → Plugins**, press **Add** and choose the item that adds an MCP server.
+2. In the form for a custom MCP server fill in:
+   - **Name** - for example `tiamcpserver`;
+   - **Type** - `STDIO` (not streamable HTTP);
+   - **Launch command** - the full path to `TiaMcpServer.exe`;
+   - **Arguments** - empty. Start-up options go in one per field: `--read-only` is one field,
+     `--tia-major-version` and `20` are two; the button below the field adds another one;
+   - **Environment variables** - not needed.
+3. The server appears on the **MCP** tab in the **Servers** list with a switch. The switch turns
+   it off without removing it - use it before updating the server files. The gear icon opens the
+   same form for editing; the delete button is there too.
 
 ### Option B: Command line
 
