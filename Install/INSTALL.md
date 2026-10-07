@@ -1,6 +1,6 @@
 # Installing and Integrating TiaMcpServer
 
-This guide walks you through installing and integrating the precompiled `TiaMcpServer` into your preferred AI assistants (Claude Code, Antigravity 2.0, or Claude Desktop).
+This guide walks you through installing and integrating the precompiled `TiaMcpServer` into your preferred AI assistants (Claude Code, Antigravity 2.0, Claude Desktop, or Codex).
 
 ## 1. Installation
 
@@ -75,9 +75,49 @@ To use `TiaMcpServer` directly in the Claude Desktop app:
 3. Fully quit and restart Claude Desktop.
 ---
 
+## 5. Integration with Codex
+
+[Codex](https://developers.openai.com/codex) (the desktop app and the CLI) keeps its MCP servers in one file,
+`C:\Users\<YourUsername>\.codex\config.toml`. All three ways below write the same entry there.
+
+### Option A: Settings of the desktop app
+
+1. Open **Settings → Plugins** and switch to the **MCP** tab.
+2. Press **Add**, give the server a name (for example `tiamcpserver`) and enter the full path to
+   `TiaMcpServer.exe` as the command. Start-up options, if you need any, go into the arguments.
+3. The server appears in the **Servers** list with a switch. The switch turns it off without
+   removing it - use it before updating the server files.
+
+### Option B: Command line
+
+```bash
+codex mcp add tiamcpserver -- C:\Users\<YourUsername>\AppData\Local\TiaMcpServer\TiaMcpServer.exe
+```
+
+`codex mcp list` shows the server with the status `enabled`; `codex mcp remove tiamcpserver` removes it.
+
+### Option C: Configuration file
+
+Add to `C:\Users\<YourUsername>\.codex\config.toml`:
+
+```toml
+[mcp_servers.tiamcpserver]
+enabled = true
+command = 'C:\Users\<YourUsername>\AppData\Local\TiaMcpServer\TiaMcpServer.exe'
+args = []
+```
+
+The path is in single quotes: TOML then takes the backslashes as they are. Start-up options go
+into `args`, for example `args = ["--read-only"]`.
+
+Start a new Codex session after any of the three, and test it by asking
+`"Use tiamcpserver: run doctor and show the result"`.
+
+---
+
 ## Start-up options
 
-Options go into `args` of the client configuration, for example `"args": ["--read-only"]`.
+Options go into `args` of the client configuration, for example `"args": ["--read-only"]` (in Codex: `args = ["--read-only"]`).
 
 | Option | Purpose |
 | --- | --- |
