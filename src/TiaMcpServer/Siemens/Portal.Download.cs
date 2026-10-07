@@ -307,7 +307,7 @@ namespace TiaMcpServer.Siemens
                 catch (Exception ex) when (ex is not PortalException)
                 {
                     var seen = outcome.Steps.Count == 0
-                        ? "No configuration step was reached, so the target was probably not reachable: check that the PLC or the PLCSIM instance is running and that its address matches the project."
+                        ? "No configuration step was reached, so the target was probably not reachable: check that the PLC or the PLCSIM instance is running and that its address matches the project ('get_accessible_devices' shows what is on the network). If the search finds the device and the download still cannot connect, the PC interface has no IP address in the subnet of the device: the download dialog of TIA Portal adds one by itself (\"An additional IP address was added\"), Openness does not - the user adds it to the adapter, or loads once from TIA Portal."
                         : "Configuration steps seen: " + string.Join("; ", outcome.Steps.Select(DescribeStep)) + ".";
 
                     // "Download configuration '...StopModules' was unhandled" is how TIA Portal
