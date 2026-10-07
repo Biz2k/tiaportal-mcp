@@ -4,6 +4,12 @@
 
 ### Fixed
 
+- Non-ASCII text in code written through the server arrived in TIA Portal garbled: `plc_replace_source`,
+  `plc_create_scl_block`, `plc_create_external_source` and the source imports handed TIA Portal a UTF-8 file
+  without a byte order mark, and TIA Portal reads such a file as ANSI. A Cyrillic comment or a tag named
+  `"ШВВ3-U1"` became unreadable, and code using such a name did not compile. Every source file now goes to TIA
+  Portal as a UTF-8 copy with the mark; a file of the caller in ANSI or UTF-16 is decoded first. (The original
+  project fixed the same on 2026-10-06.)
 - `plc_manage_tag_table_entries` is rewritten; three defects are gone. An `update` passed its fields one place off:
   the data type became the new NAME of the tag, the address its data type, the comment its address (and the comment
   of a `create` landed in the address). Fields the tool did not know were dropped without a word. An action that

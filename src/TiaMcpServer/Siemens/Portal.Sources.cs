@@ -1178,7 +1178,11 @@ namespace TiaMcpServer.Siemens
                             $"Source file '{filePath}' does not exist on the machine running this server.");
                     }
 
-                    return group.ExternalSources.CreateFromFile(name, filePath);
+                    // Never the caller's file as it is: without a byte order mark TIA Portal reads it as ANSI.
+                    using (var scope = new SourceScope())
+                    {
+                        return group.ExternalSources.CreateFromFile(name, SourceFileEncoding.WriteCopy(filePath, scope.Directory));
+                    }
                 },
                 ("softwarePath", softwarePath), ("groupPath", groupPath), ("name", name), ("filePath", filePath));
         }
