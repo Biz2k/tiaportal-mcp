@@ -6,6 +6,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 |---|---|
 | [`plc_compile_block`](#plc_compile_block) | write |
 | [`plc_compile_software`](#plc_compile_software) | session |
+| [`plc_connect_technology_object`](#plc_connect_technology_object) | write |
 | [`plc_copy_block`](#plc_copy_block) | write |
 | [`plc_copy_type`](#plc_copy_type) | write |
 | [`plc_create_block_group`](#plc_create_block_group) | write |
@@ -18,6 +19,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 | [`plc_create_tag`](#plc_create_tag) | write |
 | [`plc_create_tag_table`](#plc_create_tag_table) | write |
 | [`plc_create_tag_table_group`](#plc_create_tag_table_group) | write |
+| [`plc_create_technology_object`](#plc_create_technology_object) | session |
 | [`plc_create_type_group`](#plc_create_type_group) | write |
 | [`plc_create_user_constant`](#plc_create_user_constant) | write |
 | [`plc_create_watch_table`](#plc_create_watch_table) | write |
@@ -29,6 +31,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 | [`plc_delete_tag`](#plc_delete_tag) | write |
 | [`plc_delete_tag_table`](#plc_delete_tag_table) | write |
 | [`plc_delete_tag_table_group`](#plc_delete_tag_table_group) | write |
+| [`plc_delete_technology_object`](#plc_delete_technology_object) | write |
 | [`plc_delete_type`](#plc_delete_type) | write |
 | [`plc_delete_type_group`](#plc_delete_type_group) | write |
 | [`plc_delete_user_constant`](#plc_delete_user_constant) | write |
@@ -56,6 +59,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 | [`plc_get_tag_table_info`](#plc_get_tag_table_info) | read |
 | [`plc_get_tag_tables`](#plc_get_tag_tables) | read |
 | [`plc_get_tags`](#plc_get_tags) | read |
+| [`plc_get_technology_objects`](#plc_get_technology_objects) | read |
 | [`plc_get_type_info`](#plc_get_type_info) | read |
 | [`plc_get_type_source`](#plc_get_type_source) | read |
 | [`plc_get_types`](#plc_get_types) | read |
@@ -72,6 +76,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 | [`plc_rename_watch_table`](#plc_rename_watch_table) | write |
 | [`plc_replace_source`](#plc_replace_source) | write |
 | [`plc_resolve_object_path`](#plc_resolve_object_path) | read |
+| [`plc_set_technology_parameters`](#plc_set_technology_parameters) | write |
 | [`plc_update_tag`](#plc_update_tag) | write |
 | [`plc_update_user_constant`](#plc_update_user_constant) | write |
 | [`plc_where_used`](#plc_where_used) | read |
@@ -93,6 +98,19 @@ Compile the plc software and report every compiler message with the object it be
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `password` | string | no (default ``) | password: the password to access adminsitration, default: no password |
+
+## plc_connect_technology_object
+
+Connect an axis (or take it off) to the telegram of a SINAMICS drive: 'drive' is the setpoint side of the axis, 'encoder' its first encoder, 'torque' the torque data. The drive has to be in the IO system of the PLC first ('net_connect_subnet', 'net_connect_to_io_system'). Connecting the drive side to a telegram that carries encoder values (3, 5, 105 ...) connects the encoder with it. Returns the connections afterwards. Needs SINAMICS Startdrive
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `name` | string | yes | name: name of the axis |
+| `drivePath` | string | no (default ``) | drivePath: path of the drive from 'drive_get_objects'; not needed for disconnect |
+| `action` | string | no (default `connect`) | action: connect (default) or disconnect |
+| `interface` | string | no (default `drive`) | interface: drive (default), encoder or torque |
+| `telegramType` | string | no (default ``) | telegramType: which telegram of the drive: main (default), supplementary, additional, torque |
 
 ## plc_copy_block
 
@@ -238,6 +256,17 @@ Create a group below the PLC tags root of the plc software
 | `parentGroupPath` | string | yes | parentGroupPath: root-relative path of the parent group; empty creates directly below PLC tags |
 | `name` | string | yes | name: name of the new group, without a slash |
 
+## plc_create_technology_object
+
+Create a technology object in a PLC: an axis (TO_SpeedAxis, TO_PositioningAxis, TO_SynchronousAxis), an encoder (TO_ExternalEncoder), a controller (PID_Compact, PID_3Step, PID_Temp), a counter (High_Speed_Counter) and whatever else the CPU offers. Without a version the newest one the CPU takes is used. The object comes with default values: set its parameters with 'plc_set_technology_parameters' and connect an axis to its drive with 'plc_connect_technology_object'
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `name` | string | yes | name: name of the new object, e.g. 'Axis_1' |
+| `type` | string | yes | type: type of the object, e.g. 'TO_PositioningAxis' or 'PID_Compact' |
+| `version` | string | no (default ``) | version: version of the type, e.g. '6.0'; empty (default) takes the newest the CPU offers |
+
 ## plc_create_type_group
 
 Create a group below the PLC data types root of the plc software
@@ -342,6 +371,15 @@ Delete a tag table group and everything inside it. The PLC tags system group its
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `groupPath` | string | yes | groupPath: root-relative path of the group to delete |
+
+## plc_delete_technology_object
+
+Delete a technology object of a PLC. Blocks that call it (MC_Power, MC_MoveAbsolute, PID calls) stop compiling: look for them first with 'plc_where_used'
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `name` | string | yes | name: name of the technology object |
 
 ## plc_delete_type
 
@@ -606,6 +644,18 @@ List PLC tags, either of one tag table or of every tag table of the plc software
 | `limit` | integer | no (default `200`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
 | `offset` | integer | no (default `0`) | offset: items to skip, to read the next page of a long list: pass the 'nextOffset' of the previous answer (default 0) |
 
+## plc_get_technology_objects
+
+List the technology objects of a PLC - axes, encoders, PID controllers, counters - with type, version, number of parameters and, for an axis, what its drive and encoder interfaces are connected to. With 'name' the parameters of that object are returned as well ('filter' narrows them by a text in the name, e.g. 'DynamicLimits', 'Sensor[1]'; paged)
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `name` | string | no (default ``) | name: one technology object, to read its parameters; empty (default) lists all without parameters |
+| `filter` | string | no (default ``) | filter: text looked for in the parameter names of that object; empty returns all |
+| `limit` | integer | no (default `80`) | limit: the most parameters to return (default 80); 0 returns all |
+| `offset` | integer | no (default `0`) | offset: parameters to skip (default 0) |
+
 ## plc_get_type_info
 
 Get a type info from the plc software
@@ -770,6 +820,16 @@ Turn a bare or partial object name into the root-relative path the other tools n
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `name` | string | yes | name: the object name to look for, e.g. 'FC_Block_1'. A full path may be passed; only its last segment is matched |
 | `kind` | string | no (default `any`) | kind: restrict the search to 'block', 'type', 'tag', 'tagTable', 'watchTable' or 'source'. Default 'any' searches all of them |
+
+## plc_set_technology_parameters
+
+Set parameters of a technology object, several at once, all or nothing; each value is read back and returned as before/after. The names are paths as 'plc_get_technology_objects' lists them, e.g. 'DynamicLimits.MaxVelocity', 'Mechanics.LeadScrew', 'Sensor[1].Type'. Limits of an axis decide how a machine moves: set what the user asked for
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `name` | string | yes | name: name of the technology object |
+| `parameters` | object | yes | parameters: name -> value, e.g. {"DynamicLimits.MaxVelocity": 250, "Modulo.Enable": true} |
 
 ## plc_update_tag
 

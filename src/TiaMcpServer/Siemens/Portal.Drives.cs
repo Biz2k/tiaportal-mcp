@@ -1,7 +1,10 @@
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.MC.Drives;
+using Siemens.Engineering.MC.Drives.DFI;
 using Siemens.Engineering.MC.Drives.Enums;
+using Siemens.Engineering.SW.TechnologicalObjects;
+using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -94,6 +97,20 @@ namespace TiaMcpServer.Siemens
         public string? Unit { get; set; }
     }
 
+    public class DriveMotorResult
+    {
+        public string? Path { get; set; }
+
+        public int DataSet { get; set; }
+
+        /// <summary>The motor data TIA Portal asks for with this motor type, with the values now in the project.</summary>
+        public List<DriveParameterInfo> Required { get; set; } = new List<DriveParameterInfo>();
+
+        public List<string> Done { get; set; } = new List<string>();
+
+        public List<string>? MotorTypes { get; set; }
+    }
+
     /// <summary>One change to the telegrams of a drive object.</summary>
     public class DriveTelegramAction
     {
@@ -128,6 +145,13 @@ namespace TiaMcpServer.Siemens
     //     elements 'p1120[0]' ... which carry value, unit and limits. Find(name) and Find(number, index) both work.
     //     'r' parameters refuse a write ("as read-only parameter cannot be written").
     //   - A G120 control unit alone takes no parameter write: "There is no PowerModule added to the device".
+    //     The power module is plugged INTO THE CONTROL UNIT at position 3 (cu.PlugNew(type, name, 3)); position 0 is
+    //     offered by CanPlugNew too but creates the module and then fails. After that the parameters are writable.
+    //   - Motor: DriveFunctionInterface.HardwareProjection (null until the power module is there) - SetMotorType(type,
+    //     dataSet), then GetCurrentMotorConfiguration(dataSet).RequiredConfigurationEntries (p304 voltage, p305 current,
+    //     p307 power, p310 frequency, p311 speed, p335 cooling) are edited and ProjectMotorConfiguration writes them.
+    //     A G120 answers "does not support the encoder projection"; an S210 has its motor as a catalog item.
+    //   - An S120 control unit comes up with one drive object (4793 parameters); adding motor modules was not found.
     //   - Telegrams: Telegram.TelegramNumber is settable after CanChangeTelegram(n); the sizes follow (S210: 105 is
     //     20 bytes each way, 3 is 18 in). TelegramComposition has CanInsert... / Insert... per type and EraseTelegram.
     //     After EraseTelegram the telegram objects read before are disposed: ask the drive object for them again.
@@ -285,6 +309,21 @@ namespace TiaMcpServer.Siemens
                 ("drivePath", drivePath)));
         }
 
+        public DriveMotorResult SetDriveMotor(string drivePath, string? motorType, int dataSet, Dictionary<string, JsonElement>? values)
+        {
+            return WithStartdrive(() => Operation.Run(_logger, nameof(SetDriveMotor), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    var (item, path) = RequireDriveItem(drivePath);
+                    var result = DriveAccess.SetMotor(item, motorType, dataSet, values);
+
+                    result.Path = path;
+
+                    return result;
+                },
+                ("drivePath", drivePath), ("motorType", motorType)));
+        }
+
         public (List<string> Done, List<DriveTelegramInfo> Telegrams) ManageDriveTelegrams(string drivePath, List<DriveTelegramAction>? actions)
         {
             return WithStartdrive(() => Operation.Run(_logger, nameof(ManageDriveTelegrams), PortalErrorCode.InvalidState,
@@ -415,7 +454,7 @@ namespace TiaMcpServer.Siemens
                         // limits of TIA Portal's own "no limit"
                         return float.IsInfinity(single) || Math.Abs(single) >= 3.4e38f ? (object?)null : Math.Round((double)single, 6);
                     case double number:
-                        return double.IsInfinity(number) || Math.Abs(number) >= 3.4e38 ? (object?)null : number;
+                        return double.IsInfinity(number) || Math.Abs(number) >= 3.4e38 ? (object?)null : Math.Round(number, 6);
                     case bool _:
                     case byte _:
                     case sbyte _:
@@ -685,7 +724,7 @@ namespace TiaMcpServer.Siemens
                     {
                         var reason = ErrorText.Describe(ex);
                         var hint = reason.IndexOf("no PowerModule", StringComparison.OrdinalIgnoreCase) >= 0
-                            ? " The drive has no power module yet: plug one first ('hw_plug_module'), a control unit alone takes no parameters."
+                            ? " The drive has no power module yet: plug one first - 'hw_plug_module' with the control unit as parentItemName and position 3 - a control unit alone takes no parameters."
                             : $" Limits: {Convert.ToString(Plain(parameter.MinValue), CultureInfo.InvariantCulture)} .. {Convert.ToString(Plain(parameter.MaxValue), CultureInfo.InvariantCulture)} {parameter.Unit}.";
 
                         throw new PortalException(PortalErrorCode.InvalidParams, $"'{name}' ({parameter.ParameterText}) did not take the value {Convert.ToString(value, CultureInfo.InvariantCulture)}: {reason}.{hint} Nothing was changed.", null, ex);
@@ -707,9 +746,150 @@ namespace TiaMcpServer.Siemens
                 return changes;
             }
 
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static DriveMotorResult SetMotor(DeviceItem item, string? motorType, int dataSet, Dictionary<string, JsonElement>? values)
+            {
+                var drive = Require(item);
+                var result = new DriveMotorResult { DataSet = dataSet };
+                var projection = drive.GetService<DriveFunctionInterface>()?.HardwareProjection
+                                 ?? throw new PortalException(PortalErrorCode.InvalidState,
+                                     $"'{item.Name}' takes no motor configuration yet. A G120 needs its power module first: 'hw_plug_module' with the control unit as parentItemName and position 3. " +
+                                     "A drive whose motor is a catalog item (S210) gets its motor data from that item.");
+                var set = (ushort)dataSet;
+
+                if (!string.IsNullOrWhiteSpace(motorType))
+                {
+                    if (!Enum.TryParse<MotorType>(motorType!.Trim(), true, out var type))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, $"motorType '{motorType}' is not known. Types: {string.Join(", ", Enum.GetNames(typeof(MotorType)))}.");
+                    }
+
+                    if (!projection.SetMotorType(type, set))
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, $"The drive did not take the motor type {type} for data set {dataSet}. Nothing was changed.");
+                    }
+
+                    result.Done.Add($"motor type {type}");
+                }
+
+                MotorConfiguration configuration;
+
+                try
+                {
+                    configuration = projection.GetCurrentMotorConfiguration(set);
+                }
+                catch (EngineeringException ex)
+                {
+                    throw new PortalException(PortalErrorCode.InvalidState,
+                        $"The motor data of '{item.Name}' cannot be read: {ErrorText.Describe(ex)}. Give 'motorType' first, e.g. InductionMotor. Types: {string.Join(", ", Enum.GetNames(typeof(MotorType)))}.", null, ex);
+                }
+
+                var entries = configuration.RequiredConfigurationEntries.Concat(configuration.OptionalConfigurationEntries).ToList();
+
+                if (values != null && values.Count > 0)
+                {
+                    var missing = values.Keys.Where(k => entries.All(e => !string.Equals(e.Name, k.Trim(), StringComparison.OrdinalIgnoreCase))).ToList();
+
+                    if (missing.Count > 0)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"Nothing was changed: the motor data of this type have no {string.Join(", ", missing.Select(m => $"'{m}'"))}. They are: {string.Join(", ", entries.Select(e => $"{e.Name} ({e.Description})"))}.");
+                    }
+
+                    foreach (var pair in values)
+                    {
+                        var entry = entries.First(e => string.Equals(e.Name, pair.Key.Trim(), StringComparison.OrdinalIgnoreCase));
+
+                        try
+                        {
+                            entry.Value = Convert_(pair.Value, entry.Value, entry.Name);
+                        }
+                        catch (Exception ex) when (ex is not PortalException)
+                        {
+                            throw new PortalException(PortalErrorCode.InvalidParams,
+                                $"'{entry.Name}' ({entry.Description}) did not take the value: {ErrorText.Describe(ex)}. Limits: {Convert.ToString(Plain(entry.MinValue), CultureInfo.InvariantCulture)} .. {Convert.ToString(Plain(entry.MaxValue), CultureInfo.InvariantCulture)} {entry.Unit}. Nothing was changed.", null, ex);
+                        }
+                    }
+
+                    bool taken;
+
+                    try
+                    {
+                        taken = projection.ProjectMotorConfiguration(configuration, set);
+                    }
+                    catch (Exception ex) when (ex is not PortalException)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams,
+                            $"The drive did not take the motor data ({string.Join(", ", values.Select(v => $"{v.Key}={v.Value}"))}): {ErrorText.Describe(ex)}. A value outside what this power module can drive is refused this way. Nothing was changed.", null, ex);
+                    }
+
+                    if (!taken)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidParams, "The drive did not take the motor data (TIA Portal gives no reason). Nothing was changed.");
+                    }
+
+                    result.Done.Add($"motor data: {string.Join(", ", values.Keys)}");
+                    configuration = projection.GetCurrentMotorConfiguration(set);
+                }
+
+                foreach (var entry in configuration.RequiredConfigurationEntries)
+                {
+                    result.Required.Add(new DriveParameterInfo
+                    {
+                        Name = entry.Name,
+                        Text = entry.Description,
+                        Value = Plain(entry.Value),
+                        Unit = string.IsNullOrEmpty(entry.Unit) ? null : entry.Unit,
+                        Min = Plain(entry.MinValue),
+                        Max = Plain(entry.MaxValue)
+                    });
+                }
+
+                if (result.Done.Count == 0)
+                {
+                    result.MotorTypes = Enum.GetNames(typeof(MotorType)).ToList();
+                }
+
+                return result;
+            }
+
+            /// <summary>Connects an axis to a telegram of a SINAMICS drive; the drive has to be in the IO system of the PLC.</summary>
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static void ConnectAxis(TechnologicalInstanceDB axis, DeviceItem driveItem, string side, string? telegramType)
+            {
+                var drive = Require(driveItem);
+                var provider = axis.GetService<AxisHardwareConnectionSDRProvider>()
+                               ?? throw new PortalException(PortalErrorCode.NotSupported, $"'{axis.Name}' ({axis.OfSystemLibElement}) cannot be connected to a SINAMICS drive.");
+                var type = side == "torque" && string.IsNullOrWhiteSpace(telegramType) ? TelegramType.TorqueTelegram : TypeOf(telegramType, 1);
+                var telegram = drive.Telegrams.Find(type)
+                               ?? throw new PortalException(PortalErrorCode.NotFound, $"The drive has no {type}. 'drive_get_objects' shows its telegrams, 'drive_manage_telegrams' inserts one.");
+
+                try
+                {
+                    switch (side)
+                    {
+                        case "drive":
+                            provider.ActorInterface.Connect(telegram);
+                            break;
+                        case "encoder":
+                            (provider.SensorInterface.FirstOrDefault() ?? throw new PortalException(PortalErrorCode.NotSupported, $"'{axis.Name}' has no encoder interface.")).Connect(telegram);
+                            break;
+                        default:
+                            provider.TorqueInterface.Connect(telegram);
+                            break;
+                    }
+                }
+                catch (Exception ex) when (ex is not PortalException && ErrorText.Describe(ex).IndexOf("Target not available", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    throw new PortalException(PortalErrorCode.InvalidState,
+                        $"The {type} {telegram.TelegramNumber} of the drive cannot be the {side} of '{axis.Name}': {ErrorText.Describe(ex)}. Either the drive is not in the IO system of this PLC yet " +
+                        "('net_connect_subnet', then 'net_connect_to_io_system'), or the telegram is taken already - connecting the drive to a telegram with encoder values (3, 5, 105 ...) connects the encoder with it. Nothing was changed.", null, ex);
+                }
+            }
+
             private static TelegramType TypeOf(string? type, int index)
             {
-                switch ((type ?? "main").Trim().ToLowerInvariant())
+                switch ((string.IsNullOrWhiteSpace(type) ? "main" : type!).Trim().ToLowerInvariant())
                 {
                     case "main":
                     case "maintelegram":

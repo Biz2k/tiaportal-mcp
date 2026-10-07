@@ -4,6 +4,12 @@
 
 ### Added
 
+- Technology objects of a PLC: `plc_get_technology_objects` (list, and the parameters of one), `plc_create_technology_object`
+  (axes, encoder, PID controllers, counters; without a version the newest the CPU takes),
+  `plc_set_technology_parameters`, `plc_connect_technology_object` (an axis to the telegram of a SINAMICS drive, and
+  off again), `plc_delete_technology_object`.
+- `drive_set_motor`: motor type and rating plate data of a drive whose motor is entered by data (G120). The power
+  module of a G120 is plugged with `hw_plug_module` into the control unit at position 3; the refusals say so.
 - A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
   drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
   the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
@@ -28,7 +34,7 @@
   "Connect to module ... failed".
 - `download_to_plc` takes `passwords`: the passwords the PLC asks for during the download, by the type of the step
   (`ModuleWriteAccessPassword`, `PlcMasterSecretPassword`, ...). A step that asked and got none is named in the answer.
-- **Changed default:** the client sees eleven tools instead of 166 - `tia_read` for everything that only reads (with
+- **Changed default:** the client sees eleven tools instead of 172 - `tia_read` for everything that only reads (with
   `tia_help`, the parameters of a tool) and ten group tools for what changes something (`project_write`, `plc_write`,
   `plc_delete`, `hw_write`, `hw_delete`, `hmi_write`, `drive_write`, `plc_download`, `security_protection`, `security_users`); each
   takes the name of a tool and its arguments. For clients with a permission per tool, and to keep the descriptions of
@@ -381,6 +387,12 @@ below):
 
 ### Added
 
+- Technology objects of a PLC: `plc_get_technology_objects` (list, and the parameters of one), `plc_create_technology_object`
+  (axes, encoder, PID controllers, counters; without a version the newest the CPU takes),
+  `plc_set_technology_parameters`, `plc_connect_technology_object` (an axis to the telegram of a SINAMICS drive, and
+  off again), `plc_delete_technology_object`.
+- `drive_set_motor`: motor type and rating plate data of a drive whose motor is entered by data (G120). The power
+  module of a G120 is plugged with `hw_plug_module` into the control unit at position 3; the refusals say so.
 - A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
   drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
   the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
@@ -485,6 +497,12 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
 
 ### Added
 
+- Technology objects of a PLC: `plc_get_technology_objects` (list, and the parameters of one), `plc_create_technology_object`
+  (axes, encoder, PID controllers, counters; without a version the newest the CPU takes),
+  `plc_set_technology_parameters`, `plc_connect_technology_object` (an axis to the telegram of a SINAMICS drive, and
+  off again), `plc_delete_technology_object`.
+- `drive_set_motor`: motor type and rating plate data of a drive whose motor is entered by data (G120). The power
+  module of a G120 is plugged with `hw_plug_module` into the control unit at position 3; the refusals say so.
 - A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
   drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
   the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
@@ -863,6 +881,12 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
   counterpart; each links to the other at the top.
 ### Added
 
+- Technology objects of a PLC: `plc_get_technology_objects` (list, and the parameters of one), `plc_create_technology_object`
+  (axes, encoder, PID controllers, counters; without a version the newest the CPU takes),
+  `plc_set_technology_parameters`, `plc_connect_technology_object` (an axis to the telegram of a SINAMICS drive, and
+  off again), `plc_delete_technology_object`.
+- `drive_set_motor`: motor type and rating plate data of a drive whose motor is entered by data (G120). The power
+  module of a G120 is plugged with `hw_plug_module` into the control unit at position 3; the refusals say so.
 - A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
   drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
   the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
@@ -947,6 +971,12 @@ Five tools got an area prefix, and the prompts are gone. Update prompts, scripts
 
 ### Added
 
+- Technology objects of a PLC: `plc_get_technology_objects` (list, and the parameters of one), `plc_create_technology_object`
+  (axes, encoder, PID controllers, counters; without a version the newest the CPU takes),
+  `plc_set_technology_parameters`, `plc_connect_technology_object` (an axis to the telegram of a SINAMICS drive, and
+  off again), `plc_delete_technology_object`.
+- `drive_set_motor`: motor type and rating plate data of a drive whose motor is entered by data (G120). The power
+  module of a G120 is plugged with `hw_plug_module` into the control unit at position 3; the refusals say so.
 - A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
   drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
   the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
@@ -978,6 +1008,12 @@ PLC data types. The read tool surface grows from 56 to 59.
 
 ### Added
 
+- Technology objects of a PLC: `plc_get_technology_objects` (list, and the parameters of one), `plc_create_technology_object`
+  (axes, encoder, PID controllers, counters; without a version the newest the CPU takes),
+  `plc_set_technology_parameters`, `plc_connect_technology_object` (an axis to the telegram of a SINAMICS drive, and
+  off again), `plc_delete_technology_object`.
+- `drive_set_motor`: motor type and rating plate data of a drive whose motor is entered by data (G120). The power
+  module of a G120 is plugged with `hw_plug_module` into the control unit at position 3; the refusals say so.
 - A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
   drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
   the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
@@ -1063,6 +1099,12 @@ surface grows from 31 tools to 44 read tools plus 37 project-mutating tools.
 
 ### Added
 
+- Technology objects of a PLC: `plc_get_technology_objects` (list, and the parameters of one), `plc_create_technology_object`
+  (axes, encoder, PID controllers, counters; without a version the newest the CPU takes),
+  `plc_set_technology_parameters`, `plc_connect_technology_object` (an axis to the telegram of a SINAMICS drive, and
+  off again), `plc_delete_technology_object`.
+- `drive_set_motor`: motor type and rating plate data of a drive whose motor is entered by data (G120). The power
+  module of a G120 is plugged with `hw_plug_module` into the control unit at position 3; the refusals say so.
 - A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
   drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
   the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
@@ -1223,6 +1265,12 @@ Upgrade to the current MCP .NET SDK and adopt the newer protocol surface.
 
 ### Added
 
+- Technology objects of a PLC: `plc_get_technology_objects` (list, and the parameters of one), `plc_create_technology_object`
+  (axes, encoder, PID controllers, counters; without a version the newest the CPU takes),
+  `plc_set_technology_parameters`, `plc_connect_technology_object` (an axis to the telegram of a SINAMICS drive, and
+  off again), `plc_delete_technology_object`.
+- `drive_set_motor`: motor type and rating plate data of a drive whose motor is entered by data (G120). The power
+  module of a G120 is plugged with `hw_plug_module` into the control unit at position 3; the refusals say so.
 - A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
   drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
   the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in
@@ -1276,6 +1324,12 @@ Upgrade to the current MCP .NET SDK and adopt the newer protocol surface.
 
 ### Added
 
+- Technology objects of a PLC: `plc_get_technology_objects` (list, and the parameters of one), `plc_create_technology_object`
+  (axes, encoder, PID controllers, counters; without a version the newest the CPU takes),
+  `plc_set_technology_parameters`, `plc_connect_technology_object` (an axis to the telegram of a SINAMICS drive, and
+  off again), `plc_delete_technology_object`.
+- `drive_set_motor`: motor type and rating plate data of a drive whose motor is entered by data (G120). The power
+  module of a G120 is plugged with `hw_plug_module` into the control unit at position 3; the refusals say so.
 - A new area of tools, `drive` (`drive_*`), for SINAMICS drives through Startdrive: `drive_get_objects` lists the
   drive objects of the project with their telegrams; `drive_get_parameters` reads offline parameters by name (with
   the values of an enumerated parameter, the bits of a bit-coded one, the elements of an indexed one) or by a text in

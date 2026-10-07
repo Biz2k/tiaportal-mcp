@@ -7,6 +7,7 @@ download_to_plc
 drive_get_objects
 drive_get_parameters
 drive_manage_telegrams
+drive_set_motor
 drive_set_parameters
 export_objects
 get_accessible_devices
@@ -45,6 +46,7 @@ open_project
 open_tia_project
 plc_compile_block
 plc_compile_software
+plc_connect_technology_object
 plc_copy_block
 plc_copy_type
 plc_create_block_group
@@ -57,6 +59,7 @@ plc_create_scl_block
 plc_create_tag
 plc_create_tag_table
 plc_create_tag_table_group
+plc_create_technology_object
 plc_create_type_group
 plc_create_user_constant
 plc_create_watch_table
@@ -68,6 +71,7 @@ plc_delete_external_source_group
 plc_delete_tag
 plc_delete_tag_table
 plc_delete_tag_table_group
+plc_delete_technology_object
 plc_delete_type
 plc_delete_type_group
 plc_delete_user_constant
@@ -95,6 +99,7 @@ plc_get_tag_info
 plc_get_tag_table_info
 plc_get_tag_tables
 plc_get_tags
+plc_get_technology_objects
 plc_get_type_info
 plc_get_type_source
 plc_get_types
@@ -111,6 +116,7 @@ plc_rename_type
 plc_rename_watch_table
 plc_replace_source
 plc_resolve_object_path
+plc_set_technology_parameters
 plc_update_tag
 plc_update_user_constant
 plc_where_used

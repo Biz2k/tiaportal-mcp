@@ -12,6 +12,7 @@ Connection, project and session tools.
 | [`drive_get_objects`](#drive_get_objects) | read |
 | [`drive_get_parameters`](#drive_get_parameters) | read |
 | [`drive_manage_telegrams`](#drive_manage_telegrams) | write |
+| [`drive_set_motor`](#drive_set_motor) | write |
 | [`drive_set_parameters`](#drive_set_parameters) | write |
 | [`get_accessible_devices`](#get_accessible_devices) | read |
 | [`get_installed_software`](#get_installed_software) | read |
@@ -101,6 +102,17 @@ Change the PROFIdrive telegrams of a drive object, several actions at once, all 
 |---|---|---|---|
 | `drivePath` | string | yes | drivePath: path of the drive from 'drive_get_objects', or the device path when the device has one drive object |
 | `actions` | array of object | yes | actions: applied in order; fields: action (change, insert, erase, resize), type (main, supplementary, additional, safety, torque), number, inputSize, outputSize |
+
+## drive_set_motor
+
+Set the motor type of a drive and its rating plate data, for drives whose motor is entered by data (G120 and the like): motorType e.g. 'InductionMotor', then the data TIA Portal asks for with that type - p304 rated voltage, p305 rated current, p307 rated power, p310 rated frequency, p311 rated speed, p335 cooling - in 'values'. Called with neither, it returns the data now in the project and the motor types. A G120 needs its power module first ('hw_plug_module' with the control unit as parentItemName, position 3). Use the data of the motor's rating plate as the user gave them: a wrong motor is overloaded or does not turn
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `drivePath` | string | yes | drivePath: path of the drive from 'drive_get_objects', or the device path when the device has one drive object |
+| `motorType` | string | no (default ``) | motorType: e.g. InductionMotor, SynchronousMotor, InductionMotor1LE1; empty leaves the type as it is |
+| `values` | object | no (default ``) | values: rating plate data by parameter name, e.g. {"p305": 1.5, "p307": 0.55, "p311": 1425}; empty changes none |
+| `dataSet` | integer | no (default `0`) | dataSet: number of the drive data set (default 0) |
 
 ## drive_set_parameters
 
