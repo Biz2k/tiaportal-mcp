@@ -53,6 +53,9 @@ namespace TiaMcpServer.Siemens
 
                     foreach (var action in actions)
                     {
+                        Progress(results.Count + 1, actions.Count,
+                            $"{softwarePath}: {action.Action} '{action.ScreenName}{(string.IsNullOrWhiteSpace(action.ItemName) ? string.Empty : "/" + action.ItemName)}'");
+
                         results.Add(ApplyHmiItemAction(software, action));
                     }
 

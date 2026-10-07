@@ -773,7 +773,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 // an unlabelled pile of steps. Falls back to an unwrapped write when TIA Portal
                 // refuses exclusive access, so this can never turn a working write into a
                 // failure - see Portal.InTransaction in Portal.cs.
-                return Portal.InTransaction($"MCP: {toolName}", body);
+                return Portal.InTransaction(ActivityText(toolName), body);
             }
             catch (PortalException pex)
             {
@@ -785,6 +785,33 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 throw ToolError(ex, $"Unexpected error in '{toolName}'");
             }
+        }
+
+        private static readonly Lazy<Dictionary<string, string>> ActivityTexts = new Lazy<Dictionary<string, string>>(() =>
+        {
+            var texts = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            foreach (var method in typeof(McpServer).GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
+            {
+                var tool = (McpServerToolAttribute?)System.Attribute.GetCustomAttribute(method, typeof(McpServerToolAttribute));
+
+                if (tool?.Name != null && !texts.ContainsKey(method.Name))
+                {
+                    texts[method.Name] = string.IsNullOrWhiteSpace(tool.Title) ? tool.Name : $"{tool.Title} ({tool.Name})";
+                }
+            }
+
+            return texts;
+        });
+
+        /// <summary>
+        /// What TIA Portal shows while a write runs, in its "Exclusive access from external application" window and in
+        /// its undo list: the title of the tool and the name the client calls it by, instead of the name of the C#
+        /// method. Batch operations add the running step below it (Portal.Progress).
+        /// </summary>
+        internal static string ActivityText(string methodName)
+        {
+            return ActivityTexts.Value.TryGetValue(methodName, out var text) ? text : methodName;
         }
 
         private static T GuardedNoTransaction<T>(string toolName, Func<T> body)

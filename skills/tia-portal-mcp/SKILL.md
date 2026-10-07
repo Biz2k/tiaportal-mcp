@@ -54,6 +54,9 @@ name, and the change lands there.
   copied or moved, and the project is not ready to download.
 - **Before deleting or renaming**, look at who uses the object (`plc_where_used`,
   `plc_get_cross_references`) and tell the user what depends on it.
+- While a write runs, TIA Portal shows a window with the name of the tool and, for a batch, the running step. The
+  user can press Cancel there: the batch stops, nothing is changed, and the call says it was cancelled. Do not
+  repeat a cancelled call without asking.
 - If the write tools are missing from the session, the server runs with `--read-only`
   (`get_state` shows `allowWrite: false`). Say so; do not look for a way around it.
 

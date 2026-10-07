@@ -615,6 +615,9 @@ namespace TiaMcpServer.Siemens
                         var verb = PlcTagActions.Verb(action)!;
                         var name = action.Name!.Trim();
                         var result = new UnifiedActionResult { Action = verb, Name = name, Status = "success" };
+
+                        Progress(results.Count + 1, actions.Count, $"{tagTablePath}: {verb} '{name}'");
+
                         var tag = table.Tags.Find(name);
 
                         results.Add(result);

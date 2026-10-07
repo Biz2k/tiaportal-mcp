@@ -594,6 +594,8 @@ namespace TiaMcpServer.Siemens
                         var verb = (action.GetType().GetProperty("Action")?.GetValue(action) as string ?? string.Empty).Trim().ToLowerInvariant();
                         var result = new UnifiedActionResult { Action = verb, Name = nameOf(action) };
 
+                        Progress(results.Count + 1, actions.Count, $"{softwarePath}: {verb} '{result.Name}'");
+
                         try
                         {
                             apply(software, action, verb, result);

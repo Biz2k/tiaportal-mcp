@@ -1031,6 +1031,36 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         private bool _inTransaction;
 
+        /// <summary>The exclusive access of the running write: the window TIA Portal shows over its own, with a text and 'Cancel'.</summary>
+        private ExclusiveAccess? _access;
+
+        /// <summary>The first line of that window: what the tool does, in words.</summary>
+        private string _accessHead = string.Empty;
+
+        /// <summary>
+        /// Says in the window of TIA Portal which step of a long write is running, and stops the write when the user
+        /// pressed 'Cancel' there. Call it between the steps of a batch, outside any try/catch of a single step: the
+        /// exception has to leave the batch, which rolls the transaction back. Without a transaction it does nothing.
+        /// Setting the text does not disturb the transaction (probe of 2026-10-07).
+        /// </summary>
+        internal void Progress(int step, int steps, string what)
+        {
+            var access = _access;
+
+            if (access == null)
+            {
+                return;
+            }
+
+            if (access.IsCancellationRequested)
+            {
+                throw new PortalException(PortalErrorCode.InvalidState,
+                    $"Cancelled by the user in TIA Portal ('Cancel' in the window of the running operation) before step {step} of {steps}. Nothing was changed: the call was rolled back.");
+            }
+
+            access.Text = $"{_accessHead}\n{(steps > 1 ? $"{step} / {steps}: " : string.Empty)}{what}";
+        }
+
         // The whole transaction runs under the shared lock: the nested Operation.Run calls of the body would take it one
         // by one, and another tool could slip a call between two of them into the open transaction.
         public T InTransaction<T>(string description, Func<T> body) => Operation.Locked(() => InTransactionUnlocked(description, body));
@@ -1079,6 +1109,8 @@ namespace TiaMcpServer.Siemens
                     T result;
 
                     _inTransaction = true;
+                    _access = access;
+                    _accessHead = description;
 
                     try
                     {
@@ -1087,6 +1119,7 @@ namespace TiaMcpServer.Siemens
                     finally
                     {
                         _inTransaction = false;
+                        _access = null;
                     }
 
                     // Only reached when the body did not throw. Without this call the dispose

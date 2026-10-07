@@ -121,7 +121,7 @@ namespace TiaMcpServer.Siemens
 
                     try
                     {
-                        InTransaction("MCP: plc_replace_source", () => GenerateInPlace(softwarePath, objectPath, source, extension, block != null, result.Number));
+                        InTransaction($"Replace the code of {kind} '{name}' (plc_replace_source)", () => GenerateInPlace(softwarePath, objectPath, source, extension, block != null, result.Number));
                     }
                     catch (PortalException pex) when (pex.Code == PortalErrorCode.CreateFailed)
                     {
@@ -153,7 +153,7 @@ namespace TiaMcpServer.Siemens
                     {
                         try
                         {
-                            InTransaction("MCP: plc_replace_source (restore)", () => GenerateInPlace(softwarePath, objectPath, previous!, extension, block != null, result.Number));
+                            InTransaction($"Put the previous code of {kind} '{name}' back: the new code does not compile (plc_replace_source)", () => GenerateInPlace(softwarePath, objectPath, previous!, extension, block != null, result.Number));
                             CompileObject(softwarePath, objectPath, block != null);
                         }
                         catch (Exception ex)
