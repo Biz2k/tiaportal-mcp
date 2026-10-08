@@ -88,4 +88,8 @@ configuration data is not supported»; после отказа `configurationPro
 
 ### Пункт 4 — `connect` при двух экземплярах TIA Portal
 
-Не сделан: нужен второй экземпляр TIA Portal без проекта — запускает или разрешает запустить Biz.
+Проверено вживую (08.10.2026, по слову Biz «запускай сам»): второй пустой экземпляр запущен `Start-Process Siemens.Automation.Portal.exe` (процесс 45892, режим `WithUserInterface`, без проекта),
+закрыт `CloseMainWindow` (чистый выход, нового отчёта о сбое нет). Пока он был открыт: `get_tia_instances` — оба (`45892` без проекта и `34968` с проверочным); `connect` без параметров выбрал экземпляр с проектом
+(`get_state` — `21474_SEVGOK_P2_v4_V21`); `connect` с `processId: 45892` подключился к пустому (`project: -`, `get_project` — пусто, `hw_get_devices` — «No project is open»); `connect` с несуществующим процессом
+99999 отказал текстом «No TIA Portal instance for process 99999. Running: process 45892 (no project ...); process 34968 (...)»; повторный `connect` без параметров снова выбрал экземпляр с проектом. После закрытия
+`get_tia_instances` показывает один экземпляр. Не проверено: два экземпляра, в обоих из которых открыт проект (отказ с перечнем — по тестам и описанию в `findings.md`, раздел 22).
