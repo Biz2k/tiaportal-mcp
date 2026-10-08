@@ -119,6 +119,9 @@
 
 ## Мелкое
 
+- [ ] **`plc_get_software_tree` не показывает технологические объекты** (найдено в задаче 36, пункт 6): у `PLC (A0)` есть `PID_Compact_1`, `plc_get_technology_objects` его видит, а в дереве
+      раздела «Technology objects» нет. Добавить раздел (`sections`) — вопрос к владельцу: нужен ли он в дереве, раз есть отдельный инструмент.
+
 - [ ] **Подсказка отказа `sec_manage_opcua_users` / `sec_set_display_password`** (Opus, `Portal.Security.cs`): советует `OpcUaPasswordAuthentication`, а на CPU V4 такого атрибута нет
       (доступ OPC UA там — право пользователя проекта `OPCUAServerAccess`). Найдено при задаче 35, в рецепте `protect-a-plc.md` сказано.
 
