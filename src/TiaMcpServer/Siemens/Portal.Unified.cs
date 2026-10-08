@@ -158,6 +158,11 @@ namespace TiaMcpServer.Siemens
         /// PropertyName, Errors and Warnings. Checked on V21 (2026-10-06) on tags, alarms, alarm classes, connections,
         /// logs, logging tags, screens, the runtime settings and every item type a screen can create: it does not
         /// throw and does not change the object. An object without the method has no findings.
+        /// Probes of 2026-10-08 (task 33), where Validate() is no use and so no wrap: a connection (nothing found, not for a fresh one nor
+        /// with a driver; the setter of a driver property refuses a bad IP address by itself), a text list and a graphic list (no
+        /// Validate() at all; the lists are written through files and read back), a screen group (none), a screen (nothing to set
+        /// but the name), a trend control, its area and its trend (nothing found for a source that does not exist) - but the data
+        /// source part of a trend, DataSourceY, names it, and that one is wrapped in ConfigureUnifiedTrendControl.
         /// </summary>
         private static List<UnifiedFinding> ReadUnifiedFindings(object target)
         {
@@ -771,8 +776,16 @@ namespace TiaMcpServer.Siemens
                     if (!string.IsNullOrEmpty(dataSource))
                     {
                         CheckTrendDataSource(RequireUnifiedSoftware(softwarePath), dataSource);
-                        trend!.DataSourceY.Source = dataSource;
+
+                        // Found on V21 (probe of 2026-10-08): Validate() of the trend, of its area and of the control says nothing about a
+                        // source that does not exist; Validate() of the DATA SOURCE part does ("The object "X" at the property "Source" does
+                        // not exist"). An archive form 'Tag:Log' with a missing log is refused by the setter itself.
+                        var notes = new List<string>();
+                        object sourcePart = trend!.DataSourceY;
+
+                        WithUnifiedValidation(sourcePart, notes, () => trend!.DataSourceY.Source = dataSource);
                         applied.Add("DataSourceY=" + dataSource);
+                        applied.AddRange(notes.Select(n => "note: " + n));
                     }
 
                     if (!string.IsNullOrEmpty(trendName))
