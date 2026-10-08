@@ -56,6 +56,9 @@ Probe 'create tag' { $t = $sw.Tags.Create('MCPT_T1'); $t.DataType = 'Real'; Show
 
 ## mcp-call.ps1
 
+The scripts that print answers (`mcp-call.ps1`, `inproc-call.ps1`, `openness-probe.ps1`) set the console output to UTF-8: with the DOS code page of a Russian
+Windows a Cyrillic name in an answer came out as garbage in the log of an agent. The calls file is still UTF-8 JSON.
+
 The calls file is a JSON array of `{ "name": "<tool>", "args": { ... } }`. All calls run in one
 server process, so `connect` (or `open_tia_project`) goes first.
 

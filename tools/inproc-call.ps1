@@ -17,6 +17,7 @@ param(
     [int]$Max = 1500
 )
 
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false   # the output is read as UTF-8 (by a person, a file or an agent); the console default is a DOS code page that garbles Cyrillic
 if (-not $Bin) { $Bin = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) '..\src\TiaMcpServer\bin\Release\net48' }
 
 $api = 'C:\Program Files\Siemens\Automation\Portal V21\PublicAPI\V21\net48'

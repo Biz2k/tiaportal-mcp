@@ -26,6 +26,8 @@
 
 $script:TiaApi = 'C:\Program Files\Siemens\Automation\Portal V21\PublicAPI\V21\net48'
 
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false   # the output is read as UTF-8 (by a person, a file or an agent); the console default is a DOS code page that garbles Cyrillic
+
 foreach ($assembly in 'Base', 'Step7', 'WinCC', 'WinCCUnified') {
     [void][Reflection.Assembly]::LoadFrom("$script:TiaApi\Siemens.Engineering.$assembly.dll")
 }

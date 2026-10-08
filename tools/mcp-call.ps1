@@ -40,6 +40,7 @@ param(
     [string]$DumpTools = ''
 )
 
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false   # the output is read as UTF-8 (by a person, a file or an agent); the console default is a DOS code page that garbles Cyrillic
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName = (Resolve-Path $Exe).Path
 $psi.Arguments = $(if ($Grouped) { $ExeArgs } else { ('--full ' + $ExeArgs).Trim() })
