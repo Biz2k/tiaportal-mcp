@@ -17,7 +17,7 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>What every tool of this area tells the agent about asking first and about passwords.</summary>
         private const string SecurityRule =
             " SENSITIVE: before calling, tell the user in plain words what will change on which PLC and get their consent. A password is the one the user gave in this conversation - never make one up, " +
-            "never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere.";
+            "never repeat it in your answer. The server passes it to TIA Portal and keeps it nowhere. TIA Portal refuses some passwords of a CPU (a password with a space in it, found by trial) and then answers with a bare EngineeringPasswordPolicyViolationException or just the name of the call that failed: ask the user for another password, do not change it yourself.";
 
         public class ResponsePlcSecurity : ResponseMessage
         {
