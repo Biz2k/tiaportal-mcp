@@ -67,6 +67,12 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (!Truncated)
             {
+                // found live (task 36): offset 9999 on 2556 tags said "Items 10000 to 9999 of 2556."
+                if (Items.Count == 0 && Total > 0)
+                {
+                    return $" The offset {Offset} is past the end: the list has {Total} item(s), the last offset is {Total - 1}.";
+                }
+
                 return Offset > 0 ? $" Items {Offset + 1} to {Offset + Items.Count} of {Total}." : string.Empty;
             }
 

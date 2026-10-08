@@ -45,6 +45,17 @@ namespace TiaMcpServer.Test
         }
 
         [TestMethod]
+        public void Test_2599_ListPage_OffsetPastTheEnd_SaysSo()
+        {
+            var page = ListPage<int>.Of(Enumerable.Range(1, 30).ToList(), 500, 9999);
+
+            Assert.AreEqual(0, page.Items.Count);
+            StringAssert.Contains(page.Note("x"), "past the end");
+            StringAssert.Contains(page.Note("x"), "30 item(s)");
+            Assert.AreEqual(string.Empty, ListPage<int>.Of(new List<int>(), 500, 0).Note("x"));
+        }
+
+        [TestMethod]
         public void Test_2501_ListPage_ZeroLimitReturnsAll_NegativeOffsetIsRefused()
         {
             var all = Enumerable.Range(1, 30).ToList();
