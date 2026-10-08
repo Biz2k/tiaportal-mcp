@@ -71,3 +71,5 @@ Portal снова открыт проверочный проект без изм
 Проверено вживую (`inproc-call`): архив → повторный (отказ) → нет папки → неизвестный режим → `retrieve_project` при открытом проекте (отказ) → `close_project` → нет файла (отказ) → `retrieve_project` в `MCPT_Retrieve` → `get_project` → попытка при открытом (отказ) → `close_project` → `open_project` проверочного: проект цел, `isModified=false`. Временные папки удалены.
 
 **Не проверено**: установленный сервер и `smoke.ps1 -Write` (вызовы `archive_project` добавлены в `write.json` — три штуки; ждут слова Biz); `tools/smoke/project.json` с `retrieve_project` вручную; отказ для проекта с несохранёнными изменениями на сервере вживую (только проба TIA и тест правил); режимы `none` и `discardRestorable*` вживую.
+
+Дополнение (08.10.2026): `smoke.ps1 -Write` на новой сборке — 299 из 299 вызовов, 0 ошибок, инвентаризация совпала; в нём успешный `archive_project` в `{WORK}`, отказы «уже есть» и «несохранённые изменения» (проверены вживую на сервере). Не проверены: режимы `none` и `discardRestorableData`, `tools/smoke/project.json`.
