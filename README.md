@@ -1,3 +1,5 @@
+[![M8ven Score](https://m8ven.ai/badge/mcp/biz2k/tiaportal-mcp)](https://m8ven.ai/mcp/biz2k/tiaportal-mcp?s=readme)
+[![M8ven Score](https://m8ven.ai/badge/mcp/biz2k-tiaportal-mcp-hsvml8?v=1dff080aba5d77b5400dba8fa18804b4)](https://m8ven.ai/mcp/biz2k-tiaportal-mcp-hsvml8?s=readme)
 # TIA Portal MCP Server
 
 **English** | [Русский](README_ru.md)
@@ -6,8 +8,6 @@
 
 An MCP server that lets an AI assistant work with Siemens TIA Portal through the Openness API:
 read a project, edit PLC software, hardware and HMI, and download to a PLC.
-
-[![M8ven Score](https://m8ven.ai/badge/mcp/biz2k-tiaportal-mcp-hsvml8?v=1dff080aba5d77b5400dba8fa18804b4)](https://m8ven.ai/mcp/biz2k-tiaportal-mcp-hsvml8?s=readme)
 
 ## Features
 
