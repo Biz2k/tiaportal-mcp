@@ -115,13 +115,13 @@ Openness. Подтвердите запрос в окне TIA Portal.
 | `--doctor`                | Вывести отчёт об окружении и завершиться, не запуская MCP-сервер.               |
 | `--debug-tools`           | Зарегистрировать инструменты разработки сервера (`unified_debug_*`).                    |
 | `--tools <области>`       | Зарегистрировать только названные области инструментов, например `--tools plc,unified`. См. ниже. |
-| `--full`                  | Показывать инструмент на каждую операцию (174) вместо одиннадцати групповых. См. ниже. |
+| `--full`                  | Показывать инструмент на каждую операцию (175) вместо одиннадцати групповых. См. ниже. |
 | `--allow-write`           | Принимается для старых конфигураций; запись включена по умолчанию, параметр ничего не меняет. |
 
 ## Одиннадцать групповых инструментов и `--full`
 
 Клиент, который даёт решать по каждому инструменту — разрешать всегда, спрашивать, запретить, — показывает по строке
-на инструмент, а 174 строк — это уже не выбор. Поэтому сервер показывает одиннадцать инструментов:
+на инструмент, а 175 строк — это уже не выбор. Поэтому сервер показывает одиннадцать инструментов:
 один на всё, что только читает (решать про чтение нечего — один раз поставьте ему «Always allow»), и десять групп,
 разрезанных по тому, что пользователь действительно хочет решать (изменение, удаление, загрузка, защита). С флагом `--full` он показывает каждый инструмент отдельно, как раньше.
 
@@ -144,7 +144,7 @@ Openness. Подтвердите запрос в окне TIA Portal.
 инструментов. За группами стоят те же инструменты с теми же именами, поэтому остальной документ и навык агента
 действуют как есть. `--read-only` и `--tools` работают как раньше: группа, в которой не осталось инструментов, не
 показывается. Цена — один лишний вызов: модель читает справку по инструменту перед первым использованием; взамен
-описания 174 инструментов не занимают её контекст.
+описания 175 инструментов не занимают её контекст.
 
 ## Области инструментов
 
@@ -209,7 +209,7 @@ allow», «Needs approval» или «Blocked». Задать этот выбор
 
 Точный список имён инструментов — в [`docs/tools-list.txt`](docs/tools-list.txt); тест падает,
 если зарегистрированные инструменты расходятся с этим файлом. По умолчанию регистрируется
-За групповыми инструментами (или отдельно, с `--full`) стоят 174 инструментов (79 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
+За групповыми инструментами (или отдельно, с `--full`) стоят 175 инструментов (79 с `--read-only`). Краткое описание каждого — в [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Доступны всегда (79):
 
@@ -231,7 +231,7 @@ allow», «Needs approval» или «Blocked». Задать этот выбор
 | Загрузка                         | `get_download_targets` |
 | Безопасность                     | `sec_get_plc_security`, `sec_get_project_users` |
 
-Не регистрируются с `--read-only` (95):
+Не регистрируются с `--read-only` (96):
 
 | Область                          | Инструменты |
 | -------------------------------- | ----------- |
@@ -242,7 +242,7 @@ allow», «Needs approval» или «Blocked». Задать этот выбор
 | Типы данных                      | `plc_rename_type`, `plc_delete_type`, `plc_copy_type`, `plc_move_type` |
 | Таблицы тегов                    | `plc_create_tag_table`, `plc_rename_tag_table`, `plc_delete_tag_table`, `plc_create_tag_table_group`, `plc_delete_tag_table_group` |
 | Теги и константы                 | `plc_create_tag`, `plc_update_tag`, `plc_delete_tag`, `plc_create_user_constant`, `plc_update_user_constant`, `plc_delete_user_constant`, `plc_manage_tag_table_entries` |
-| Таблицы наблюдения               | `plc_create_watch_table`, `plc_rename_watch_table`, `plc_delete_watch_table`, `plc_create_watch_table_group`, `plc_delete_watch_table_group` |
+| Таблицы наблюдения               | `plc_create_watch_table`, `plc_rename_watch_table`, `plc_delete_watch_table`, `plc_create_watch_table_group`, `plc_delete_watch_table_group`, `plc_manage_watch_table_entries` |
 | Внешние исходные файлы           | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Оборудование                     | `hw_create_device`, `hw_plug_module`, `hw_set_device_item_attributes`, `hw_compile`, `hw_delete_device` |
 | Сеть                             | `net_connect_subnet`, `net_disconnect_subnet`, `net_create_io_system`, `net_connect_to_io_system`, `net_create_connection`, `net_delete_connection`, `net_delete_subnet` |
@@ -634,7 +634,6 @@ CPU не останавливается и не запускается, пока
   файл текстов `.s7res` инструмент ведёт сам. LAD-блок со встроенным технологическим объектом, у которого изменены
   начальные значения (экземпляр `PID_Compact`), получает отказ: текстовая форма блока этих значений не несёт, и
   изменение их потеряло бы. Блоки FBD, STL, GRAPH и CEM только читаются (`plc_get_block_source`).
-- **Записи таблиц наблюдения** пока нельзя создавать и удалять через сервер.
 - **Инструменты HMI — только для WinCC Unified.** Для WinCC Comfort, Advanced и Professional в
   Openness нет объектной модели экранов: экран нельзя создать, а его элементы — прочитать или
   изменить; возможен только экспорт и импорт в XML. Инструменты `unified_*` отказывают на таком

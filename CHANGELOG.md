@@ -8,6 +8,11 @@
 ### Added
 - `tools/smoke.ps1 -Grouped` (with or without `-Write`) runs through the group tools a client sees, with checks of `tia_help`
   and of the refusals of the group tools; `tools/mcp-call.ps1 -Grouped -Wrap` sends a calls file that way.
+- `plc_manage_watch_table_entries` adds and deletes the rows of a watch table (a tag, a data block member or an absolute address; display
+  format, triggers, modify value, comment; comment lines; `clear`). Openness cannot do it by calls - `Entries.Create()` makes only a comment
+  row and the rows have no setters - so the table is exported, edited as text and imported over itself (name and place stay), then read back.
+  A name that is no tag or data block would be dropped by TIA Portal without an error: it is refused before. Rows are counted from 0 and
+  `plc_get_watch_table_info` now gives the `index` of each row.
 - `archive_project` writes a backup of the open project to one `.zapXX` file (modes `compressed`, `discardRestorableDataAndCompressed`,
   `none`, `discardRestorableData`); `retrieve_project` unpacks an archive into a new folder and opens the project in it. TIA Portal
   adds no extension to the archive name, so the server adds `.zapXX` of the project's version; a project with unsaved changes, an

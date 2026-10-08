@@ -68,6 +68,7 @@ Blocks, data types, tags, tables, external sources, cross references and compile
 | [`plc_manage_lad_interface`](#plc_manage_lad_interface) | write |
 | [`plc_manage_lad_networks`](#plc_manage_lad_networks) | write |
 | [`plc_manage_tag_table_entries`](#plc_manage_tag_table_entries) | write |
+| [`plc_manage_watch_table_entries`](#plc_manage_watch_table_entries) | write |
 | [`plc_move_block`](#plc_move_block) | write |
 | [`plc_move_type`](#plc_move_type) | write |
 | [`plc_rename_block`](#plc_rename_block) | write |
@@ -737,6 +738,16 @@ Create, update, upsert or delete PLC tags of one tag table, several at once. The
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `tagTablePath` | string | yes | tagTablePath: root-relative path of the tag table, e.g. TagGroup1/Table1 |
+| `actions` | array of object | yes | actions: the changes to make, applied in order |
+
+## plc_manage_watch_table_entries
+
+Add and delete the rows of one PLC watch table, several at once; 'plc_get_watch_table_info' lists the rows with their index. The actions are applied in order and all or nothing. Actions: 'add' a row (name = a PLC tag or a data block member, or address = %MW10; displayFormat for an address; monitorTrigger, modifyTrigger, modifyValue, comment; index = where, from 0, default the end; a comment alone makes a comment line), 'delete' (index, name or address), 'clear' (every row). Fields of an action: action, index, name, address, displayFormat, monitorTrigger, modifyTrigger, modifyValue, comment. A name that is no tag or data block of the PLC is refused. TIA Portal has no call for rows: the table is exported, edited and imported over itself, and read back; its name and place stay. The modify value is the preset of the table, it is not written to the PLC. 'Modify now' (ModifyIntention) cannot be set through Openness
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
+| `watchTablePath` | string | yes | watchTablePath: root-relative path of the watch table, e.g. 'WatchGroup1/WatchTable_1' |
 | `actions` | array of object | yes | actions: the changes to make, applied in order |
 
 ## plc_move_block

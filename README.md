@@ -110,12 +110,12 @@ access. Confirm it in the TIA Portal window.
 | `--doctor`                | Print the environment report and exit without starting the MCP server.         |
 | `--debug-tools`           | Register the server-development tools (`unified_debug_*`).                      |
 | `--tools <areas>`         | Register only the named tool areas, e.g. `--tools plc,unified`. See below.     |
-| `--full`                  | Show one tool per operation (174) instead of the eleven group tools. See below. |
+| `--full`                  | Show one tool per operation (175) instead of the eleven group tools. See below. |
 | `--allow-write`           | Accepted for older configurations; writing is on by default, so it is a no-op. |
 
 ## Eleven group tools, and `--full`
 
-A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 174 rows are no
+A client that lets you decide per tool - always allow, ask, block - shows one row per tool, and 175 rows are no
 choice at all. So the server shows eleven tools: one for everything that only reads - there is nothing to decide about reading, set it
 to "Always allow" once - and ten groups cut along what a user does want to decide (changing, deleting, downloading,
 protection). Started with `--full` it shows every tool by itself, as
@@ -139,7 +139,7 @@ A group tool takes the name of a tool and its parameters, `{"tool": "plc_get_blo
 its tools with a line each; the tool `tia_help` of `tia_read` gives the full description and the parameters of the tools named. The tools
 behind the groups are the same ones, with the same names, so the rest of this document and the skill apply as they
 are. `--read-only` and `--tools` work as before: a group with no tool left is not shown. The price is one more
-call - the model reads the help of a tool before it first uses it - and in return the descriptions of 174 tools stay
+call - the model reads the help of a tool before it first uses it - and in return the descriptions of 175 tools stay
 out of its context.
 
 ## Tool areas
@@ -206,7 +206,7 @@ have no such setting ask (or do not ask) by their own rules. To leave the tools 
 ## Tools
 
 The authoritative list of tool names is [`docs/tools-list.txt`](docs/tools-list.txt); a test fails
-when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 174 tools (79 with `--read-only`). A short
+when the registered tools and that file disagree. Behind the group tools, or by themselves with `--full`, are 175 tools (79 with `--read-only`). A short
 description of each, in Russian, is in [`Implemented_Tools.md`](Implemented_Tools.md).
 
 Always available (79):
@@ -231,7 +231,7 @@ Always available (79):
 | Technology objects      | `plc_get_technology_objects` |
 | Security                | `sec_get_plc_security`, `sec_get_project_users` |
 
-Left out with `--read-only` (95):
+Left out with `--read-only` (96):
 
 | Area                    | Tools |
 | ----------------------- | ----- |
@@ -242,7 +242,7 @@ Left out with `--read-only` (95):
 | Types                   | `plc_rename_type`, `plc_delete_type`, `plc_copy_type`, `plc_move_type` |
 | Tag tables              | `plc_create_tag_table`, `plc_rename_tag_table`, `plc_delete_tag_table`, `plc_create_tag_table_group`, `plc_delete_tag_table_group` |
 | Tags and constants      | `plc_create_tag`, `plc_update_tag`, `plc_delete_tag`, `plc_create_user_constant`, `plc_update_user_constant`, `plc_delete_user_constant`, `plc_manage_tag_table_entries` |
-| Watch tables            | `plc_create_watch_table`, `plc_rename_watch_table`, `plc_delete_watch_table`, `plc_create_watch_table_group`, `plc_delete_watch_table_group` |
+| Watch tables            | `plc_create_watch_table`, `plc_rename_watch_table`, `plc_delete_watch_table`, `plc_create_watch_table_group`, `plc_delete_watch_table_group`, `plc_manage_watch_table_entries` |
 | External sources        | `plc_create_external_source`, `plc_delete_external_source`, `plc_create_external_source_group`, `plc_delete_external_source_group` |
 | Hardware                | `hw_create_device`, `hw_plug_module`, `hw_set_device_item_attributes`, `hw_compile`, `hw_delete_device` |
 | Network                 | `net_connect_subnet`, `net_disconnect_subnet`, `net_delete_subnet`, `net_create_io_system`, `net_connect_to_io_system`, `net_create_connection`, `net_delete_connection` |
@@ -644,7 +644,6 @@ and says in `meta` how long the list is: `total`, `offset`, `truncated` and, whe
   V21). A LAD block that embeds a technology object with changed start values (a `PID_Compact` instance) is
   refused: the text form of a block does not carry those values, and the change would lose them. FBD, STL, GRAPH
   and CEM blocks are read only (`plc_get_block_source`).
-- **Watch table entries** cannot be created or deleted through this server yet.
 - **HMI tools are WinCC Unified only.** For WinCC Comfort, Advanced and Professional the Openness
   API has no object model for screens: a screen cannot be created and its items cannot be read or
   changed, only exported and imported as XML. The `unified_*` tools refuse such an HMI with that

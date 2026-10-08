@@ -109,6 +109,7 @@ plc_get_watch_tables
 plc_manage_lad_interface
 plc_manage_lad_networks
 plc_manage_tag_table_entries
+plc_manage_watch_table_entries
 plc_move_block
 plc_move_type
 plc_rename_block

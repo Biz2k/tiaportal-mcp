@@ -23,6 +23,9 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     public class TableEntryInfo
     {
+        /// <summary>Position of the row in the table, from 0; comment rows count. The 'index' of 'plc_manage_watch_table_entries'.</summary>
+        public int Index { get; set; }
+
         /// <summary>"Watch", "Force" or "Comment".</summary>
         public string? Kind { get; set; }
         public string? Name { get; set; }

@@ -85,7 +85,7 @@ namespace TiaMcpServer.Test
             // Arrange: every tool here changes the project and used to be registered regardless.
             var edits = new[]
             {
-                "hw_create_device", "hw_plug_module", "hw_delete_device", "archive_project", "retrieve_project",
+                "hw_create_device", "hw_plug_module", "hw_delete_device", "archive_project", "retrieve_project", "plc_manage_watch_table_entries",
                 "net_connect_subnet", "net_disconnect_subnet", "net_create_io_system", "net_connect_to_io_system",
                 "instantiate_master_copy", "import_objects", "unified_create_screen", "unified_delete_screen", "unified_manage_items",
                 "unified_manage_faceplate", "unified_configure_trend_control",

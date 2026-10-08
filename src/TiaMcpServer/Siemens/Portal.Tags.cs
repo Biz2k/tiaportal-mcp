@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Xml.Linq;
 using TiaMcpServer.ModelContextProtocol;
 using System.Text.RegularExpressions;
 
@@ -906,6 +908,138 @@ namespace TiaMcpServer.Siemens
                     return true;
                 },
                 ("softwarePath", softwarePath), ("groupPath", groupPath), ("importPath", importPath));
+        }
+
+        /// <summary>
+        /// Adds and deletes the rows of a watch table. TIA Portal has no call for it (see <see cref="PlcWatchTableEdit"/>), so the table is
+        /// exported, edited as text and imported over itself; the result is read back and compared with what was asked for, and a
+        /// difference fails the call (and with it the transaction). Rows are counted from 0, comment rows included.
+        /// </summary>
+        public List<UnifiedActionResult> ManageWatchTableEntries(string softwarePath, string watchTablePath, IList<WatchTableEntryAction>? actions)
+        {
+            return Operation.Run(_logger, nameof(ManageWatchTableEntries), PortalErrorCode.InvalidState,
+                () =>
+                {
+                    var software = GetPlcSoftwareOrThrow(softwarePath);
+                    var table = GetWatchTable(softwarePath, watchTablePath)
+                        ?? throw new PortalException(PortalErrorCode.NotFound, $"Watch table not found at '{watchTablePath}'. Use 'plc_get_watch_tables' to list the available tables.");
+
+                    if (!table.IsConsistent)
+                    {
+                        throw new PortalException(PortalErrorCode.InvalidState, $"Watch table '{watchTablePath}' is inconsistent, and TIA Portal exports only a consistent table. Open it in TIA Portal and correct the rows with errors (or 'plc_manage_watch_table_entries' with a 'clear' after deleting the table content by hand).");
+                    }
+
+                    // the import replaces the table: the object read here is disposed afterwards, so its name is kept
+                    var tableName = table.Name;
+                    var folder = Path.Combine(Path.GetTempPath(), "tiamcp-watch-" + Guid.NewGuid().ToString("N").Substring(0, 8));
+
+                    Directory.CreateDirectory(folder);
+
+                    try
+                    {
+                        var exported = Path.Combine(folder, "table.xml");
+
+                        table.Export(new FileInfo(exported), ExportOptions.None);
+
+                        var document = XDocument.Load(exported);
+                        var rows = PlcWatchTableEdit.ReadRows(document);
+                        var needsSymbols = actions != null && actions.Any(a => a?.Name != null);
+                        HashSet<string>? symbols = null;
+
+                        if (needsSymbols)
+                        {
+                            symbols = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                            foreach (var tag in GetTags(softwarePath))
+                            {
+                                symbols.Add(tag.Name);
+                            }
+
+                            foreach (var block in GetBlocks(softwarePath))
+                            {
+                                symbols.Add(block.Name);
+                            }
+                        }
+
+                        var problems = PlcWatchTableEdit.Check(actions, rows, symbols == null ? (Func<string, bool>?)null : symbols.Contains);
+
+                        if (problems.Count > 0)
+                        {
+                            throw new PortalException(PortalErrorCode.InvalidParams, $"{problems.Count} problem(s) in the actions; nothing was changed. " + string.Join(" | ", problems));
+                        }
+
+                        var languages = RequireProject().LanguageSettings.ActiveLanguages.Select(l => l.Culture.Name).ToList();
+
+                        PlcWatchTableEdit.Apply(document, actions!, languages);
+
+                        var expected = PlcWatchTableEdit.ReadRows(document);
+                        var edited = Path.Combine(folder, "edited.xml");
+
+                        File.WriteAllText(edited, document.Declaration + Environment.NewLine + document.ToString(), new UTF8Encoding(false));
+
+                        var (groupPath, _) = SplitPath(watchTablePath);
+                        var group = GetWatchTableGroupByPath(softwarePath, groupPath)!;
+
+                        Progress(1, 2, $"{watchTablePath}: import of {expected.Count} row(s)");
+
+                        try
+                        {
+                            group.WatchTables.Import(new FileInfo(edited), ImportOptions.Override);
+                        }
+                        catch (Exception ex) when (ex is not PortalException && ErrorText.Describe(ex).IndexOf("read-only", StringComparison.OrdinalIgnoreCase) >= 0)
+                        {
+                            throw new PortalException(PortalErrorCode.InvalidParams,
+                                "TIA Portal refused a field of a row as read-only, so nothing is kept. 'displayFormat' goes only with an 'address' (a tag gives its own), and 'modifyValue' only on a row that has a display format - a tag or an absolute address, not a member of a data block. TIA Portal said: " + ErrorText.Describe(ex));
+                        }
+
+                        var after = group.WatchTables.Find(tableName)
+                            ?? throw new PortalException(PortalErrorCode.InvalidState, $"After the import the watch table '{watchTablePath}' is gone; nothing is kept.");
+
+                        var actual = new List<PlcWatchTableEdit.Row>();
+
+                        foreach (var entry in after.Entries)
+                        {
+                            actual.Add(entry is PlcWatchTableEntry w
+                                ? new PlcWatchTableEdit.Row
+                                {
+                                    Kind = "Watch", Name = w.Name, Address = w.Address, DisplayFormat = w.DisplayFormat.ToString(), MonitorTrigger = w.MonitorTrigger.ToString(),
+                                    ModifyTrigger = w.ModifyTrigger.ToString(), ModifyValue = w.ModifyValue
+                                }
+                                : new PlcWatchTableEdit.Row { Kind = "Comment" });
+                        }
+
+                        var differences = PlcWatchTableEdit.Compare(expected, actual);
+
+                        if (!after.IsConsistent)
+                        {
+                            differences.Add("the table is inconsistent after the import");
+                        }
+
+                        if (differences.Count > 0)
+                        {
+                            throw new PortalException(PortalErrorCode.InvalidState, "The watch table does not hold what was asked for, so nothing is kept: " + string.Join("; ", differences) + ".");
+                        }
+
+                        return actions!.Select(a => new UnifiedActionResult
+                        {
+                            Action = a.Action!.Trim().ToLowerInvariant(),
+                            Name = a.Name ?? a.Address ?? (a.Index != null ? $"row {a.Index}" : null),
+                            Status = "success",
+                            Notes = { $"The table now has {actual.Count} row(s)." }
+                        }).ToList();
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            Directory.Delete(folder, true);
+                        }
+                        catch (IOException)
+                        {
+                        }
+                    }
+                },
+                ("softwarePath", softwarePath), ("watchTablePath", watchTablePath));
         }
 
         #endregion

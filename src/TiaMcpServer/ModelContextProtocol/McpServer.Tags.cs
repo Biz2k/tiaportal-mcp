@@ -411,6 +411,8 @@ namespace TiaMcpServer.ModelContextProtocol
 
             foreach (var entry in entries)
             {
+                var before = list.Count;
+
                 if (entry is PlcWatchTableEntry watch)
                 {
                     list.Add(new TableEntryInfo
@@ -449,6 +451,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             .FirstOrDefault(a => a.Name == "Name")?.Value?.ToString()
                     });
                 }
+
+                list[before].Index = before;
             }
 
             return list;
@@ -790,6 +794,17 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         #endregion
+
+        [WriteTool]
+        [McpServerTool(Name = "plc_manage_watch_table_entries", Title = "Manage the rows of a watch table", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
+         Description("Add and delete the rows of one PLC watch table, several at once; 'plc_get_watch_table_info' lists the rows with their index. The actions are applied in order and all or nothing. Actions: 'add' a row (name = a PLC tag or a data block member, or address = %MW10; displayFormat for an address; monitorTrigger, modifyTrigger, modifyValue, comment; index = where, from 0, default the end; a comment alone makes a comment line), 'delete' (index, name or address), 'clear' (every row). Fields of an action: action, index, name, address, displayFormat, monitorTrigger, modifyTrigger, modifyValue, comment. A name that is no tag or data block of the PLC is refused. TIA Portal has no call for rows: the table is exported, edited and imported over itself, and read back; its name and place stay. The modify value is the preset of the table, it is not written to the PLC. 'Modify now' (ModifyIntention) cannot be set through Openness")]
+        public static ResponseUnifiedActions ManageWatchTableEntries(
+            [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
+            [Description("watchTablePath: root-relative path of the watch table, e.g. 'WatchGroup1/WatchTable_1'")] string watchTablePath,
+            [Description("actions: the changes to make, applied in order")] List<WatchTableEntryAction> actions)
+        {
+            return Guarded(nameof(ManageWatchTableEntries), () => UnifiedActions(Portal.ManageWatchTableEntries(softwarePath, watchTablePath, actions)));
+        }
 
         [WriteTool]
         [McpServerTool(Name = "plc_manage_tag_table_entries", Title = "Manage the tags of a tag table", Destructive = true, Idempotent = false, OpenWorld = false, UseStructuredContent = true),
