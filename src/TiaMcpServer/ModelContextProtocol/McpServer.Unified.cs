@@ -550,9 +550,43 @@ namespace TiaMcpServer.ModelContextProtocol
          Description("Create or replace global script modules of a WinCC Unified HMI, several at once. A module is written as a whole (globalDefinitions and functions): what it held before is replaced, so read it first with 'unified_get_scripts' to change part of it. Every write is read back and compared; code that TIA Portal cannot parse (syntax errors, default parameter values) is reported and rolled back instead of being stored mangled. The syntax of the code is NOT checked here: code with a syntax error is stored as written (every action says so in its notes). Check it with 'unified_compile' and pathFilter 'Scripts/<module>': the compile reports the error with its line and column, e.g. \"SyntaxError: Unexpected token ';' in line 2, in column 12\" for the function in 'Scripts/<module>/<function>' (checked live). Script modules cannot be deleted or renamed through Openness. A call applies all of its actions or none")]
         public static ResponseUnifiedActions ManageUnifiedScripts(
             [Description(UnifiedPath)] string softwarePath,
-            [Description("actions: the changes to make, applied in order")] List<UnifiedScriptAction> actions)
+            [Description("actions: the changes to make, applied in order")] List<UnifiedScriptAction> actions,
+            [Description(CompileText)] bool compile = false)
         {
-            return Guarded(nameof(ManageUnifiedScripts), () => UnifiedActions(Portal.ManageUnifiedScripts(softwarePath, actions)));
+            var response = Guarded(nameof(ManageUnifiedScripts), () => UnifiedActions(Portal.ManageUnifiedScripts(softwarePath, actions)));
+
+            if (compile)
+            {
+                response.Compile = CompileAfterWrite(softwarePath, actions.Select(a => a?.ModuleName));
+            }
+
+            return response;
+        }
+
+        private const string CompileText = "compile: true compiles the HMI after the changes are committed and returns the result in 'compile' - the only check of the syntax of a script, which neither Openness nor the validation sees. The state and the counts are those of the whole device; the messages are those of the screens or modules this call changed. A compile error does not fail the call and does not undo the write. It takes seconds (about 5 s on the 14-screen, 2500-tag test panel after a change; the first compile of a large HMI takes much longer) and marks the project as modified. Default false";
+
+        /// <summary>
+        /// The compile of a Unified HMI right after a write. TIA Portal refuses to compile inside a transaction, so it runs after the
+        /// commit, which is why it cannot undo the write. It never fails the call: what went wrong is in the note.
+        /// </summary>
+        private static UnifiedCompileSummary CompileAfterWrite(string softwarePath, IEnumerable<string?> places)
+        {
+            var wanted = places.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p!.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+            try
+            {
+                var result = Portal.CompileUnified(softwarePath, null, false);
+                var summary = new UnifiedCompileSummary { State = result.State, ErrorCount = result.ErrorCount, WarningCount = result.WarningCount };
+
+                summary.Items = result.Items.Where(i => wanted.Count == 0 || (i.Path ?? string.Empty).Split('/').Any(segment => wanted.Contains(segment.Trim(), StringComparer.OrdinalIgnoreCase))).ToList();
+                summary.Note = $"{summary.Items.Count} of {result.Items.Count} message(s) of the device concern {string.Join(", ", wanted.Select(w => $"'{w}'"))}; 'unified_compile' lists the rest. The project was not saved.";
+
+                return summary;
+            }
+            catch (Exception ex)
+            {
+                return new UnifiedCompileSummary { Note = "The changes are in, but the compile did not run: " + ErrorText.Describe(ex) };
+            }
         }
 
         [WriteTool]
@@ -653,9 +687,10 @@ namespace TiaMcpServer.ModelContextProtocol
          Description("Create, update, upsert or delete items on WinCC Unified screens, several at once. Each action sets any number of properties - a static value or a dynamization (tag, script, or a text or graphic list driven by a tag) - and event handlers. Use 'unified_get_screen_items' and 'unified_get_screen_item_properties' to find item and property names. A call applies all of its actions or none: if one fails, the error names it and nothing is changed. Faceplate instances are parameterized with 'unified_manage_faceplate', trends with 'unified_configure_trend_control'")]
         public static ResponseHmiManageItems ManageUnifiedItems(
             [Description(UnifiedPath)] string softwarePath,
-            [Description("actions: the changes to make, applied in order")] List<HmiItemAction> actions)
+            [Description("actions: the changes to make, applied in order")] List<HmiItemAction> actions,
+            [Description(CompileText)] bool compile = false)
         {
-            return Guarded(nameof(ManageUnifiedItems), () =>
+            var response = Guarded(nameof(ManageUnifiedItems), () =>
             {
                 // All or nothing: Portal.ManageUnifiedItems throws when any action fails, which
                 // rolls the transaction back, so reaching the next line means every action took.
@@ -669,6 +704,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     Meta = OkMeta()
                 };
             });
+
+            if (compile)
+            {
+                response.Compile = CompileAfterWrite(softwarePath, actions.Select(a => a?.ScreenName));
+            }
+
+            return response;
         }
 
         [WriteTool]

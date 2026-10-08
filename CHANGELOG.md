@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Added (compile after a write)
+- `unified_manage_items` and `unified_manage_scripts` take `compile: true`: after the changes are committed the HMI is compiled and the result
+  is in the answer as `compile` - the state and counts of the device, the messages of the changed screens or modules. It is the only check of
+  the syntax of a script (`return a *;` comes back as "SyntaxError: Unexpected token ';'"). A compile error does not fail the call and does not
+  undo the write; about 5 s on the test panel.
+
+### Changed
+- `unified_configure_trend_control` refuses a data source that does not exist ("The object "X" at the property "Source" does not exist"):
+  TIA Portal stores it without a word, and only the validation of the data source part names it.
+
 ### Fixed
 - `net_get_connections` returned the fields of a connection in a different order on identical calls.
 

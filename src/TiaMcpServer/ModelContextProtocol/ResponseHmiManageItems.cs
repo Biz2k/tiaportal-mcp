@@ -8,6 +8,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>Number of actions applied. A call either applies all of them or fails as a whole.</summary>
         public int SuccessCount { get; set; }
+
+        /// <summary>Only when 'compile' was true: the compile of the HMI after the changes.</summary>
+        public UnifiedCompileSummary? Compile { get; set; }
     }
 
     public class HmiItemResult

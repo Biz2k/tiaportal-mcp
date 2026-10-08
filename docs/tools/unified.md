@@ -303,6 +303,7 @@ Create, update, upsert or delete items on WinCC Unified screens, several at once
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
 | `actions` | array of object | yes | actions: the changes to make, applied in order |
+| `compile` | boolean | no (default `False`) | compile: true compiles the HMI after the changes are committed and returns the result in 'compile' - the only check of the syntax of a script, which neither Openness nor the validation sees. The state and the counts are those of the whole device; the messages are those of the screens or modules this call changed. A compile error does not fail the call and does not undo the write. It takes seconds (about a second after a change when the HMI was compiled before, much longer for the first compile of a large HMI) and marks the project as modified. Default false |
 
 ## unified_manage_lists
 
@@ -348,6 +349,7 @@ Create or replace global script modules of a WinCC Unified HMI, several at once.
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: path to the WinCC Unified HMI software, e.g. 'HMI_1/HMI_RT_1'; 'get_project_tree' shows it |
 | `actions` | array of object | yes | actions: the changes to make, applied in order |
+| `compile` | boolean | no (default `False`) | compile: true compiles the HMI after the changes are committed and returns the result in 'compile' - the only check of the syntax of a script, which neither Openness nor the validation sees. The state and the counts are those of the whole device; the messages are those of the screens or modules this call changed. A compile error does not fail the call and does not undo the write. It takes seconds (about a second after a change when the HMI was compiled before, much longer for the first compile of a large HMI) and marks the project as modified. Default false |
 
 ## unified_manage_tag_table_groups
 

@@ -86,6 +86,24 @@ namespace TiaMcpServer.ModelContextProtocol
         public List<CompileMessageLine> Items { get; set; } = new List<CompileMessageLine>();
     }
 
+    /// <summary>
+    /// The compile that a writing tool runs after its changes were committed ('compile': true). The counts and the state are those of the
+    /// whole device, the items only those of the screens or modules the call changed. A failed compile does not undo the write.
+    /// </summary>
+    public class UnifiedCompileSummary
+    {
+        public string? State { get; set; }
+
+        public int ErrorCount { get; set; }
+
+        public int WarningCount { get; set; }
+
+        public List<CompileMessageLine> Items { get; set; } = new List<CompileMessageLine>();
+
+        /// <summary>What to know about it: where the items were cut, or why the compile did not run.</summary>
+        public string? Note { get; set; }
+    }
+
     public class ResponseUnifiedCompile : ResponseMessage
     {
         /// <summary>Success, Warning or Error - of the whole device, whatever the filters left of the messages.</summary>
