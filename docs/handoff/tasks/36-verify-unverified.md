@@ -85,3 +85,7 @@ configuration data is not supported»; после отказа `configurationPro
 `kind: constant`, `kind: tag` честно отвечает «не найдено» (константа не тег); перекрёстные ссылки константы дают источник `MCPT_Const` со ссылкой `MCPT_FCK` (`Read`, `UsedBy`, место `Program code`);
 таблица тегов — «0 tag(s) and 1 user constant(s)»; весь ПЛК с `objectKind: constant` — один источник. В `write.json` добавлены константа `MCPT_KX`, SCL-функция, использующая её, `plc_where_used` и таблица
 (ждут прогона `smoke.ps1 -Write`).
+
+### Пункт 4 — `connect` при двух экземплярах TIA Portal
+
+Не сделан: нужен второй экземпляр TIA Portal без проекта — запускает или разрешает запустить Biz.
