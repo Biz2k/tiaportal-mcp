@@ -119,6 +119,9 @@
 
 ## Мелкое
 
+- [ ] **Подсказка отказа `sec_manage_opcua_users` / `sec_set_display_password`** (Opus, `Portal.Security.cs`): советует `OpcUaPasswordAuthentication`, а на CPU V4 такого атрибута нет
+      (доступ OPC UA там — право пользователя проекта `OPCUAServerAccess`). Найдено при задаче 35, в рецепте `protect-a-plc.md` сказано.
+
 - [ ] **Навык агента** (`skills/tia-portal-mcp/SKILL.md`) — 131 строка при ориентире 120.
       Сценарий загрузки вынесен в `docs/recipes/download-to-plcsim.md`; новые сценарии — только
       в рецепты (задача 35). При следующей переработке навыка посмотреть, как сделаны чужие
