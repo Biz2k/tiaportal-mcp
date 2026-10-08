@@ -40,7 +40,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseCrossReferences GetCrossReferences(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("objectPath: optional root-relative path of a block, type, tag table, tag or block group; empty targets the whole plc software")] string objectPath = "",
-            [Description("objectKind: 'auto' (default), 'block', 'type', 'tagTable', 'tag' or 'blockGroup'. With an empty objectPath it selects what is listed: 'block' only blocks, 'type' only types, 'tagTable' or 'tag' only tags, 'auto' all")] string objectKind = "auto",
+            [Description("objectKind: 'auto' (default), 'block', 'type', 'tagTable', 'tag', 'constant' or 'blockGroup'. With an empty objectPath it selects what is listed: 'block' only blocks, 'type' only types, 'tagTable' or 'tag' only tags, 'auto' all")] string objectKind = "auto",
             [Description("filter: 'AllObjects' (default), 'ObjectsWithReferences', 'ObjectsWithoutReferences' or 'UnusedObjects'")] string filter = "AllObjects",
             [Description("maxDepth: 1 = sources and their references (default), 2 = also source children, 3 = also reference locations. Keeps large results manageable")] int maxDepth = 1,
             [Description(Paging.LimitText)] int limit = 100,
@@ -169,7 +169,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseWhereUsed WhereUsed(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("name: the object to look up, by bare name or by full root-relative path")] string name,
-            [Description("kind: restrict resolution to 'block', 'type', 'tag' or 'tagTable'. Default 'any' picks the single match, and reports the candidates when the name is ambiguous")] string kind = "any")
+            [Description("kind: restrict resolution to 'block', 'type', 'tag', 'tagTable' or 'constant'. Default 'any' picks the single match among blocks, types, tags and tag tables (a user constant is looked for when nothing else has the name, or with kind 'constant'), and reports the candidates when the name is ambiguous")] string kind = "any")
         {
             try
             {
@@ -177,10 +177,16 @@ namespace TiaMcpServer.ModelContextProtocol
                     .Where(m => CrossReferenceKinds.Contains(m.Kind))
                     .ToList();
 
+                if (matches.Count == 0 && kind.Equals("any", StringComparison.OrdinalIgnoreCase))
+                {
+                    // a user constant is no tag: it is found only when nothing else carries the name
+                    matches = Portal.ResolveObjectPath(softwarePath, name, "constant").ToList();
+                }
+
                 if (matches.Count == 0)
                 {
                     throw new McpException(
-                        $"No block, PLC data type, tag or tag table named '{name}' in '{softwarePath}'. " +
+                        $"No block, PLC data type, tag, user constant or tag table named '{name}' in '{softwarePath}'. " +
                         "Watch tables and external source files have no cross references.");
                 }
 
@@ -231,7 +237,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>Object kinds Openness can produce cross references for.</summary>
         private static readonly HashSet<string> CrossReferenceKinds =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "block", "type", "tag", "tagTable" };
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "block", "type", "tag", "tagTable", "constant" };
 
         #endregion
     }

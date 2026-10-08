@@ -37,7 +37,7 @@ namespace TiaMcpServer.Siemens
 
         /// <summary>The object areas ResolveObjectPath can search, as accepted in 'kind'.</summary>
         private static readonly string[] LookupKinds =
-            { "block", "type", "tag", "tagTable", "watchTable", "source" };
+            { "block", "type", "tag", "tagTable", "constant", "watchTable", "source" };
 
         /// <summary>
         /// Finds objects whose name matches <paramref name="name"/>, exactly first and by
@@ -82,7 +82,9 @@ namespace TiaMcpServer.Siemens
             var matches = new List<ObjectMatch>();
             var all = kind.Equals("any", StringComparison.OrdinalIgnoreCase);
 
-            bool Wanted(string k) => all || kind.Equals(k, StringComparison.OrdinalIgnoreCase);
+            // 'any' leaves the user constants out: callers of the 'any' search (export, import, move) know no constants, and a constant
+            // is looked for by name only where it is asked for (kind 'constant': plc_where_used).
+            bool Wanted(string k) => kind.Equals(k, StringComparison.OrdinalIgnoreCase) || (all && !k.Equals("constant", StringComparison.OrdinalIgnoreCase));
 
             if (Wanted("block"))
             {
@@ -119,6 +121,21 @@ namespace TiaMcpServer.Siemens
                         Kind = "tag",
                         Name = tag.Name,
                         Path = table == null ? EscapeSegment(tag.Name) : JoinLeaf(GetTagTablePath(table), tag.Name)
+                    });
+                }
+            }
+
+            if (Wanted("constant"))
+            {
+                foreach (var constant in GetUserConstants(softwarePath).Where(c => wanted(c.Name)))
+                {
+                    var table = constant.Parent as PlcTagTable;
+
+                    matches.Add(new ObjectMatch
+                    {
+                        Kind = "constant",
+                        Name = constant.Name,
+                        Path = table == null ? EscapeSegment(constant.Name) : JoinLeaf(GetTagTablePath(table), constant.Name)
                     });
                 }
             }

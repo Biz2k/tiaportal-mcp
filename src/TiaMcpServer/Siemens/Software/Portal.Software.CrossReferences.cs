@@ -99,11 +99,12 @@ namespace TiaMcpServer.Siemens
                     var withBlocks = kind == "auto" || kind == "block" || kind == "blockgroup";
                     var withTypes = kind == "auto" || kind == "type";
                     var withTags = kind == "auto" || kind == "tagtable" || kind == "tag";
+                    var withConstants = kind == "auto" || kind == "tagtable" || kind == "constant";
 
-                    if (!withBlocks && !withTypes && !withTags)
+                    if (!withBlocks && !withTypes && !withTags && !withConstants)
                     {
                         throw new PortalException(PortalErrorCode.InvalidParams,
-                            $"Unknown objectKind '{objectKind}'. Allowed values are 'auto', 'block', 'type', 'tagTable', 'tag' and 'blockGroup'.");
+                            $"Unknown objectKind '{objectKind}'. Allowed values are 'auto', 'block', 'type', 'tagTable', 'tag', 'constant' and 'blockGroup'.");
                     }
 
                     var providers = new List<IEngineeringServiceProvider>();
@@ -173,6 +174,28 @@ namespace TiaMcpServer.Siemens
 
                         WalkTables(software.TagTableGroup);
                         counts.Add($"{tags} tag(s)");
+                    }
+
+                    if (withConstants)
+                    {
+                        var constants = 0;
+
+                        void WalkConstantTables(PlcTagTableGroup group)
+                        {
+                            foreach (var table in group.TagTables)
+                            {
+                                providers.AddRange(table.UserConstants);
+                                constants += table.UserConstants.Count;
+                            }
+
+                            foreach (var sub in group.Groups)
+                            {
+                                WalkConstantTables(sub);
+                            }
+                        }
+
+                        WalkConstantTables(software.TagTableGroup);
+                        counts.Add($"{constants} user constant(s)");
                     }
 
                     List<SourceObject> Read(IEnumerable<IEngineeringServiceProvider> objects)
@@ -273,7 +296,17 @@ namespace TiaMcpServer.Siemens
                             }
                         }
 
-                        groupNote = $"Openness gives a tag table no cross references of its own; this is the answer for its {table.Tags.Count} tag(s).";
+                        foreach (var constant in table.UserConstants)
+                        {
+                            var constantService = constant.GetService<CrossReferenceService>();
+
+                            if (constantService != null)
+                            {
+                                tagSources.AddRange(constantService.GetCrossReferences(filter).Sources.Cast<SourceObject>());
+                            }
+                        }
+
+                        groupNote = $"Openness gives a tag table no cross references of its own; this is the answer for its {table.Tags.Count} tag(s) and {table.UserConstants.Count} user constant(s).";
 
                         return tagSources;
                     }
@@ -320,6 +353,9 @@ namespace TiaMcpServer.Siemens
                 case "tag":
                     provider = GetTag(softwarePath, objectPath);
                     break;
+                case "constant":
+                    provider = TryGetUserConstant(softwarePath, objectPath);
+                    break;
                 case "blockgroup":
                     provider = GetPlcBlockGroupByPath(softwarePath, objectPath);
                     break;
@@ -330,11 +366,12 @@ namespace TiaMcpServer.Siemens
                                ?? (IEngineeringServiceProvider?)GetType(softwarePath, objectPath)
                                ?? (IEngineeringServiceProvider?)GetTagTable(softwarePath, objectPath)
                                ?? (IEngineeringServiceProvider?)TryGetTag(softwarePath, objectPath)
+                               ?? (IEngineeringServiceProvider?)TryGetUserConstant(softwarePath, objectPath)
                                ?? (IEngineeringServiceProvider?)GetPlcBlockGroupByPath(softwarePath, objectPath);
                     break;
                 default:
                     throw new PortalException(PortalErrorCode.InvalidParams,
-                        $"Unknown objectKind '{objectKind}'. Allowed values are 'auto', 'block', 'type', 'tagTable', 'tag' and 'blockGroup'.");
+                        $"Unknown objectKind '{objectKind}'. Allowed values are 'auto', 'block', 'type', 'tagTable', 'tag', 'constant' and 'blockGroup'.");
             }
 
             return provider
@@ -356,6 +393,22 @@ namespace TiaMcpServer.Siemens
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// A user constant by 'Table/Name'. Found on V21 (probe of 2026-10-08, task 36): a PlcUserConstant offers the cross reference
+        /// service, a tag table does not; a block that reads the constant lists it among its references.
+        /// </summary>
+        private PlcUserConstant? TryGetUserConstant(string softwarePath, string objectPath)
+        {
+            var (tablePath, name) = SplitPath(objectPath);
+
+            if (string.IsNullOrEmpty(tablePath))
+            {
+                return null;
+            }
+
+            return GetTagTable(softwarePath, tablePath)?.UserConstants.Find(name);
         }
 
         #endregion

@@ -73,3 +73,15 @@
 1517H-3 PN V3.1, 1518-4 PN/DP V3.1 и S7-1200 1214C V4.7 — `protect_all`, `protect_all` с паролем и `unprotect_all` везде отвечают одним и тем же текстом TIA Portal: «Additional protection of downloadable
 configuration data is not supported»; после отказа `configurationProtection` остаётся `WithoutPassword`. У CPU нет атрибута, который включал бы эту защиту (проверены `Protect*`, `*Secret*`, `*Certificate*`, `Download*` на CPU 1518).
 Итог: прочитать обратно результат `protect_all` нельзя ни на каком доступном CPU; вызовы остаются проверенными только отказом. Описание инструмента теперь это говорит (чтобы модель не пробовала по кругу).
+
+### Пункт 1 — кросс-ссылки пользовательских констант
+
+Проверено вживую (временная станция `MCPT_St1`, CPU 1511-1 V2.9; удалена). Таблица `MCPT_TT`, константа `MCPT_Const` = 42 (`plc_create_user_constant`), SCL-функция `MCPT_FCK`
+(`#MCPT_FCK := "MCPT_Const" + 1;`), `plc_compile_software` — Success. Служба **есть**: `PlcUserConstant.GetService<CrossReferenceService>()` возвращает её (у таблицы тегов и у самого ПЛК — нет).
+Ссылка блока на константу видна в перекрёстных ссылках самого блока (`MCPT_Const`, `PLC tags\MCPT_TT`, доступ `Read`). Но `plc_where_used` и `plc_get_cross_references` по имени и пути константы отвечали
+«No block, PLC data type, tag or tag table named ...» — то самое «не найдено», которого задача не допускает. Исправлено: у `plc_get_cross_references` `objectKind: constant` (путь `Таблица/Константа`; в режиме `auto`
+константа пробуется последней); таблица тегов и список всего ПЛК включают константы; `plc_where_used` ищет константу, когда ничего другого с таким именем нет, или по `kind: constant`; в `ResolveObjectPath` режим
+`any` констант не возвращает (его вызывают экспорт, импорт, перенос: им константы не нужны). После правки: `plc_where_used MCPT_Const` → «used by 1 object(s)» (`MCPT_FCK`, `%FC1`), то же по
+`kind: constant`, `kind: tag` честно отвечает «не найдено» (константа не тег); перекрёстные ссылки константы дают источник `MCPT_Const` со ссылкой `MCPT_FCK` (`Read`, `UsedBy`, место `Program code`);
+таблица тегов — «0 tag(s) and 1 user constant(s)»; весь ПЛК с `objectKind: constant` — один источник. В `write.json` добавлены константа `MCPT_KX`, SCL-функция, использующая её, `plc_where_used` и таблица
+(ждут прогона `smoke.ps1 -Write`).

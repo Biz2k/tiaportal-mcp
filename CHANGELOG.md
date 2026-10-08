@@ -9,6 +9,9 @@
   undo the write; about 5 s on the test panel.
 
 ### Changed
+- `plc_where_used` and `plc_get_cross_references` know user constants (`kind` / `objectKind` `constant`; a name nothing else has is looked up among the
+  constants; a tag table's answer and the whole-PLC list include them). Before, they answered "not found" for a constant that a block reads.
+- An `offset` behind the end of a list says so instead of "Items 10000 to 9999 of 2556".
 - `unified_configure_trend_control` refuses a data source that does not exist ("The object "X" at the property "Source" does not exist"):
   TIA Portal stores it without a word, and only the validation of the data source part names it.
 

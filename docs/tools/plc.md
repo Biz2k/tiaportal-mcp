@@ -527,7 +527,7 @@ Get cross references for the whole PLC software (empty objectPath; blocks, types
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `objectPath` | string | no (default ``) | objectPath: optional root-relative path of a block, type, tag table, tag or block group; empty targets the whole plc software |
-| `objectKind` | string | no (default `auto`) | objectKind: 'auto' (default), 'block', 'type', 'tagTable', 'tag' or 'blockGroup'. With an empty objectPath it selects what is listed: 'block' only blocks, 'type' only types, 'tagTable' or 'tag' only tags, 'auto' all |
+| `objectKind` | string | no (default `auto`) | objectKind: 'auto' (default), 'block', 'type', 'tagTable', 'tag', 'constant' or 'blockGroup'. With an empty objectPath it selects what is listed: 'block' only blocks, 'type' only types, 'tagTable' or 'tag' only tags, 'auto' all |
 | `filter` | string | no (default `AllObjects`) | filter: 'AllObjects' (default), 'ObjectsWithReferences', 'ObjectsWithoutReferences' or 'UnusedObjects' |
 | `maxDepth` | integer | no (default `1`) | maxDepth: 1 = sources and their references (default), 2 = also source children, 3 = also reference locations. Keeps large results manageable |
 | `limit` | integer | no (default `100`) | limit: the most items to return in one page; 0 returns all. A longer list is cut and the answer says so |
@@ -878,5 +878,5 @@ Answer 'what uses this?' for a tag, block, PLC data type or tag table by name. R
 |---|---|---|---|
 | `softwarePath` | string | yes | softwarePath: defines the path in the project structure to the plc software |
 | `name` | string | yes | name: the object to look up, by bare name or by full root-relative path |
-| `kind` | string | no (default `any`) | kind: restrict resolution to 'block', 'type', 'tag' or 'tagTable'. Default 'any' picks the single match, and reports the candidates when the name is ambiguous |
+| `kind` | string | no (default `any`) | kind: restrict resolution to 'block', 'type', 'tag', 'tagTable' or 'constant'. Default 'any' picks the single match among blocks, types, tags and tag tables (a user constant is looked for when nothing else has the name, or with kind 'constant'), and reports the candidates when the name is ambiguous |
 
