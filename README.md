@@ -7,7 +7,11 @@
 
 An MCP server that lets an AI assistant work with Siemens TIA Portal through the Openness API:
 read a project, edit PLC software, hardware and HMI, and download to a PLC.
-
+![TIA Portal](https://img.shields.io/badge/TIA_Portal_V21-009999?style=for-the-badge&logo=siemens&logoColor=white)
+![.NET Framework](https://img.shields.io/badge/.NET_4.8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white)
+![MCP](https://img.shields.io/badge/Model_Context_Protocol-000000?style=for-the-badge&logo=json&logoColor=white)
+![Claude & GPT](https://img.shields.io/badge/AI_Ready-10a37f?style=for-the-badge&logo=openai&logoColor=white)
 ## Features
 
 - Connect to a running TIA Portal and open a project or a multiuser local session
