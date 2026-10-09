@@ -1,5 +1,9 @@
 [![M8ven Score](https://m8ven.ai/badge/mcp/biz2k/tiaportal-mcp)](https://m8ven.ai/mcp/biz2k/tiaportal-mcp?s=readme)
 # TIA Portal MCP Server
+![GitHub License](https://img.shields.io/github/license/Biz2k/tiaportal-mcp?style=flat-square)
+![GitHub Repo stars](https://img.shields.io/github/stars/Biz2k/tiaportal-mcp?style=flat-square)
+![GitHub forks](https://img.shields.io/github/forks/Biz2k/tiaportal-mcp?style=flat-square)
+![GitHub repo size](https://img.shields.io/github/repo-size/Biz2k/tiaportal-mcp?style=flat-square)
 
 **English** | [Русский](README_ru.md)
 
@@ -7,6 +11,7 @@
 
 An MCP server that lets an AI assistant work with Siemens TIA Portal through the Openness API:
 read a project, edit PLC software, hardware and HMI, and download to a PLC.
+
 ![TIA Portal](https://img.shields.io/badge/TIA_Portal_V21-009999?style=for-the-badge&logo=siemens&logoColor=white)
 ![.NET Framework](https://img.shields.io/badge/.NET_4.8-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
 ![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white)
